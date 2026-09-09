@@ -1,0 +1,211 @@
+* Netlist snapshot for record 20260909-055500-e2bb637 -- exactly what was simulated.
+* DUT: placeholder-v1 (placeholder), sim/dut/placeholder_comparator.spice
+* Testbench: sim/comparator-offset-mc/testbench/tb_offset_mc.spice
+* ---------------- DUT NETLIST ----------------
+* ============================================================================
+* PLACEHOLDER DUT -- NOT A DESIGN, NOT A TOPOLOGY PROPOSAL
+* ============================================================================
+*
+* This netlist exists for exactly one reason: so that sim/'s harness, its
+* corner grid, its evidence-record format and its four experiment benches can
+* be proven to run end to end BEFORE this repo's comparator topology has been
+* decided. That decision is spec/porting-plan.md next step 1 and is a separate
+* decision record; it is explicitly out of scope for the harness work.
+*
+* Consequences, stated so nobody has to infer them:
+*
+*   - NOTHING HERE IS SIZED. The devices are round numbers picked by
+*     inspection to give a converging operating point at 3.3 V. No gm/ID
+*     study, no noise budget, no offset budget went into any of them.
+*   - NO NUMBER MEASURED AGAINST THIS DUT SUBSTANTIATES A SPEC ROW.
+*     sim/dut.json declares provenance "placeholder", which makes every
+*     record the harness writes against it carry a banner saying so.
+*   - THIS IS NOT gf180-sar-adc's COMPARATOR. spec/porting-plan.md ports that
+*     repo's testbench METHODOLOGY and forbids porting its topology, sizing
+*     or numbers. The front end below is a textbook resistively-loaded
+*     differential pair at deliberately different, deliberately unconsidered
+*     sizing; the decision stage below is BEHAVIOURAL and therefore commits
+*     to no transistor topology at all.
+*
+* When design/comparator.sch (or its netlist) lands, point sim/dut.json at it
+* and re-run. Nothing else in sim/ changes.
+*
+* Interface contract: sim/dut/README.md.
+* Parameters supplied by the harness: dut_ib, dut_vcm, vdd_val, vdd_nom,
+* temp_c (sim/harness/runner.py compose_deck).
+* ============================================================================
+
+
+* ---------------------------------------------------------------------------
+* comparator_dut_analog -- the DC-resolvable front end.
+*
+* Exposed as its own subckt because two of the four experiments (offset-MC
+* and preamp-noise) are small-signal analyses about a DC operating point.
+* See sim/dut/README.md "Why there are two subckts".
+*
+* Simple NMOS-input pair, 1:1 tail mirror, unsalicided p+ poly loads.
+* w/l are round numbers. Do not read intent into them.
+* ---------------------------------------------------------------------------
+.subckt comparator_dut_analog vinp vinn ibias aop aon vdd vss
+* 1:1 NMOS current mirror; ibias is forced into the diode branch.
+Xmb  ibias ibias vss vss nfet_03v3 w=10u l=1u
+Xmt  atail ibias vss vss nfet_03v3 w=10u l=1u
+* Input pair. The device whose gate is vinp drives the INVERTING node aon,
+* so v(aop) - v(aon) = +A_v * (v(vinp) - v(vinn)).
+Xmip aon vinp atail vss nfet_03v3 w=20u l=1u
+Xmin aop vinn atail vss nfet_03v3 w=20u l=1u
+* Unsalicided 1 kohm/sq p+ poly loads, 100 squares = 100 kohm nominal.
+* Third terminal is the substrate/body contact. `ppolyf_u_1k` is chosen
+* because it is the flavour klayout-tools' gf180mcu extraction deck can
+* actually select today (2AMLogic/klayout-tools#595, cited in
+* spec/porting-plan.md) -- so a placeholder that is later replaced by a real
+* design does not hand the layout work an already-known dead end.
+Xrlp vdd aop vss ppolyf_u_1k r_width=1u r_length=100u
+Xrln vdd aon vss ppolyf_u_1k r_width=1u r_length=100u
+.ends comparator_dut_analog
+
+
+* ---------------------------------------------------------------------------
+* comparator_dut_latch -- BEHAVIOURAL regenerative decision stage.
+*
+* Deliberately behavioural. A transistor-level latch here would be a topology
+* choice, and the topology decision is out of scope. What this models is only
+* the *observable contract* every latched comparator has, so that the
+* regeneration and kickback benches have something real to measure:
+*
+*   clk low   -> reset: both regeneration nodes pulled to mid-rail
+*   clk high  -> evaluate: dv/dt = dv/tau + (input injection), i.e. the
+*                exponential regeneration law t = t0 + tau*ln(V/(A*Vin))
+*                the regeneration bench extracts tau from
+*   output    -> held between decisions, flipping only once the regeneration
+*                nodes have separated past an absolute threshold (an SR
+*                latch's behaviour, not a differential zero-crossing)
+*
+* c_fb IS THE PART THAT MATTERS FOR KICKBACK and it is an explicit, declared
+* stand-in: a real latch's input pair couples its rail-to-rail regeneration
+* nodes back to its inputs through C_gd. Modelling that as an explicit 5 fF
+* per side means the kickback bench measures a real path (regeneration node
+* -> front-end output -> input-pair C_gd -> input node) instead of reporting
+* a fictitious zero. The VALUE is a placeholder like everything else here.
+* ---------------------------------------------------------------------------
+.subckt comparator_dut_latch inp inn clk dout doutb vdd vss
+.param g_reg=5m
+.param c_reg=500f
+.param g_in=5m
+.param v_lim=0.4
+.param c_fb=5f
+.param g_clamp=1
+.param r_hold=200
+.param c_hold=100f
+.param v_th=0.8
+.param v_sharp=0.1
+.param r_rst=100
+* Clock enable, smoothed so the B-source expressions stay differentiable.
+Ben  ken 0 v = '0.5*(1+tanh((v(clk)-0.5*v(vdd,vss))/0.05))'
+Cqp  qp 0 {c_reg}
+Cqn  qn 0 {c_reg}
+* Positive feedback (tanh-limited) plus input injection. tau = c_reg/(2*g_reg).
+Bqp  0 qp i = 'v(ken)*( g_reg*v_lim*tanh((v(qp)-v(qn))/v_lim) + g_in*(v(inp)-v(inn)) )'
+Bqn  0 qn i = '-v(ken)*( g_reg*v_lim*tanh((v(qp)-v(qn))/v_lim) + g_in*(v(inp)-v(inn)) )'
+* Reset to mid-rail while clk is low.
+Brp  0 qp i = '(1-v(ken))*(0.5*v(vdd,vss)-v(qp))/r_rst'
+Brn  0 qn i = '(1-v(ken))*(0.5*v(vdd,vss)-v(qn))/r_rst'
+* Rail clamps -- the regeneration nodes are supply-bounded, like real ones.
+Bcp  qp 0 i = 'g_clamp*(max(v(qp)-v(vdd),0)+min(v(qp)-v(vss),0))'
+Bcn  qn 0 i = 'g_clamp*(max(v(qn)-v(vdd),0)+min(v(qn)-v(vss),0))'
+* Latch input pair C_gd, explicit. This is the kickback path (see header).
+Ckp  qp inp {c_fb}
+Ckn  qn inn {c_fb}
+* Output hold. Tracks the decision only once |v(qp)-v(qn)| passes v_th, so
+* the output delay is a real function of overdrive rather than of the moment
+* the differential crosses zero. Rh keeps the node non-floating for `op`.
+Ch   h 0 {c_hold}
+Rh   h vss 1G
+Bh   0 h i = 'v(ken)*0.5*(1+tanh((abs(v(qp)-v(qn))-v_th)/v_sharp))*(v(vdd,vss)*0.5*(1+tanh((v(qp)-v(qn))/v_sharp))-v(h))/r_hold'
+Bdo  dout  0 v = 'min(max(v(h),v(vss)),v(vdd))'
+Bdob doutb 0 v = 'v(vdd)-min(max(v(h),v(vss)),v(vdd))'
+.ends comparator_dut_latch
+
+
+* ---------------------------------------------------------------------------
+* comparator_dut -- the full clocked comparator the transient benches drive.
+* ---------------------------------------------------------------------------
+.subckt comparator_dut vinp vinn clk ibias dout doutb vdd vss
+Xa vinp vinn ibias aop aon vdd vss comparator_dut_analog
+Xl aop aon clk dout doutb vdd vss comparator_dut_latch
+.ends comparator_dut
+
+* ---------------- TESTBENCH FRAGMENT ----------------
+* tb_offset_mc -- Monte-Carlo input-referred offset of the comparator front
+* end, and the part of that offset that MOVES with input common mode.
+*
+* Netlist FRAGMENT. The harness supplies the models, the corner .lib
+* sections, .temp, the DUT netlist, the .control block and .end
+* (sim/harness/README.md). Parameters from the harness: vdd_val, vdd_nom,
+* temp_c, dut_ib, dut_vcm.
+*
+* METHODOLOGY PORTED FROM gf180-sar-adc/sim/comparator-offset-mc/ -- see this
+* experiment's README.md for the full transfer/non-transfer list. In one
+* line: `setseed <n>` once, then N draws through a `dowhile`/`reset` loop,
+* each draw re-evaluating the agauss expressions inside the PDK's `fets_mm`
+* subcircuits, with the gain of the SAME draw measured by a second DC point
+* so that offset = -dv0/A_v is a real offset rather than a difference of two
+* independent populations.
+*
+* STANDALONE STIMULUS. gf180-sar-adc's version of this bench sweeps the
+* common-mode band its CDAC produces in single-ended mode. There is no CDAC
+* here and no SAR sequencer: the stimulus is an ideal differential DC source
+* riding on an ideal common-mode source, and the common-mode band swept is a
+* stated +/-50 mV about the DUT's own specified `dut_vcm` -- a property of
+* the comparator, not of anything driving it.
+*
+* MISMATCH IS TURNED ON HERE, IN THE FRAGMENT, NOT IN THE MANIFEST'S params.
+* The harness emits manifest params AHEAD of the model includes, and
+* design.ngspice sets sw_stat_mismatch = 0; a manifest param would therefore
+* be silently overridden and the entire Monte Carlo would collapse to
+* sigma = 0 while still looking like it ran. Setting it after the includes
+* (this fragment is included after them) is the only placement that works.
+
+.param sw_stat_mismatch=1
+
+.param c_route=10f
+.param vcm_step=50m
+
+* ---- supply ----------------------------------------------------------
+vsup vdd 0 dc {vdd_val}
+
+* ---- ideal standalone stimulus ---------------------------------------
+* cm  = dut_vcm + vcmd, so sweeping `vcmd` moves the input common mode
+* without the manifest having to know what dut_vcm is.
+vcmb cmb 0 dc {dut_vcm}
+vcmd cm  cmb dc 0
+vd   vd 0 dc 0
+Eap  ap cm vd 0 0.5
+Ean  an cm vd 0 -0.5
+
+* ---- device under test (front end; see sim/dut/README.md) -------------
+ib   vdd ibn dc {dut_ib}
+Xa   ap an ibn aop aon vdd 0 comparator_dut_analog
+
+* Routing allowance on each front-end output. Deliberately SMALL: loading
+* this node harder would only lower the bandwidth, which does not affect a
+* DC offset measurement, but keeping the same allowance as the noise bench
+* means the two benches see the same circuit.
+Cwp aop 0 {c_route}
+Cwn aon 0 {c_route}
+
+* ---- NULL CONTROL: resistor local mismatch ---------------------------
+* Two identical unsalicided poly resistors, each fed 1 uA, read as the
+* difference of their terminal voltages. EXPECTED TO BE EXACTLY ZERO:
+* gf180mcu wires `*(1+mis_r*sw_stat_mismatch)` into its resistor subcircuits
+* but hard-sets mis_r = 0 and leaves the area-scaled agauss expression
+* commented out, so this PDK models NO resistor local mismatch at all.
+* Keeping it as a live check rather than a comment makes it a regression
+* guard: a PDK revision that switches mis_r on fails here instead of
+* silently changing the meaning of every offset record in this repo. It also
+* states, in the record itself, that the reported offset sigma contains no
+* load-mismatch term and that such a term must be budgeted by hand.
+irefa 0 rpa dc 1u
+Xra   rpa 0 0 ppolyf_u_1k r_width=1u r_length=100u
+irefb 0 rpb dc 1u
+Xrb   rpb 0 0 ppolyf_u_1k r_width=1u r_length=100u

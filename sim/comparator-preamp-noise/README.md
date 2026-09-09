@@ -104,7 +104,7 @@ conservative direction" convention for the routing allowance.
 
 | record | DUT | grid | verdict |
 |---|---|---|---|
-| [`20260909-055027-b930f65`](records/20260909-055027-b930f65.md) | `placeholder-v1` (**placeholder**) | 45/45, `mos` × 3 T × 3 V | PASS |
+| [`20260909-055524-e2bb637`](records/20260909-055524-e2bb637.md) | `placeholder-v1` (**placeholder**) | 45/45, `mos` × 3 T × 3 V | PASS |
 
 **Read the banner on that record.** It was taken against the placeholder DUT
 and substantiates the harness, not the noise row. It is also the record the
