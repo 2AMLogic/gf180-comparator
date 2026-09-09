@@ -1,0 +1,28 @@
+{
+  "_comment": [
+    "THE DEVICE-UNDER-TEST BINDING. All four experiments instantiate the",
+    "subcircuits this file names; none of them contains a comparator netlist.",
+    "Swapping the placeholder for the ratified design is a one-line edit here.",
+    "  netlist     path relative to sim/, must satisfy the interface contract",
+    "              in sim/dut/README.md (checked at load time by harness/dut.py)",
+    "  id          short identifier stamped into every record and deck header",
+    "  provenance  placeholder | schematic | extracted -- 'placeholder' makes",
+    "              every record it produces carry a banner saying the numbers",
+    "              substantiate the harness and not a spec row",
+    "  params      operating-point parameters the harness emits as .param, so",
+    "              all four benches bias the DUT identically without each",
+    "              re-stating the numbers"
+  ],
+  "netlist": "dut/placeholder_comparator.spice",
+  "id": "placeholder-v1",
+  "provenance": "placeholder",
+  "description": "Harness-exercising placeholder: a crude resistively-loaded NMOS differential front end plus a behavioural regenerative latch. NOT a design candidate and NOT a topology proposal -- see sim/dut/README.md.",
+  "params": {
+    "dut_ib": 1e-05,
+    "dut_vcm": 1.2
+  },
+  "notes": [
+    "dut_ib is the tail-mirror reference current forced into the `ibias` pin.",
+    "dut_vcm is the input common mode the front end is specified at. It is a property of the DUT, not of any one testbench, so it lives here."
+  ]
+}

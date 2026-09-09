@@ -1,0 +1,73 @@
+* tb_offset_mc -- Monte-Carlo input-referred offset of the comparator front
+* end, and the part of that offset that MOVES with input common mode.
+*
+* Netlist FRAGMENT. The harness supplies the models, the corner .lib
+* sections, .temp, the DUT netlist, the .control block and .end
+* (sim/harness/README.md). Parameters from the harness: vdd_val, vdd_nom,
+* temp_c, dut_ib, dut_vcm.
+*
+* METHODOLOGY PORTED FROM gf180-sar-adc/sim/comparator-offset-mc/ -- see this
+* experiment's README.md for the full transfer/non-transfer list. In one
+* line: `setseed <n>` once, then N draws through a `dowhile`/`reset` loop,
+* each draw re-evaluating the agauss expressions inside the PDK's `fets_mm`
+* subcircuits, with the gain of the SAME draw measured by a second DC point
+* so that offset = -dv0/A_v is a real offset rather than a difference of two
+* independent populations.
+*
+* STANDALONE STIMULUS. gf180-sar-adc's version of this bench sweeps the
+* common-mode band its CDAC produces in single-ended mode. There is no CDAC
+* here and no SAR sequencer: the stimulus is an ideal differential DC source
+* riding on an ideal common-mode source, and the common-mode band swept is a
+* stated +/-50 mV about the DUT's own specified `dut_vcm` -- a property of
+* the comparator, not of anything driving it.
+*
+* MISMATCH IS TURNED ON HERE, IN THE FRAGMENT, NOT IN THE MANIFEST'S params.
+* The harness emits manifest params AHEAD of the model includes, and
+* design.ngspice sets sw_stat_mismatch = 0; a manifest param would therefore
+* be silently overridden and the entire Monte Carlo would collapse to
+* sigma = 0 while still looking like it ran. Setting it after the includes
+* (this fragment is included after them) is the only placement that works.
+
+.param sw_stat_mismatch=1
+
+.param c_route=10f
+.param vcm_step=50m
+
+* ---- supply ----------------------------------------------------------
+vsup vdd 0 dc {vdd_val}
+
+* ---- ideal standalone stimulus ---------------------------------------
+* cm  = dut_vcm + vcmd, so sweeping `vcmd` moves the input common mode
+* without the manifest having to know what dut_vcm is.
+vcmb cmb 0 dc {dut_vcm}
+vcmd cm  cmb dc 0
+vd   vd 0 dc 0
+Eap  ap cm vd 0 0.5
+Ean  an cm vd 0 -0.5
+
+* ---- device under test (front end; see sim/dut/README.md) -------------
+ib   vdd ibn dc {dut_ib}
+Xa   ap an ibn aop aon vdd 0 comparator_dut_analog
+
+* Routing allowance on each front-end output. Deliberately SMALL: loading
+* this node harder would only lower the bandwidth, which does not affect a
+* DC offset measurement, but keeping the same allowance as the noise bench
+* means the two benches see the same circuit.
+Cwp aop 0 {c_route}
+Cwn aon 0 {c_route}
+
+* ---- NULL CONTROL: resistor local mismatch ---------------------------
+* Two identical unsalicided poly resistors, each fed 1 uA, read as the
+* difference of their terminal voltages. EXPECTED TO BE EXACTLY ZERO:
+* gf180mcu wires `*(1+mis_r*sw_stat_mismatch)` into its resistor subcircuits
+* but hard-sets mis_r = 0 and leaves the area-scaled agauss expression
+* commented out, so this PDK models NO resistor local mismatch at all.
+* Keeping it as a live check rather than a comment makes it a regression
+* guard: a PDK revision that switches mis_r on fails here instead of
+* silently changing the meaning of every offset record in this repo. It also
+* states, in the record itself, that the reported offset sigma contains no
+* load-mismatch term and that such a term must be budgeted by hand.
+irefa 0 rpa dc 1u
+Xra   rpa 0 0 ppolyf_u_1k r_width=1u r_length=100u
+irefb 0 rpb dc 1u
+Xrb   rpb 0 0 ppolyf_u_1k r_width=1u r_length=100u

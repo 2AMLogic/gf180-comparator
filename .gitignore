@@ -10,6 +10,11 @@ bsim4v5.out
 # sim/ harness: per-corner ngspice logs under corners/ are committed evidence
 # (append-only record trail), so they escape the *.log rule.
 !sim/*/corners/**/*.log
+# sim/ harness scratch: generated decks for in-flight runs (deleted on exit,
+# but a crashed or interrupted run leaves them behind).
+sim/.work/
+# machine-local PDK override (sim/harness/pdk.py resolution step 3)
+sim/pdk.local.json
 sim/build/
 design/build/
 # synthesis / P&R scratch

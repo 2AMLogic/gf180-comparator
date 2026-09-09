@@ -1,0 +1,105 @@
+* tb_regeneration -- decision time versus input overdrive, the regeneration
+* time constant tau extracted from it, and the switching energy per decision.
+*
+* Netlist FRAGMENT. The harness supplies the models, the corner .lib
+* sections, .temp, the DUT netlist, the .control block and .end
+* (sim/harness/README.md). Parameters from the harness: vdd_val, vdd_nom,
+* temp_c, dut_ib, dut_vcm.
+*
+* METHODOLOGY PORTED FROM gf180-sar-adc/sim/comparator-regeneration/ -- see
+* this experiment's README.md for the full transfer/non-transfer list.
+*
+* WHAT THIS ANSWERS
+*
+* 1. Is the decision complete inside the budget at the WORST PVT corner,
+*    rather than at a typical-corner estimate? README.md's decision-time row
+*    is stated at 50 mV overdrive, so 50 mV is the primary rung of the
+*    ladder below.
+*
+* 2. The regeneration time constant tau, EXTRACTED rather than assumed. A
+*    regenerative latch resolves in t = t0 + tau*ln(V_logic/(A_v*V_in)), so
+*    the delay difference between two KNOWN overdrives gives tau directly:
+*        tau = (t(V_small) - t(V_large)) / ln(V_large/V_small)
+*    Everything downstream -- the metastability window, the minimum
+*    resolvable input in a given time budget -- is computed from tau, so tau
+*    is the quantity that must be measured, not the delay at one overdrive.
+*    That makes metastability a FIRST-CLASS ROW of this bench, per CLAUDE.md,
+*    rather than an afterthought: td_od01 is deliberately an overdrive small
+*    enough to sit inside the near-metastable region.
+*
+* 3. Switching energy per decision and the static current, for the power row.
+*
+* THE OVERDRIVE LADDER (standalone; no CDAC and no LSB to inherit).
+*   dv_big   50 mV    the overdrive README.md's decision-time row is stated at
+*   dv_mid    1 mV    a small overdrive, deep in the logarithmic regime
+*   dv_tiny   0.1 mV  ~1 decade smaller again: the tau lever arm, and a
+*                     near-metastable probe
+* tau is extracted from the (mid, tiny) pair because both are inside the
+* logarithmic region; the 50 mV rung is large-signal and sets t0.
+*
+* EVERY INSTANCE DECIDES BOTH WAYS, AND THAT IS WHAT MAKES THE MEASUREMENT
+* ROBUST. Each input is a PWL that is NEGATIVE for the first strobe and
+* POSITIVE for the second. The delay is therefore measured on a strobe where
+* the output must actively flip a latch holding the OPPOSITE answer, so it
+* cannot depend on which state the output happened to start in. (An earlier
+* revision of the sibling repo's deck strobed a static input from a
+* `.nodeset`-hinted start state and failed at every cold corner, because the
+* operating point sometimes converged to the very state the decision was
+* supposed to produce and the output never transitioned. A measurement whose
+* validity depends on an initial guess is not a measurement.)
+*
+* TIMING THRESHOLDS ARE SUPPLY-NORMALIZED. Every delay triggers on a node
+* divided by its own supply and crossed at 0.5 (the Bclkn/Bd*n sources
+* below). A fixed absolute threshold would turn the +/-10 % supply axis into
+* a measurement artefact.
+*
+* MISMATCH IS OFF (PDK default sw_stat_mismatch = 0), deliberately.
+* Regeneration time and offset are separable and are budgeted separately:
+* offset shifts the input at which the decision flips (measured in
+* sim/comparator-offset-mc/), while tau sets how fast a given overdrive
+* resolves. Combining them in one deck would make neither attributable.
+
+.param dv_big=50m
+.param dv_mid=1m
+.param dv_tiny=0.1m
+.param t_flip=20n
+.param c_route=10f
+
+* ---- supplies --------------------------------------------------------
+* Instance A gets its own supply so its switching charge can be integrated
+* without the other two instances' current in the same integral.
+vsup  vdd  0 dc {vdd_val}
+vsupa vdda 0 dc {vdd_val}
+
+* ---- clock: two strobes, decision measured on the second ---------------
+vclk clk 0 pulse(0 {vdd_val} 10n 100p 100p 10n 30n)
+
+* ---- common mode -----------------------------------------------------
+vcm cm 0 dc {dut_vcm}
+
+* ---- A: 50 mV overdrive, on its own supply ---------------------------
+vsa  sa 0 pwl(0 {-dv_big} {t_flip} {-dv_big} {t_flip+1n} {dv_big})
+Eapa apa cm sa 0 0.5
+Eana ana cm sa 0 -0.5
+iba  vdda ibna dc {dut_ib}
+Xa   apa ana clk ibna douta doutba vdda 0 comparator_dut
+
+* ---- B: 1 mV overdrive ------------------------------------------------
+vsb  sb 0 pwl(0 {-dv_mid} {t_flip} {-dv_mid} {t_flip+1n} {dv_mid})
+Eapb apb cm sb 0 0.5
+Eanb anb cm sb 0 -0.5
+ibb  vdd ibnb dc {dut_ib}
+Xb   apb anb clk ibnb doutb doutbb vdd 0 comparator_dut
+
+* ---- C: 0.1 mV overdrive (tau lever arm / metastability probe) --------
+vsc  sc 0 pwl(0 {-dv_tiny} {t_flip} {-dv_tiny} {t_flip+1n} {dv_tiny})
+Eapc apc cm sc 0 0.5
+Eanc anc cm sc 0 -0.5
+ibc  vdd ibnc dc {dut_ib}
+Xc   apc anc clk ibnc doutc doutbc vdd 0 comparator_dut
+
+* ---- supply-normalized probes ----------------------------------------
+Bclkn clkn 0 v = 'v(clk)/v(vdd)'
+Bdan  dan  0 v = 'v(douta)/v(vdda)'
+Bdbn  dbn  0 v = 'v(doutb)/v(vdd)'
+Bdcn  dcn  0 v = 'v(doutc)/v(vdd)'

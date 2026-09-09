@@ -1,0 +1,111 @@
+{
+  "name": "comparator-regeneration",
+  "description": "Decision time versus input overdrive over PVT at 50 mV / 1 mV / 0.1 mV, the regeneration time constant tau extracted from the two small rungs, the near-metastable behaviour at 0.1 mV, and the switching energy and static current per decision.",
+  "claim": "HARNESS PLUMBING ONLY while sim/dut.json binds a placeholder. Once a real design/ netlist is bound, this bench substantiates README.md#target-specification's Decision-time-vs-overdrive row (<= 1.5 ns at 50 mV overdrive, 3.3 V; <= 0.8 ns stretch) and supplies the tau that any metastability statement in this repo is computed from.",
+  "netlist": "tb_regeneration.spice",
+  "nominal_supply_v": 3.3,
+  "supply_tolerance": 0.1,
+  "temperatures_c": [
+    -40,
+    27,
+    125
+  ],
+  "corners": [
+    "mos"
+  ],
+  "analyses": [
+    "tran 5p 60n",
+    "meas tran vsup_v find v(vdd) at=25n",
+    "meas tran td_a trig v(clkn) val=0.5 rise=2 targ v(dan) val=0.5 rise=1",
+    "meas tran td_b trig v(clkn) val=0.5 rise=2 targ v(dbn) val=0.5 rise=1",
+    "meas tran td_c trig v(clkn) val=0.5 rise=2 targ v(dcn) val=0.5 rise=1",
+    "meas tran da_first find v(dan) at=18n",
+    "meas tran db_first find v(dbn) at=18n",
+    "meas tran dc_first find v(dcn) at=18n",
+    "meas tran da_end find v(dan) at=55n",
+    "meas tran db_end find v(dbn) at=55n",
+    "meas tran dc_end find v(dcn) at=55n",
+    "meas tran i_stat avg i(vsupa) from=25n to=29n",
+    "meas tran q_dec integ i(vsupa) from=39.9n to=48n"
+  ],
+  "measure": {
+    "td_od50_ns": "td_a*1e9",
+    "td_od1_ns": "td_b*1e9",
+    "td_od01_ns": "td_c*1e9",
+    "tau_ps": "(td_c-td_b)/ln(10)*1e12",
+    "resolve_decades": "td_b/((td_c-td_b)/ln(10))",
+    "dout_od50_end": "da_end",
+    "dout_od1_end": "db_end",
+    "dout_od01_end": "dc_end",
+    "dout_od50_first": "da_first",
+    "dout_od1_first": "db_first",
+    "dout_od01_first": "dc_first",
+    "i_static_ua": "abs(i_stat)*1e6",
+    "e_dec_fj": "abs(q_dec - i_stat*8.1e-9)*vsup_v*1e15"
+  },
+  "checks": {
+    "td_od50_ns": {
+      "min": 0.001,
+      "max": 25.0,
+      "min_spread_pct_by_axis": {
+        "process": 8.0,
+        "temperature": 10.0
+      },
+      "description": "PRIMARY CORNER-SENSITIVITY ANCHOR as well as the row-facing number. The min/max pair is a sanity envelope, not the spec bound: 1 ps would mean the delay measurement latched onto a numerical artefact, and 25 ns is most of the strobe window (a decision that has not completed by then did not complete at all). The SPEC bound (<= 1.5 ns at 50 mV, README.md) is deliberately NOT encoded while sim/dut.json binds a placeholder. The per-axis floors are what make `--sabotage-corners` fail: regeneration speed is set by device transconductance, which is the most corner- and temperature-sensitive quantity in the whole campaign. Floors calibrated from the full 45-point mos grid measured in this experiment's first committed record (named in this experiment's README.md), with ~45 % margin below the observed weakest slice, following the sibling repo's calibrate-from-a-cited-clean-tree-record convention. Observed weakest slices there: process 15.16 %, temperature 20.05 %. The supply axis is unfloored because the delay threshold is supply-normalized on purpose (see the deck header), which removes most of the supply dependence from the measurement by construction."
+    },
+    "tau_ps": {
+      "min": 0.1,
+      "max": 20000.0,
+      "description": "Regeneration time constant, extracted from the (1 mV, 0.1 mV) pair -- both inside the logarithmic region, one decade apart, so tau = (t(0.1 mV) - t(1 mV))/ln(10). Bounds are a sanity envelope: a negative or sub-0.1 ps tau means the two delays came out in the wrong order (a broken measurement, not a fast latch), and 20 ns means the structure is not regenerating on the timescale of the strobe. Everything this repo says about metastability is computed from this number, so it is recorded at every PVT point rather than quoted once."
+    },
+    "resolve_decades": {
+      "min": 1.0,
+      "description": "How many e-folds of regeneration fit inside the measured 1 mV decision time (td_od1 / tau). It is the metastability lever arm: the probability of an unresolved decision falls as exp(-t/tau), so this is the exponent that number is taken to. Below 1 the structure is not resolving by regeneration at all and no metastability claim derived from tau would be meaningful."
+    },
+    "dout_od50_end": {
+      "min": 0.9,
+      "description": "POLARITY CHECK: after the second strobe the 50 mV instance must hold the POSITIVE answer (dout normalized to its own supply, so this is supply-independent). Together with dout_od50_first below it proves the same instance decided BOTH ways within one run, which is what makes the delay measurement independent of the starting state."
+    },
+    "dout_od1_end": {
+      "min": 0.9,
+      "description": "the same at 1 mV overdrive."
+    },
+    "dout_od01_end": {
+      "min": 0.9,
+      "description": "the same at 0.1 mV overdrive -- i.e. the near-metastable rung still resolves to the CORRECT answer within the strobe window, which is the statement the metastability row rests on."
+    },
+    "dout_od50_first": {
+      "max": 0.1,
+      "description": "the OPPOSITE-polarity half of the same proof: at the first strobe the input was negative, so the held output must be low."
+    },
+    "dout_od1_first": {
+      "max": 0.1,
+      "description": "the same at 1 mV overdrive."
+    },
+    "dout_od01_first": {
+      "max": 0.1,
+      "description": "the same at 0.1 mV overdrive."
+    },
+    "i_static_ua": {
+      "min": 0.1,
+      "description": "Static supply current of one instance with the strobe low. A floor only: zero would mean the bias never came up and every dynamic number in this record was taken on a dead circuit. No ceiling while a placeholder is bound -- README.md's power row is a spec bound, not a plumbing check."
+    }
+  },
+  "evidence": {
+    "record_kind": "corner-matrix",
+    "notes": [
+      "MISMATCH-FREE BY CONSTRUCTION. sw_stat_mismatch is left at the PDK default (0), so every device is nominal. Regeneration time and offset are separable effects and are budgeted separately; combining them here would make neither attributable.",
+      "THE DELAY IS MEASURED ON THE SECOND STROBE, where the output must actively flip a latch holding the opposite answer. That is why every instance is driven by a PWL that changes sign between the two strobes, and why dout_*_first / dout_*_end are checked as a pair: together they prove one instance decided both ways in one run, so no delay in this record depends on which state the output happened to start in.",
+      "TIMING THRESHOLDS ARE SUPPLY-NORMALIZED (each output divided by its own supply, crossed at 0.5). A fixed absolute threshold would turn the +/-10 % supply axis into a measurement artefact rather than a measurement.",
+      "METASTABILITY IS A FIRST-CLASS ROW HERE, not a note. tau and resolve_decades are recorded at every PVT point precisely so that any metastability statement this repo makes is computed from a measured time constant at the worst corner rather than asserted from a typical-corner delay.",
+      "e_dec_fj CARRIES NO CHECK, DELIBERATELY. The placeholder DUT's decision stage is behavioural and draws no supply current at all, so the switching energy measured here is the FRONT END's alone and what remains of the charge integral is dominated by numerical residue (it moves over three orders of magnitude across the grid, which is a property of the integral, not of the circuit). Rather than invent a floor that would pass for the wrong reason, the number is recorded and left unchecked; a check belongs here the moment a transistor-level decision stage is bound in sim/dut.json.",
+      "THE 20 ns INPUT-FLIP INSTANT IS NOT ARBITRARY. The front end's output pole is roughly (load resistance x load capacitance); flipping the input 20 ns before the second strobe leaves it more than ten time constants to settle, so the decision is taken on a settled overdrive rather than on a transient. A bench that strobed too soon would report the settling time, not the regeneration time.",
+      "SOLVER TOLERANCES. reltol = 1e-4 and vntol = 1e-9 are tightened from the ngspice defaults so that a sub-nanosecond delay difference between two overdrives is resolved rather than smeared. abstol is 1e-13 and NOT the 1e-15 the kickback deck uses: at 1e-15 six of the 45 points of this grid fail to take their first transient step at all (`Timestep too small ... trouble with node eanc#branch`, at t < 1e-13 s), because the three PWL-driven controlled sources here present branch currents far below that floor at t = 0. A re-run that changes any of these three is not bit-comparable with this record."
+    ]
+  },
+  "options": [
+    "reltol=1e-4",
+    "vntol=1e-9",
+    "abstol=1e-13"
+  ]
+}
