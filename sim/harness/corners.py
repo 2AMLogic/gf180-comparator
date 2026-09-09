@@ -220,15 +220,58 @@ class PvtPoint:
         }
 
 
+class CornerIdCollisionError(ValueError):
+    """Raised when two or more distinct PVT points format to the same ``corner_id``.
+
+    ``corner_id`` renders ``temp_c`` with ``:g`` and ``vdd`` with ``:.2f``
+    (see ``PvtPoint.corner_id``), so a non-default ``--temps``/
+    ``--supply-tolerance`` can produce distinct ``(corner, temp_c, vdd)``
+    tuples that nonetheless render identically -- e.g. ``--supply-tolerance
+    0.001`` on the 3.3 V nominal yields 3.2967/3.3/3.3033 V, all of which
+    round to ``3.30`` under ``:.2f``. A silently-collapsed grid drops points
+    without warning and later evidence records overwrite each other's log
+    files under the same ``corner_id``, so this must fail loudly instead.
+    """
+
+
 def build_grid(
     corners: list[Corner],
     temperatures: list[float] | tuple[float, ...],
     supplies: list[float],
 ) -> list[PvtPoint]:
-    """Full factorial P x V x T grid, in a stable, reproducible order."""
-    return [
+    """Full factorial P x V x T grid, in a stable, reproducible order.
+
+    Raises:
+        CornerIdCollisionError: if two or more of the constructed points
+            share a ``corner_id`` (see that class's docstring for why this
+            can happen and why it must be a loud, immediate error).
+    """
+    points = [
         PvtPoint(corner=corner, temp_c=float(temp), vdd=float(vdd), index=i)
         for i, (corner, temp, vdd) in enumerate(
             itertools.product(corners, temperatures, supplies)
         )
     ]
+
+    by_id: dict[str, list[PvtPoint]] = {}
+    for point in points:
+        by_id.setdefault(point.corner_id, []).append(point)
+    collisions = {cid: pts for cid, pts in by_id.items() if len(pts) > 1}
+    if collisions:
+        lines = []
+        for cid, pts in sorted(collisions.items()):
+            tuples = ", ".join(
+                f"(corner={p.corner.name!r}, temp_c={p.temp_c!r}, vdd={p.vdd!r})" for p in pts
+            )
+            lines.append(f"  {cid!r} <- {tuples}")
+        raise CornerIdCollisionError(
+            "PVT grid has colliding corner_id values -- distinct "
+            "(corner, temp_c, vdd) points rendered to the same id, so the "
+            "grid would silently lose points:\n" + "\n".join(lines) +
+            "\n\nThis happens when a custom --temps/--supply-tolerance "
+            "produces values that round to the same corner_id string "
+            "(temp_c uses ':g', vdd uses ':.2f'). Widen the spacing between "
+            "the colliding values."
+        )
+
+    return points
