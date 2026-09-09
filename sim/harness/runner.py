@@ -133,6 +133,7 @@ class PointResult:
     status: str                                   # "ok" | "failed" | "error"
     measurements: dict[str, float] = field(default_factory=dict)
     missing: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
     seconds: float = 0.0
     deck: str = ""
     log: str = ""
@@ -151,6 +152,8 @@ class PointResult:
         )
         if self.missing:
             record["missing_measurements"] = self.missing
+        if self.warnings:
+            record["warnings"] = self.warnings
         if self.message:
             record["message"] = self.message
         return record
@@ -224,16 +227,27 @@ def run_point(
     measurements = parse_measurements(output)
     missing = [name for name in tb.measure if name not in measurements]
 
+    # Computed unconditionally -- previously this returncode/_ERROR_RE scan
+    # only ran inside the `if missing:` branch below, so a non-fatal ngspice
+    # error (non-zero exit, or an Error/Fatal/doAnalyses: line) was silently
+    # discarded whenever every requested measurement still happened to parse
+    # (#7). `warnings` surfaces that finding on the "ok" path too, without
+    # changing the point's status.
+    error_lines = [line.strip() for line in output.splitlines() if _ERROR_RE.match(line)]
+    warnings: list[str] = []
+    if returncode != 0:
+        warnings.append(f"ngspice exited {returncode}")
+    warnings.extend(error_lines[:5])
+
     if missing:
         errors = "; ".join(_ERROR_RE.findall(output)[:3])
-        first_error = next(
-            (line.strip() for line in output.splitlines() if _ERROR_RE.match(line)), ""
-        )
+        first_error = error_lines[0] if error_lines else ""
         return PointResult(
             point=point,
             status="failed",
             measurements=measurements,
             missing=missing,
+            warnings=warnings,
             seconds=elapsed,
             deck=deck_path.name,
             log=log_path.name,
@@ -244,6 +258,7 @@ def run_point(
         point=point,
         status="ok",
         measurements=measurements,
+        warnings=warnings,
         seconds=elapsed,
         deck=deck_path.name,
         log=log_path.name,
