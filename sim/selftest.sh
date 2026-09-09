@@ -42,20 +42,16 @@ if "${RUNNER[@]}" --check-env; then ok "environment"; else bad "environment"; fi
 note "2. every bench completes at the nominal PVT point"
 for campaign in comparator-offset-mc comparator-preamp-noise \
                 comparator-regeneration comparator-kickback; do
+  # A per-axis sensitivity check is SKIPPED, not failed, on a grid that does
+  # not sweep that axis (harness/report.py swept_axes) -- so a single-point
+  # run is expected to pass here, with the skips named in its output.
   if "${RUNNER[@]}" "${campaign}" \
        --corners tt --temps 27 --supply-tolerance 0 --no-write -j 1 \
        >/tmp/loom-selftest-$$.log 2>&1; then
     ok "nominal ${campaign}"
   else
-    # A per-axis check cannot be evaluated at a single point, so a
-    # "never varies" complaint here is expected and is not a failure.
-    if grep -q "never varies" /tmp/loom-selftest-$$.log \
-       && grep -q "1/1 points completed" /tmp/loom-selftest-$$.log; then
-      ok "nominal ${campaign} (per-axis checks not evaluable at one point)"
-    else
-      tail -20 /tmp/loom-selftest-$$.log
-      bad "nominal ${campaign}"
-    fi
+    tail -20 /tmp/loom-selftest-$$.log
+    bad "nominal ${campaign}"
   fi
 done
 rm -f /tmp/loom-selftest-$$.log

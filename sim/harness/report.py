@@ -78,6 +78,7 @@ class MeasurementSummary:
     spread: float = 0.0
     axes: dict[str, Axis] = field(default_factory=dict)
     failures: list[str] = field(default_factory=list)
+    skipped: list[str] = field(default_factory=list)
 
 
 def per_axis_spreads(results: list[PointResult], name: str) -> dict[str, Axis]:
@@ -101,8 +102,33 @@ def per_axis_spreads(results: list[PointResult], name: str) -> dict[str, Axis]:
     return axes
 
 
+def swept_axes(results: list[PointResult]) -> set[str]:
+    """Axes the grid actually varies (>= 2 distinct values).
+
+    A per-axis sensitivity check asserts that a measurement MOVES when an
+    axis is swept. If the grid never sweeps that axis -- a one-point smoke
+    run, or `--corners tt` -- there is nothing to assert, so the check is
+    SKIPPED rather than failed. Skips are reported in the record so a
+    single-point run can never be mistaken for a full-grid one.
+
+    Note this keys on the grid, not on the model sections: under
+    ``--sabotage-corners`` the five process corner NAMES are still present,
+    so the process axis counts as swept and the sabotage run still fails its
+    sensitivity check -- which is exactly what the negative control needs.
+    """
+    axes: set[str] = set()
+    if len({r.point.corner.name for r in results}) > 1:
+        axes.add("process")
+    if len({r.point.temp_c for r in results}) > 1:
+        axes.add("temperature")
+    if len({r.point.vdd for r in results}) > 1:
+        axes.add("supply")
+    return axes
+
+
 def summarize(tb: Testbench, results: list[PointResult]) -> dict[str, MeasurementSummary]:
     ok = [r for r in results if r.status == "ok"]
+    swept = swept_axes(results)
     summaries: dict[str, MeasurementSummary] = {}
     for name in tb.measure:
         values = {r.point.corner_id: r.measurements[name] for r in ok if name in r.measurements}
@@ -140,7 +166,12 @@ def summarize(tb: Testbench, results: list[PointResult]) -> dict[str, Measuremen
             )
         for axis, bound in (spec.get("min_spread_pct_by_axis") or {}).items():
             observed = summary.axes.get(axis)
-            if observed is None or not observed.varies:
+            if axis not in swept:
+                summary.skipped.append(
+                    f"min_spread_pct_by_axis[{axis}] >= {bound:g} % — SKIPPED, "
+                    "this grid does not sweep that axis"
+                )
+            elif observed is None or not observed.varies:
                 summary.failures.append(f"axis {axis!r} never varies -- cannot check sensitivity")
             elif observed.weakest < bound:
                 summary.failures.append(
@@ -149,7 +180,12 @@ def summarize(tb: Testbench, results: list[PointResult]) -> dict[str, Measuremen
                 )
         for axis, bound in (spec.get("max_spread_pct_by_axis") or {}).items():
             observed = summary.axes.get(axis)
-            if observed is None or not observed.varies:
+            if axis not in swept:
+                summary.skipped.append(
+                    f"max_spread_pct_by_axis[{axis}] <= {bound:g} % — SKIPPED, "
+                    "this grid does not sweep that axis"
+                )
+            elif observed is None or not observed.varies:
                 summary.failures.append(f"axis {axis!r} never varies -- cannot check sensitivity")
             elif observed.strongest > bound:
                 summary.failures.append(
@@ -359,7 +395,17 @@ def render_record(
         lines.append(f"  | `{name}` | " + " | ".join(cells) + " |")
 
     failures = {n: s.failures for n, s in summaries.items() if s.failures}
+    skipped = {n: s.skipped for n, s in summaries.items() if s.skipped}
     lines += ["", f"- **Verdict**: {'PASS' if passed else 'FAIL'}"]
+    if skipped:
+        lines.append(
+            "- **Checks NOT evaluated on this grid** (an unswept axis has no "
+            "sensitivity to assert; a record with skips is weaker evidence "
+            "than one without):"
+        )
+        for name, reasons in skipped.items():
+            for reason in reasons:
+                lines.append(f"  - `{name}`: {reason}")
     if failures:
         lines.append("- **Check failures**:")
         for name, reasons in failures.items():
@@ -441,6 +487,7 @@ def write_record(
                             for a, ax in s.axes.items()
                         },
                         "failures": s.failures,
+                        "skipped_checks": s.skipped,
                     }
                     for name, s in summaries.items()
                     if s.values

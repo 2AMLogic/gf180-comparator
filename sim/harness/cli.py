@@ -247,6 +247,13 @@ def main(argv: list[str] | None = None) -> int:
         ]
         if axis_bits:
             print(f"  {'':24s}   per-axis: " + "  ".join(axis_bits))
+    skipped = {n: s.skipped for n, s in summaries.items() if s.skipped}
+    if skipped:
+        print("-" * 78)
+        print("  CHECKS SKIPPED (this grid does not sweep the axis they assert):")
+        for name, reasons in skipped.items():
+            for reason in reasons:
+                print(f"    {name}: {reason}")
     if failures:
         print("-" * 78)
         print("  CHECK FAILURES:")
