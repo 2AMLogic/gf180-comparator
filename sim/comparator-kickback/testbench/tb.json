@@ -1,0 +1,118 @@
+{
+  "name": "comparator-kickback",
+  "description": "Charge kicked back into the comparator's input nodes by one decision, over PVT: the peak disturbance at the 1 kohm source impedance README.md's kickback row is stated at, and the residual differential/common-mode displacement of a floating high-impedance input -- including its signal-dependent part, the only component that cannot be absorbed as an offset.",
+  "claim": "HARNESS PLUMBING ONLY while sim/dut.json binds a placeholder. Once a real design/ netlist is bound, this bench substantiates README.md#target-specification's Kickback row (<= 5 mV disturbance into a 1 kohm source impedance at the input nodes, single decision edge; <= 2 mV stretch).",
+  "netlist": "tb_kickback.spice",
+  "nominal_supply_v": 3.3,
+  "supply_tolerance": 0.1,
+  "temperatures_c": [
+    -40,
+    27,
+    125
+  ],
+  "corners": [
+    "mos"
+  ],
+  "analyses": [
+    "tran 5p 60n",
+    "meas tran ad_pos max v(ad) from=30n to=45n",
+    "meas tran ad_neg min v(ad) from=30n to=45n",
+    "meas tran ap0 find v(apa) at=29n",
+    "meas tran apmax max v(apa) from=30n to=45n",
+    "meas tran apmin min v(apa) from=30n to=45n",
+    "meas tran bd0 find v(bd) at=29n",
+    "meas tran bd1 find v(bd) at=55n",
+    "meas tran cd0 find v(cd) at=29n",
+    "meas tran cd1 find v(cd) at=55n",
+    "meas tran bc0 find v(bc) at=29n",
+    "meas tran bc1 find v(bc) at=55n",
+    "meas tran bp0 find v(bpp) at=29n",
+    "meas tran bn0 find v(bpn) at=29n",
+    "meas tran bp1 find v(bpp) at=55n",
+    "meas tran bn1 find v(bpn) at=55n",
+    "meas tran da_end find v(dan) at=55n",
+    "meas tran db_end find v(dbn) at=55n",
+    "meas tran dc_end find v(dcn) at=55n"
+  ],
+  "measure": {
+    "kick_1k_peak_mv": "max(abs(ad_pos),abs(ad_neg))*1e3",
+    "kick_1k_pos_mv": "ad_pos*1e3",
+    "kick_1k_neg_mv": "ad_neg*1e3",
+    "kick_1k_raw_mv": "max(abs(apmax-ap0),abs(ap0-apmin))*1e3",
+    "kick_resid_small_nv": "(bd1-bd0)*1e9",
+    "kick_resid_big_nv": "(cd1-cd0)*1e9",
+    "kick_sigdep_nv": "abs((cd1-cd0)-(bd1-bd0))*1e9",
+    "kick_cm_nv": "(bc1-bc0)*1e9",
+    "kick_resid_raw_uv": "((bp1-bn1)-(bp0-bn0))*1e6",
+    "q_resid_small_ac": "(bd1-bd0)*1e-12*1e18",
+    "dout_1k_end": "da_end",
+    "dout_float_small_end": "db_end",
+    "dout_float_big_end": "dc_end"
+  },
+  "checks": {
+    "kick_1k_peak_mv": {
+      "min": 0.0001,
+      "max": 500.0,
+      "min_spread_pct_by_axis": {
+        "process": 18.0,
+        "temperature": 1.8,
+        "supply": 8.0
+      },
+      "description": "THE ROW-FACING NUMBER AND THIS BENCH'S CORNER-SENSITIVITY ANCHOR: peak disturbance of an input node, relative to its own driving source, during one decision, with a 1 kohm series source impedance and 100 fF of node capacitance -- the exact condition README.md's kickback row states. The bounds here are a sanity envelope only (a true zero would mean the probe is not connected; half a rail would mean the input pair is being driven, not disturbed); the SPEC bound is deliberately not encoded while sim/dut.json binds a placeholder. The per-axis floors make `--sabotage-corners` fail: the peak is set by the input devices' C_gd/C_gs and by the front end's bandwidth, and both move with process and temperature. Floors calibrated from the full 45-point mos grid measured in this experiment's first committed record (named in this experiment's README.md), with ~45 % margin below the observed weakest slice, following the sibling repo's calibrate-from-a-cited-clean-tree-record convention. Observed weakest slices there: process 34.76 %, temperature 3.34 %, supply 15.25 %. Temperature is genuinely the weak axis here and its floor is set accordingly -- it is still more than an order of magnitude above the ~0 % a runner stuck on one temperature would produce. This is the one bench whose anchor DOES carry a supply floor, because the kicked charge scales with the rail the regeneration nodes swing between."
+    },
+    "kick_sigdep_nv": {
+      "min": 0.0,
+      "max": 1000000.0,
+      "description": "THE COMPONENT THAT ACTUALLY MATTERS: the difference between the residual differential kickback at a 100 mV residue and at a 1 mV residue, on a floating high-impedance input. A residue-INDEPENDENT disturbance is indistinguishable from comparator offset and is removed by the same means; only the residue-DEPENDENT part is an irreducible error. Recorded in nV because the near-zero-referenced probes resolve it three decades below what a raw node difference can (see kick_resid_raw_uv). The ceiling is a sanity envelope, not a budget."
+    },
+    "kick_resid_small_nv": {
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "description": "Residual differential displacement left on a floating 1 pF input node after one decision, at a 1 mV residue -- i.e. the part of the kickback that never recovers because there is no low-impedance path to restore it (RC = 1 ms against a ~30 ns cycle). Bounded loosely on purpose: a residue-independent residual is an offset, and the offset budget already has a row of its own. The bound exists so 'constant' cannot quietly become 'large enough to eat that budget by itself'."
+    },
+    "kick_cm_nv": {
+      "min": -20000000.0,
+      "max": 20000000.0,
+      "description": "Common-mode displacement of the two floating input nodes over one decision. Rejected by a differential comparator to first order, so it is not a linearity error -- but a large common-mode kick would move the operating point the offset and noise records were taken about, which is a different way of being wrong. The +/-20 mV band is a sanity envelope on that."
+    },
+    "kick_resid_raw_uv": {
+      "min": -100000.0,
+      "max": 100000.0,
+      "description": "THE SAME RESIDUAL, MEASURED THE NAIVE WAY, and it is in the record to make a methodology point rather than a design one. It differences two ~1.2 V node levels, so ngspice's ~6-significant-digit `meas` result precision quantizes it at ~1 uV -- which for a well-isolated input stage is coarser than the quantity itself, and every value comes back as an exact integer number of microvolts. kick_resid_small_nv measures the identical physical quantity through a near-zero-referenced probe and resolves it ~1000x finer. Keeping both means a reader can see the resolution floor rather than take this bench's word for it."
+    },
+    "q_resid_small_ac": {
+      "min": -1000000.0,
+      "max": 1000000.0,
+      "description": "The residual differential kick expressed as CHARGE on the 1 pF floating node, in attocoulombs, so a reader whose input capacitance differs from this bench's can rescale it. Kickback is a charge injection; quoting it only as a voltage hides its dependence on the capacitance it was measured against."
+    },
+    "dout_1k_end": {
+      "min": 0.9,
+      "description": "The 1 kohm-driven instance must still DECIDE CORRECTLY while its own kickback is disturbing its input. A comparator whose kickback pushed the input past the decision point would fail here, and that failure would be invisible in the displacement numbers alone."
+    },
+    "dout_float_small_end": {
+      "min": 0.9,
+      "description": "the same for the floating instance at a 1 mV residue -- the harder case, because nothing restores the injected charge."
+    },
+    "dout_float_big_end": {
+      "min": 0.9,
+      "description": "the same at a 100 mV residue."
+    }
+  },
+  "evidence": {
+    "record_kind": "corner-matrix",
+    "notes": [
+      "TWO SOURCE IMPEDANCES, BOTH IN THE RECORD, AND NEITHER IS AN IDEAL VOLTAGE SOURCE. An ideal source restores the injected charge instantly and reports ~0 kickback however bad it is -- the standard way this measurement is faked. Instance A uses the 1 kohm impedance README.md's kickback row is stated at (peak disturbance); instances B and C use a 1 pF node through 1 Gohm, RC = 1 ms against a ~30 ns cycle, so the bias sets the operating point and then does nothing (residual charge).",
+      "ONLY THE SIGNAL-DEPENDENT PART IS IRREDUCIBLE. A residue-independent kick is indistinguishable from comparator offset and is removed the same way; that is why B and C sit at 1 mV and 100 mV residues and why their difference (kick_sigdep_nv) is called out separately from the absolute residual.",
+      "THE RESOLUTION FLOOR IS A PROPERTY OF THE MEASUREMENT AND IT IS IN THE TABLE. ngspice's `meas` returns ~6 significant digits, so differencing two ~1.2 V node levels quantizes the answer at ~1 uV. kick_resid_raw_uv does exactly that and shows the floor; kick_resid_small_nv measures the same physical quantity through a probe referenced near 0 V and resolves it ~1000x finer. The sibling repo's own kickback record documents this floor and states that beating it requires measuring an already-small quantity rather than tightening tolerances -- this bench acts on that finding rather than restating it.",
+      "MISMATCH IS OFF (PDK default sw_stat_mismatch = 0). Kickback and offset are separable and are budgeted separately; a mismatched instance would add its offset to the measured displacement and make neither attributable.",
+      "THE INPUT NODE IS A LUMPED CAPACITANCE, not a modelled driving network. There is no CDAC, no sampling switch and no sequencer here -- that is the point of a standalone bench. The lumped model is conservative for the residual kick (no path to restore charge at all) and optimistic for the peak (no distributed series resistance), which is why the peak is reported separately rather than folded into one number.",
+      "PLACEHOLDER CAVEAT. While sim/dut.json binds the placeholder DUT, the coupling from its decision stage back to the front end is an explicit 5 fF/side stand-in for a real latch input pair's C_gd (declared in sim/dut/placeholder_comparator.spice), not an extracted capacitance. The kickback numbers here therefore exercise the measurement path end to end but do not characterise any real topology."
+    ]
+  },
+  "options": [
+    "reltol=1e-4",
+    "vntol=1e-9",
+    "abstol=1e-15",
+    "chgtol=1e-16"
+  ]
+}

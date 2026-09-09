@@ -1,0 +1,15 @@
+{
+  "_comment": [
+    "Committed PDK defaults for this repo. Environment variables win over this",
+    "file, and sim/pdk.local.json (git-ignored) wins over both.",
+    "  variant       gf180mcu flavor directory to use.",
+    "  search_roots  extra directories that CONTAIN variant dirs, searched before",
+    "                the built-in list (~/.volare, ~/.ciel, /usr/share/pdk, ...).",
+    "gf180mcuD is the 5LM / metal_top 11K variant. This block is all-MOS plus",
+    "unsalicided poly resistors, so unlike gf180-sar-adc the variant choice does",
+    "not select a MIM metal stack here -- see sim/harness/README.md 'Deliberate",
+    "divergences from gf180-sar-adc's harness'."
+  ],
+  "variant": "gf180mcuD",
+  "search_roots": []
+}

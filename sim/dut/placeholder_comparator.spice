@@ -1,0 +1,132 @@
+* ============================================================================
+* PLACEHOLDER DUT -- NOT A DESIGN, NOT A TOPOLOGY PROPOSAL
+* ============================================================================
+*
+* This netlist exists for exactly one reason: so that sim/'s harness, its
+* corner grid, its evidence-record format and its four experiment benches can
+* be proven to run end to end BEFORE this repo's comparator topology has been
+* decided. That decision is spec/porting-plan.md next step 1 and is a separate
+* decision record; it is explicitly out of scope for the harness work.
+*
+* Consequences, stated so nobody has to infer them:
+*
+*   - NOTHING HERE IS SIZED. The devices are round numbers picked by
+*     inspection to give a converging operating point at 3.3 V. No gm/ID
+*     study, no noise budget, no offset budget went into any of them.
+*   - NO NUMBER MEASURED AGAINST THIS DUT SUBSTANTIATES A SPEC ROW.
+*     sim/dut.json declares provenance "placeholder", which makes every
+*     record the harness writes against it carry a banner saying so.
+*   - THIS IS NOT gf180-sar-adc's COMPARATOR. spec/porting-plan.md ports that
+*     repo's testbench METHODOLOGY and forbids porting its topology, sizing
+*     or numbers. The front end below is a textbook resistively-loaded
+*     differential pair at deliberately different, deliberately unconsidered
+*     sizing; the decision stage below is BEHAVIOURAL and therefore commits
+*     to no transistor topology at all.
+*
+* When design/comparator.sch (or its netlist) lands, point sim/dut.json at it
+* and re-run. Nothing else in sim/ changes.
+*
+* Interface contract: sim/dut/README.md.
+* Parameters supplied by the harness: dut_ib, dut_vcm, vdd_val, vdd_nom,
+* temp_c (sim/harness/runner.py compose_deck).
+* ============================================================================
+
+
+* ---------------------------------------------------------------------------
+* comparator_dut_analog -- the DC-resolvable front end.
+*
+* Exposed as its own subckt because two of the four experiments (offset-MC
+* and preamp-noise) are small-signal analyses about a DC operating point.
+* See sim/dut/README.md "Why there are two subckts".
+*
+* Simple NMOS-input pair, 1:1 tail mirror, unsalicided p+ poly loads.
+* w/l are round numbers. Do not read intent into them.
+* ---------------------------------------------------------------------------
+.subckt comparator_dut_analog vinp vinn ibias aop aon vdd vss
+* 1:1 NMOS current mirror; ibias is forced into the diode branch.
+Xmb  ibias ibias vss vss nfet_03v3 w=10u l=1u
+Xmt  atail ibias vss vss nfet_03v3 w=10u l=1u
+* Input pair. The device whose gate is vinp drives the INVERTING node aon,
+* so v(aop) - v(aon) = +A_v * (v(vinp) - v(vinn)).
+Xmip aon vinp atail vss nfet_03v3 w=20u l=1u
+Xmin aop vinn atail vss nfet_03v3 w=20u l=1u
+* Unsalicided 1 kohm/sq p+ poly loads, 100 squares = 100 kohm nominal.
+* Third terminal is the substrate/body contact. `ppolyf_u_1k` is chosen
+* because it is the flavour klayout-tools' gf180mcu extraction deck can
+* actually select today (2AMLogic/klayout-tools#595, cited in
+* spec/porting-plan.md) -- so a placeholder that is later replaced by a real
+* design does not hand the layout work an already-known dead end.
+Xrlp vdd aop vss ppolyf_u_1k r_width=1u r_length=100u
+Xrln vdd aon vss ppolyf_u_1k r_width=1u r_length=100u
+.ends comparator_dut_analog
+
+
+* ---------------------------------------------------------------------------
+* comparator_dut_latch -- BEHAVIOURAL regenerative decision stage.
+*
+* Deliberately behavioural. A transistor-level latch here would be a topology
+* choice, and the topology decision is out of scope. What this models is only
+* the *observable contract* every latched comparator has, so that the
+* regeneration and kickback benches have something real to measure:
+*
+*   clk low   -> reset: both regeneration nodes pulled to mid-rail
+*   clk high  -> evaluate: dv/dt = dv/tau + (input injection), i.e. the
+*                exponential regeneration law t = t0 + tau*ln(V/(A*Vin))
+*                the regeneration bench extracts tau from
+*   output    -> held between decisions, flipping only once the regeneration
+*                nodes have separated past an absolute threshold (an SR
+*                latch's behaviour, not a differential zero-crossing)
+*
+* c_fb IS THE PART THAT MATTERS FOR KICKBACK and it is an explicit, declared
+* stand-in: a real latch's input pair couples its rail-to-rail regeneration
+* nodes back to its inputs through C_gd. Modelling that as an explicit 5 fF
+* per side means the kickback bench measures a real path (regeneration node
+* -> front-end output -> input-pair C_gd -> input node) instead of reporting
+* a fictitious zero. The VALUE is a placeholder like everything else here.
+* ---------------------------------------------------------------------------
+.subckt comparator_dut_latch inp inn clk dout doutb vdd vss
+.param g_reg=5m
+.param c_reg=500f
+.param g_in=5m
+.param v_lim=0.4
+.param c_fb=5f
+.param g_clamp=1
+.param r_hold=200
+.param c_hold=100f
+.param v_th=0.8
+.param v_sharp=0.1
+.param r_rst=100
+* Clock enable, smoothed so the B-source expressions stay differentiable.
+Ben  ken 0 v = '0.5*(1+tanh((v(clk)-0.5*v(vdd,vss))/0.05))'
+Cqp  qp 0 {c_reg}
+Cqn  qn 0 {c_reg}
+* Positive feedback (tanh-limited) plus input injection. tau = c_reg/(2*g_reg).
+Bqp  0 qp i = 'v(ken)*( g_reg*v_lim*tanh((v(qp)-v(qn))/v_lim) + g_in*(v(inp)-v(inn)) )'
+Bqn  0 qn i = '-v(ken)*( g_reg*v_lim*tanh((v(qp)-v(qn))/v_lim) + g_in*(v(inp)-v(inn)) )'
+* Reset to mid-rail while clk is low.
+Brp  0 qp i = '(1-v(ken))*(0.5*v(vdd,vss)-v(qp))/r_rst'
+Brn  0 qn i = '(1-v(ken))*(0.5*v(vdd,vss)-v(qn))/r_rst'
+* Rail clamps -- the regeneration nodes are supply-bounded, like real ones.
+Bcp  qp 0 i = 'g_clamp*(max(v(qp)-v(vdd),0)+min(v(qp)-v(vss),0))'
+Bcn  qn 0 i = 'g_clamp*(max(v(qn)-v(vdd),0)+min(v(qn)-v(vss),0))'
+* Latch input pair C_gd, explicit. This is the kickback path (see header).
+Ckp  qp inp {c_fb}
+Ckn  qn inn {c_fb}
+* Output hold. Tracks the decision only once |v(qp)-v(qn)| passes v_th, so
+* the output delay is a real function of overdrive rather than of the moment
+* the differential crosses zero. Rh keeps the node non-floating for `op`.
+Ch   h 0 {c_hold}
+Rh   h vss 1G
+Bh   0 h i = 'v(ken)*0.5*(1+tanh((abs(v(qp)-v(qn))-v_th)/v_sharp))*(v(vdd,vss)*0.5*(1+tanh((v(qp)-v(qn))/v_sharp))-v(h))/r_hold'
+Bdo  dout  0 v = 'min(max(v(h),v(vss)),v(vdd))'
+Bdob doutb 0 v = 'v(vdd)-min(max(v(h),v(vss)),v(vdd))'
+.ends comparator_dut_latch
+
+
+* ---------------------------------------------------------------------------
+* comparator_dut -- the full clocked comparator the transient benches drive.
+* ---------------------------------------------------------------------------
+.subckt comparator_dut vinp vinn clk ibias dout doutb vdd vss
+Xa vinp vinn ibias aop aon vdd vss comparator_dut_analog
+Xl aop aon clk dout doutb vdd vss comparator_dut_latch
+.ends comparator_dut

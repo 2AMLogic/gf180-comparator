@@ -1,0 +1,77 @@
+{
+  "name": "comparator-preamp-noise",
+  "description": "Input-referred noise of the comparator front end over PVT via ngspice .noise, reported as total integrated OUTPUT noise divided by the measured DC gain, split into a full band (1 Hz .. 1 GHz) and a >1 kHz band so the flicker content is visible rather than buried.",
+  "claim": "HARNESS PLUMBING ONLY while sim/dut.json binds a placeholder. Once a real design/ netlist is bound, this bench substantiates README.md#target-specification's Input-referred-noise row (<= 1.0 mV rms differential, <= 0.6 mV stretch) and, with sim/comparator-regeneration/'s tau, the noise floor half of the metastability story.",
+  "netlist": "tb_preamp_noise.spice",
+  "nominal_supply_v": 3.3,
+  "supply_tolerance": 0.1,
+  "temperatures_c": [
+    -40,
+    27,
+    125
+  ],
+  "corners": [
+    "mos"
+  ],
+  "analyses": [
+    "op",
+    "noise v(aop,aon) vd dec 20 1 1e9",
+    "noise v(aop,aon) vd dec 20 1e3 1e9",
+    "ac dec 20 1 1e9"
+  ],
+  "measure": {
+    "av_dc": "mag(v(aop)-v(aon))[0]",
+    "vn_in_uv": "noise2.onoise_total/mag(v(aop)-v(aon))[0]*1e6",
+    "vn_in_hf_uv": "noise4.onoise_total/mag(v(aop)-v(aon))[0]*1e6",
+    "onoise_uv": "noise2.onoise_total*1e6",
+    "onoise_hf_uv": "noise4.onoise_total*1e6",
+    "inoise_band_uv": "noise2.inoise_total*1e6",
+    "flicker_frac_pct": "(noise2.onoise_total^2-noise4.onoise_total^2)/noise2.onoise_total^2*100",
+    "white_nv_rthz": "noise1.onoise_spectrum[120]*1e9",
+    "enbw_mhz": "(noise2.onoise_total^2)/(noise1.onoise_spectrum[120]^2)/1e6",
+    "vbias_anchor_mv": "op1.v(ibn)*1e3"
+  },
+  "checks": {
+    "av_dc": {
+      "min": 1.0,
+      "min_spread_pct_by_axis": {
+        "process": 18.0,
+        "temperature": 24.0
+      },
+      "description": "DC differential gain of the front end, and this bench's second corner-sensitivity anchor. The floor of 1.0 asserts the stage is a gain stage at every corner -- a front end with gain below unity would make every input-referred number here larger than the output-referred one and the divide-by-gain step actively misleading. It is NOT a design bound on gain. The per-axis floors are what make `--sabotage-corners` fail: gain is (transconductance x load resistance) and both move strongly with corner and temperature. Floors calibrated from the full 45-point mos grid measured in this experiment's first committed record (named in this experiment's README.md), with ~45 % margin below the observed weakest slice, following the sibling repo's calibrate-from-a-cited-clean-tree-record convention. Observed weakest slices there: process 32.57 %, temperature 44.55 %. The supply axis is unfloored: the front end is biased by a forced current, so its gain barely moves with the rail."
+    },
+    "vn_in_uv": {
+      "min": 0.1,
+      "description": "THE HEADLINE NUMBER, and the one README.md's noise row is stated against: total integrated output noise (1 Hz .. 1 GHz) DIVIDED BY THE MEASURED DC GAIN. The floor only catches a degenerate analysis (a `.noise` that returned nothing, or a gain so large the division collapses the result); the SPEC bound is deliberately not encoded while a placeholder is bound. Read the units caution in the testbench header: ngspice's own inoise_total is recorded separately as inoise_band_uv precisely so the two referrals can be compared rather than conflated."
+    },
+    "inoise_band_uv": {
+      "min": 0.1,
+      "description": "ngspice's OWN input referral over the same band, recorded alongside the divide-by-gain number rather than instead of it -- AND THE TWO ARE NOT EXPECTED TO AGREE. ngspice refers each frequency bin through the AC transfer function at THAT frequency, so every bin above the front end's bandwidth is divided by a rolled-off gain and inflates the total; the quoted number divides the whole integrated output noise by the DC gain instead. On this record ngspice's figure runs several times larger for exactly that reason. Both are kept in the table so the discrepancy is a visible, explained property of the two referrals rather than an unexplained factor somebody later rediscovers -- which is the failure mode the sibling repo's 200x units error actually was."
+    },
+    "flicker_frac_pct": {
+      "min": 0.0,
+      "max": 100.0,
+      "description": "Fraction of the total noise POWER contributed below 1 kHz, i.e. the flicker content. Bounded only to the range a fraction can legally take -- outside it means the two noise integrals came back inconsistent. Its VALUE is what a reader uses to rescale the flicker term for a different fnoicor setting (the PDK default, fnoicor = 0, is what this record was taken at), and it is why the two-band split exists at all: sub-kHz noise drifts slowly enough to behave as an offset rather than as per-decision noise."
+    },
+    "enbw_mhz": {
+      "min": 0.001,
+      "description": "Equivalent noise bandwidth implied by (total integrated noise / white density). Lets a reader re-derive the headline number by hand as density x sqrt(ENBW) instead of taking the integral on trust. Floor only -- a zero or negative ENBW means the spectrum sample used as the white reference landed somewhere it should not have."
+    },
+    "vbias_anchor_mv": {
+      "min": 100.0,
+      "max": 3000.0,
+      "description": "The same V_th-proxy anchor as sim/comparator-offset-mc/, measured on the DUT's ibias contract pin. Recorded here without per-axis floors because av_dc above already carries them for this bench; keeping the same anchor in both records makes the two directly comparable point by point."
+    }
+  },
+  "evidence": {
+    "record_kind": "corner-matrix",
+    "notes": [
+      "THE QUOTED NUMBER IS OUTPUT NOISE DIVIDED BY MEASURED DC GAIN, NOT ngspice's inoise_total. This is the exact methodology, and the exact caution, ported from gf180-sar-adc/sim/comparator-preamp-noise/, whose own record documents a prior 200x-magnitude error from reporting sqrt(onoise_total) directly. Both quantities are in the table so a reader can see them agree.",
+      "TOTAL INTEGRATED NOISE, NOT A DENSITY. A comparator samples its input noise at the decision instant rather than filtering it, so the band-limited total is the relevant quantity. That is why the integration runs to 1 GHz rather than to some assumed signal bandwidth.",
+      "THE DECISION STAGE IS INSTANTIATED IN RESET so that the front end's noise bandwidth is set by the capacitance it actually drives. Omitting it would over-state the bandwidth and therefore over-state the noise; inventing a lumped capacitor instead would make the answer depend on the invention.",
+      "MISMATCH IS OFF (PDK default sw_stat_mismatch = 0). Noise and offset are separate terms budgeted separately; a mismatched instance would shift the operating point the small-signal analysis is taken about and make neither number attributable.",
+      "fnoicor IS AT THE PDK DEFAULT (0, as-extracted). Every flicker number in this repo must state its fnoicor setting; the flicker_frac_pct column is what lets a reader rescale the flicker part for the worst-case setting and see immediately whether it would change a verdict.",
+      "WHAT IS NOT IN THIS RECORD: the decision stage's own noise. `.noise` cannot reach a reset-and-regenerate structure at all (no DC operating point), and ngspice offers no PSS/pnoise. Referred to the comparator input that term is divided by the gain measured here, which is why the front end is where the budget is closed."
+    ]
+  }
+}

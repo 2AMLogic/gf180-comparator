@@ -31,6 +31,25 @@ strong version: Monte-Carlo sigma with run counts and seeds committed. The
 existing SAR's behavior is context, not a source — this repo derives its own
 numbers from the models.
 
+## Verification harness
+
+Every row of the table below has a testbench, a committed PVT corner matrix,
+and a one-command way to reproduce it — see [`sim/`](sim/).
+
+```bash
+python3 sim/run_corners.py --check-env   # PDK, pinned toolchain, DUT contract
+./sim/characterize.sh smoke              # every bench, nominal point, seconds
+./sim/characterize.sh characterize       # the full 45-point PVT campaign
+./sim/selftest.sh                        # the harness's own acceptance test
+```
+
+**No measured result exists for this block's own comparator yet.** The
+topology is not decided — that is [`spec/porting-plan.md`](spec/porting-plan.md)
+next step 1 — so `sim/dut.json` binds a loudly-labelled *placeholder* DUT and
+every committed record carries a banner saying its numbers substantiate the
+harness rather than a spec row. Swapping in the real netlist once it exists is
+a one-line edit; see [`sim/dut/README.md`](sim/dut/README.md).
+
 ## Target specification (DRAFT — engineering to ratify)
 
 No decision record has ratified this table yet — these are original

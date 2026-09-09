@@ -1,0 +1,257 @@
+* Netlist snapshot for record 20260909-055539-e2bb637 -- exactly what was simulated.
+* DUT: placeholder-v1 (placeholder), sim/dut/placeholder_comparator.spice
+* Testbench: sim/comparator-kickback/testbench/tb_kickback.spice
+* ---------------- DUT NETLIST ----------------
+* ============================================================================
+* PLACEHOLDER DUT -- NOT A DESIGN, NOT A TOPOLOGY PROPOSAL
+* ============================================================================
+*
+* This netlist exists for exactly one reason: so that sim/'s harness, its
+* corner grid, its evidence-record format and its four experiment benches can
+* be proven to run end to end BEFORE this repo's comparator topology has been
+* decided. That decision is spec/porting-plan.md next step 1 and is a separate
+* decision record; it is explicitly out of scope for the harness work.
+*
+* Consequences, stated so nobody has to infer them:
+*
+*   - NOTHING HERE IS SIZED. The devices are round numbers picked by
+*     inspection to give a converging operating point at 3.3 V. No gm/ID
+*     study, no noise budget, no offset budget went into any of them.
+*   - NO NUMBER MEASURED AGAINST THIS DUT SUBSTANTIATES A SPEC ROW.
+*     sim/dut.json declares provenance "placeholder", which makes every
+*     record the harness writes against it carry a banner saying so.
+*   - THIS IS NOT gf180-sar-adc's COMPARATOR. spec/porting-plan.md ports that
+*     repo's testbench METHODOLOGY and forbids porting its topology, sizing
+*     or numbers. The front end below is a textbook resistively-loaded
+*     differential pair at deliberately different, deliberately unconsidered
+*     sizing; the decision stage below is BEHAVIOURAL and therefore commits
+*     to no transistor topology at all.
+*
+* When design/comparator.sch (or its netlist) lands, point sim/dut.json at it
+* and re-run. Nothing else in sim/ changes.
+*
+* Interface contract: sim/dut/README.md.
+* Parameters supplied by the harness: dut_ib, dut_vcm, vdd_val, vdd_nom,
+* temp_c (sim/harness/runner.py compose_deck).
+* ============================================================================
+
+
+* ---------------------------------------------------------------------------
+* comparator_dut_analog -- the DC-resolvable front end.
+*
+* Exposed as its own subckt because two of the four experiments (offset-MC
+* and preamp-noise) are small-signal analyses about a DC operating point.
+* See sim/dut/README.md "Why there are two subckts".
+*
+* Simple NMOS-input pair, 1:1 tail mirror, unsalicided p+ poly loads.
+* w/l are round numbers. Do not read intent into them.
+* ---------------------------------------------------------------------------
+.subckt comparator_dut_analog vinp vinn ibias aop aon vdd vss
+* 1:1 NMOS current mirror; ibias is forced into the diode branch.
+Xmb  ibias ibias vss vss nfet_03v3 w=10u l=1u
+Xmt  atail ibias vss vss nfet_03v3 w=10u l=1u
+* Input pair. The device whose gate is vinp drives the INVERTING node aon,
+* so v(aop) - v(aon) = +A_v * (v(vinp) - v(vinn)).
+Xmip aon vinp atail vss nfet_03v3 w=20u l=1u
+Xmin aop vinn atail vss nfet_03v3 w=20u l=1u
+* Unsalicided 1 kohm/sq p+ poly loads, 100 squares = 100 kohm nominal.
+* Third terminal is the substrate/body contact. `ppolyf_u_1k` is chosen
+* because it is the flavour klayout-tools' gf180mcu extraction deck can
+* actually select today (2AMLogic/klayout-tools#595, cited in
+* spec/porting-plan.md) -- so a placeholder that is later replaced by a real
+* design does not hand the layout work an already-known dead end.
+Xrlp vdd aop vss ppolyf_u_1k r_width=1u r_length=100u
+Xrln vdd aon vss ppolyf_u_1k r_width=1u r_length=100u
+.ends comparator_dut_analog
+
+
+* ---------------------------------------------------------------------------
+* comparator_dut_latch -- BEHAVIOURAL regenerative decision stage.
+*
+* Deliberately behavioural. A transistor-level latch here would be a topology
+* choice, and the topology decision is out of scope. What this models is only
+* the *observable contract* every latched comparator has, so that the
+* regeneration and kickback benches have something real to measure:
+*
+*   clk low   -> reset: both regeneration nodes pulled to mid-rail
+*   clk high  -> evaluate: dv/dt = dv/tau + (input injection), i.e. the
+*                exponential regeneration law t = t0 + tau*ln(V/(A*Vin))
+*                the regeneration bench extracts tau from
+*   output    -> held between decisions, flipping only once the regeneration
+*                nodes have separated past an absolute threshold (an SR
+*                latch's behaviour, not a differential zero-crossing)
+*
+* c_fb IS THE PART THAT MATTERS FOR KICKBACK and it is an explicit, declared
+* stand-in: a real latch's input pair couples its rail-to-rail regeneration
+* nodes back to its inputs through C_gd. Modelling that as an explicit 5 fF
+* per side means the kickback bench measures a real path (regeneration node
+* -> front-end output -> input-pair C_gd -> input node) instead of reporting
+* a fictitious zero. The VALUE is a placeholder like everything else here.
+* ---------------------------------------------------------------------------
+.subckt comparator_dut_latch inp inn clk dout doutb vdd vss
+.param g_reg=5m
+.param c_reg=500f
+.param g_in=5m
+.param v_lim=0.4
+.param c_fb=5f
+.param g_clamp=1
+.param r_hold=200
+.param c_hold=100f
+.param v_th=0.8
+.param v_sharp=0.1
+.param r_rst=100
+* Clock enable, smoothed so the B-source expressions stay differentiable.
+Ben  ken 0 v = '0.5*(1+tanh((v(clk)-0.5*v(vdd,vss))/0.05))'
+Cqp  qp 0 {c_reg}
+Cqn  qn 0 {c_reg}
+* Positive feedback (tanh-limited) plus input injection. tau = c_reg/(2*g_reg).
+Bqp  0 qp i = 'v(ken)*( g_reg*v_lim*tanh((v(qp)-v(qn))/v_lim) + g_in*(v(inp)-v(inn)) )'
+Bqn  0 qn i = '-v(ken)*( g_reg*v_lim*tanh((v(qp)-v(qn))/v_lim) + g_in*(v(inp)-v(inn)) )'
+* Reset to mid-rail while clk is low.
+Brp  0 qp i = '(1-v(ken))*(0.5*v(vdd,vss)-v(qp))/r_rst'
+Brn  0 qn i = '(1-v(ken))*(0.5*v(vdd,vss)-v(qn))/r_rst'
+* Rail clamps -- the regeneration nodes are supply-bounded, like real ones.
+Bcp  qp 0 i = 'g_clamp*(max(v(qp)-v(vdd),0)+min(v(qp)-v(vss),0))'
+Bcn  qn 0 i = 'g_clamp*(max(v(qn)-v(vdd),0)+min(v(qn)-v(vss),0))'
+* Latch input pair C_gd, explicit. This is the kickback path (see header).
+Ckp  qp inp {c_fb}
+Ckn  qn inn {c_fb}
+* Output hold. Tracks the decision only once |v(qp)-v(qn)| passes v_th, so
+* the output delay is a real function of overdrive rather than of the moment
+* the differential crosses zero. Rh keeps the node non-floating for `op`.
+Ch   h 0 {c_hold}
+Rh   h vss 1G
+Bh   0 h i = 'v(ken)*0.5*(1+tanh((abs(v(qp)-v(qn))-v_th)/v_sharp))*(v(vdd,vss)*0.5*(1+tanh((v(qp)-v(qn))/v_sharp))-v(h))/r_hold'
+Bdo  dout  0 v = 'min(max(v(h),v(vss)),v(vdd))'
+Bdob doutb 0 v = 'v(vdd)-min(max(v(h),v(vss)),v(vdd))'
+.ends comparator_dut_latch
+
+
+* ---------------------------------------------------------------------------
+* comparator_dut -- the full clocked comparator the transient benches drive.
+* ---------------------------------------------------------------------------
+.subckt comparator_dut vinp vinn clk ibias dout doutb vdd vss
+Xa vinp vinn ibias aop aon vdd vss comparator_dut_analog
+Xl aop aon clk dout doutb vdd vss comparator_dut_latch
+.ends comparator_dut
+
+* ---------------- TESTBENCH FRAGMENT ----------------
+* tb_kickback -- charge kicked back into the comparator's own input nodes by
+* a decision, measured two ways: at the source impedance README.md's kickback
+* row is stated at, and against a floating high-impedance source that cannot
+* restore the injected charge.
+*
+* Netlist FRAGMENT. The harness supplies the models, the corner .lib
+* sections, .temp, the DUT netlist, the .control block and .end
+* (sim/harness/README.md). Parameters from the harness: vdd_val, vdd_nom,
+* temp_c, dut_ib, dut_vcm.
+*
+* METHODOLOGY PORTED FROM gf180-sar-adc/sim/comparator-kickback/ -- see this
+* experiment's README.md for the full transfer/non-transfer list.
+*
+* THE ONE THING THAT MAKES THIS MEASUREMENT REAL: THE SOURCE IMPEDANCE.
+* Biasing the inputs from ideal voltage sources restores the injected charge
+* instantly and reports ~0 kickback no matter how bad it is; that is the
+* standard way this measurement gets faked. Two independent drives are used
+* here instead, and BOTH are in the record:
+*
+*   A -- 1 kohm series source impedance with 100 fF of input-node
+*        capacitance. This is the condition README.md's kickback row is
+*        stated at ("<= 5 mV disturbance into a 1 kohm source impedance at
+*        the input nodes, single decision edge"), so it is what the row is
+*        eventually scored against. It reports the PEAK transient
+*        disturbance, because at 100 ps of RC the node recovers long before
+*        the next decision.
+*
+*   B/C -- a 1 pF input node fed through 1 Gohm, i.e. RC = 1 ms against a
+*        ~30 ns decision cycle: the bias network sets the operating point
+*        and then does nothing. This is the sibling repo's floating-node
+*        methodology and it reports the RESIDUAL charge left on the node
+*        after the decision -- the component that does not recover at all.
+*        B sits at a 1 mV residue and C at 100 mV, so their difference is
+*        the SIGNAL-DEPENDENT part of the kickback, which is the only part
+*        that cannot be absorbed as an offset.
+*
+* THE RESIDUAL PROBES ARE REFERENCED NEAR ZERO VOLTS, DELIBERATELY. ngspice's
+* `meas` returns roughly six significant digits, so differencing two ~1.2 V
+* node levels quantizes the answer at ~1 microvolt -- and the residual
+* kickback of a well-isolated input stage is smaller than that. The sibling
+* repo's own kickback record documents this exact floor, and states that
+* buying the extra decades requires measuring a quantity that is ALREADY
+* small rather than tightening tolerances. That is what the Bbd/Bcd/Bbc
+* behavioural sources below do: they compute the differential (or
+* common-mode-referred) node voltage as a signal near 0 V, so `meas` returns
+* six digits OF THE SMALL QUANTITY and the floor drops to ~1 nV. Both the
+* raw-node-difference and the referenced forms are reported so the
+* improvement is visible in the record rather than asserted here.
+*
+* MISMATCH IS OFF (PDK default sw_stat_mismatch = 0). Kickback and offset are
+* separable effects budgeted separately; a mismatched instance would add its
+* own offset to the measured input displacement and make neither
+* attributable.
+
+.param rsrc=1k
+.param cin=100f
+.param rfloat=1G
+.param cfloat=1p
+.param dv_small=1m
+.param dv_big=100m
+.param t_pre=29n
+.param t_post=55n
+
+vsup vdd 0 dc {vdd_val}
+vcm  cm 0 dc {dut_vcm}
+
+* One strobe, late enough that every node has settled from the operating
+* point before the decision happens.
+vclk clk 0 pulse(0 {vdd_val} 30n 100p 100p 10n 30n)
+
+* ---- A: 1 kohm source impedance (README.md's stated condition) --------
+vsa  sa 0 dc {dv_small}
+Easp asp cm sa 0 0.5
+Easn asn cm sa 0 -0.5
+Rap  asp apa {rsrc}
+Ran  asn ana {rsrc}
+Cap  apa 0 {cin}
+Can  ana 0 {cin}
+iba  vdd ibna dc {dut_ib}
+Xa   apa ana clk ibna douta doutba vdd 0 comparator_dut
+
+* ---- B: floating high-Z input, small residue --------------------------
+vsb  sb 0 dc {dv_small}
+Ebsp bsp cm sb 0 0.5
+Ebsn bsn cm sb 0 -0.5
+Rbp  bsp bpp {rfloat}
+Rbn  bsn bpn {rfloat}
+Cbp  bpp 0 {cfloat}
+Cbn  bpn 0 {cfloat}
+ibb  vdd ibnb dc {dut_ib}
+Xb   bpp bpn clk ibnb doutb doutbb vdd 0 comparator_dut
+
+* ---- C: floating high-Z input, large residue --------------------------
+vsc  sc 0 dc {dv_big}
+Ecsp csp cm sc 0 0.5
+Ecsn csn cm sc 0 -0.5
+Rcp  csp cpp {rfloat}
+Rcn  csn cpn {rfloat}
+Ccp  cpp 0 {cfloat}
+Ccn  cpn 0 {cfloat}
+ibc  vdd ibnc dc {dut_ib}
+Xc   cpp cpn clk ibnc doutc doutbc vdd 0 comparator_dut
+
+* ---- near-zero-referenced probes (see header) -------------------------
+* ad: instantaneous disturbance of A's + input relative to its own driving
+*     source, so the peak is measured against what the node WOULD have been.
+Bad ad 0 v = 'v(apa)-v(asp)'
+* bd/cd: differential input voltage of the floating instances, a ~1 mV and
+*     ~100 mV quantity rather than a ~1.2 V one.
+Bbd bd 0 v = 'v(bpp)-v(bpn)'
+Bcd cd 0 v = 'v(cpp)-v(cpn)'
+* bc: common-mode displacement of the floating instance, referenced to the
+*     bias so it too is a small quantity.
+Bbc bc 0 v = '(v(bpp)+v(bpn))/2-v(cm)'
+
+* ---- supply-normalized decision probes --------------------------------
+Bdan dan 0 v = 'v(douta)/v(vdd)'
+Bdbn dbn 0 v = 'v(doutb)/v(vdd)'
+Bdcn dcn 0 v = 'v(doutc)/v(vdd)'

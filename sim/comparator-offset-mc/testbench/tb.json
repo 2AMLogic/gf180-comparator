@@ -1,0 +1,115 @@
+{
+  "name": "comparator-offset-mc",
+  "description": "Monte-Carlo input-referred offset of the comparator front end over PVT, plus the part of that offset that moves across a +/-50 mV input-common-mode band, plus a null control showing this PDK models no resistor local mismatch.",
+  "claim": "HARNESS PLUMBING ONLY while sim/dut.json binds a placeholder. Once a real design/ netlist is bound, this bench substantiates README.md#target-specification's Offset-sigma row (<= 15 mV 3-sigma input-referred, <= 8 mV stretch) -- measured, not asserted, via gf180mcu's sw_stat_mismatch local-mismatch models.",
+  "netlist": "tb_offset_mc.spice",
+  "nominal_supply_v": 3.3,
+  "supply_tolerance": 0.1,
+  "temperatures_c": [
+    -40,
+    27,
+    125
+  ],
+  "corners": [
+    "mos"
+  ],
+  "analyses": [
+    "setseed 20260909",
+    "let n = 0",
+    "let nmax = 200",
+    "let sva = 0",
+    "let svaq = 0",
+    "let sdc = 0",
+    "let sdcq = 0",
+    "let sde = 0",
+    "let sdeq = 0",
+    "let sav = 0",
+    "let savq = 0",
+    "let srr = 0",
+    "let srrq = 0",
+    "let svb = 0",
+    "dowhile n < nmax",
+    "  reset",
+    "  dc vd 0 2m 2m vcmd -50m 50m 50m",
+    "  let dv = v(aop)-v(aon)",
+    "  let avc = (dv[1]-dv[0])/2e-3",
+    "  let ava = (dv[3]-dv[2])/2e-3",
+    "  let ave = (dv[5]-dv[4])/2e-3",
+    "  let voc = -dv[0]/avc",
+    "  let voa = -dv[2]/ava",
+    "  let voe = -dv[4]/ave",
+    "  let ddc = voc - voa",
+    "  let dde = voe - voa",
+    "  let drr = v(rpa)[2]-v(rpb)[2]",
+    "  print voa",
+    "  print ddc",
+    "  print dde",
+    "  let sva = sva + voa",
+    "  let svaq = svaq + voa*voa",
+    "  let sdc = sdc + ddc",
+    "  let sdcq = sdcq + ddc*ddc",
+    "  let sde = sde + dde",
+    "  let sdeq = sdeq + dde*dde",
+    "  let sav = sav + ava",
+    "  let savq = savq + ava*ava",
+    "  let srr = srr + drr",
+    "  let srrq = srrq + drr*drr",
+    "  let svb = v(ibn)[2]",
+    "  let n = n + 1",
+    "end"
+  ],
+  "measure": {
+    "n_samples": "nmax",
+    "sig_vos_mv": "sqrt(svaq/nmax - (sva/nmax)^2)*1e3",
+    "vos_3sig_mv": "3*sqrt(svaq/nmax - (sva/nmax)^2)*1e3",
+    "mean_vos_uv": "sva/nmax*1e6",
+    "mean_vos_sem": "(sva/nmax)/(sqrt(svaq/nmax - (sva/nmax)^2)/sqrt(nmax))",
+    "sig_dvos_dn_uv": "sqrt(sdcq/nmax - (sdc/nmax)^2)*1e6",
+    "sig_dvos_up_uv": "sqrt(sdeq/nmax - (sde/nmax)^2)*1e6",
+    "mean_dvos_dn_uv": "sdc/nmax*1e6",
+    "mean_dvos_up_uv": "sde/nmax*1e6",
+    "av_mean": "sav/nmax",
+    "av_sigma_pct": "sqrt(savq/nmax - (sav/nmax)^2)/(sav/nmax)*100",
+    "sig_rpair_uv": "sqrt(srrq/nmax - (srr/nmax)^2)*1e6",
+    "vbias_anchor_mv": "svb*1e3"
+  },
+  "checks": {
+    "sig_vos_mv": {
+      "min": 0.05,
+      "description": "MISMATCH-ON GUARD, not a spec bound. design.ngspice defaults sw_stat_mismatch = 0, so a deck that failed to turn local mismatch on would report ~0 here while every other number in the record still looked plausible. 0.05 mV is far below anything a real 180 nm input pair can achieve, so this floor cannot be read as a design assertion -- it only catches a collapsed (mismatch-free) population. The SPEC bound (<= 15 mV 3-sigma, README.md) is deliberately NOT encoded as a check while sim/dut.json binds a placeholder: a placeholder passing or failing a spec row would be meaningless either way."
+    },
+    "av_sigma_pct": {
+      "max": 5.0,
+      "description": "LOAD-BEARING SELF-CHECK, not a design number. Each draw's gain is taken as (DC point at +2 mV minus DC point at 0 mV) within ONE `dc` sweep, which is only valid if the Monte-Carlo draw is constant across that sweep. If the draw were re-rolled per sweep point, (dv1 - dv0) would be dominated by the difference of two independent offsets rather than by the 2 mV probe, and the extracted gain would scatter by tens of percent. A few percent here is the proof that the draw was preserved, and therefore that every V_os in this record is a real offset rather than a difference of two populations."
+    },
+    "sig_rpair_uv": {
+      "max": 0.01,
+      "description": "NULL CONTROL: 1-sigma resistance mismatch of two identical ppolyf_u_1k loads, read as 1 uA times their difference. EXPECTED TO BE ZERO. gf180mcu wires `*(1+mis_r*sw_stat_mismatch)` into every resistor subckt but hard-sets mis_r = 0 and leaves the area-scaled agauss expression commented out, so this PDK models no resistor local mismatch at all. That means the offset sigma above contains NO load-mismatch contribution and that term must be budgeted by hand. As a live check rather than a comment it is a regression guard: a PDK revision that switches mis_r on fails here instead of silently changing every offset record in this repo."
+    },
+    "mean_vos_sem": {
+      "min": -5.0,
+      "max": 5.0,
+      "description": "SYMMETRY CHECK, expressed in standard errors of the mean so it is independent of whatever sigma the bound DUT happens to have. The population mean offset must be ~0 because the circuit is nominally symmetric; +/-5 standard errors is a ~6e-7 two-sided false-alarm rate at this N. A mean outside it means a systematic asymmetry is riding on top of the mismatch -- a netlist error, or a genuinely asymmetric topology."
+    },
+    "vbias_anchor_mv": {
+      "min": 100.0,
+      "max": 3000.0,
+      "min_spread_pct_by_axis": {
+        "process": 15.0,
+        "temperature": 8.0
+      },
+      "description": "CORNER-SENSITIVITY ANCHOR. The bias pin's own voltage is a V_th proxy and is strongly corner- and temperature-dependent, unlike the mismatch sigma above, which is corner-invariant almost by construction (A_Vt lives in the PDK's fets_mm subcircuits, not in any corner section). Without an anchor this manifest would have nothing that could fail under `--sabotage-corners`, and its headline numbers would stay 'valid' with the corner runner stuck on typical. It is deliberately measured on `ibn`, a CONTRACT node (the DUT's ibias pin), not on an internal node, so it survives a DUT swap. Floors calibrated from the full 45-point mos grid measured in this experiment's first committed record (named in this experiment's README.md), with ~45 % margin below the observed weakest slice, following the sibling repo's calibrate-from-a-cited-clean-tree-record convention. Observed weakest slices there: process 27.35 %, temperature 14.76 %. The supply axis is deliberately unfloored: a diode-connected mirror's gate voltage is set by the forced bias current and is essentially supply-independent by design, so a floor there would fail for a correct circuit."
+    }
+  },
+  "evidence": {
+    "record_kind": "monte-carlo",
+    "mc_seed": "ngspice `setseed 20260909` at the top of the control block, then 200 draws per PVT point via `reset` inside a `dowhile` loop (each reset re-evaluates the agauss expressions in the PDK's fets_mm subcircuits). The SAME seed is used at every PVT point -- common random numbers -- so movement of the reported sigma across the grid is a real PVT effect and not sampling noise; N for statistical-error purposes is 200, not 200 x 45. `setseed <n>` is the only ngspice seeding control that works for this: `set rndseed` is silently ignored and `.options seed` freezes the draw.",
+    "mc_scope": "mismatch-only (sw_stat_mismatch = 1, sw_stat_global left at the PDK default 0). Global process variation is swept deterministically by the corner axis instead, so the two are never confounded in one number.",
+    "mc_sigma": "1-sigma of the input-referred offset is reported directly, alongside the 3-sigma value README.md's offset row is stated at. Statistical precision on each sigma is 1/sqrt(2N) = 5.0 % at N = 200. Offset per draw is -dv(0 mV)/A_v where A_v is measured on the SAME draw from the 0 mV and +2 mV points of one `dc` sweep; av_sigma_pct is the check that the draw really was preserved between them.",
+    "notes": [
+      "TWO DC POINTS PER DRAW, ONE INSTANCE. Gain is measured inside a single `dc` sweep of the shared differential source, not from a second instance. Two instances would have independent mismatch draws, so their difference would contain an offset difference rather than just the gain.",
+      "WHAT IS NOT IN THIS RECORD. (a) The decision stage's own offset -- it has no DC operating point, so this method cannot reach it at all; referred to the comparator input it is divided by the gain measured here, and closing it needs either a transient Monte Carlo or an A_Vt-based derivation once the topology is decided. (b) Load-resistor mismatch, which this PDK does not model at all (see the sig_rpair_uv null control). (c) Any layout-induced systematic offset -- this is a schematic-level record.",
+      "THE COMMON-MODE BAND IS +/-50 mV ABOUT dut_vcm AND IT IS A STANDALONE CHOICE. gf180-sar-adc's equivalent bench sweeps the band its CDAC produces; there is no CDAC here, so the band is a stated property of the comparator's own input range rather than inherited from a driving circuit."
+    ]
+  }
+}
