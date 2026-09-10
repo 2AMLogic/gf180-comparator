@@ -104,7 +104,7 @@ conservative direction" convention for the routing allowance.
 
 | record | DUT | grid | verdict |
 |---|---|---|---|
-| [`20260910-000413-3383e41`](records/20260910-000413-3383e41.md) | `comparator-dr0001` (**schematic**) | 45/45, `mos` × 3 T × 3 V | PASS |
+| [`20260910-125200-4805118`](records/20260910-125200-4805118.md) | `comparator-dr0001` (**schematic**) | 45/45, `mos` × 3 T × 3 V | PASS |
 | [`20260909-055524-e2bb637`](records/20260909-055524-e2bb637.md) | `placeholder-v1` (**placeholder**) | 45/45, `mos` × 3 T × 3 V | PASS |
 
 The first row is the current reference: taken against

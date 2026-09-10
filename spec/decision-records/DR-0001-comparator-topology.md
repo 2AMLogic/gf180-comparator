@@ -16,10 +16,10 @@
   `gf180-sar-adc/spec/decision-records/DR-0015-comparator-topology.md`
   (context for the topology-class choice, not a netlist copied from —
   different target-spec numbers, different sizing, no CDAC-derived common
-  mode); `sim/comparator-offset-mc/records/20260910-000212-3383e41.md`,
-  `sim/comparator-preamp-noise/records/20260910-000413-3383e41.md`,
-  `sim/comparator-regeneration/records/20260910-000418-3383e41.md`,
-  `sim/comparator-kickback/records/20260910-000606-3383e41.md` (the four
+  mode); `sim/comparator-offset-mc/records/20260910-124917-4805118.md`,
+  `sim/comparator-preamp-noise/records/20260910-125200-4805118.md`,
+  `sim/comparator-regeneration/records/20260910-125206-4805118.md`,
+  `sim/comparator-kickback/records/20260910-125341-4805118.md` (the four
   45-point records minted against this decision).
 
 ## Context
@@ -150,8 +150,8 @@ against what this repo's own new records actually measured.
   `gm = 14.96 × 10 µA = 149.6 µA/V`, and the single-ended-to-differential
   gain of a resistively loaded pair is `A_v ≈ gm × R_load = 149.6 µA/V ×
   120 kΩ = 17.95`.
-- **Measured vs. predicted gain.** `sim/comparator-offset-mc/records/20260910-000212-3383e41.md`
-  measures `av_mean = 18.0026` and `sim/comparator-preamp-noise/records/20260910-000413-3383e41.md`
+- **Measured vs. predicted gain.** `sim/comparator-offset-mc/records/20260910-124917-4805118.md`
+  measures `av_mean = 18.0026` and `sim/comparator-preamp-noise/records/20260910-125200-4805118.md`
   measures `av_dc = 18.0123`, both at the nominal `tt_27c_3.30v` corner — a
   **0.3 % match** to the 17.95 prediction from the cited gm/ID row. This is
   the load-bearing citation this record makes: the input pair's operating

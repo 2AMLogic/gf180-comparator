@@ -1,0 +1,219 @@
+* Netlist snapshot for record 20260910-125200-4805118 -- exactly what was simulated.
+* DUT: comparator-dr0001 (schematic), design/comparator.spice
+* Testbench: sim/comparator-preamp-noise/testbench/tb_preamp_noise.spice
+* ---------------- DUT NETLIST ----------------
+* ===========================================================================
+* GENERATED FILE -- do not edit. Regenerate with:  ./design/netlist.sh
+*
+* Source of truth: design/comparator.sch and the cells below it
+*   design/comparator_dut.sch        -> .subckt comparator_dut
+*   design/comparator_dut_analog.sch -> .subckt comparator_dut_analog
+*   design/comparator_dut_latch.sch  -> .subckt comparator_dut_latch
+*
+* Topology, sizing and the gm/ID rows every device is cited against:
+*   spec/decision-records/DR-0001-comparator-topology.md
+*
+* Interface contract (pin names and ORDER) : sim/dut/README.md
+* Bound into the corner runner by          : sim/dut.json
+*
+* This file deliberately contains no .include / .lib / .temp / .control /
+* .endc / .end: the harness supplies the models, the corner .lib sections,
+* the temperature and the control block for every PVT point it composes.
+* ===========================================================================
+** sch_path: design/comparator.sch
+
+* expanding   symbol:  comparator_dut.sym # of pins=8
+** sym_path: design/comparator_dut.sym
+** sch_path: design/comparator_dut.sch
+.subckt comparator_dut vinp vinn clk ibias dout doutb vdd vss
+
+*.ipin vinp
+*.ipin vinn
+*.ipin clk
+*.ipin ibias
+*.opin dout
+*.opin doutb
+*.iopin vdd
+*.iopin vss
+XA vinp vinn ibias aop aon vdd vss comparator_dut_analog
+XL aop aon clk dout doutb vdd vss comparator_dut_latch
+.ends
+
+* expanding   symbol:  comparator_dut_analog.sym # of pins=7
+** sym_path: design/comparator_dut_analog.sym
+** sch_path: design/comparator_dut_analog.sch
+.subckt comparator_dut_analog vinp vinn ibias aop aon vdd vss
+
+*.ipin vinp
+*.ipin vinn
+*.ipin ibias
+*.opin aop
+*.opin aon
+*.iopin vdd
+*.iopin vss
+XMB ibias ibias vss vss nfet_03v3 L=4u W=5u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XMT atail ibias vss vss nfet_03v3 L=4u W=10u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XMIP aon vinp atail vss nfet_03v3 L=2u W=30u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XMIN aop vinn atail vss nfet_03v3 L=2u W=30u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XRN aon vdd vss ppolyf_u_1k r_width=1u r_length=120u m=1
+XRP aop vdd vss ppolyf_u_1k r_width=1u r_length=120u m=1
+.ends
+
+* expanding   symbol:  comparator_dut_latch.sym # of pins=7
+** sym_path: design/comparator_dut_latch.sym
+** sch_path: design/comparator_dut_latch.sch
+.subckt comparator_dut_latch inp inn clk dout doutb vdd vss
+
+*.ipin inp
+*.ipin inn
+*.ipin clk
+*.opin dout
+*.opin doutb
+*.iopin vdd
+*.iopin vss
+XMTL ltail clk vss vss nfet_03v3 L=0.5u W=16u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XM1 mn inp ltail vss nfet_03v3 L=0.5u W=8u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XM2 mp inn ltail vss nfet_03v3 L=0.5u W=8u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XM3 qn qp mn vss nfet_03v3 L=0.5u W=6u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XM4 qp qn mp vss nfet_03v3 L=0.5u W=6u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XM5 qn qp vdd vdd pfet_03v3 L=0.5u W=6u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XM6 qp qn vdd vdd pfet_03v3 L=0.5u W=6u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XM7 qn clk vdd vdd pfet_03v3 L=0.5u W=4u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XM8 qp clk vdd vdd pfet_03v3 L=0.5u W=4u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XM9 mn clk vdd vdd pfet_03v3 L=0.5u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XM10 mp clk vdd vdd pfet_03v3 L=0.5u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XIP1 sp qp vdd vdd pfet_03v3 L=0.5u W=5u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XIN1 sp qp vss vss nfet_03v3 L=0.5u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XIP2 sn qn vdd vdd pfet_03v3 L=0.5u W=5u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XIN2 sn qn vss vss nfet_03v3 L=0.5u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XA1P na sp vdd vdd pfet_03v3 L=0.5u W=10u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XA2P dout doutb na vdd pfet_03v3 L=0.5u W=10u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XA1N dout sp vss vss nfet_03v3 L=0.5u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XA2N dout doutb vss vss nfet_03v3 L=0.5u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XB1P nb sn vdd vdd pfet_03v3 L=0.5u W=10u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XB2P doutb dout nb vdd pfet_03v3 L=0.5u W=10u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XB1N doutb sn vss vss nfet_03v3 L=0.5u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XB2N doutb dout vss vss nfet_03v3 L=0.5u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+.ends
+
+* ---------------- TESTBENCH FRAGMENT ----------------
+* tb_preamp_noise -- input-referred noise of the comparator front end,
+* measured with ngspice's `.noise` analysis, over the full PVT grid.
+*
+* Netlist FRAGMENT. The harness supplies the models, the corner .lib
+* sections, .temp, the DUT netlist, the .control block and .end
+* (sim/harness/README.md). Parameters from the harness: vdd_val, vdd_nom,
+* temp_c, dut_ib, dut_vcm.
+*
+* METHODOLOGY PORTED FROM gf180-sar-adc/sim/comparator-preamp-noise/ -- see
+* this experiment's README.md for the full transfer/non-transfer list.
+*
+* THE UNITS CAUTION THAT MADE THIS BENCH WORTH PORTING. ngspice's own
+* `inoise_total` is its input referral through the AC transfer function of
+* the source you name; the number this repo's README.md noise row is stated
+* at is the TOTAL INTEGRATED OUTPUT NOISE DIVIDED BY THE MEASURED DC GAIN.
+* The sibling repo's own record documents a prior 200x-magnitude error from
+* reporting `sqrt(onoise_total)` directly as the answer. So this bench
+* reports BOTH -- `vn_in_uv` (onoise_total / A_v, the number that is quoted)
+* and `inoise_band_uv` (ngspice's own) -- and the record shows them side by
+* side. If they ever disagree by more than the AC-vs-DC gain difference,
+* something is wrong with the referral, and that is visible rather than
+* hidden.
+*
+* WHY THIS BENCH CAN EXIST AT ALL. `.noise` is a small-signal analysis about
+* a DC operating point. A reset-and-regenerate decision stage has none, and
+* ngspice offers no PSS/pnoise and no automatic device-level transient noise.
+* So this bench measures the FRONT END -- which is also where the dominant
+* term is, since everything after it is divided by the front-end gain. The
+* decision stage's own noise is not reachable this way and is not claimed
+* here; sim/comparator-regeneration/'s 0.1 mV rung bounds the region where
+* it would matter. See sim/dut/README.md "Why the DUT is split into three
+* subckts" for what happens to this bench if the ratified topology turns out
+* to have no DC-resolvable front end.
+*
+* THE DECISION STAGE IS INSTANTIATED HERE, WITH ITS CLOCK HELD LOW. It
+* contributes no current in reset, but it presents the input capacitance
+* that -- with the front-end load resistance -- sets the noise bandwidth.
+* Leaving it out would under-load the node, OVER-state the bandwidth, and so
+* OVER-state the noise; replacing it with an invented lumped capacitor would
+* make the number depend on that invention. Neither is acceptable, so the
+* real thing is instantiated in reset.
+*
+* WHAT IS MEASURED
+*   vn_in_uv      total input-referred noise, 1 Hz .. 1 GHz, as
+*                 onoise_total / A_v(DC). A comparator SAMPLES its input
+*                 noise at the decision instant rather than filtering it, so
+*                 the relevant quantity is the TOTAL integrated noise, not a
+*                 density at some bandwidth.
+*   vn_in_hf_uv   the same integrated from 1 kHz up. The difference in
+*                 quadrature is the sub-kHz flicker content, which drifts
+*                 slowly enough to behave as an offset rather than as
+*                 per-decision noise. Reporting both keeps that distinction
+*                 visible instead of burying it in one total.
+*   av_dc, enbw   gain and equivalent noise bandwidth, so the noise number
+*                 can be re-derived by hand as (density x sqrt(ENBW)).
+*
+* fnoicor. The flicker-corner switch is left at the PDK default
+* (fnoicor = 0, as-extracted). The worst-case setting moves the gf180mcu
+* flicker corner substantially, so every flicker number in this repo must
+* state which setting it came from -- this one is the default, and the
+* vn_in_uv / vn_in_hf_uv split above is what lets a reader rescale the
+* flicker part and see whether it would change any verdict.
+
+.param c_route=10f
+
+vsup vdd 0 dc {vdd_val}
+
+* ---- ideal standalone stimulus ---------------------------------------
+* `vd` is the noise-analysis input source, so ngspice's own inoise_* is
+* referred to the DIFFERENTIAL input directly and is comparable with the
+* divide-by-gain number this bench actually quotes.
+vcm  cm 0 dc {dut_vcm}
+vd   vd 0 dc 0 ac 1
+Eap  ap cm vd 0 0.5
+Ean  an cm vd 0 -0.5
+
+* ---- device under test ------------------------------------------------
+ib   vdd ibn dc {dut_ib}
+Xa   ap an ibn aop aon vdd 0 comparator_dut_analog
+
+* Decision stage in reset: no current, but its input capacitance is part of
+* the load that sets the front end's noise bandwidth.
+vclk clk 0 dc 0
+Xl   aop aon clk doutl doutbl vdd 0 comparator_dut_latch
+
+* Routing allowance on each front-end output: a stated placeholder for
+* interconnect that does not exist until a floorplan does. Kept deliberately
+* SMALL, because loading this node harder would lower the noise bandwidth
+* and so REDUCE the reported noise -- an optimistic direction. Under-loading
+* it is the conservative choice, which means post-layout extraction can only
+* improve this number, never worsen it.
+Cwp aop 0 {c_route}
+Cwn aon 0 {c_route}
