@@ -1,0 +1,97 @@
+#### Project-local xschem configuration for gf180-comparator (DR-0001, issue #12).
+####
+#### Ported from gf180-bandgap/design/xschemrc (same PDK, same resolution
+#### rules). The reason a project-local rc file exists at all is the same one
+#### that repo records: xschem's default library-path bootstrap is fine, but a
+#### machine-local ~/.xschem/xschemrc can silently override
+#### XSCHEM_LIBRARY_PATH with unrelated, possibly-stale content, which shows up
+#### as `l_s_d(): Symbol not found` for every generic device symbol. Resetting
+#### it explicitly here makes this repo's xschem invocations reproducible
+#### regardless of what is (or is not) in a given machine's dotfiles.
+####
+#### Load it explicitly and unambiguously (independent of cwd):
+####   xschem --rcfile design/xschemrc ...
+#### which is what design/netlist.sh does. Relying on xschem's cwd-relative
+#### "./xschemrc" auto-discovery is NOT sufficient -- that only fires when
+#### xschem's cwd happens to be this directory.
+
+set XSCHEM_LIBRARY_PATH {}
+append XSCHEM_LIBRARY_PATH :${XSCHEM_SHAREDIR}/xschem_library/devices
+
+#### ---------------------------------------------------------------------
+#### gf180mcu PDK resolution.
+####
+#### Resolved by the SAME rules as sim/harness/pdk.py, so that xschem and the
+#### corner runner can never disagree about which PDK is in use:
+####   1. GF180_PDK_PATH (the variant dir) -- what sim/env.sh exports
+####   2. PDK_ROOT + PDK
+####   3. the usual install prefixes, volare first
+#### Nothing here hardcodes a PDK path.
+
+if {[info exists env(PDK_ROOT)]} {
+  set PDK_ROOT $env(PDK_ROOT)
+}
+if {[info exists env(PDK)]} {
+  set PDK $env(PDK)
+}
+
+if { [info exists env(GF180_PDK_PATH)] && $env(GF180_PDK_PATH) ne {} } {
+    set GF180_ROOT [file dirname $env(GF180_PDK_PATH)]
+    set GF180_VARIANT [file tail $env(GF180_PDK_PATH)]
+} elseif { [info exists env(PDK_ROOT)] && $env(PDK_ROOT) ne {} } {
+    set GF180_ROOT $env(PDK_ROOT)
+    set GF180_VARIANT [expr {[info exists env(PDK)] && $env(PDK) ne {} ? $env(PDK) : {gf180mcuD}}]
+} else {
+    set GF180_VARIANT {gf180mcuD}
+    set GF180_ROOT {}
+    foreach candidate [list [file join $env(HOME) .volare] \
+                            [file join $env(HOME) .ciel] \
+                            /usr/share/pdk /usr/local/share/pdk \
+                            [file join $env(HOME) share pdk] /opt/pdk] {
+        if { [file isdir [file join $candidate $GF180_VARIANT libs.tech xschem]] } {
+            set GF180_ROOT $candidate
+            break
+        }
+    }
+}
+
+if { $GF180_ROOT eq {} } {
+    puts stderr "xschemrc: no gf180mcu install found."
+    puts stderr "xschemrc: run 'source sim/env.sh' (see sim/README.md) and restart xschem."
+} else {
+    # The PDK ships its own xschemrc; it reads PDK_ROOT from the environment and
+    # sets XSCHEM_LIBRARY_PATH plus the gf180mcu device symbol libraries, which
+    # is where symbols/nfet_03v3.sym, symbols/pfet_03v3.sym and
+    # symbols/ppolyf_u_1k.sym come from.
+    set env(PDK_ROOT) $GF180_ROOT
+    set PDK_ROOT $GF180_ROOT
+    set pdk_xschemrc [file join $GF180_ROOT $GF180_VARIANT libs.tech xschem xschemrc]
+    if { [file exists $pdk_xschemrc] } {
+        source $pdk_xschemrc
+    } else {
+        puts stderr "xschemrc: $pdk_xschemrc not found; gf180mcu symbols unavailable."
+    }
+}
+
+#### ------------------------------------------------------- repo libraries ---
+#### Re-assert the generic devices library and add this repo's own directories
+#### last, so that sourcing the PDK's xschemrc above cannot drop them.
+set REPO_ROOT [file dirname [file dirname [file normalize [info script]]]]
+
+if { ![info exists XSCHEM_LIBRARY_PATH] } { set XSCHEM_LIBRARY_PATH {} }
+append XSCHEM_LIBRARY_PATH :${XSCHEM_SHAREDIR}/xschem_library/devices
+append XSCHEM_LIBRARY_PATH :[file join $REPO_ROOT design]
+
+# Testbenches live at sim/<experiment-slug>/testbench/ (see sim/README.md).
+foreach tb_dir [glob -nocomplain -type d [file join $REPO_ROOT sim * testbench]] {
+    append XSCHEM_LIBRARY_PATH :$tb_dir
+}
+
+#### Hierarchical-cell symbols live NEXT TO their .sch (design/comparator_dut.sym
+#### beside design/comparator_dut.sch), never in a symbols/ subdirectory: xschem
+#### only descends into a child schematic when the referencing symbol is found at
+#### the same relative path as a same-named .sch, and a symbol filed elsewhere
+#### netlists as an EMPTY subcircuit with no error at all.
+
+#### Start on an empty sheet rather than the PDK's demo top-level.
+set XSCHEM_START_WINDOW {}

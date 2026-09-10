@@ -16,16 +16,27 @@ Four experiments, one per first-class row of
 Metastability and kickback are first-class rows here, not appendices, per
 [`CLAUDE.md`](../CLAUDE.md).
 
-> **Current status: the device under test is a PLACEHOLDER.** This repo's
-> comparator topology is not decided yet — that is
-> [`spec/porting-plan.md`](../spec/porting-plan.md) next step 1, a separate
-> decision record. `sim/dut.json` therefore binds
-> [`sim/dut/placeholder_comparator.spice`](dut/), a deliberately crude stub,
-> and **every record committed so far carries a banner saying its numbers
-> substantiate the harness and not a spec row.** The plumbing is real,
-> exercised, and reproducible; the circuit is not the design. Swapping in the
-> real netlist is a one-line edit of `sim/dut.json` — see
-> [`sim/dut/README.md`](dut/README.md).
+> **Current status: the device under test is a SCHEMATIC.** `sim/dut.json`
+> binds [`design/comparator.spice`](../design/) (`comparator-dr0001`,
+> `provenance: schematic`) — the xschem netlist of the topology
+> [`spec/decision-records/DR-0001-comparator-topology.md`](../spec/decision-records/DR-0001-comparator-topology.md)
+> decides: a static differential preamplifier into a StrongARM latch with
+> isolation inverters and a NOR SR output latch. Records minted against it
+> carry **no** placeholder banner and are real schematic-level measurements.
+>
+> Two limits on what they mean. **The target-specification table in
+> [`README.md`](../README.md#target-specification-draft--engineering-to-ratify)
+> is still DRAFT** — no decision record ratifies it — so a record that meets
+> (or misses) a row is *reference, not verdict*; ratification is
+> [`spec/porting-plan.md`](../spec/porting-plan.md) next step 4. And every
+> record is **schematic-level, with no parasitics**: post-layout extraction
+> can only add capacitance at the preamplifier output (which lowers the
+> measured noise) and at the input (which raises the measured kickback), so
+> the noise numbers are conservative and the kickback numbers are *not*.
+>
+> The earlier `placeholder-v1` records are still in `records/` and still carry
+> their banner — `sim/` is append-only evidence, so nothing was rewritten. See
+> [`sim/dut/README.md`](dut/README.md) for the binding contract.
 
 ## Cold start
 
@@ -83,7 +94,7 @@ under it).
 | open_pdks | `c6d73a35f524070e85faff4a6a9eef49553ebc2b` | **exact** — the hash *is* the device models |
 | ngspice | ≥ 46 (major) | floor |
 | Python | ≥ 3.9 | floor |
-| xschem | 3.4.7 | recorded only — nothing here invokes xschem until `design/` has a schematic |
+| xschem | 3.4.7 | recorded only — `--check-env` reports the installed version but does not gate on it. `./design/netlist.sh` is what invokes xschem, and it runs outside the corner runner |
 
 PDK variant: **gf180mcuD**, set in [`sim/pdk.json`](pdk.json).
 
@@ -127,8 +138,8 @@ sim/<experiment-slug>/
 Every record states, in its header, everything needed to judge or reproduce
 it:
 
-- the **claim** it substantiates (or, today, that it substantiates the
-  harness and not a spec row);
+- the **claim** it substantiates — and, while `README.md`'s table is DRAFT,
+  that a row met or missed there is reference rather than verdict;
 - the **DUT** — id, provenance (`placeholder` / `schematic` / `extracted`),
   path and sha256;
 - the **testbench** fragment and manifest sha256s;

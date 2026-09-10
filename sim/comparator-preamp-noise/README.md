@@ -104,9 +104,20 @@ conservative direction" convention for the routing allowance.
 
 | record | DUT | grid | verdict |
 |---|---|---|---|
+| [`20260910-125200-4805118`](records/20260910-125200-4805118.md) | `comparator-dr0001` (**schematic**) | 45/45, `mos` × 3 T × 3 V | PASS |
 | [`20260909-055524-e2bb637`](records/20260909-055524-e2bb637.md) | `placeholder-v1` (**placeholder**) | 45/45, `mos` × 3 T × 3 V | PASS |
 
-**Read the banner on that record.** It was taken against the placeholder DUT
-and substantiates the harness, not the noise row. It is also the record the
-`av_dc` per-axis floors are calibrated from (observed weakest slices: process
-32.57 %, temperature 44.55 %).
+The first row is the current reference: taken against
+[DR-0001](../../spec/decision-records/DR-0001-comparator-topology.md)'s
+static preamp + StrongARM latch, no placeholder banner. `vn_in_uv` is
+91.25 µV rms at nominal, 128.8 µV rms worst-case — comfortably inside both
+the README ≤ 1.0 mV target and the ≤ 0.6 mV stretch (reference against a
+still-DRAFT row, not a verdict). The `av_dc` per-axis floors (calibrated
+against the placeholder DUT, below) held on the real schematic with margin
+and were not recalibrated.
+
+**Read the banner on the placeholder row.** It was taken against the
+placeholder DUT and substantiates the harness, not the noise row; it stays
+committed as append-only evidence but is superseded as the current
+reference. It is also the record the `av_dc` per-axis floors are calibrated
+from (observed weakest slices: process 32.57 %, temperature 44.55 %).

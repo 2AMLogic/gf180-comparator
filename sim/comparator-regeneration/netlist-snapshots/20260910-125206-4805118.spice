@@ -1,0 +1,231 @@
+* Netlist snapshot for record 20260910-125206-4805118 -- exactly what was simulated.
+* DUT: comparator-dr0001 (schematic), design/comparator.spice
+* Testbench: sim/comparator-regeneration/testbench/tb_regeneration.spice
+* ---------------- DUT NETLIST ----------------
+* ===========================================================================
+* GENERATED FILE -- do not edit. Regenerate with:  ./design/netlist.sh
+*
+* Source of truth: design/comparator.sch and the cells below it
+*   design/comparator_dut.sch        -> .subckt comparator_dut
+*   design/comparator_dut_analog.sch -> .subckt comparator_dut_analog
+*   design/comparator_dut_latch.sch  -> .subckt comparator_dut_latch
+*
+* Topology, sizing and the gm/ID rows every device is cited against:
+*   spec/decision-records/DR-0001-comparator-topology.md
+*
+* Interface contract (pin names and ORDER) : sim/dut/README.md
+* Bound into the corner runner by          : sim/dut.json
+*
+* This file deliberately contains no .include / .lib / .temp / .control /
+* .endc / .end: the harness supplies the models, the corner .lib sections,
+* the temperature and the control block for every PVT point it composes.
+* ===========================================================================
+** sch_path: design/comparator.sch
+
+* expanding   symbol:  comparator_dut.sym # of pins=8
+** sym_path: design/comparator_dut.sym
+** sch_path: design/comparator_dut.sch
+.subckt comparator_dut vinp vinn clk ibias dout doutb vdd vss
+
+*.ipin vinp
+*.ipin vinn
+*.ipin clk
+*.ipin ibias
+*.opin dout
+*.opin doutb
+*.iopin vdd
+*.iopin vss
+XA vinp vinn ibias aop aon vdd vss comparator_dut_analog
+XL aop aon clk dout doutb vdd vss comparator_dut_latch
+.ends
+
+* expanding   symbol:  comparator_dut_analog.sym # of pins=7
+** sym_path: design/comparator_dut_analog.sym
+** sch_path: design/comparator_dut_analog.sch
+.subckt comparator_dut_analog vinp vinn ibias aop aon vdd vss
+
+*.ipin vinp
+*.ipin vinn
+*.ipin ibias
+*.opin aop
+*.opin aon
+*.iopin vdd
+*.iopin vss
+XMB ibias ibias vss vss nfet_03v3 L=4u W=5u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XMT atail ibias vss vss nfet_03v3 L=4u W=10u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XMIP aon vinp atail vss nfet_03v3 L=2u W=30u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XMIN aop vinn atail vss nfet_03v3 L=2u W=30u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XRN aon vdd vss ppolyf_u_1k r_width=1u r_length=120u m=1
+XRP aop vdd vss ppolyf_u_1k r_width=1u r_length=120u m=1
+.ends
+
+* expanding   symbol:  comparator_dut_latch.sym # of pins=7
+** sym_path: design/comparator_dut_latch.sym
+** sch_path: design/comparator_dut_latch.sch
+.subckt comparator_dut_latch inp inn clk dout doutb vdd vss
+
+*.ipin inp
+*.ipin inn
+*.ipin clk
+*.opin dout
+*.opin doutb
+*.iopin vdd
+*.iopin vss
+XMTL ltail clk vss vss nfet_03v3 L=0.5u W=16u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XM1 mn inp ltail vss nfet_03v3 L=0.5u W=8u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XM2 mp inn ltail vss nfet_03v3 L=0.5u W=8u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XM3 qn qp mn vss nfet_03v3 L=0.5u W=6u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XM4 qp qn mp vss nfet_03v3 L=0.5u W=6u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XM5 qn qp vdd vdd pfet_03v3 L=0.5u W=6u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XM6 qp qn vdd vdd pfet_03v3 L=0.5u W=6u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XM7 qn clk vdd vdd pfet_03v3 L=0.5u W=4u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XM8 qp clk vdd vdd pfet_03v3 L=0.5u W=4u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XM9 mn clk vdd vdd pfet_03v3 L=0.5u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XM10 mp clk vdd vdd pfet_03v3 L=0.5u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XIP1 sp qp vdd vdd pfet_03v3 L=0.5u W=5u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XIN1 sp qp vss vss nfet_03v3 L=0.5u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XIP2 sn qn vdd vdd pfet_03v3 L=0.5u W=5u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XIN2 sn qn vss vss nfet_03v3 L=0.5u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XA1P na sp vdd vdd pfet_03v3 L=0.5u W=10u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XA2P dout doutb na vdd pfet_03v3 L=0.5u W=10u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XA1N dout sp vss vss nfet_03v3 L=0.5u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XA2N dout doutb vss vss nfet_03v3 L=0.5u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XB1P nb sn vdd vdd pfet_03v3 L=0.5u W=10u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XB2P doutb dout nb vdd pfet_03v3 L=0.5u W=10u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XB1N doutb sn vss vss nfet_03v3 L=0.5u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+XB2N doutb dout vss vss nfet_03v3 L=0.5u W=2u nf=1 ad='int((nf+1)/2) * W/nf * 0.18u' as='int((nf+2)/2) * W/nf * 0.18u' pd='2*int((nf+1)/2) * (W/nf + 0.18u)'
++ ps='2*int((nf+2)/2) * (W/nf + 0.18u)' nrd='0.18u / W' nrs='0.18u / W' sa=0 sb=0 sd=0 m=1
+.ends
+
+* ---------------- TESTBENCH FRAGMENT ----------------
+* tb_regeneration -- decision time versus input overdrive, the regeneration
+* time constant tau extracted from it, and the switching energy per decision.
+*
+* Netlist FRAGMENT. The harness supplies the models, the corner .lib
+* sections, .temp, the DUT netlist, the .control block and .end
+* (sim/harness/README.md). Parameters from the harness: vdd_val, vdd_nom,
+* temp_c, dut_ib, dut_vcm.
+*
+* METHODOLOGY PORTED FROM gf180-sar-adc/sim/comparator-regeneration/ -- see
+* this experiment's README.md for the full transfer/non-transfer list.
+*
+* WHAT THIS ANSWERS
+*
+* 1. Is the decision complete inside the budget at the WORST PVT corner,
+*    rather than at a typical-corner estimate? README.md's decision-time row
+*    is stated at 50 mV overdrive, so 50 mV is the primary rung of the
+*    ladder below.
+*
+* 2. The regeneration time constant tau, EXTRACTED rather than assumed. A
+*    regenerative latch resolves in t = t0 + tau*ln(V_logic/(A_v*V_in)), so
+*    the delay difference between two KNOWN overdrives gives tau directly:
+*        tau = (t(V_small) - t(V_large)) / ln(V_large/V_small)
+*    Everything downstream -- the metastability window, the minimum
+*    resolvable input in a given time budget -- is computed from tau, so tau
+*    is the quantity that must be measured, not the delay at one overdrive.
+*    That makes metastability a FIRST-CLASS ROW of this bench, per CLAUDE.md,
+*    rather than an afterthought: td_od01 is deliberately an overdrive small
+*    enough to sit inside the near-metastable region.
+*
+* 3. Switching energy per decision and the static current, for the power row.
+*
+* THE OVERDRIVE LADDER (standalone; no CDAC and no LSB to inherit).
+*   dv_big   50 mV    the overdrive README.md's decision-time row is stated at
+*   dv_mid    1 mV    a small overdrive, deep in the logarithmic regime
+*   dv_tiny   0.1 mV  ~1 decade smaller again: the tau lever arm, and a
+*                     near-metastable probe
+* tau is extracted from the (mid, tiny) pair because both are inside the
+* logarithmic region; the 50 mV rung is large-signal and sets t0.
+*
+* EVERY INSTANCE DECIDES BOTH WAYS, AND THAT IS WHAT MAKES THE MEASUREMENT
+* ROBUST. Each input is a PWL that is NEGATIVE for the first strobe and
+* POSITIVE for the second. The delay is therefore measured on a strobe where
+* the output must actively flip a latch holding the OPPOSITE answer, so it
+* cannot depend on which state the output happened to start in. (An earlier
+* revision of the sibling repo's deck strobed a static input from a
+* `.nodeset`-hinted start state and failed at every cold corner, because the
+* operating point sometimes converged to the very state the decision was
+* supposed to produce and the output never transitioned. A measurement whose
+* validity depends on an initial guess is not a measurement.)
+*
+* TIMING THRESHOLDS ARE SUPPLY-NORMALIZED. Every delay triggers on a node
+* divided by its own supply and crossed at 0.5 (the Bclkn/Bd*n sources
+* below). A fixed absolute threshold would turn the +/-10 % supply axis into
+* a measurement artefact.
+*
+* MISMATCH IS OFF (PDK default sw_stat_mismatch = 0), deliberately.
+* Regeneration time and offset are separable and are budgeted separately:
+* offset shifts the input at which the decision flips (measured in
+* sim/comparator-offset-mc/), while tau sets how fast a given overdrive
+* resolves. Combining them in one deck would make neither attributable.
+
+.param dv_big=50m
+.param dv_mid=1m
+.param dv_tiny=0.1m
+.param t_flip=20n
+.param c_route=10f
+
+* ---- supplies --------------------------------------------------------
+* Instance A gets its own supply so its switching charge can be integrated
+* without the other two instances' current in the same integral.
+vsup  vdd  0 dc {vdd_val}
+vsupa vdda 0 dc {vdd_val}
+
+* ---- clock: two strobes, decision measured on the second ---------------
+vclk clk 0 pulse(0 {vdd_val} 10n 100p 100p 10n 30n)
+
+* ---- common mode -----------------------------------------------------
+vcm cm 0 dc {dut_vcm}
+
+* ---- A: 50 mV overdrive, on its own supply ---------------------------
+vsa  sa 0 pwl(0 {-dv_big} {t_flip} {-dv_big} {t_flip+1n} {dv_big})
+Eapa apa cm sa 0 0.5
+Eana ana cm sa 0 -0.5
+iba  vdda ibna dc {dut_ib}
+Xa   apa ana clk ibna douta doutba vdda 0 comparator_dut
+
+* ---- B: 1 mV overdrive ------------------------------------------------
+vsb  sb 0 pwl(0 {-dv_mid} {t_flip} {-dv_mid} {t_flip+1n} {dv_mid})
+Eapb apb cm sb 0 0.5
+Eanb anb cm sb 0 -0.5
+ibb  vdd ibnb dc {dut_ib}
+Xb   apb anb clk ibnb doutb doutbb vdd 0 comparator_dut
+
+* ---- C: 0.1 mV overdrive (tau lever arm / metastability probe) --------
+vsc  sc 0 pwl(0 {-dv_tiny} {t_flip} {-dv_tiny} {t_flip+1n} {dv_tiny})
+Eapc apc cm sc 0 0.5
+Eanc anc cm sc 0 -0.5
+ibc  vdd ibnc dc {dut_ib}
+Xc   apc anc clk ibnc doutc doutbc vdd 0 comparator_dut
+
+* ---- supply-normalized probes ----------------------------------------
+Bclkn clkn 0 v = 'v(clk)/v(vdd)'
+Bdan  dan  0 v = 'v(douta)/v(vdda)'
+Bdbn  dbn  0 v = 'v(doutb)/v(vdd)'
+Bdcn  dcn  0 v = 'v(doutc)/v(vdd)'
