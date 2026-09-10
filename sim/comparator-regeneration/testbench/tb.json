@@ -1,7 +1,7 @@
 {
   "name": "comparator-regeneration",
   "description": "Decision time versus input overdrive over PVT at 50 mV / 1 mV / 0.1 mV, the regeneration time constant tau extracted from the two small rungs, the near-metastable behaviour at 0.1 mV, and the switching energy and static current per decision.",
-  "claim": "HARNESS PLUMBING ONLY while sim/dut.json binds a placeholder. Once a real design/ netlist is bound, this bench substantiates README.md#target-specification's Decision-time-vs-overdrive row (<= 1.5 ns at 50 mV overdrive, 3.3 V; <= 0.8 ns stretch) and supplies the tau that any metastability statement in this repo is computed from.",
+  "claim": "REFERENCE, NOT VERDICT. sim/dut.json binds design/comparator.spice (id comparator-dr0001, provenance schematic -- topology per spec/decision-records/DR-0001-comparator-topology.md). This bench measures README.md#target-specification's Decision-time-vs-overdrive row (<= 1.5 ns at 50 mV overdrive, 3.3 V; <= 0.8 ns stretch) and supplies the tau that any metastability statement in this repo is computed from -- but that row is still DRAFT -- no decision record ratifies it -- so a measured pass or miss here is same-PDK/same-design context for the eventual ratification, not a pass/fail claim against a ratified spec.",
   "netlist": "tb_regeneration.spice",
   "nominal_supply_v": 3.3,
   "supply_tolerance": 0.1,
@@ -16,9 +16,9 @@
   "analyses": [
     "tran 5p 60n",
     "meas tran vsup_v find v(vdd) at=25n",
-    "meas tran td_a trig v(clkn) val=0.5 rise=2 targ v(dan) val=0.5 rise=1",
-    "meas tran td_b trig v(clkn) val=0.5 rise=2 targ v(dbn) val=0.5 rise=1",
-    "meas tran td_c trig v(clkn) val=0.5 rise=2 targ v(dcn) val=0.5 rise=1",
+    "meas tran td_a trig v(clkn) val=0.5 rise=2 targ v(dan) val=0.5 rise=1 td=35n",
+    "meas tran td_b trig v(clkn) val=0.5 rise=2 targ v(dbn) val=0.5 rise=1 td=35n",
+    "meas tran td_c trig v(clkn) val=0.5 rise=2 targ v(dcn) val=0.5 rise=1 td=35n",
     "meas tran da_first find v(dan) at=18n",
     "meas tran db_first find v(dbn) at=18n",
     "meas tran dc_first find v(dcn) at=18n",
@@ -100,7 +100,8 @@
       "METASTABILITY IS A FIRST-CLASS ROW HERE, not a note. tau and resolve_decades are recorded at every PVT point precisely so that any metastability statement this repo makes is computed from a measured time constant at the worst corner rather than asserted from a typical-corner delay.",
       "e_dec_fj CARRIES NO CHECK, DELIBERATELY. The placeholder DUT's decision stage is behavioural and draws no supply current at all, so the switching energy measured here is the FRONT END's alone and what remains of the charge integral is dominated by numerical residue (it moves over three orders of magnitude across the grid, which is a property of the integral, not of the circuit). Rather than invent a floor that would pass for the wrong reason, the number is recorded and left unchecked; a check belongs here the moment a transistor-level decision stage is bound in sim/dut.json.",
       "THE 20 ns INPUT-FLIP INSTANT IS NOT ARBITRARY. The front end's output pole is roughly (load resistance x load capacitance); flipping the input 20 ns before the second strobe leaves it more than ten time constants to settle, so the decision is taken on a settled overdrive rather than on a transient. A bench that strobed too soon would report the settling time, not the regeneration time.",
-      "SOLVER TOLERANCES. reltol = 1e-4 and vntol = 1e-9 are tightened from the ngspice defaults so that a sub-nanosecond delay difference between two overdrives is resolved rather than smeared. abstol is 1e-13 and NOT the 1e-15 the kickback deck uses: at 1e-15 six of the 45 points of this grid fail to take their first transient step at all (`Timestep too small ... trouble with node eanc#branch`, at t < 1e-13 s), because the three PWL-driven controlled sources here present branch currents far below that floor at t = 0. A re-run that changes any of these three is not bit-comparable with this record."
+      "SOLVER TOLERANCES. reltol = 1e-4 and vntol = 1e-9 are tightened from the ngspice defaults so that a sub-nanosecond delay difference between two overdrives is resolved rather than smeared. abstol is 1e-13 and NOT the 1e-15 the kickback deck uses: at 1e-15 six of the 45 points of this grid fail to take their first transient step at all (`Timestep too small ... trouble with node eanc#branch`, at t < 1e-13 s), because the three PWL-driven controlled sources here present branch currents far below that floor at t = 0. A re-run that changes any of these three is not bit-comparable with this record.",
+      "THE TARG SEARCHES START AT td=35n, AND THAT IS LOAD-BEARING, NOT COSMETIC. A real comparator's output SR latch is a bistable with NO defined power-up state: at t = 0 its DC operating point can be the metastable one, and the transient then resolves it to whichever rail numerical asymmetry picks, typically within the first few nanoseconds. That resolution is a legitimate 0.5-crossing, so an unwindowed `targ ... rise=1` locks onto it instead of onto the decision under test and reports a NEGATIVE delay (observed: -38.2 ns) on whichever instances happened to resolve upward. 35 ns is after the first strobe has completed and after the 20-21 ns input flip has settled, and before the second strobe at 40 ns, so the window contains exactly the transition this bench says it measures ('THE DELAY IS MEASURED ON THE SECOND STROBE'). It relaxes no bound -- td_od50_ns's envelope, the per-axis floors and the dout_*_first/dout_*_end polarity pair are all unchanged. gf180-sar-adc's equivalent deck carries the identical idiom (td=71n against a strobe at 72.5 ns) for the identical reason. Records written before this change (the placeholder-DUT record named in this experiment's README.md) used an unwindowed search and are therefore not bit-comparable with records written after it -- the placeholder's behavioural decision stage starts from a defined output state, so its numbers were unaffected either way."
     ]
   },
   "options": [

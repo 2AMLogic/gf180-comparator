@@ -1,0 +1,34 @@
+v {xschem version=3.4.7 file_version=1.2
+* comparator_dut_latch -- StrongARM latch + isolation inverters + NOR SR
+* output latch (DR-0001).
+* Pin order is the sim/dut/README.md contract: inp inn clk dout doutb vdd vss.
+}
+G {}
+K {type=subcircuit
+format="@spiceprefix@name @pinlist comparator_dut_latch"
+template="name=x1
+spiceprefix=X"
+}
+V {}
+S {}
+E {}
+L 4 -110 -150 110 -150 {}
+L 4 -110 150 110 150 {}
+L 4 -110 -150 -110 150 {}
+L 4 110 -150 110 150 {}
+B 5 -112.5 -92.5 -107.5 -87.5 {name=inp dir=in pinnumber=1}
+B 5 -112.5 -32.5 -107.5 -27.5 {name=inn dir=in pinnumber=2}
+B 5 -112.5 27.5 -107.5 32.5 {name=clk dir=in pinnumber=3}
+B 5 107.5 -92.5 112.5 -87.5 {name=dout dir=out pinnumber=4}
+B 5 107.5 -32.5 112.5 -27.5 {name=doutb dir=out pinnumber=5}
+B 5 107.5 27.5 112.5 32.5 {name=vdd dir=inout pinnumber=6}
+B 5 107.5 87.5 112.5 92.5 {name=vss dir=inout pinnumber=7}
+T {inp} -105 -95 0 0 0.2 0.2 {}
+T {inn} -105 -35 0 0 0.2 0.2 {}
+T {clk} -105 25 0 0 0.2 0.2 {}
+T {dout} 105 -95 0 1 0.2 0.2 {}
+T {doutb} 105 -35 0 1 0.2 0.2 {}
+T {vdd} 105 25 0 1 0.2 0.2 {}
+T {vss} 105 85 0 1 0.2 0.2 {}
+T {@name} -110 -158 0 0 0.2 0.2 {}
+T {comparator_dut_latch} -98 -4 0 0 0.2 0.2 {}

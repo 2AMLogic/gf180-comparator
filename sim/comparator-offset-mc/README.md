@@ -90,9 +90,22 @@ the record" discipline.
 
 | record | DUT | grid | verdict |
 |---|---|---|---|
+| [`20260910-000212-3383e41`](records/20260910-000212-3383e41.md) | `comparator-dr0001` (**schematic**) | 45/45, `mos` × 3 T × 3 V | PASS |
 | [`20260909-055500-e2bb637`](records/20260909-055500-e2bb637.md) | `placeholder-v1` (**placeholder**) | 45/45, `mos` × 3 T × 3 V | PASS |
 
-**Read the banner on that record.** It was taken against the placeholder DUT
-and substantiates the harness, not the offset row. It is also the record the
-`vbias_anchor_mv` per-axis floors are calibrated from (observed weakest
-slices: process 27.35 %, temperature 14.76 %).
+The first row is the current reference: taken against
+[DR-0001](../../spec/decision-records/DR-0001-comparator-topology.md)'s
+static preamp + StrongARM latch, no placeholder banner, 3σ = 2.80 mV at
+nominal (well inside the README ≤ 15 mV target / ≤ 8 mV stretch, reference
+against a still-DRAFT row, not a verdict). It is also the record the
+`vbias_anchor_mv` per-axis floors are now calibrated from (observed weakest
+slices: process 23.55 %, temperature 1.282 %).
+
+**Read the banner on the placeholder row.** It was taken against the
+placeholder DUT and substantiates the harness, not the offset row; it stays
+committed as append-only evidence but is superseded as the current
+reference. It is the record the `vbias_anchor_mv` per-axis floors were
+*originally* calibrated from (observed weakest slices: process 27.35 %,
+temperature 14.76 %) — the temperature floor did not transfer to the real
+schematic's bias node and was recalibrated (see this experiment's `tb.json`
+`vbias_anchor_mv` check description).

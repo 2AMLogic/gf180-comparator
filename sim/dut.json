@@ -13,16 +13,17 @@
     "              all four benches bias the DUT identically without each",
     "              re-stating the numbers"
   ],
-  "netlist": "dut/placeholder_comparator.spice",
-  "id": "placeholder-v1",
-  "provenance": "placeholder",
-  "description": "Harness-exercising placeholder: a crude resistively-loaded NMOS differential front end plus a behavioural regenerative latch. NOT a design candidate and NOT a topology proposal -- see sim/dut/README.md.",
+  "netlist": "../design/comparator.spice",
+  "id": "comparator-dr0001",
+  "provenance": "schematic",
+  "description": "DR-0001 topology: a resistively-loaded NMOS differential preamplifier (comparator_dut_analog) feeding a StrongARM latch with isolation inverters and a NOR SR output latch (comparator_dut_latch). See spec/decision-records/DR-0001-comparator-topology.md for the sizing rationale and design/README.md for the xschem source and netlisting command.",
   "params": {
     "dut_ib": 1e-05,
-    "dut_vcm": 1.2
+    "dut_vcm": 1.65
   },
   "notes": [
     "dut_ib is the tail-mirror reference current forced into the `ibias` pin.",
-    "dut_vcm is the input common mode the front end is specified at. It is a property of the DUT, not of any one testbench, so it lives here."
+    "dut_vcm is the input common mode the front end is specified at. It is a property of the DUT, not of any one testbench, so it lives here.",
+    "1.65 V is mid-rail (VDD/2 at the nominal 3.3 V supply) -- there is no CDAC or other driving circuit to inherit a common mode from here, so mid-rail is the natural standalone choice; DR-0001 states this explicitly."
   ]
 }

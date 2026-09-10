@@ -100,16 +100,31 @@ merely restating it.
 
 | record | DUT | grid | verdict |
 |---|---|---|---|
+| [`20260910-000606-3383e41`](records/20260910-000606-3383e41.md) | `comparator-dr0001` (**schematic**) | 45/45, `mos` × 3 T × 3 V | PASS |
 | [`20260909-055539-e2bb637`](records/20260909-055539-e2bb637.md) | `placeholder-v1` (**placeholder**) | 45/45, `mos` × 3 T × 3 V | PASS |
 
-**Read the banner on that record.** It was taken against the placeholder DUT
-and substantiates the harness, not the kickback row. It is also the record
-the `kick_1k_peak_mv` per-axis floors are calibrated from (observed weakest
-slices: process 34.76 %, temperature 3.34 %, supply 15.25 %).
+The first row is the current reference: taken against
+[DR-0001](../../spec/decision-records/DR-0001-comparator-topology.md)'s
+static preamp + StrongARM latch, no placeholder banner. `kick_1k_peak_mv` is
+7.60 mV at nominal, 4.53–10.01 mV across the grid — **misses** the README
+≤ 5 mV target at most corners and the ≤ 2 mV stretch everywhere (reference
+against a still-DRAFT row, not a verdict; DR-0001's Consequences section
+names this as the gap most likely to need revisiting first, and it is not
+retuned here per `sim/README.md`'s rule against relaxing a check to make a
+result pass). It is also the record the `kick_1k_peak_mv` per-axis floors
+are now calibrated from (observed weakest slices: process 15.34 %,
+temperature 2.461 %, supply 30.1 %).
 
-**Placeholder caveat.** The coupling from the placeholder's decision stage
-back to its front end is an explicit 5 fF/side stand-in for a real latch
-input pair's `C_gd`, declared in
-[`sim/dut/placeholder_comparator.spice`](../dut/placeholder_comparator.spice),
-not an extracted capacitance. The numbers exercise the measurement path end
-to end; they characterise no real topology.
+**Read the banner on the placeholder row.** It was taken against the
+placeholder DUT and substantiates the harness, not the kickback row; it
+stays committed as append-only evidence but is superseded as the current
+reference. It is the record the `kick_1k_peak_mv` per-axis floors were
+*originally* calibrated from (observed weakest slices: process 34.76 %,
+temperature 3.34 %, supply 15.25 %) — the process floor did not transfer to
+the real schematic's input pair and was recalibrated (see this experiment's
+`tb.json` `kick_1k_peak_mv` check description). The coupling from the
+placeholder's decision stage back to its front end was an explicit 5 fF/side
+stand-in for a real latch input pair's `C_gd`, declared in
+[`sim/dut/placeholder_comparator.spice`](../dut/placeholder_comparator.spice);
+the schematic row above couples through the real input pair's `C_gd`
+(`comparator_dut_analog`'s `XMIP`/`XMIN`) instead.

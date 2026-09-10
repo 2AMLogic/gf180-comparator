@@ -1,0 +1,36 @@
+v {xschem version=3.4.7 file_version=1.2
+* comparator_dut -- the full clocked comparator of DR-0001.
+* Pin order is the sim/dut/README.md contract:
+*   vinp vinn clk ibias dout doutb vdd vss
+}
+G {}
+K {type=subcircuit
+format="@spiceprefix@name @pinlist comparator_dut"
+template="name=x1
+spiceprefix=X"
+}
+V {}
+S {}
+E {}
+L 4 -120 -150 120 -150 {}
+L 4 -120 150 120 150 {}
+L 4 -120 -150 -120 150 {}
+L 4 120 -150 120 150 {}
+B 5 -122.5 -92.5 -117.5 -87.5 {name=vinp dir=in pinnumber=1}
+B 5 -122.5 -32.5 -117.5 -27.5 {name=vinn dir=in pinnumber=2}
+B 5 -122.5 27.5 -117.5 32.5 {name=clk dir=in pinnumber=3}
+B 5 -122.5 87.5 -117.5 92.5 {name=ibias dir=in pinnumber=4}
+B 5 117.5 -92.5 122.5 -87.5 {name=dout dir=out pinnumber=5}
+B 5 117.5 -32.5 122.5 -27.5 {name=doutb dir=out pinnumber=6}
+B 5 117.5 27.5 122.5 32.5 {name=vdd dir=inout pinnumber=7}
+B 5 117.5 87.5 122.5 92.5 {name=vss dir=inout pinnumber=8}
+T {vinp} -115 -95 0 0 0.2 0.2 {}
+T {vinn} -115 -35 0 0 0.2 0.2 {}
+T {clk} -115 25 0 0 0.2 0.2 {}
+T {ibias} -115 85 0 0 0.2 0.2 {}
+T {dout} 115 -95 0 1 0.2 0.2 {}
+T {doutb} 115 -35 0 1 0.2 0.2 {}
+T {vdd} 115 25 0 1 0.2 0.2 {}
+T {vss} 115 85 0 1 0.2 0.2 {}
+T {@name} -120 -158 0 0 0.2 0.2 {}
+T {comparator_dut} -108 -4 0 0 0.2 0.2 {}

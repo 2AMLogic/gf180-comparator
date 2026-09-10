@@ -95,12 +95,25 @@ current and switching energy from the same deck.
 
 | record | DUT | grid | verdict |
 |---|---|---|---|
+| [`20260910-000418-3383e41`](records/20260910-000418-3383e41.md) | `comparator-dr0001` (**schematic**) | 45/45, `mos` × 3 T × 3 V | PASS |
 | [`20260909-055524-e2bb637`](records/20260909-055524-e2bb637.md) | `placeholder-v1` (**placeholder**) | 45/45, `mos` × 3 T × 3 V | PASS |
 
-**Read the banner on that record.** It was taken against the placeholder DUT
-and substantiates the harness, not the decision-time row. It is also the
-record the `td_od50_ns` per-axis floors are calibrated from (observed weakest
-slices: process 15.16 %, temperature 20.05 %).
+The first row is the current reference: taken against
+[DR-0001](../../spec/decision-records/DR-0001-comparator-topology.md)'s
+static preamp + StrongARM latch, no placeholder banner. `td_od50_ns` is
+0.708 ns at nominal, 1.237 ns worst-case at `ss_125c_2.97v` — meets the
+README ≤ 1.5 ns target at every corner, misses the ≤ 0.8 ns stretch at the
+slow/hot/low-supply corner (reference against a still-DRAFT row, not a
+verdict; not retuned here). The `td_od50_ns` per-axis floors (calibrated
+against the placeholder DUT, below) held on the real schematic with margin
+and were not recalibrated.
+
+**Read the banner on the placeholder row.** It was taken against the
+placeholder DUT and substantiates the harness, not the decision-time row; it
+stays committed as append-only evidence but is superseded as the current
+reference. It is also the record the `td_od50_ns` per-axis floors are
+calibrated from (observed weakest slices: process 15.16 %, temperature
+20.05 %).
 
 ### Two placeholder-specific caveats on that record
 
