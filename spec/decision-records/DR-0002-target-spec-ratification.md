@@ -93,7 +93,7 @@ to make a result pass.
 |---|---|---|---|---|---|
 | Offset sigma | ≤ 15 mV 3σ | ≤ 8 mV 3σ | 3σ = 2.80 mV | 2.796–2.807 mV 3σ across all 45 corners | **meets target and stretch at every corner** |
 | Input-referred noise | ≤ 1.0 mV rms | ≤ 0.6 mV rms | 91.25 µV rms (0.0913 mV) | 66.8–128.8 µV rms (0.0668–0.1288 mV) across all 45 corners | **meets target and stretch at every corner** |
-| Decision time (50 mV overdrive) | ≤ 1.5 ns | ≤ 0.8 ns | 0.708 ns | 0.498–1.237 ns across all 45 corners | **meets target at every corner (45/45); misses stretch at 16/45 corners**, worst case 1.237 ns at `ss_125c_2.97v` |
+| Decision time (50 mV overdrive) | ≤ 1.5 ns | ≤ 0.8 ns | 0.708 ns | 0.464–1.237 ns across all 45 corners | **meets target at every corner (45/45); misses stretch at 16/45 corners**, worst case 1.237 ns at `ss_125c_2.97v` |
 | Kickback into 1 kΩ | ≤ 5 mV | ≤ 2 mV | 7.60 mV | 4.53–10.01 mV across all 45 corners | **misses target at 44/45 corners** (only `ss_-40c_2.97v` at 4.528 mV clears ≤ 5 mV); **misses stretch at 45/45 corners** (best case 4.528 mV still exceeds 2 mV) |
 | Supply / power | ≤ 1 mW avg | ≤ 500 µW avg | 28.4 µA → ≈ 94 µW | 27.7–29.7 µA → ≈ 82–108 µW across all 45 corners | **meets target and stretch at every corner** |
 
@@ -172,7 +172,7 @@ rejecting or amending this PR rather than accepting it as drafted.
 1.237 ns at `ss_125c_2.97v` — the target is met at all 45/45 corners; the
 stretch bound is missed at 16/45 corners (all slow-process and/or
 high-temperature/low-supply: `tt_125c_*`, `ff_125c_2.97v`, `ss_-40c_2.97v`,
-`ss_27c_2.97v`/`3.30v`, `ss_125c_*`, `fs_125c_*`, `sf_27c_2.97v`,
+`ss_27c_2.97v`/`3.30v`, `ss_125c_*`, `fs_125c_2.97v`/`3.30v`, `sf_27c_2.97v`,
 `sf_125c_*` — see `sim/comparator-regeneration/records/20260910-125206-4805118.md`
 for the full per-corner table).
 - **Option A — accept the gap, record it as known.** Ratify ≤ 1.5 ns / ≤ 0.8 ns
@@ -220,7 +220,7 @@ revisiting first.
   (≤ 1.5 ns target / ≤ 0.8 ns stretch at 50 mV overdrive) — ratified as
   measured (no value change), **with a known gap**:
   `sim/comparator-regeneration/records/20260910-125206-4805118.md` reports
-  0.708 ns at nominal, 0.498–1.237 ns across the 45-point grid — meets target
+  0.708 ns at nominal, 0.464–1.237 ns across the 45-point grid — meets target
   at 45/45 corners, misses stretch at 16/45 corners (worst case 1.237 ns at
   `ss_125c_2.97v`). See "Tradeoff: decision time and kickback" for the two
   options the operator may choose between.
