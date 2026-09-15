@@ -9,9 +9,11 @@ open-source xschem + ngspice flow.
 is a static differential preamplifier into a StrongARM latch, decided and
 sized in [`spec/decision-records/DR-0001-comparator-topology.md`](spec/decision-records/DR-0001-comparator-topology.md)
 and bound into `sim/dut.json` at `provenance: schematic`. The four benches
-below have a first measured result at this sizing; the target-specification
-table is still DRAFT and no decision record has ratified it, so those results
-are reference, not verdict — see the Target specification section below.
+below have a first measured result at this sizing; ratification of the
+target-specification table against those results is proposed in
+[`spec/decision-records/DR-0002-target-spec-ratification.md`](spec/decision-records/DR-0002-target-spec-ratification.md)
+(status: proposed — ratification happens when that record's PR merges, not
+before) — see the Target specification section below.
 
 **Built agent-native.** Every specification, decision record, testbench, and
 line of documentation here is produced by AI agents working from a ratified
@@ -56,9 +58,16 @@ the binding contract. The four benches' new records carry no placeholder
 banner; the earlier placeholder-DUT records remain committed (`sim/` is
 append-only evidence) but are superseded as the current reference.
 
-## Target specification (DRAFT — engineering to ratify)
+## Target specification (ratification proposed via DR-0002)
 
-No decision record has ratified this table yet — these are original
+Ratification of this table against the measured results below is proposed in
+[`spec/decision-records/DR-0002-target-spec-ratification.md`](spec/decision-records/DR-0002-target-spec-ratification.md)
+(`Status: proposed`) — no numeric bound is changed by that record; it only
+proposes ratifying the existing bounds against the first measured result
+against every row. Per the fleet-wide ratification pattern
+([2AMLogic/2am#357](https://github.com/2AMLogic/2am/issues/357)), ratification
+itself happens when that record's PR is approved and merged, not before — the
+table below is treated as DRAFT until then. These are original
 engineering-judgment bounds for the gf180mcu 3.3 V rail, each row stating its
 own basis, not a value inherited from any sibling. See
 [`spec/porting-plan.md`](spec/porting-plan.md) for what *does* transfer
@@ -96,13 +105,20 @@ the Basis column are same-PDK context showing these targets are achievable at
 *some* sizing, not inherited values; this repo's own sizing and measurement
 are original work (see `spec/porting-plan.md`).
 
-**Ratification status.** This table stays **DRAFT** in this pass — no
-decision record is filed for it yet. `spec/README.md` documents when a DR is
-required (whenever this table is set, changed, or scoped) and how to write
-one. See [issue #3](https://github.com/2AMLogic/gf180-comparator/issues/3)
-for the honest artifact-presence checklist this table's DRAFT status feeds
-(full PVT corner sim vs. a *ratified* spec is blocked on this table's
-ratification).
+**Ratification status.** This table stays **DRAFT** until
+[DR-0002](spec/decision-records/DR-0002-target-spec-ratification.md)'s PR is
+approved and merged — the record has been drafted and proposes ratifying
+every row's existing bound against the measured results above (including two
+rows, decision time and kickback, that carry a known gap at some or all PVT
+corners; DR-0002 presents both "accept the gap" and "revise the row" as
+options rather than resolving them), but per
+[2AMLogic/2am#357](https://github.com/2AMLogic/2am/issues/357) the operator's
+PR approval is the ratification act itself, not this drafting step.
+`spec/README.md` documents when a DR is required (whenever this table is set,
+changed, or scoped) and how to write one. See
+[issue #3](https://github.com/2AMLogic/gf180-comparator/issues/3) for the
+honest artifact-presence checklist this table's DRAFT status feeds (full PVT
+corner sim vs. a *ratified* spec is blocked on this table's ratification).
 
 ## License
 
