@@ -1,0 +1,18 @@
+{
+  "engine": "klayout",
+  "layout": {
+    "deck": "gf180mcu",
+    "netlist": "comparator.extracted.spice",
+    "top": "COMPARATOR"
+  },
+  "options": {
+    "flatten_reference": true
+  },
+  "reference": {
+    "deck": "gf180mcu",
+    "form": "subckt-call",
+    "netlist": "../../design/comparator.spice",
+    "top": "comparator_dut"
+  },
+  "schema": "klt.lvs.request/1"
+}
