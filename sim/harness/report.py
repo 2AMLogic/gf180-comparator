@@ -243,10 +243,6 @@ def dirty_paths() -> list[str]:
     return offenders
 
 
-def git_dirty() -> bool:
-    return bool(dirty_paths())
-
-
 def record_id(now: datetime | None = None) -> str:
     now = now or datetime.now(timezone.utc)
     return f"{now.strftime('%Y%m%d-%H%M%S')}-{git_short_sha()}"

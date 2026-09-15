@@ -180,11 +180,3 @@ def find_pdk(variant: str | None = None) -> Pdk:
         "Looked for gf180mcu variant %r in:\n  %s\n\n%s"
         % (variant, "\n  ".join(tried), INSTALL_HINT)
     )
-
-
-def pdk_available(variant: str | None = None) -> bool:
-    try:
-        find_pdk(variant)
-    except PdkNotFound:
-        return False
-    return True
