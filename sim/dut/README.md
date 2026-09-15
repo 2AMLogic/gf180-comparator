@@ -1,42 +1,73 @@
 # `sim/dut/` — the device under test
 
-Every testbench in `sim/` instantiates the DUT; **no testbench contains a
-comparator netlist.** The binding lives in one file, [`sim/dut.json`](../dut.json),
-and the harness (`sim/harness/dut.py`) includes it in every generated deck.
+Every testbench in `sim/` instantiates the DUT. The binding lives in one
+file, [`sim/dut.json`](../dut.json), and the harness (`sim/harness/dut.py`)
+includes it in every generated deck.
 
-Today it points at [`placeholder_comparator.spice`](placeholder_comparator.spice) —
-a deliberately crude stub whose only job is to prove the plumbing runs.
+Today it points at the ratified schematic,
+[`design/comparator.spice`](../../design/comparator.spice) — see "What is
+bound here today" below. The repo also still ships
+[`placeholder_comparator.spice`](placeholder_comparator.spice), the
+deliberately crude stub that originally proved the plumbing ran before a
+topology existed; it is no longer bound but is kept because real records
+were committed against it (see "Placeholder history" below).
 
 ## What is bound here today
 
 | field | value |
 |---|---|
-| `id` | `placeholder-v1` |
-| `provenance` | **`placeholder`** |
-| `netlist` | `sim/dut/placeholder_comparator.spice` |
+| `id` | `comparator-dr0001` |
+| `provenance` | **`schematic`** |
+| `netlist` | `design/comparator.spice` |
 
-`provenance: placeholder` is load-bearing: `sim/harness/report.py` puts a
-banner at the top of **every** record produced under it saying the numbers
-substantiate the harness and not a spec row. A placeholder measurement can
-therefore never be quoted against `README.md`'s target-specification table by
-accident.
+This is [DR-0001](../../spec/decision-records/DR-0001-comparator-topology.md)'s
+topology: a resistively-loaded NMOS differential preamplifier
+(`comparator_dut_analog`) feeding a StrongARM latch with isolation inverters
+and a NOR SR output latch (`comparator_dut_latch`). See
+[`design/README.md`](../../design/README.md) for the xschem source and
+netlisting command.
 
-## Why a placeholder exists at all
+`provenance: schematic` means records minted against this binding carry no
+placeholder banner and are real schematic-level measurements — but they are
+still pre-layout (no parasitics extracted). See [`sim/README.md`](../README.md)
+for what that does and doesn't let you claim against the target-specification
+table.
 
-This repo's comparator topology is not decided. That decision is
-[`spec/porting-plan.md`](../../spec/porting-plan.md) next step 1 and is
-explicitly out of scope for the harness work (issue #5). But the harness
-cannot be *proven* to work without something to simulate — "the four benches
-would run once a design exists" is exactly the kind of untested claim this
-repo's `CLAUDE.md` forbids ("no claim without a testbench").
+## Placeholder history
+
+Before a topology was ratified, this file bound
+[`placeholder_comparator.spice`](placeholder_comparator.spice) instead —
+`id: placeholder-v1`, `provenance: placeholder`. That binding held until
+commit c9bb71a rebound `sim/dut.json` to the real schematic above.
+
+`provenance: placeholder` was load-bearing while it was live:
+`sim/harness/report.py` puts a banner at the top of **every** record produced
+under it saying the numbers substantiate the harness and not a spec row. A
+placeholder measurement can therefore never be quoted against `README.md`'s
+target-specification table by accident. The `placeholder-v1` records minted
+under that binding are still committed in each experiment's `records/`
+directory and still carry that banner — `sim/` is append-only evidence, so
+nothing was rewritten when the binding changed.
+
+### Why a placeholder existed at all
+
+Before DR-0001, this repo's comparator topology was not decided. That
+decision was [`spec/porting-plan.md`](../../spec/porting-plan.md) next step 1
+and was explicitly out of scope for the original harness work (issue #5). But
+the harness could not be *proven* to work without something to simulate —
+"the four benches would run once a design exists" was exactly the kind of
+untested claim this repo's `CLAUDE.md` forbids ("no claim without a
+testbench").
 
 So: a placeholder, loudly labelled, with real records committed against it,
-and a one-line swap to the real design when it lands.
+and a one-line swap to the real design once it landed (which it has — see
+"What is bound here today" above).
 
-**The placeholder is not a topology proposal.** Its front end is a textbook
-resistively-loaded NMOS pair at unconsidered sizing; its decision stage is
-*behavioural* precisely so that it commits to no transistor topology at all.
-Nothing about it should be read as pre-empting the decision record.
+**The placeholder was never a topology proposal.** Its front end is a
+textbook resistively-loaded NMOS pair at unconsidered sizing; its decision
+stage is *behavioural* precisely so that it committed to no transistor
+topology at all. Nothing about it should be read as having pre-empted the
+decision record.
 
 ## Interface contract
 
@@ -94,11 +125,16 @@ analysis). That is a known, named consequence of the topology decision,
 recorded here so the decision record can *weigh* it rather than discover it.
 It is not a reason to fake a front end.
 
-## Swapping in the real design
+## Swapping the binding (e.g. for a future revision or a post-layout run)
 
-1. Commit the netlist (e.g. `design/comparator.spice`, or an xschem-generated
-   netlist) satisfying the contract above.
-2. Edit `sim/dut.json`:
+The procedure below is what already rebound this file from the placeholder
+to `design/comparator.spice` (commit c9bb71a) and is the same procedure for
+any future rebind — a new design revision, or a post-layout extracted
+netlist:
+
+1. Commit the netlist (e.g. a new `design/comparator.spice` revision, or an
+   extracted netlist) satisfying the contract above.
+2. Edit `sim/dut.json`, e.g.:
 
    ```json
    {
@@ -110,9 +146,10 @@ It is not a reason to fake a front end.
    ```
 
 3. `python3 sim/run_corners.py --check-env` — confirms the contract is met.
-4. Re-run the four experiments. The placeholder records stay in `records/`
-   (evidence is append-only) but every new record is stamped
-   `provenance: schematic` and carries no placeholder banner.
+4. Re-run the four experiments. Earlier records stay in `records/`
+   (evidence is append-only) but every new record is stamped with the new
+   `provenance` and carries no placeholder banner (unless rebinding back to
+   the placeholder itself).
 
 For a post-layout run, set `provenance` to `extracted` and point at the
 extracted netlist; the record header distinguishes the two.

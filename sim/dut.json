@@ -1,8 +1,11 @@
 {
   "_comment": [
     "THE DEVICE-UNDER-TEST BINDING. All four experiments instantiate the",
-    "subcircuits this file names; none of them contains a comparator netlist.",
-    "Swapping the placeholder for the ratified design is a one-line edit here.",
+    "subcircuits this file names -- a live, swappable pointer, not a fixed",
+    "record of one netlist. It currently binds design/comparator.spice (see",
+    "netlist/id/provenance below); swapping to a different netlist (e.g. a",
+    "future revision, or back to sim/dut/placeholder_comparator.spice) is",
+    "still a one-line edit here. See sim/dut/README.md for the full contract.",
     "  netlist     path relative to sim/, must satisfy the interface contract",
     "              in sim/dut/README.md (checked at load time by harness/dut.py)",
     "  id          short identifier stamped into every record and deck header",
