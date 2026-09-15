@@ -20,6 +20,7 @@ generator is the reviewable source", are reused here).
 | `gen_comparator.py` | The generator script — the reviewable source of the GDS, not the GDS itself (same rule `gf180-sar-adc/layout/adc-top/README.md` states for its own generated cells). Re-running it reproduces `comparator.gds` byte-for-byte at a fixed `klt` pin. |
 | `comparator.gds` | The composed layout: 27 transistors + 2 `ppolyf_u_1k` load resistors (29 devices total), one flat `COMPARATOR` top cell. |
 | `comparator.gen-compose.json` | The full `klt gen-compose` JSON response — every net's routing status, every leg's `routed`/`reason`, `drc_hints`, `warnings`. This is the routing/connectivity **evidence**, not just a byproduct: read `nets[]`/`unrouted_nets[]` before trusting any claim about what is and is not actually wired in the GDS. |
+| `routing_table.py` | Emits this README's routing-status table mechanically from `comparator.gen-compose.json`'s own `nets[].status` field, so the prose cannot drift from the evidence. `--write` regenerates the table; `--check` exits 1 if the README is stale. |
 
 `layout/_gen/` (per-device `klt gen` blocks + the `gen-compose` request) and
 `layout/comparator.spice` (a `klt extract` scratch artifact) are
@@ -105,17 +106,40 @@ composition's scale (18 nets, several with 5-12 pins -- see
 `docs/cli/gen-compose.md`'s own "Known limitations" section, and the
 friction filed below), not a defect in this script. The committed
 `comparator.gen-compose.json` reports, per net, exactly which legs got real
-drawn Metal1 and which did not (and why -- `legs[].reason`):
+drawn Metal1 and which did not (and why -- `legs[].reason`).
 
-| Outcome | Nets | Meaning |
-|---|---|---|
-| **Fully routed** (9/18) | `ibias`, `atail`, `aon`, `aop`, `vdd`, `clk`, `ltail`, `na`, `nb` | Every pin on the net is joined by real, drawn Metal1 -- including the 11-pin `vdd` supply bundle. |
-| **Partially routed** (9/18) | `vss`, `mn`, `mp`, `qn`, `qp`, `sp`, `sn`, `dout`, `doutb` | At least one pin is still isolated; `comparator.gen-compose.json`'s `nets[].legs[].reason` names the specific rejection (overwhelmingly "same-facing port pair" -- see "Known klt gen-compose limitations hit here" below). |
+**The table below is generated, not transcribed.** It is emitted by
+`layout/routing_table.py` straight from the committed
+`comparator.gen-compose.json`'s own `nets[].status` / `nets[].legs[].routed`
+fields -- regenerate with `python3 layout/routing_table.py --write`, and
+prove it is still in sync with `python3 layout/routing_table.py --check`
+(exit 1 if stale). An earlier hand-written version of this table
+mislabelled six nets, which is why it is machine-derived now.
 
-Overall: **30 of the 65 minimum-spanning-tree legs this design's
-connectivity needs (46%) carry real drawn metal.** `vinp`/`vinn` are
-additionally labelled (not routed, nothing to route to -- each is a single
-gate pin) via `gen-compose`'s `pins[]`.
+<!-- BEGIN generated: python3 layout/routing_table.py --write -->
+
+| Outcome | Nets | MST legs drawn | Meaning |
+|---|---|---|---|
+| **Fully routed** (6/18) | `atail`, `aon`, `vdd`, `ltail`, `na`, `nb` | 19/19 | Every pin on the net is joined by real, drawn Metal1 -- including the 12-pin `vdd` supply bundle. |
+| **Partially routed** (7/18) | `ibias`, `clk`, `mn`, `mp`, `qn`, `sp`, `doutb` | 11/23 | Some legs carry real drawn metal, but at least one pin is still isolated; `nets[].legs[].reason` names the specific rejection (overwhelmingly "same-facing port pair" -- see "Known klt gen-compose limitations hit here" below). |
+| **Not routed at all** (5/18) | `aop`, `vss`, `qp`, `sn`, `dout` | 0/23 | Every attempted leg was rejected (`routed: false`, `route_length_um: null` on the net) -- these nets have NO drawn metal in `comparator.gds` today and are the bulk of the follow-up hand-routing effort. |
+
+Overall: **30 of the 65 minimum-spanning-tree legs this design's connectivity needs (46%) carry real drawn metal.**
+
+<!-- END generated -->
+
+Note what the third row means for reading the rest of this document:
+`aop` -- one of the two preamp-to-latch analog signal nets DR-0001
+describes -- is in it. The drawn GDS today carries `aon`'s preamp-to-latch
+path in real metal but not `aop`'s; both are declared identically in the
+composition's `connectivity[]` (and therefore in the request the generator
+submits), but only one survived the router. Read that asymmetry before
+reasoning about which signal paths are physically connected in this cell:
+the `aop` row of `comparator.gen-compose.json` has `routed: false` and
+`route_length_um: null`, with a rejection `reason` on every leg.
+
+`vinp`/`vinn` are additionally labelled (not routed, nothing to route to --
+each is a single gate pin) via `gen-compose`'s `pins[]`.
 
 **Why this script does not push harder for 100%.** The two things that
 would close most of the remaining gap -- hand-supplied
@@ -149,8 +173,9 @@ The committed `comparator.gds` was independently re-verified clean of any
   single-row placement is structurally a same-facing pair -- the exact case
   `docs/cli/gen-compose.md`'s "Known limitations" section names as needing a
   caller-supplied `waypoints_um`/`legs[]` detour, with no automatic remedy.
-  This is the dominant rejection reason across every partially-routed net
-  above (`qn`/`qp`/`sp`/`sn`/`dout`/`doutb` are all gate-heavy bundle nets).
+  This is the dominant rejection reason across every net the table above
+  reports as partially routed or not routed at all (`qn`/`qp`/`sp`/`sn`/
+  `dout`/`doutb` are all gate-heavy bundle nets).
 - **`routing.cross_block_layer_role` can silently short two unrelated
   nets.** Confirmed by direct A/B test on this exact composition (see
   above) and reproduced generically (no comparator-specific device
