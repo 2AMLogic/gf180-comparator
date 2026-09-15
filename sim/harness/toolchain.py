@@ -27,10 +27,6 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 TOOLCHAIN_JSON = REPO_ROOT / "sim" / "toolchain.json"
 
 
-class ToolchainDrift(RuntimeError):
-    """A pinned tool version does not match what is installed."""
-
-
 @dataclass
 class Toolchain:
     pins: dict
