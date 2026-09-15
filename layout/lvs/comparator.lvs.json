@@ -1,0 +1,1765 @@
+{
+  "category_counts": {
+    "device.unmatched": 31,
+    "net.merged": 17,
+    "net.split": 54,
+    "topology.flattened": 1
+  },
+  "category_error_counts": {
+    "device.unmatched": 31,
+    "net.merged": 17,
+    "net.split": 54
+  },
+  "counts": {
+    "devices": {
+      "layout": 29,
+      "matched": 0,
+      "reference": 29
+    },
+    "nets": {
+      "layout": 57,
+      "matched": 2,
+      "reference": 20
+    },
+    "pins": {
+      "layout": 16,
+      "matched": 21,
+      "reference": 8
+    }
+  },
+  "device_classes": [
+    "nfet",
+    "pfet",
+    "bjt",
+    "cap_mim_2f0_m4m5_noshield",
+    "resistor",
+    "diode_nd2ps_06v0",
+    "diode_pd2nw_06v0"
+  ],
+  "engine": "klayout",
+  "environment": {
+    "engine": "klayout",
+    "engine_version": "0.30.12",
+    "extracted_netlist": null,
+    "layout_sha256": "cd65389469e998b8a61c1e828bbb857d95957d03c3fa9972de188b57f1f24d3b",
+    "reference_sha256": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a"
+  },
+  "error_count": 102,
+  "layout": "comparator.extracted.spice",
+  "mismatch_count": 103,
+  "mismatches": [
+    {
+      "category": "device.unmatched",
+      "circuit": null,
+      "description": "device has no counterpart on the other side",
+      "details": null,
+      "device": {
+        "class": "PPOLYF_U_1K",
+        "layout": "\\$28",
+        "reference": null
+      },
+      "instance": null,
+      "net": null,
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "device.unmatched",
+      "circuit": null,
+      "description": "device has no counterpart on the other side",
+      "details": null,
+      "device": {
+        "class": "PPOLYF_U_1K",
+        "layout": "\\$29",
+        "reference": null
+      },
+      "instance": null,
+      "net": null,
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "device.unmatched",
+      "circuit": null,
+      "description": "device has no counterpart on the other side",
+      "details": null,
+      "device": {
+        "class": "PPOLYF_U_1K",
+        "layout": null,
+        "reference": "A.N"
+      },
+      "instance": null,
+      "net": null,
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "device.unmatched",
+      "circuit": null,
+      "description": "device has no counterpart on the other side",
+      "details": null,
+      "device": {
+        "class": "PPOLYF_U_1K",
+        "layout": null,
+        "reference": "A.P"
+      },
+      "instance": null,
+      "net": null,
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "device.unmatched",
+      "circuit": null,
+      "description": "device has no counterpart on the other side",
+      "details": null,
+      "device": {
+        "class": "NFET",
+        "layout": "\\$1",
+        "reference": "L.B2N"
+      },
+      "instance": null,
+      "net": null,
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "device.unmatched",
+      "circuit": null,
+      "description": "device has no counterpart on the other side",
+      "details": null,
+      "device": {
+        "class": "NFET",
+        "layout": "\\$10",
+        "reference": "A.T"
+      },
+      "instance": null,
+      "net": null,
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "device.unmatched",
+      "circuit": null,
+      "description": "device has no counterpart on the other side",
+      "details": null,
+      "device": {
+        "class": "NFET",
+        "layout": "\\$11",
+        "reference": "L.4"
+      },
+      "instance": null,
+      "net": null,
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "device.unmatched",
+      "circuit": null,
+      "description": "device has no counterpart on the other side",
+      "details": null,
+      "device": {
+        "class": "NFET",
+        "layout": "\\$12",
+        "reference": "L.TL"
+      },
+      "instance": null,
+      "net": null,
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "device.unmatched",
+      "circuit": null,
+      "description": "device has no counterpart on the other side",
+      "details": null,
+      "device": {
+        "class": "NFET",
+        "layout": "\\$13",
+        "reference": "L.2"
+      },
+      "instance": null,
+      "net": null,
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "device.unmatched",
+      "circuit": null,
+      "description": "device has no counterpart on the other side",
+      "details": null,
+      "device": {
+        "class": "NFET",
+        "layout": "\\$14",
+        "reference": "A.IP"
+      },
+      "instance": null,
+      "net": null,
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "device.unmatched",
+      "circuit": null,
+      "description": "device has no counterpart on the other side",
+      "details": null,
+      "device": {
+        "class": "NFET",
+        "layout": "\\$15",
+        "reference": "A.IN"
+      },
+      "instance": null,
+      "net": null,
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "device.unmatched",
+      "circuit": null,
+      "description": "device has no counterpart on the other side",
+      "details": null,
+      "device": {
+        "class": "PFET",
+        "layout": "\\$16",
+        "reference": "L.10"
+      },
+      "instance": null,
+      "net": null,
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "device.unmatched",
+      "circuit": null,
+      "description": "device has no counterpart on the other side",
+      "details": null,
+      "device": {
+        "class": "PFET",
+        "layout": "\\$17",
+        "reference": "L.8"
+      },
+      "instance": null,
+      "net": null,
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "device.unmatched",
+      "circuit": null,
+      "description": "device has no counterpart on the other side",
+      "details": null,
+      "device": {
+        "class": "PFET",
+        "layout": "\\$18",
+        "reference": "L.IP1"
+      },
+      "instance": null,
+      "net": null,
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "device.unmatched",
+      "circuit": null,
+      "description": "device has no counterpart on the other side",
+      "details": null,
+      "device": {
+        "class": "PFET",
+        "layout": "\\$19",
+        "reference": "L.9"
+      },
+      "instance": null,
+      "net": null,
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "device.unmatched",
+      "circuit": null,
+      "description": "device has no counterpart on the other side",
+      "details": null,
+      "device": {
+        "class": "NFET",
+        "layout": "\\$2",
+        "reference": "L.B1N"
+      },
+      "instance": null,
+      "net": null,
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "device.unmatched",
+      "circuit": null,
+      "description": "device has no counterpart on the other side",
+      "details": null,
+      "device": {
+        "class": "PFET",
+        "layout": "\\$20",
+        "reference": "L.6"
+      },
+      "instance": null,
+      "net": null,
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "device.unmatched",
+      "circuit": null,
+      "description": "device has no counterpart on the other side",
+      "details": null,
+      "device": {
+        "class": "PFET",
+        "layout": "\\$21",
+        "reference": "L.7"
+      },
+      "instance": null,
+      "net": null,
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "device.unmatched",
+      "circuit": null,
+      "description": "device has no counterpart on the other side",
+      "details": null,
+      "device": {
+        "class": "PFET",
+        "layout": "\\$22",
+        "reference": "L.A1P"
+      },
+      "instance": null,
+      "net": null,
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "device.unmatched",
+      "circuit": null,
+      "description": "device has no counterpart on the other side",
+      "details": null,
+      "device": {
+        "class": "PFET",
+        "layout": "\\$23",
+        "reference": "L.A2P"
+      },
+      "instance": null,
+      "net": null,
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "device.unmatched",
+      "circuit": null,
+      "description": "device has no counterpart on the other side",
+      "details": null,
+      "device": {
+        "class": "PFET",
+        "layout": "\\$24",
+        "reference": "L.IP2"
+      },
+      "instance": null,
+      "net": null,
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "device.unmatched",
+      "circuit": null,
+      "description": "device has no counterpart on the other side",
+      "details": null,
+      "device": {
+        "class": "PFET",
+        "layout": "\\$25",
+        "reference": "L.5"
+      },
+      "instance": null,
+      "net": null,
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "device.unmatched",
+      "circuit": null,
+      "description": "device has no counterpart on the other side",
+      "details": null,
+      "device": {
+        "class": "PFET",
+        "layout": "\\$26",
+        "reference": "L.B1P"
+      },
+      "instance": null,
+      "net": null,
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "device.unmatched",
+      "circuit": null,
+      "description": "device has no counterpart on the other side",
+      "details": null,
+      "device": {
+        "class": "PFET",
+        "layout": "\\$27",
+        "reference": "L.B2P"
+      },
+      "instance": null,
+      "net": null,
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "device.unmatched",
+      "circuit": null,
+      "description": "device has no counterpart on the other side",
+      "details": null,
+      "device": {
+        "class": "NFET",
+        "layout": "\\$3",
+        "reference": "L.A2N"
+      },
+      "instance": null,
+      "net": null,
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "device.unmatched",
+      "circuit": null,
+      "description": "device has no counterpart on the other side",
+      "details": null,
+      "device": {
+        "class": "NFET",
+        "layout": "\\$4",
+        "reference": "A.B"
+      },
+      "instance": null,
+      "net": null,
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "device.unmatched",
+      "circuit": null,
+      "description": "device has no counterpart on the other side",
+      "details": null,
+      "device": {
+        "class": "NFET",
+        "layout": "\\$5",
+        "reference": "L.A1N"
+      },
+      "instance": null,
+      "net": null,
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "device.unmatched",
+      "circuit": null,
+      "description": "device has no counterpart on the other side",
+      "details": null,
+      "device": {
+        "class": "NFET",
+        "layout": "\\$6",
+        "reference": "L.IN2"
+      },
+      "instance": null,
+      "net": null,
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "device.unmatched",
+      "circuit": null,
+      "description": "device has no counterpart on the other side",
+      "details": null,
+      "device": {
+        "class": "NFET",
+        "layout": "\\$7",
+        "reference": "L.IN1"
+      },
+      "instance": null,
+      "net": null,
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "device.unmatched",
+      "circuit": null,
+      "description": "device has no counterpart on the other side",
+      "details": null,
+      "device": {
+        "class": "NFET",
+        "layout": "\\$8",
+        "reference": "L.3"
+      },
+      "instance": null,
+      "net": null,
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "device.unmatched",
+      "circuit": null,
+      "description": "device has no counterpart on the other side",
+      "details": null,
+      "device": {
+        "class": "NFET",
+        "layout": "\\$9",
+        "reference": "L.1"
+      },
+      "instance": null,
+      "net": null,
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "net.merged",
+      "circuit": null,
+      "description": "multiple reference nets were collapsed into one layout net",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": null,
+        "reference": "A.ATAIL"
+      },
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "net.merged",
+      "circuit": null,
+      "description": "multiple reference nets were collapsed into one layout net",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": null,
+        "reference": "AON"
+      },
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "net.merged",
+      "circuit": null,
+      "description": "multiple reference nets were collapsed into one layout net",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": null,
+        "reference": "AOP"
+      },
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "net.merged",
+      "circuit": null,
+      "description": "multiple reference nets were collapsed into one layout net",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": null,
+        "reference": "CLK"
+      },
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "net.merged",
+      "circuit": null,
+      "description": "multiple reference nets were collapsed into one layout net",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": null,
+        "reference": "DOUT"
+      },
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "net.merged",
+      "circuit": null,
+      "description": "multiple reference nets were collapsed into one layout net",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": null,
+        "reference": "DOUTB"
+      },
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "net.merged",
+      "circuit": null,
+      "description": "multiple reference nets were collapsed into one layout net",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": null,
+        "reference": "IBIAS"
+      },
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "net.merged",
+      "circuit": null,
+      "description": "multiple reference nets were collapsed into one layout net",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": null,
+        "reference": "L.LTAIL"
+      },
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "net.merged",
+      "circuit": null,
+      "description": "multiple reference nets were collapsed into one layout net",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": null,
+        "reference": "L.MN"
+      },
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "net.merged",
+      "circuit": null,
+      "description": "multiple reference nets were collapsed into one layout net",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": null,
+        "reference": "L.MP"
+      },
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "net.merged",
+      "circuit": null,
+      "description": "multiple reference nets were collapsed into one layout net",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": null,
+        "reference": "L.NA"
+      },
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "net.merged",
+      "circuit": null,
+      "description": "multiple reference nets were collapsed into one layout net",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": null,
+        "reference": "L.NB"
+      },
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "net.merged",
+      "circuit": null,
+      "description": "multiple reference nets were collapsed into one layout net",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": null,
+        "reference": "L.QN"
+      },
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "net.merged",
+      "circuit": null,
+      "description": "multiple reference nets were collapsed into one layout net",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": null,
+        "reference": "L.QP"
+      },
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "net.merged",
+      "circuit": null,
+      "description": "multiple reference nets were collapsed into one layout net",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": null,
+        "reference": "L.SN"
+      },
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "net.merged",
+      "circuit": null,
+      "description": "multiple reference nets were collapsed into one layout net",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": null,
+        "reference": "L.SP"
+      },
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "net.merged",
+      "circuit": null,
+      "description": "multiple reference nets were collapsed into one layout net",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": null,
+        "reference": "VDD"
+      },
+      "property": null,
+      "severity": "error",
+      "side": "reference",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "AON",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "ATAIL",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "CLK",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "DOUTB",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "IBIAS",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "LTAIL",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "MN",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "MP",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "NA",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "NB",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "QN",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "SP",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "VDD",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$10",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$11",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$12",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$13",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$17",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$18",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$20",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$21",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$22",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$23",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$24",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$25",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$26",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$27",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$29",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$30",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$31",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$32",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$34",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$35",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$36",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$37",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$38",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$4",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$41",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$42",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$43",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$44",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$45",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$46",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$47",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$49",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$5",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$52",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$53",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$54",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$55",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$56",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$6",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$7",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$8",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "topology.flattened",
+      "circuit": null,
+      "description": "options.flatten_reference flattened the reference netlist before comparing: 3 circuit(s) were collapsed into 1 top-level circuit(s), substituting every subcircuit-call instance in place -- this compare verified topology only after removing the original hierarchy boundaries on this side (see docs/cli/lvs.md, \"topology.flattened\")",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": null,
+      "property": null,
+      "severity": "warning",
+      "side": "reference",
+      "subcircuit": null
+    }
+  ],
+  "net_correspondence": [
+    {
+      "layout": "VINN",
+      "pin": true,
+      "reference": "VINN"
+    },
+    {
+      "layout": "VINP",
+      "pin": true,
+      "reference": "VINP"
+    }
+  ],
+  "options": {
+    "combine_devices": false,
+    "combine_devices_per_circuit": null,
+    "flatten_layout": false,
+    "flatten_reference": true,
+    "netgen_setup": null,
+    "parameter_tolerance": null
+  },
+  "parameter_tolerance": null,
+  "provenance": {
+    "deck": {
+      "content_hash": "sha256:79e71a1e7d84be3cfc82e4c70afbdf7b743ac1f361fb8e981f57831014d2e8b0",
+      "name": "gf180mcu",
+      "released": true
+    },
+    "input": null,
+    "klayout_version": "0.30.12",
+    "klt_version": "0.4.0",
+    "pdk": null
+  },
+  "reference": "../../design/comparator.spice",
+  "reference_top": "COMPARATOR_DUT",
+  "schema_version": 1,
+  "status": "mismatch",
+  "top": "COMPARATOR"
+}
