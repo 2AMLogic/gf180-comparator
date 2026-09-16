@@ -88,7 +88,13 @@ git status --short layout/          # should be empty: byte-reproducible
 That `git status` check is real, not aspirational: `route_nets.py` writes
 the stream with `SaveLayoutOptions.gds2_write_timestamps = False`, so the
 BGNLIB/BGNSTR clock readings (the only bytes that otherwise differ between
-two runs of an already-deterministic pipeline) are zeroed.
+two runs of an already-deterministic pipeline) are zeroed. It also holds
+across checkouts/worktrees, not just repeat runs in the same one:
+`gen_comparator.py` runs `klt gen-compose` with `cwd` set to `layout/` and
+`options.output` set to the relative name `"comparator.gds"`, so the
+response's own `gds_path` field (which `klt gen-compose` otherwise echoes
+back resolved against its process cwd) is committed as `"comparator.gds"`
+rather than baking in one checkout's absolute host path (#45).
 
 Requires `klt` on `PATH` and the `gf180mcuC` PDK variant resolvable (`klt
 pdk find --pdk gf180mcuC`) -- see "Toolchain" below for the exact pin.
