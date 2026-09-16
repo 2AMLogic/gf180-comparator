@@ -1,0 +1,115 @@
+{
+  "category_counts": {
+    "device.property": 2
+  },
+  "category_error_counts": {
+    "device.property": 2
+  },
+  "counts": {
+    "devices": {
+      "layout": 29,
+      "matched": 0,
+      "reference": 0
+    },
+    "nets": {
+      "layout": 20,
+      "matched": 0,
+      "reference": 10
+    },
+    "pins": {
+      "layout": 8,
+      "matched": 0,
+      "reference": 8
+    }
+  },
+  "device_classes": [
+    "nfet",
+    "pfet",
+    "bjt",
+    "cap_mim_2f0_m4m5_noshield",
+    "resistor",
+    "diode_nd2ps_06v0",
+    "diode_pd2nw_06v0"
+  ],
+  "engine": "netgen",
+  "environment": {
+    "engine": "netgen",
+    "engine_version": "1.5.323",
+    "extracted_netlist": null,
+    "layout_sha256": "9f7c3dab36a25bea3cb27240233cb014a469f9229863869cda035c5e84540c25",
+    "reference_sha256": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a"
+  },
+  "error_count": 2,
+  "layout": "comparator.extracted.spice",
+  "mismatch_count": 2,
+  "mismatches": [
+    {
+      "category": "device.property",
+      "circuit": null,
+      "description": "netgen: matched device parameter 'value' differs (netgen reported a property difference)",
+      "details": null,
+      "device": {
+        "class": "VSS",
+        "layout": "VSS:$28",
+        "reference": "COMPARATOR_DUT_ANALOG:A/VSS:N"
+      },
+      "instance": null,
+      "net": null,
+      "property": {
+        "layout": "120000",
+        "name": "value",
+        "reference": "0"
+      },
+      "severity": "error",
+      "side": "both",
+      "subcircuit": null
+    },
+    {
+      "category": "device.property",
+      "circuit": null,
+      "description": "netgen: matched device parameter 'value' differs (netgen reported a property difference)",
+      "details": null,
+      "device": {
+        "class": "VSS",
+        "layout": "VSS:$29",
+        "reference": "COMPARATOR_DUT_ANALOG:A/VSS:P"
+      },
+      "instance": null,
+      "net": null,
+      "property": {
+        "layout": "120000",
+        "name": "value",
+        "reference": "0"
+      },
+      "severity": "error",
+      "side": "both",
+      "subcircuit": null
+    }
+  ],
+  "net_correspondence": [],
+  "options": {
+    "combine_devices": false,
+    "combine_devices_per_circuit": null,
+    "flatten_layout": false,
+    "flatten_reference": false,
+    "netgen_setup": null,
+    "parameter_tolerance": null
+  },
+  "parameter_tolerance": null,
+  "provenance": {
+    "deck": {
+      "content_hash": "sha256:3c2f4e4be2524a0fe964cd1b2c4c171c0f904586c10eaa8c4ffe3511909e4706",
+      "name": "gf180mcu",
+      "released": true
+    },
+    "input": null,
+    "klayout_version": "0.30.12",
+    "klt_version": "0.5.0",
+    "pdk": null
+  },
+  "reference": "../../design/comparator.spice",
+  "reference_top": "COMPARATOR_DUT",
+  "schema_version": 1,
+  "status": "mismatch",
+  "top": "COMPARATOR"
+}

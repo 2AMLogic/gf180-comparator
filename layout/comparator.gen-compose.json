@@ -2,7 +2,7 @@
   "schema_version": 1,
   "generator": "gen-compose",
   "cell_name": "COMPARATOR",
-  "gds_path": "/Users/rwalters/GitHub/gf180-comparator/.loom/worktrees/issue-20/layout/comparator.gds",
+  "gds_path": "/Users/rwalters/GitHub/gf180-comparator/.loom/worktrees/issue-30/layout/comparator.gds",
   "pdk": {
     "name": "gf180mcuC",
     "variant": "gf180mcuC",
@@ -339,8 +339,8 @@
         }
       ],
       "routed": false,
-      "route_length_um": 14.639999999999999,
-      "status": "partial",
+      "route_length_um": null,
+      "status": "unrouted",
       "legs": [
         {
           "pins": [
@@ -355,23 +355,7 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "self-net backbone crosses 3.07um through block 'mb''s own port 'U0_S' on the same drawing layer -- bussing this net across the block would draw a silent short to that pad; route to a layer_role with a metal2/via stack instead (or configure routing.cross_block_layer_role, issue #1168), or wire this net externally"
-        },
-        {
-          "pins": [
-            {
-              "block": "mb",
-              "port": "U0_G"
-            },
-            {
-              "block": "mt",
-              "port": "U0_G"
-            }
-          ],
-          "routed": true,
-          "route_length_um": 14.639999999999999,
-          "reason": null,
-          "channel_track": 0
+          "reason": "routing not requested"
         },
         {
           "pins": [
@@ -386,7 +370,7 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 11.39um through its own pin's block 'mt' -- more than that pin's own 0.39um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
+          "reason": "routing not requested"
         }
       ]
     },
@@ -406,9 +390,9 @@
           "port": "Q2_1_S"
         }
       ],
-      "routed": true,
-      "route_length_um": 59.660000000000004,
-      "status": "routed",
+      "routed": false,
+      "route_length_um": null,
+      "status": "unrouted",
       "legs": [
         {
           "pins": [
@@ -421,10 +405,9 @@
               "port": "Q1_1_S"
             }
           ],
-          "routed": true,
-          "route_length_um": 13.920000000000002,
-          "reason": null,
-          "channel_track": 0
+          "routed": false,
+          "route_length_um": null,
+          "reason": "routing not requested"
         },
         {
           "pins": [
@@ -437,10 +420,9 @@
               "port": "Q2_1_S"
             }
           ],
-          "routed": true,
-          "route_length_um": 45.74,
-          "reason": null,
-          "channel_track": 0
+          "routed": false,
+          "route_length_um": null,
+          "reason": "routing not requested"
         }
       ]
     },
@@ -457,12 +439,12 @@
         },
         {
           "block": "m1_m2",
-          "port": "Q1_1_G"
+          "port": "Q2_1_G"
         }
       ],
-      "routed": true,
-      "route_length_um": 288.27000000000004,
-      "status": "routed",
+      "routed": false,
+      "route_length_um": null,
+      "status": "unrouted",
       "legs": [
         {
           "pins": [
@@ -475,10 +457,9 @@
               "port": "R0_A"
             }
           ],
-          "routed": true,
-          "route_length_um": 18.17,
-          "reason": null,
-          "channel_track": 0
+          "routed": false,
+          "route_length_um": null,
+          "reason": "routing not requested"
         },
         {
           "pins": [
@@ -488,13 +469,12 @@
             },
             {
               "block": "m1_m2",
-              "port": "Q1_1_G"
+              "port": "Q2_1_G"
             }
           ],
-          "routed": true,
-          "route_length_um": 270.1,
-          "reason": null,
-          "channel_track": 0
+          "routed": false,
+          "route_length_um": null,
+          "reason": "routing not requested"
         }
       ]
     },
@@ -511,7 +491,7 @@
         },
         {
           "block": "m1_m2",
-          "port": "Q2_1_G"
+          "port": "Q1_1_G"
         }
       ],
       "routed": false,
@@ -521,21 +501,6 @@
         {
           "pins": [
             {
-              "block": "rn_rp",
-              "port": "R1_A"
-            },
-            {
-              "block": "m1_m2",
-              "port": "Q2_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 2.36um through unrelated block 'mtl''s bbox (including its own edge, within half the route's width) -- the route is not point-to-point between only the two connected blocks"
-        },
-        {
-          "pins": [
-            {
               "block": "mip_min",
               "port": "Q2_1_D"
             },
@@ -546,7 +511,7 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "crosses already-routed net 'aon'"
+          "reason": "routing not requested"
         },
         {
           "pins": [
@@ -556,12 +521,12 @@
             },
             {
               "block": "m1_m2",
-              "port": "Q2_1_G"
+              "port": "Q1_1_G"
             }
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "crosses already-routed net 'aon'"
+          "reason": "routing not requested"
         }
       ]
     },
@@ -617,169 +582,24 @@
           "port": "Q2_1_S"
         }
       ],
-      "routed": true,
-      "route_length_um": 529.6499999999995,
-      "status": "routed",
+      "routed": false,
+      "route_length_um": null,
+      "status": "unrouted",
       "legs": [
         {
           "pins": [
             {
               "block": "rn_rp",
-              "port": "R1_B"
+              "port": "R0_B"
             },
-            {
-              "block": "m5_m6",
-              "port": "Q1_1_S"
-            }
-          ],
-          "routed": true,
-          "route_length_um": 24.109999999999957,
-          "reason": null,
-          "channel_track": 0
-        },
-        {
-          "pins": [
             {
               "block": "rn_rp",
               "port": "R1_B"
-            },
-            {
-              "block": "m7_m8",
-              "port": "Q1_1_S"
             }
           ],
-          "routed": true,
-          "route_length_um": 28.109999999999957,
-          "reason": null,
-          "channel_track": 0
-        },
-        {
-          "pins": [
-            {
-              "block": "rn_rp",
-              "port": "R1_B"
-            },
-            {
-              "block": "m5_m6",
-              "port": "Q2_1_S"
-            }
-          ],
-          "routed": true,
-          "route_length_um": 31.929999999999957,
-          "reason": null,
-          "channel_track": 0
-        },
-        {
-          "pins": [
-            {
-              "block": "rn_rp",
-              "port": "R1_B"
-            },
-            {
-              "block": "m9_m10",
-              "port": "Q1_1_S"
-            }
-          ],
-          "routed": true,
-          "route_length_um": 32.10999999999996,
-          "reason": null,
-          "channel_track": 0
-        },
-        {
-          "pins": [
-            {
-              "block": "rn_rp",
-              "port": "R1_B"
-            },
-            {
-              "block": "m7_m8",
-              "port": "Q2_1_S"
-            }
-          ],
-          "routed": true,
-          "route_length_um": 33.92999999999996,
-          "reason": null,
-          "channel_track": 0
-        },
-        {
-          "pins": [
-            {
-              "block": "rn_rp",
-              "port": "R1_B"
-            },
-            {
-              "block": "m9_m10",
-              "port": "Q2_1_S"
-            }
-          ],
-          "routed": true,
-          "route_length_um": 35.92999999999996,
-          "reason": null,
-          "channel_track": 0
-        },
-        {
-          "pins": [
-            {
-              "block": "rn_rp",
-              "port": "R1_B"
-            },
-            {
-              "block": "ip1_ip2",
-              "port": "Q1_1_S"
-            }
-          ],
-          "routed": true,
-          "route_length_um": 38.60999999999996,
-          "reason": null,
-          "channel_track": 0
-        },
-        {
-          "pins": [
-            {
-              "block": "rn_rp",
-              "port": "R1_B"
-            },
-            {
-              "block": "ip1_ip2",
-              "port": "Q2_1_S"
-            }
-          ],
-          "routed": true,
-          "route_length_um": 45.42999999999996,
-          "reason": null,
-          "channel_track": 0
-        },
-        {
-          "pins": [
-            {
-              "block": "rn_rp",
-              "port": "R1_B"
-            },
-            {
-              "block": "a1p_b1p",
-              "port": "Q1_1_S"
-            }
-          ],
-          "routed": true,
-          "route_length_um": 51.10999999999996,
-          "reason": null,
-          "channel_track": 0
-        },
-        {
-          "pins": [
-            {
-              "block": "rn_rp",
-              "port": "R1_B"
-            },
-            {
-              "block": "a1p_b1p",
-              "port": "Q2_1_S"
-            }
-          ],
-          "routed": true,
-          "route_length_um": 62.92999999999996,
-          "reason": null,
-          "channel_track": 0
+          "routed": false,
+          "route_length_um": null,
+          "reason": "routing not requested"
         },
         {
           "pins": [
@@ -792,10 +612,144 @@
               "port": "Q1_1_S"
             }
           ],
-          "routed": true,
-          "route_length_um": 145.45,
-          "reason": null,
-          "channel_track": 0
+          "routed": false,
+          "route_length_um": null,
+          "reason": "routing not requested"
+        },
+        {
+          "pins": [
+            {
+              "block": "rn_rp",
+              "port": "R0_B"
+            },
+            {
+              "block": "m5_m6",
+              "port": "Q2_1_S"
+            }
+          ],
+          "routed": false,
+          "route_length_um": null,
+          "reason": "routing not requested"
+        },
+        {
+          "pins": [
+            {
+              "block": "rn_rp",
+              "port": "R0_B"
+            },
+            {
+              "block": "m7_m8",
+              "port": "Q1_1_S"
+            }
+          ],
+          "routed": false,
+          "route_length_um": null,
+          "reason": "routing not requested"
+        },
+        {
+          "pins": [
+            {
+              "block": "rn_rp",
+              "port": "R0_B"
+            },
+            {
+              "block": "m7_m8",
+              "port": "Q2_1_S"
+            }
+          ],
+          "routed": false,
+          "route_length_um": null,
+          "reason": "routing not requested"
+        },
+        {
+          "pins": [
+            {
+              "block": "rn_rp",
+              "port": "R0_B"
+            },
+            {
+              "block": "m9_m10",
+              "port": "Q1_1_S"
+            }
+          ],
+          "routed": false,
+          "route_length_um": null,
+          "reason": "routing not requested"
+        },
+        {
+          "pins": [
+            {
+              "block": "rn_rp",
+              "port": "R0_B"
+            },
+            {
+              "block": "m9_m10",
+              "port": "Q2_1_S"
+            }
+          ],
+          "routed": false,
+          "route_length_um": null,
+          "reason": "routing not requested"
+        },
+        {
+          "pins": [
+            {
+              "block": "rn_rp",
+              "port": "R0_B"
+            },
+            {
+              "block": "ip1_ip2",
+              "port": "Q1_1_S"
+            }
+          ],
+          "routed": false,
+          "route_length_um": null,
+          "reason": "routing not requested"
+        },
+        {
+          "pins": [
+            {
+              "block": "rn_rp",
+              "port": "R0_B"
+            },
+            {
+              "block": "ip1_ip2",
+              "port": "Q2_1_S"
+            }
+          ],
+          "routed": false,
+          "route_length_um": null,
+          "reason": "routing not requested"
+        },
+        {
+          "pins": [
+            {
+              "block": "rn_rp",
+              "port": "R0_B"
+            },
+            {
+              "block": "a1p_b1p",
+              "port": "Q1_1_S"
+            }
+          ],
+          "routed": false,
+          "route_length_um": null,
+          "reason": "routing not requested"
+        },
+        {
+          "pins": [
+            {
+              "block": "rn_rp",
+              "port": "R0_B"
+            },
+            {
+              "block": "a1p_b1p",
+              "port": "Q2_1_S"
+            }
+          ],
+          "routed": false,
+          "route_length_um": null,
+          "reason": "routing not requested"
         }
       ]
     },
@@ -846,111 +800,6 @@
         {
           "pins": [
             {
-              "block": "in1_in2",
-              "port": "Q1_1_S"
-            },
-            {
-              "block": "in1_in2",
-              "port": "Q2_1_S"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "self-net backbone crosses 0.1um through block 'in1_in2''s own port 'Q1_1_D' on the same drawing layer -- bussing this net across the block would draw a silent short to that pad; route to a layer_role with a metal2/via stack instead (or configure routing.cross_block_layer_role, issue #1168), or wire this net externally"
-        },
-        {
-          "pins": [
-            {
-              "block": "a1n_b1n",
-              "port": "Q1_1_S"
-            },
-            {
-              "block": "a1n_b1n",
-              "port": "Q2_1_S"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "self-net backbone crosses 0.1um through block 'a1n_b1n''s own port 'Q1_1_D' on the same drawing layer -- bussing this net across the block would draw a silent short to that pad; route to a layer_role with a metal2/via stack instead (or configure routing.cross_block_layer_role, issue #1168), or wire this net externally"
-        },
-        {
-          "pins": [
-            {
-              "block": "a2n_b2n",
-              "port": "Q1_1_S"
-            },
-            {
-              "block": "a2n_b2n",
-              "port": "Q2_1_S"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "self-net backbone crosses 0.1um through block 'a2n_b2n''s own port 'Q1_1_D' on the same drawing layer -- bussing this net across the block would draw a silent short to that pad; route to a layer_role with a metal2/via stack instead (or configure routing.cross_block_layer_role, issue #1168), or wire this net externally"
-        },
-        {
-          "pins": [
-            {
-              "block": "a1n_b1n",
-              "port": "Q1_1_S"
-            },
-            {
-              "block": "a2n_b2n",
-              "port": "Q1_1_S"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'a1n_b1n' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "a1n_b1n",
-              "port": "Q2_1_S"
-            },
-            {
-              "block": "a2n_b2n",
-              "port": "Q2_1_S"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'a1n_b1n' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "a1n_b1n",
-              "port": "Q1_1_S"
-            },
-            {
-              "block": "a2n_b2n",
-              "port": "Q2_1_S"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'a1n_b1n' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "a1n_b1n",
-              "port": "Q2_1_S"
-            },
-            {
-              "block": "a2n_b2n",
-              "port": "Q1_1_S"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'a1n_b1n' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
               "block": "mb",
               "port": "U0_S"
             },
@@ -961,232 +810,7 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 7.72um through its own pin's block 'mb' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "in1_in2",
-              "port": "Q1_1_S"
-            },
-            {
-              "block": "a1n_b1n",
-              "port": "Q1_1_S"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'in1_in2' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "in1_in2",
-              "port": "Q2_1_S"
-            },
-            {
-              "block": "a1n_b1n",
-              "port": "Q2_1_S"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'in1_in2' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "in1_in2",
-              "port": "Q1_1_S"
-            },
-            {
-              "block": "a1n_b1n",
-              "port": "Q2_1_S"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'in1_in2' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "in1_in2",
-              "port": "Q2_1_S"
-            },
-            {
-              "block": "a1n_b1n",
-              "port": "Q1_1_S"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'in1_in2' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "in1_in2",
-              "port": "Q1_1_S"
-            },
-            {
-              "block": "a2n_b2n",
-              "port": "Q1_1_S"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'in1_in2' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "in1_in2",
-              "port": "Q2_1_S"
-            },
-            {
-              "block": "a2n_b2n",
-              "port": "Q2_1_S"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'in1_in2' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "in1_in2",
-              "port": "Q1_1_S"
-            },
-            {
-              "block": "a2n_b2n",
-              "port": "Q2_1_S"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'in1_in2' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "in1_in2",
-              "port": "Q2_1_S"
-            },
-            {
-              "block": "a2n_b2n",
-              "port": "Q1_1_S"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'in1_in2' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "mtl",
-              "port": "U0_S"
-            },
-            {
-              "block": "in1_in2",
-              "port": "Q2_1_S"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'mtl' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "mtl",
-              "port": "U0_S"
-            },
-            {
-              "block": "in1_in2",
-              "port": "Q1_1_S"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'mtl' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "mtl",
-              "port": "U0_S"
-            },
-            {
-              "block": "a1n_b1n",
-              "port": "Q2_1_S"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'mtl' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "mtl",
-              "port": "U0_S"
-            },
-            {
-              "block": "a1n_b1n",
-              "port": "Q1_1_S"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'mtl' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "mtl",
-              "port": "U0_S"
-            },
-            {
-              "block": "a2n_b2n",
-              "port": "Q2_1_S"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'mtl' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "mtl",
-              "port": "U0_S"
-            },
-            {
-              "block": "a2n_b2n",
-              "port": "Q1_1_S"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'mtl' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "mt",
-              "port": "U0_S"
-            },
-            {
-              "block": "mtl",
-              "port": "U0_S"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 5.22um through its own pin's block 'mt' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
+          "reason": "routing not requested"
         },
         {
           "pins": [
@@ -1201,37 +825,7 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 5.22um through its own pin's block 'mb' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "mt",
-              "port": "U0_S"
-            },
-            {
-              "block": "in1_in2",
-              "port": "Q2_1_S"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 5.22um through its own pin's block 'mt' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "mt",
-              "port": "U0_S"
-            },
-            {
-              "block": "in1_in2",
-              "port": "Q1_1_S"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 5.22um through its own pin's block 'mt' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
+          "reason": "routing not requested"
         },
         {
           "pins": [
@@ -1246,7 +840,7 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 5.22um through its own pin's block 'mb' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
+          "reason": "routing not requested"
         },
         {
           "pins": [
@@ -1261,67 +855,7 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 5.22um through its own pin's block 'mb' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "mt",
-              "port": "U0_S"
-            },
-            {
-              "block": "a1n_b1n",
-              "port": "Q2_1_S"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 5.22um through its own pin's block 'mt' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "mt",
-              "port": "U0_S"
-            },
-            {
-              "block": "a1n_b1n",
-              "port": "Q1_1_S"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 5.22um through its own pin's block 'mt' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "mt",
-              "port": "U0_S"
-            },
-            {
-              "block": "a2n_b2n",
-              "port": "Q2_1_S"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 5.22um through its own pin's block 'mt' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "mt",
-              "port": "U0_S"
-            },
-            {
-              "block": "a2n_b2n",
-              "port": "Q1_1_S"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 5.22um through its own pin's block 'mt' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
+          "reason": "routing not requested"
         },
         {
           "pins": [
@@ -1336,7 +870,7 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 5.22um through its own pin's block 'mb' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
+          "reason": "routing not requested"
         },
         {
           "pins": [
@@ -1351,7 +885,7 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 5.22um through its own pin's block 'mb' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
+          "reason": "routing not requested"
         },
         {
           "pins": [
@@ -1366,7 +900,7 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 5.22um through its own pin's block 'mb' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
+          "reason": "routing not requested"
         },
         {
           "pins": [
@@ -1381,7 +915,7 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 5.22um through its own pin's block 'mb' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
+          "reason": "routing not requested"
         }
       ]
     },
@@ -1410,86 +944,23 @@
         }
       ],
       "routed": false,
-      "route_length_um": 48.279999999999994,
-      "status": "partial",
+      "route_length_um": null,
+      "status": "unrouted",
       "legs": [
         {
           "pins": [
             {
-              "block": "m9_m10",
-              "port": "Q1_1_G"
+              "block": "mtl",
+              "port": "U0_G"
             },
             {
-              "block": "m9_m10",
-              "port": "Q2_1_G"
+              "block": "m7_m8",
+              "port": "Q1_1_G"
             }
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "self-net backbone crosses 2.36um through block 'm9_m10''s own port 'Q2_1_S' on the same drawing layer -- bussing this net across the block would draw a silent short to that pad; route to a layer_role with a metal2/via stack instead (or configure routing.cross_block_layer_role, issue #1168), or wire this net externally"
-        },
-        {
-          "pins": [
-            {
-              "block": "m7_m8",
-              "port": "Q1_1_G"
-            },
-            {
-              "block": "m7_m8",
-              "port": "Q2_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "self-net backbone crosses 4.36um through block 'm7_m8''s own port 'Q2_1_S' on the same drawing layer -- bussing this net across the block would draw a silent short to that pad; route to a layer_role with a metal2/via stack instead (or configure routing.cross_block_layer_role, issue #1168), or wire this net externally"
-        },
-        {
-          "pins": [
-            {
-              "block": "m7_m8",
-              "port": "Q1_1_G"
-            },
-            {
-              "block": "m9_m10",
-              "port": "Q2_1_G"
-            }
-          ],
-          "routed": true,
-          "route_length_um": 16.759999999999998,
-          "reason": null,
-          "channel_track": 0
-        },
-        {
-          "pins": [
-            {
-              "block": "m7_m8",
-              "port": "Q1_1_G"
-            },
-            {
-              "block": "m9_m10",
-              "port": "Q1_1_G"
-            }
-          ],
-          "routed": true,
-          "route_length_um": 20.58,
-          "reason": null,
-          "channel_track": 0
-        },
-        {
-          "pins": [
-            {
-              "block": "m7_m8",
-              "port": "Q2_1_G"
-            },
-            {
-              "block": "m9_m10",
-              "port": "Q2_1_G"
-            }
-          ],
-          "routed": true,
-          "route_length_um": 10.94,
-          "reason": null,
-          "channel_track": 0
+          "reason": "routing not requested"
         },
         {
           "pins": [
@@ -1504,7 +975,7 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "crosses already-routed net 'aon'"
+          "reason": "routing not requested"
         },
         {
           "pins": [
@@ -1513,13 +984,13 @@
               "port": "U0_G"
             },
             {
-              "block": "m7_m8",
+              "block": "m9_m10",
               "port": "Q1_1_G"
             }
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "crosses already-routed net 'aon'"
+          "reason": "routing not requested"
         },
         {
           "pins": [
@@ -1534,22 +1005,7 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "crosses already-routed net 'aon'"
-        },
-        {
-          "pins": [
-            {
-              "block": "mtl",
-              "port": "U0_G"
-            },
-            {
-              "block": "m9_m10",
-              "port": "Q1_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "crosses already-routed net 'aon'"
+          "reason": "routing not requested"
         }
       ]
     },
@@ -1569,9 +1025,9 @@
           "port": "Q2_1_S"
         }
       ],
-      "routed": true,
-      "route_length_um": 17.65999999999992,
-      "status": "routed",
+      "routed": false,
+      "route_length_um": null,
+      "status": "unrouted",
       "legs": [
         {
           "pins": [
@@ -1584,10 +1040,9 @@
               "port": "Q1_1_S"
             }
           ],
-          "routed": true,
-          "route_length_um": 7.919999999999959,
-          "reason": null,
-          "channel_track": 0
+          "routed": false,
+          "route_length_um": null,
+          "reason": "routing not requested"
         },
         {
           "pins": [
@@ -1600,10 +1055,9 @@
               "port": "Q2_1_S"
             }
           ],
-          "routed": true,
-          "route_length_um": 9.73999999999996,
-          "reason": null,
-          "channel_track": 0
+          "routed": false,
+          "route_length_um": null,
+          "reason": "routing not requested"
         }
       ]
     },
@@ -1624,8 +1078,8 @@
         }
       ],
       "routed": false,
-      "route_length_um": 4.919999999999959,
-      "status": "partial",
+      "route_length_um": null,
+      "status": "unrouted",
       "legs": [
         {
           "pins": [
@@ -1638,25 +1092,9 @@
               "port": "Q1_1_S"
             }
           ],
-          "routed": true,
-          "route_length_um": 4.919999999999959,
-          "reason": null,
-          "channel_track": 0
-        },
-        {
-          "pins": [
-            {
-              "block": "m3_m4",
-              "port": "Q1_1_S"
-            },
-            {
-              "block": "m9_m10",
-              "port": "Q1_1_D"
-            }
-          ],
           "routed": false,
           "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'm3_m4' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
+          "reason": "routing not requested"
         },
         {
           "pins": [
@@ -1671,7 +1109,7 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 2.36um through unrelated block 'm3_m4''s bbox (including its own edge, within half the route's width) -- the route is not point-to-point between only the two connected blocks"
+          "reason": "routing not requested"
         }
       ]
     },
@@ -1692,8 +1130,8 @@
         }
       ],
       "routed": false,
-      "route_length_um": 6.919999999999959,
-      "status": "partial",
+      "route_length_um": null,
+      "status": "unrouted",
       "legs": [
         {
           "pins": [
@@ -1706,25 +1144,9 @@
               "port": "Q2_1_S"
             }
           ],
-          "routed": true,
-          "route_length_um": 6.919999999999959,
-          "reason": null,
-          "channel_track": 0
-        },
-        {
-          "pins": [
-            {
-              "block": "m3_m4",
-              "port": "Q2_1_S"
-            },
-            {
-              "block": "m9_m10",
-              "port": "Q2_1_D"
-            }
-          ],
           "routed": false,
           "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'm3_m4' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
+          "reason": "routing not requested"
         },
         {
           "pins": [
@@ -1739,7 +1161,7 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 2.36um through unrelated block 'm3_m4''s bbox (including its own edge, within half the route's width) -- the route is not point-to-point between only the two connected blocks"
+          "reason": "routing not requested"
         }
       ]
     },
@@ -1776,8 +1198,8 @@
         }
       ],
       "routed": false,
-      "route_length_um": 38.81999999999999,
-      "status": "partial",
+      "route_length_um": null,
+      "status": "unrouted",
       "legs": [
         {
           "pins": [
@@ -1786,34 +1208,48 @@
               "port": "Q1_1_D"
             },
             {
+              "block": "m3_m4",
+              "port": "Q2_1_G"
+            }
+          ],
+          "routed": false,
+          "route_length_um": null,
+          "reason": "routing not requested"
+        },
+        {
+          "pins": [
+            {
+              "block": "m3_m4",
+              "port": "Q1_1_D"
+            },
+            {
               "block": "m5_m6",
               "port": "Q1_1_D"
             }
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'm5_m6' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
+          "reason": "routing not requested"
         },
         {
           "pins": [
             {
               "block": "m3_m4",
-              "port": "Q2_1_G"
+              "port": "Q1_1_D"
             },
             {
               "block": "m5_m6",
               "port": "Q2_1_G"
             }
           ],
-          "routed": true,
-          "route_length_um": 6.939999999999998,
-          "reason": null,
-          "channel_track": 0
+          "routed": false,
+          "route_length_um": null,
+          "reason": "routing not requested"
         },
         {
           "pins": [
             {
-              "block": "m5_m6",
+              "block": "m3_m4",
               "port": "Q1_1_D"
             },
             {
@@ -1823,149 +1259,12 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'm7_m8' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
+          "reason": "routing not requested"
         },
         {
           "pins": [
             {
               "block": "m3_m4",
-              "port": "Q1_1_D"
-            },
-            {
-              "block": "m7_m8",
-              "port": "Q1_1_D"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 3.36um through unrelated block 'm5_m6''s bbox (including its own edge, within half the route's width) -- the route is not point-to-point between only the two connected blocks"
-        },
-        {
-          "pins": [
-            {
-              "block": "ip1_ip2",
-              "port": "Q2_1_G"
-            },
-            {
-              "block": "in1_in2",
-              "port": "Q2_1_G"
-            }
-          ],
-          "routed": true,
-          "route_length_um": 12.94,
-          "reason": null,
-          "channel_track": 0
-        },
-        {
-          "pins": [
-            {
-              "block": "m3_m4",
-              "port": "Q1_1_D"
-            },
-            {
-              "block": "m3_m4",
-              "port": "Q2_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "self-net backbone crosses 3.72um through block 'm3_m4''s own port 'Q1_1_S' on the same drawing layer -- bussing this net across the block would draw a silent short to that pad; route to a layer_role with a metal2/via stack instead (or configure routing.cross_block_layer_role, issue #1168), or wire this net externally"
-        },
-        {
-          "pins": [
-            {
-              "block": "m5_m6",
-              "port": "Q1_1_D"
-            },
-            {
-              "block": "m5_m6",
-              "port": "Q2_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "self-net backbone crosses 3.72um through block 'm5_m6''s own port 'Q1_1_S' on the same drawing layer -- bussing this net across the block would draw a silent short to that pad; route to a layer_role with a metal2/via stack instead (or configure routing.cross_block_layer_role, issue #1168), or wire this net externally"
-        },
-        {
-          "pins": [
-            {
-              "block": "m3_m4",
-              "port": "Q1_1_D"
-            },
-            {
-              "block": "m5_m6",
-              "port": "Q2_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 12.96um through its own pin's block 'm5_m6' -- more than that pin's own 0.79um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "m5_m6",
-              "port": "Q2_1_G"
-            },
-            {
-              "block": "ip1_ip2",
-              "port": "Q2_1_G"
-            }
-          ],
-          "routed": true,
-          "route_length_um": 18.939999999999998,
-          "reason": null,
-          "channel_track": 0
-        },
-        {
-          "pins": [
-            {
-              "block": "m3_m4",
-              "port": "Q2_1_G"
-            },
-            {
-              "block": "m5_m6",
-              "port": "Q1_1_D"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 12.96um through its own pin's block 'm3_m4' -- more than that pin's own 0.39um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "m5_m6",
-              "port": "Q2_1_G"
-            },
-            {
-              "block": "m7_m8",
-              "port": "Q1_1_D"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 13.96um through its own pin's block 'm5_m6' -- more than that pin's own 0.79um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "m7_m8",
-              "port": "Q1_1_D"
-            },
-            {
-              "block": "in1_in2",
-              "port": "Q2_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 2.36um through unrelated block 'm9_m10''s bbox (including its own edge, within half the route's width) -- the route is not point-to-point between only the two connected blocks"
-        },
-        {
-          "pins": [
-            {
-              "block": "m7_m8",
               "port": "Q1_1_D"
             },
             {
@@ -1975,52 +1274,7 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 2.36um through unrelated block 'm9_m10''s bbox (including its own edge, within half the route's width) -- the route is not point-to-point between only the two connected blocks"
-        },
-        {
-          "pins": [
-            {
-              "block": "m5_m6",
-              "port": "Q1_1_D"
-            },
-            {
-              "block": "in1_in2",
-              "port": "Q2_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 2.36um through unrelated block 'm7_m8''s bbox (including its own edge, within half the route's width) -- the route is not point-to-point between only the two connected blocks"
-        },
-        {
-          "pins": [
-            {
-              "block": "m3_m4",
-              "port": "Q2_1_G"
-            },
-            {
-              "block": "m7_m8",
-              "port": "Q1_1_D"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 13.96um through its own pin's block 'm3_m4' -- more than that pin's own 0.39um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "m5_m6",
-              "port": "Q1_1_D"
-            },
-            {
-              "block": "ip1_ip2",
-              "port": "Q2_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 2.36um through unrelated block 'm7_m8''s bbox (including its own edge, within half the route's width) -- the route is not point-to-point between only the two connected blocks"
+          "reason": "routing not requested"
         },
         {
           "pins": [
@@ -2035,22 +1289,7 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 2.36um through unrelated block 'm5_m6''s bbox (including its own edge, within half the route's width) -- the route is not point-to-point between only the two connected blocks"
-        },
-        {
-          "pins": [
-            {
-              "block": "m3_m4",
-              "port": "Q1_1_D"
-            },
-            {
-              "block": "ip1_ip2",
-              "port": "Q2_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 2.36um through unrelated block 'm5_m6''s bbox (including its own edge, within half the route's width) -- the route is not point-to-point between only the two connected blocks"
+          "reason": "routing not requested"
         }
       ]
     },
@@ -2103,22 +1342,7 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "self-net backbone crosses 3.72um through block 'm3_m4''s own port 'Q2_1_S' on the same drawing layer -- bussing this net across the block would draw a silent short to that pad; route to a layer_role with a metal2/via stack instead (or configure routing.cross_block_layer_role, issue #1168), or wire this net externally"
-        },
-        {
-          "pins": [
-            {
-              "block": "m5_m6",
-              "port": "Q2_1_D"
-            },
-            {
-              "block": "m5_m6",
-              "port": "Q1_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "self-net backbone crosses 3.72um through block 'm5_m6''s own port 'Q2_1_S' on the same drawing layer -- bussing this net across the block would draw a silent short to that pad; route to a layer_role with a metal2/via stack instead (or configure routing.cross_block_layer_role, issue #1168), or wire this net externally"
+          "reason": "routing not requested"
         },
         {
           "pins": [
@@ -2133,67 +1357,7 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'm5_m6' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "m3_m4",
-              "port": "Q1_1_G"
-            },
-            {
-              "block": "m5_m6",
-              "port": "Q1_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "crosses already-routed net 'qn' -- 24 alternate channel tracks (this leg's shared-channel horizontal jog shifted farther from the row, one route width's worth of clearance per track) were tried first, and each one still conflicted"
-        },
-        {
-          "pins": [
-            {
-              "block": "m5_m6",
-              "port": "Q1_1_G"
-            },
-            {
-              "block": "m7_m8",
-              "port": "Q2_1_D"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'm7_m8' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "m5_m6",
-              "port": "Q2_1_D"
-            },
-            {
-              "block": "m7_m8",
-              "port": "Q2_1_D"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'm7_m8' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "ip1_ip2",
-              "port": "Q1_1_G"
-            },
-            {
-              "block": "in1_in2",
-              "port": "Q1_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "crosses already-routed net 'qn' -- 24 alternate channel tracks (this leg's shared-channel horizontal jog shifted farther from the row, one route width's worth of clearance per track) were tried first, and each one still conflicted"
+          "reason": "routing not requested"
         },
         {
           "pins": [
@@ -2208,52 +1372,7 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "crosses already-routed net 'vdd'"
-        },
-        {
-          "pins": [
-            {
-              "block": "m3_m4",
-              "port": "Q1_1_G"
-            },
-            {
-              "block": "m5_m6",
-              "port": "Q2_1_D"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'm5_m6' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "m7_m8",
-              "port": "Q2_1_D"
-            },
-            {
-              "block": "ip1_ip2",
-              "port": "Q1_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "crosses already-routed net 'vdd'"
-        },
-        {
-          "pins": [
-            {
-              "block": "m3_m4",
-              "port": "Q1_1_G"
-            },
-            {
-              "block": "m7_m8",
-              "port": "Q2_1_D"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 2.36um through unrelated block 'm5_m6''s bbox (including its own edge, within half the route's width) -- the route is not point-to-point between only the two connected blocks"
+          "reason": "routing not requested"
         },
         {
           "pins": [
@@ -2268,82 +1387,7 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 5.36um through unrelated block 'm5_m6''s bbox (including its own edge, within half the route's width) -- the route is not point-to-point between only the two connected blocks"
-        },
-        {
-          "pins": [
-            {
-              "block": "m5_m6",
-              "port": "Q1_1_G"
-            },
-            {
-              "block": "ip1_ip2",
-              "port": "Q1_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "crosses already-routed net 'qn' -- 24 alternate channel tracks (this leg's shared-channel horizontal jog shifted farther from the row, one route width's worth of clearance per track) were tried first, and each one still conflicted"
-        },
-        {
-          "pins": [
-            {
-              "block": "m5_m6",
-              "port": "Q2_1_D"
-            },
-            {
-              "block": "ip1_ip2",
-              "port": "Q1_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "crosses already-routed net 'qn'"
-        },
-        {
-          "pins": [
-            {
-              "block": "m7_m8",
-              "port": "Q2_1_D"
-            },
-            {
-              "block": "in1_in2",
-              "port": "Q1_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "crosses already-routed net 'vdd'"
-        },
-        {
-          "pins": [
-            {
-              "block": "m3_m4",
-              "port": "Q1_1_G"
-            },
-            {
-              "block": "ip1_ip2",
-              "port": "Q1_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "crosses already-routed net 'qn' -- 24 alternate channel tracks (this leg's shared-channel horizontal jog shifted farther from the row, one route width's worth of clearance per track) were tried first, and each one still conflicted"
-        },
-        {
-          "pins": [
-            {
-              "block": "m5_m6",
-              "port": "Q1_1_G"
-            },
-            {
-              "block": "in1_in2",
-              "port": "Q1_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "crosses already-routed net 'qn' -- 24 alternate channel tracks (this leg's shared-channel horizontal jog shifted farther from the row, one route width's worth of clearance per track) were tried first, and each one still conflicted"
+          "reason": "routing not requested"
         },
         {
           "pins": [
@@ -2358,37 +1402,7 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "crosses already-routed net 'qn'"
-        },
-        {
-          "pins": [
-            {
-              "block": "m5_m6",
-              "port": "Q2_1_D"
-            },
-            {
-              "block": "in1_in2",
-              "port": "Q1_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "crosses already-routed net 'qn'"
-        },
-        {
-          "pins": [
-            {
-              "block": "m3_m4",
-              "port": "Q1_1_G"
-            },
-            {
-              "block": "in1_in2",
-              "port": "Q1_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "crosses already-routed net 'qn' -- 24 alternate channel tracks (this leg's shared-channel horizontal jog shifted farther from the row, one route width's worth of clearance per track) were tried first, and each one still conflicted"
+          "reason": "routing not requested"
         },
         {
           "pins": [
@@ -2403,7 +1417,7 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "crosses already-routed net 'vdd'"
+          "reason": "routing not requested"
         }
       ]
     },
@@ -2428,8 +1442,8 @@
         }
       ],
       "routed": false,
-      "route_length_um": 43.58,
-      "status": "partial",
+      "route_length_um": null,
+      "status": "unrouted",
       "legs": [
         {
           "pins": [
@@ -2444,37 +1458,7 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'in1_in2' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "in1_in2",
-              "port": "Q1_1_D"
-            },
-            {
-              "block": "a1p_b1p",
-              "port": "Q1_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "crosses already-routed net 'vdd'"
-        },
-        {
-          "pins": [
-            {
-              "block": "in1_in2",
-              "port": "Q1_1_D"
-            },
-            {
-              "block": "a1n_b1n",
-              "port": "Q1_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "crosses already-routed net 'vdd'"
+          "reason": "routing not requested"
         },
         {
           "pins": [
@@ -2489,23 +1473,7 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "crosses already-routed net 'vdd'"
-        },
-        {
-          "pins": [
-            {
-              "block": "a1p_b1p",
-              "port": "Q1_1_G"
-            },
-            {
-              "block": "a1n_b1n",
-              "port": "Q1_1_G"
-            }
-          ],
-          "routed": true,
-          "route_length_um": 43.58,
-          "reason": null,
-          "channel_track": 0
+          "reason": "routing not requested"
         },
         {
           "pins": [
@@ -2520,7 +1488,7 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "crosses already-routed net 'vdd'"
+          "reason": "routing not requested"
         }
       ]
     },
@@ -2561,52 +1529,7 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'in1_in2' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "in1_in2",
-              "port": "Q2_1_D"
-            },
-            {
-              "block": "a1n_b1n",
-              "port": "Q2_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 2.36um through unrelated block 'a1p_b1p''s bbox (including its own edge, within half the route's width) -- the route is not point-to-point between only the two connected blocks"
-        },
-        {
-          "pins": [
-            {
-              "block": "ip1_ip2",
-              "port": "Q2_1_D"
-            },
-            {
-              "block": "a1n_b1n",
-              "port": "Q2_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "crosses already-routed net 'qn'"
-        },
-        {
-          "pins": [
-            {
-              "block": "in1_in2",
-              "port": "Q2_1_D"
-            },
-            {
-              "block": "a1p_b1p",
-              "port": "Q2_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 19.14um through its own pin's block 'a1p_b1p' -- more than that pin's own 0.79um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
+          "reason": "routing not requested"
         },
         {
           "pins": [
@@ -2621,13 +1544,13 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 14.64um through its own pin's block 'a1p_b1p' -- more than that pin's own 0.79um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
+          "reason": "routing not requested"
         },
         {
           "pins": [
             {
-              "block": "a1p_b1p",
-              "port": "Q2_1_G"
+              "block": "ip1_ip2",
+              "port": "Q2_1_D"
             },
             {
               "block": "a1n_b1n",
@@ -2636,7 +1559,7 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "crosses already-routed net 'sp' -- 24 alternate channel tracks (this leg's shared-channel horizontal jog shifted farther from the row, one route width's worth of clearance per track) were tried first, and each one still conflicted"
+          "reason": "routing not requested"
         }
       ]
     },
@@ -2652,9 +1575,9 @@
           "port": "Q1_1_S"
         }
       ],
-      "routed": true,
-      "route_length_um": 3.919999999999959,
-      "status": "routed",
+      "routed": false,
+      "route_length_um": null,
+      "status": "unrouted",
       "legs": [
         {
           "pins": [
@@ -2667,10 +1590,9 @@
               "port": "Q1_1_S"
             }
           ],
-          "routed": true,
-          "route_length_um": 3.919999999999959,
-          "reason": null,
-          "channel_track": 0
+          "routed": false,
+          "route_length_um": null,
+          "reason": "routing not requested"
         }
       ]
     },
@@ -2686,9 +1608,9 @@
           "port": "Q2_1_S"
         }
       ],
-      "routed": true,
-      "route_length_um": 3.919999999999959,
-      "status": "routed",
+      "routed": false,
+      "route_length_um": null,
+      "status": "unrouted",
       "legs": [
         {
           "pins": [
@@ -2701,10 +1623,9 @@
               "port": "Q2_1_S"
             }
           ],
-          "routed": true,
-          "route_length_um": 3.919999999999959,
-          "reason": null,
-          "channel_track": 0
+          "routed": false,
+          "route_length_um": null,
+          "reason": "routing not requested"
         }
       ]
     },
@@ -2739,36 +1660,6 @@
         {
           "pins": [
             {
-              "block": "a1n_b1n",
-              "port": "Q1_1_D"
-            },
-            {
-              "block": "a2n_b2n",
-              "port": "Q1_1_D"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'a2n_b2n' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "a2n_b2n",
-              "port": "Q1_1_D"
-            },
-            {
-              "block": "a2n_b2n",
-              "port": "Q2_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "self-net backbone crosses 1.72um through block 'a2n_b2n''s own port 'Q1_1_S' on the same drawing layer -- bussing this net across the block would draw a silent short to that pad; route to a layer_role with a metal2/via stack instead (or configure routing.cross_block_layer_role, issue #1168), or wire this net externally"
-        },
-        {
-          "pins": [
-            {
               "block": "a2p_b2p",
               "port": "Q1_1_D"
             },
@@ -2779,37 +1670,7 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'a1n_b1n' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "a1n_b1n",
-              "port": "Q1_1_D"
-            },
-            {
-              "block": "a2n_b2n",
-              "port": "Q2_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 6.96um through its own pin's block 'a2n_b2n' -- more than that pin's own 0.39um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "a2p_b2p",
-              "port": "Q1_1_D"
-            },
-            {
-              "block": "a2n_b2n",
-              "port": "Q2_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 2.36um through unrelated block 'a1n_b1n''s bbox (including its own edge, within half the route's width) -- the route is not point-to-point between only the two connected blocks"
+          "reason": "routing not requested"
         },
         {
           "pins": [
@@ -2824,7 +1685,7 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 6.36um through unrelated block 'a1n_b1n''s bbox (including its own edge, within half the route's width) -- the route is not point-to-point between only the two connected blocks"
+          "reason": "routing not requested"
         },
         {
           "pins": [
@@ -2839,13 +1700,13 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "self-net backbone crosses 5.72um through block 'a2p_b2p''s own port 'Q1_1_S' on the same drawing layer -- bussing this net across the block would draw a silent short to that pad; route to a layer_role with a metal2/via stack instead (or configure routing.cross_block_layer_role, issue #1168), or wire this net externally"
+          "reason": "routing not requested"
         },
         {
           "pins": [
             {
               "block": "a2p_b2p",
-              "port": "Q2_1_G"
+              "port": "Q1_1_D"
             },
             {
               "block": "a2n_b2n",
@@ -2854,37 +1715,7 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "crosses already-routed net 'sp' -- 24 alternate channel tracks (this leg's shared-channel horizontal jog shifted farther from the row, one route width's worth of clearance per track) were tried first, and each one still conflicted"
-        },
-        {
-          "pins": [
-            {
-              "block": "a1n_b1n",
-              "port": "Q1_1_D"
-            },
-            {
-              "block": "a2p_b2p",
-              "port": "Q2_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 22.96um through its own pin's block 'a2p_b2p' -- more than that pin's own 0.79um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "a2n_b2n",
-              "port": "Q1_1_D"
-            },
-            {
-              "block": "a2p_b2p",
-              "port": "Q2_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 22.96um through its own pin's block 'a2p_b2p' -- more than that pin's own 0.79um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
+          "reason": "routing not requested"
         }
       ]
     },
@@ -2913,103 +1744,12 @@
         }
       ],
       "routed": false,
-      "route_length_um": 6.31999999999998,
-      "status": "partial",
+      "route_length_um": null,
+      "status": "unrouted",
       "legs": [
         {
           "pins": [
             {
-              "block": "a2n_b2n",
-              "port": "Q2_1_D"
-            },
-            {
-              "block": "a2n_b2n",
-              "port": "Q1_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "self-net backbone crosses 1.72um through block 'a2n_b2n''s own port 'Q2_1_S' on the same drawing layer -- bussing this net across the block would draw a silent short to that pad; route to a layer_role with a metal2/via stack instead (or configure routing.cross_block_layer_role, issue #1168), or wire this net externally"
-        },
-        {
-          "pins": [
-            {
-              "block": "a1n_b1n",
-              "port": "Q2_1_D"
-            },
-            {
-              "block": "a2n_b2n",
-              "port": "Q2_1_D"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'a2n_b2n' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "a1n_b1n",
-              "port": "Q2_1_D"
-            },
-            {
-              "block": "a2n_b2n",
-              "port": "Q1_1_G"
-            }
-          ],
-          "routed": true,
-          "route_length_um": 6.31999999999998,
-          "reason": null,
-          "channel_track": 0
-        },
-        {
-          "pins": [
-            {
-              "block": "a2p_b2p",
-              "port": "Q2_1_D"
-            },
-            {
-              "block": "a2p_b2p",
-              "port": "Q1_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "self-net backbone crosses 5.72um through block 'a2p_b2p''s own port 'Q2_1_S' on the same drawing layer -- bussing this net across the block would draw a silent short to that pad; route to a layer_role with a metal2/via stack instead (or configure routing.cross_block_layer_role, issue #1168), or wire this net externally"
-        },
-        {
-          "pins": [
-            {
-              "block": "a1n_b1n",
-              "port": "Q2_1_D"
-            },
-            {
-              "block": "a2p_b2p",
-              "port": "Q1_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'a1n_b1n' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "a2n_b2n",
-              "port": "Q2_1_D"
-            },
-            {
-              "block": "a2p_b2p",
-              "port": "Q1_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 2.36um through unrelated block 'a1n_b1n''s bbox (including its own edge, within half the route's width) -- the route is not point-to-point between only the two connected blocks"
-        },
-        {
-          "pins": [
-            {
               "block": "a2p_b2p",
               "port": "Q2_1_D"
             },
@@ -3020,22 +1760,7 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'a1n_b1n' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly"
-        },
-        {
-          "pins": [
-            {
-              "block": "a2p_b2p",
-              "port": "Q1_1_G"
-            },
-            {
-              "block": "a2n_b2n",
-              "port": "Q1_1_G"
-            }
-          ],
-          "routed": false,
-          "route_length_um": null,
-          "reason": "crosses already-routed net 'sp' -- 24 alternate channel tracks (this leg's shared-channel horizontal jog shifted farther from the row, one route width's worth of clearance per track) were tried first, and each one still conflicted"
+          "reason": "routing not requested"
         },
         {
           "pins": [
@@ -3050,7 +1775,22 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "backbone's 0.36um-wide drawn path crosses 2.63um through unrelated block 'a1n_b1n''s bbox (including its own edge, within half the route's width) -- the route is not point-to-point between only the two connected blocks"
+          "reason": "routing not requested"
+        },
+        {
+          "pins": [
+            {
+              "block": "a2p_b2p",
+              "port": "Q2_1_D"
+            },
+            {
+              "block": "a2p_b2p",
+              "port": "Q1_1_G"
+            }
+          ],
+          "routed": false,
+          "route_length_um": null,
+          "reason": "routing not requested"
         },
         {
           "pins": [
@@ -3065,7 +1805,7 @@
           ],
           "routed": false,
           "route_length_um": null,
-          "reason": "crosses already-routed net 'sp'"
+          "reason": "routing not requested"
         }
       ]
     }
@@ -3086,20 +1826,26 @@
   ],
   "unrouted_nets": [
     "ibias",
+    "atail",
+    "aon",
     "aop",
+    "vdd",
     "vss",
     "clk",
+    "ltail",
     "mn",
     "mp",
     "qn",
     "qp",
     "sp",
     "sn",
+    "na",
+    "nb",
     "dout",
     "doutb"
   ],
   "drc_hints": {
-    "min_spacing_um": 3.0,
+    "min_spacing_um": null,
     "matched_groups": [
       {
         "matched_group_id": "mos_array:1x1:common_centroid",
@@ -3137,18 +1883,24 @@
       }
     ],
     "notes": [
-      "net 'ibias' could not be routed: 1 of 3 pins could not be connected into one net ('mb.U0_D') -- every candidate leg reaching them was rejected (per-leg detail in nets[].legs[]); nearest rejection ('mb.U0_D' -> 'mb.U0_G'): self-net backbone crosses 3.07um through block 'mb''s own port 'U0_S' on the same drawing layer -- bussing this net across the block would draw a silent short to that pad; route to a layer_role with a metal2/via stack instead (or configure routing.cross_block_layer_role, issue #1168), or wire this net externally",
-      "net 'aop' could not be routed: 2 of 3 pins could not be connected into one net ('rn_rp.R1_A', 'm1_m2.Q2_1_G') -- every candidate leg reaching them was rejected (per-leg detail in nets[].legs[]); nearest rejection ('rn_rp.R1_A' -> 'm1_m2.Q2_1_G'): backbone's 0.36um-wide drawn path crosses 2.36um through unrelated block 'mtl''s bbox (including its own edge, within half the route's width) -- the route is not point-to-point between only the two connected blocks",
-      "net 'vss' could not be routed: 8 of 9 pins could not be connected into one net ('mt.U0_S', 'mtl.U0_S', 'in1_in2.Q1_1_S', 'in1_in2.Q2_1_S', 'a1n_b1n.Q1_1_S', 'a1n_b1n.Q2_1_S', 'a2n_b2n.Q1_1_S', 'a2n_b2n.Q2_1_S') -- every candidate leg reaching them was rejected (per-leg detail in nets[].legs[]); nearest rejection ('in1_in2.Q1_1_S' -> 'in1_in2.Q2_1_S'): self-net backbone crosses 0.1um through block 'in1_in2''s own port 'Q1_1_D' on the same drawing layer -- bussing this net across the block would draw a silent short to that pad; route to a layer_role with a metal2/via stack instead (or configure routing.cross_block_layer_role, issue #1168), or wire this net externally",
-      "net 'clk' could not be routed: 1 of 5 pins could not be connected into one net ('mtl.U0_G') -- every candidate leg reaching them was rejected (per-leg detail in nets[].legs[]); nearest rejection ('mtl.U0_G' -> 'm7_m8.Q2_1_G'): crosses already-routed net 'aon'",
-      "net 'mn' could not be routed: 1 of 3 pins could not be connected into one net ('m9_m10.Q1_1_D') -- every candidate leg reaching them was rejected (per-leg detail in nets[].legs[]); nearest rejection ('m3_m4.Q1_1_S' -> 'm9_m10.Q1_1_D'): backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'm3_m4' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly",
-      "net 'mp' could not be routed: 1 of 3 pins could not be connected into one net ('m9_m10.Q2_1_D') -- every candidate leg reaching them was rejected (per-leg detail in nets[].legs[]); nearest rejection ('m3_m4.Q2_1_S' -> 'm9_m10.Q2_1_D'): backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'm3_m4' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly",
-      "net 'qn' could not be routed: 3 of 7 pins could not be connected into one net ('m3_m4.Q1_1_D', 'm5_m6.Q1_1_D', 'm7_m8.Q1_1_D') -- every candidate leg reaching them was rejected (per-leg detail in nets[].legs[]); nearest rejection ('m3_m4.Q1_1_D' -> 'm5_m6.Q1_1_D'): backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'm5_m6' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly",
-      "net 'qp' could not be routed: 6 of 7 pins could not be connected into one net ('m3_m4.Q1_1_G', 'm5_m6.Q2_1_D', 'm5_m6.Q1_1_G', 'm7_m8.Q2_1_D', 'ip1_ip2.Q1_1_G', 'in1_in2.Q1_1_G') -- every candidate leg reaching them was rejected (per-leg detail in nets[].legs[]); nearest rejection ('m3_m4.Q2_1_D' -> 'm3_m4.Q1_1_G'): self-net backbone crosses 3.72um through block 'm3_m4''s own port 'Q2_1_S' on the same drawing layer -- bussing this net across the block would draw a silent short to that pad; route to a layer_role with a metal2/via stack instead (or configure routing.cross_block_layer_role, issue #1168), or wire this net externally",
-      "net 'sp' could not be routed: 2 of 4 pins could not be connected into one net ('ip1_ip2.Q1_1_D', 'in1_in2.Q1_1_D') -- every candidate leg reaching them was rejected (per-leg detail in nets[].legs[]); nearest rejection ('ip1_ip2.Q1_1_D' -> 'in1_in2.Q1_1_D'): backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'in1_in2' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly",
-      "net 'sn' could not be routed: 3 of 4 pins could not be connected into one net ('in1_in2.Q2_1_D', 'a1p_b1p.Q2_1_G', 'a1n_b1n.Q2_1_G') -- every candidate leg reaching them was rejected (per-leg detail in nets[].legs[]); nearest rejection ('ip1_ip2.Q2_1_D' -> 'in1_in2.Q2_1_D'): backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'in1_in2' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly",
-      "net 'dout' could not be routed: 4 of 5 pins could not be connected into one net ('a1n_b1n.Q1_1_D', 'a2n_b2n.Q1_1_D', 'a2p_b2p.Q2_1_G', 'a2n_b2n.Q2_1_G') -- every candidate leg reaching them was rejected (per-leg detail in nets[].legs[]); nearest rejection ('a1n_b1n.Q1_1_D' -> 'a2n_b2n.Q1_1_D'): backbone's 0.36um-wide drawn path crosses 1.72um through its own pin's block 'a2n_b2n' -- more than that pin's own 0.64um edge margin (including 0.18um for the route's own half-width), so the route plows through, or clips the edge of, the block's interior (e.g. a same-facing port pair reaching a pin on the block's far side, crossing another pin on the way, or a connecting jog running close enough alongside the block's own edge that the drawn wire's width still overlaps it) rather than approaching the pin cleanly",
-      "net 'doutb' could not be routed: 3 of 5 pins could not be connected into one net ('a2p_b2p.Q2_1_D', 'a2n_b2n.Q2_1_D', 'a2p_b2p.Q1_1_G') -- every candidate leg reaching them was rejected (per-leg detail in nets[].legs[]); nearest rejection ('a2n_b2n.Q2_1_D' -> 'a2n_b2n.Q1_1_G'): self-net backbone crosses 1.72um through block 'a2n_b2n''s own port 'Q2_1_S' on the same drawing layer -- bussing this net across the block would draw a silent short to that pad; route to a layer_role with a metal2/via stack instead (or configure routing.cross_block_layer_role, issue #1168), or wire this net externally"
+      "net 'ibias' could not be routed: routing not requested",
+      "net 'atail' could not be routed: routing not requested",
+      "net 'aon' could not be routed: routing not requested",
+      "net 'aop' could not be routed: routing not requested",
+      "net 'vdd' could not be routed: routing not requested",
+      "net 'vss' could not be routed: routing not requested",
+      "net 'clk' could not be routed: routing not requested",
+      "net 'ltail' could not be routed: routing not requested",
+      "net 'mn' could not be routed: routing not requested",
+      "net 'mp' could not be routed: routing not requested",
+      "net 'qn' could not be routed: routing not requested",
+      "net 'qp' could not be routed: routing not requested",
+      "net 'sp' could not be routed: routing not requested",
+      "net 'sn' could not be routed: routing not requested",
+      "net 'na' could not be routed: routing not requested",
+      "net 'nb' could not be routed: routing not requested",
+      "net 'dout' could not be routed: routing not requested",
+      "net 'doutb' could not be routed: routing not requested"
     ]
   },
   "warnings": []

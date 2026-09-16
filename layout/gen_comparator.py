@@ -2,12 +2,13 @@
 """Generate `layout/comparator.gds` -- the physical layout of DR-0001's
 comparator topology (`design/comparator_dut_analog.sch` +
 `design/comparator_dut_latch.sch`) -- via `klt gen` (2AMLogic/klayout-tools)
-device generators plus `klt gen-compose` for placement and routing.
+device generators, `klt gen-compose` for placement, and `route_nets.py` for
+the routing.
 
-Issue #18. This is fresh physical design work, not a port of any other
-repo's layout -- see `layout/README.md` for the full methodology writeup,
-what is/is not verified, and the known routing gaps this script's own
-`klt gen-compose` run reports.
+Issues #18 (the layout) and #30 (completing its routing). This is fresh
+physical design work, not a port of any other repo's layout -- see
+`layout/README.md` for the full methodology writeup and what is/is not
+verified.
 
 WHAT THIS SCRIPT DOES
 ----------------------
@@ -22,36 +23,34 @@ WHAT THIS SCRIPT DOES
    then the isolation inverters, then the NOR SR latch) -- so the drawn
    floorplan reads left-to-right the same way the schematic and the decision
    record do.
-3. Wires every schematic net (`NETS` below, transcribed directly from
+3. Declares every schematic net (`NETS` below, transcribed directly from
    `design/comparator_dut_analog.sch` / `design/comparator_dut_latch.sch`'s
-   own `N {...} {lab=...}` labels) as a `connectivity[]` entry, and runs
-   `klt gen-compose` with routing enabled on the PDK's `metal` role (Metal1).
-4. Writes the composed result to `layout/comparator.gds` plus its
+   own `N {...} {lab=...}` labels, plus `comparator_dut.sch`'s own `XA`/`XL`
+   instance lines for the preamp->latch hand-off) as a `connectivity[]`
+   entry. The request carries NO `routing` block: gen-compose still
+   validates every declared pin against the blocks' own reported ports (a
+   typo'd or stale port name is still a hard request error), but draws no
+   metal -- see `build_request()` and `route_nets.py`'s docstring for why
+   this design's net graph needs a two-layer channel router rather than
+   gen-compose's own one-plane-per-net spanning-tree router.
+4. Writes the placed result to `layout/comparator.gds` plus its
    `klt gen-compose` JSON response (`layout/comparator.gen-compose.json`,
-   committed as the routing/connectivity evidence -- which nets actually got
-   real drawn metal and which did not, see `unrouted_nets`).
-5. Runs `layout/fix_metal1_space.py` against the composed `comparator.gds`
-   (issue #20, DRC signoff) -- a Metal1/Metal2/Via1 *geometry* post-process
-   that closes the twelve `metal1.space.1` violations `klt gen-compose`'s
-   own router leaves behind (a confirmed `klt gen-compose`/`diff_pair`
-   limitation, filed as
-   [klayout-tools#1904](https://github.com/2AMLogic/klayout-tools/issues/1904)
-   -- see that module's own docstring and `layout/README.md`'s "DRC
-   signoff" section for the full derivation). This step never touches
-   `NETS`/connectivity -- every net this script wires above is still wired
-   exactly the same after it runs.
+   committed as the placement/connectivity-declaration evidence).
+5. Runs `layout/route_nets.py` against that placed `comparator.gds`: draws
+   the well/substrate body ties the device generators do not report a port
+   for, then routes 100% of `NETS` as a Metal2/Metal3 channel route,
+   and re-runs `klt drc` against the result. Its own per-net report is
+   `layout/comparator.routing.json` (committed evidence; the source
+   `layout/routing_table.py` renders this README's routing table from).
 
 WHAT IS NOT ATTEMPTED HERE (stated, not hidden -- see `layout/README.md`)
 --------------------------------------------------------------------------
-* MOSFET body/well ties. Neither `mos_array` nor `diff_pair` reports a
-  body/bulk port at all (confirmed directly against this script's own `klt
-  gen` calls -- every block's `ports[]` is S/D/G only), so there is nothing
-  in `NETS` to wire an NMOS body to `vss` or a PMOS body to `vdd` with. This
-  mirrors the gf180-sar-adc comparator layout's own stated deviation
-  ("NMOS bodies on the deck's `vsubs` global ... PMOS bodies on their own
-  Nwell island's net, not on `vdd`") -- same tool family, same gap.
-* LVS signoff. Explicitly out of scope for this issue (#22 tracks it).
-  `unrouted_nets` in the committed response is read, not silenced.
+* Guard rings. Every `diff_pair` block is drawn with `add_guard_ring:
+  false` -- a closed ring makes the block's own ports unreachable for any
+  router, this one included.
+* Parasitic-aware routing. Track and channel assignment here is ordinal
+  (declaration order), not driven by any extracted R/C or a matching
+  constraint; post-layout simulation (#23) is what will judge it.
 """
 
 from __future__ import annotations
@@ -61,12 +60,11 @@ import os
 import subprocess
 import sys
 
-import fix_metal1_space
+import route_nets
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 GENDIR = os.path.join(HERE, "_gen")
 PDK = "gf180mcuC"  # 3.3 V flavor, per DR-0001's rail discipline
-ROUTE_WIDTH_UM = 0.36
 
 # ---------------------------------------------------------------------------
 # Device groups, transcribed from design/comparator_dut_analog.sch and
@@ -160,8 +158,21 @@ NETS: dict[str, list[tuple[str, str]]] = {
     # comparator_dut_analog
     "ibias": [("MB", "d"), ("MB", "g"), ("MT", "g")],
     "atail": [("MT", "d"), ("MIP", "s"), ("MIN", "s")],
-    "aon": [("MIP", "d"), ("RN", "m"), ("M1", "g")],   # preamp -> latch (inp)
-    "aop": [("MIN", "d"), ("RP", "m"), ("M2", "g")],   # preamp -> latch (inn)
+    # The preamp -> latch hand-off, transcribed from `comparator_dut.sch`'s
+    # own instance line rather than from the two cells' pin *names*:
+    #   XL aop aon clk dout doutb vdd vss comparator_dut_latch
+    # binds the latch's `inp` to `aop` and its `inn` to `aon` -- i.e. the
+    # preamp's INVERTING output (`aon`, MIP's drain) drives the latch's
+    # `inn` (M2's gate), and `aop` drives `inp` (M1's gate). Wiring these
+    # the other way round still compares *topologically* clean (this
+    # comparator is fully symmetric, so `klayout.db.NetlistComparer` simply
+    # resolves the ambiguity by pairing every latch-internal net with its
+    # twin), but it inverts the sense of the `dout`/`doutb` boundary pins
+    # against `sim/dut/README.md`'s interface contract -- an LVS report's
+    # `net_correspondence` is what catches it, not its `status`. See
+    # layout/README.md's "Pin-order interface-contract check".
+    "aon": [("MIP", "d"), ("RN", "m"), ("M2", "g")],   # preamp -> latch (inn)
+    "aop": [("MIN", "d"), ("RP", "m"), ("M1", "g")],   # preamp -> latch (inp)
     "vdd": [
         ("RN", "p"), ("RP", "p"),
         ("M5", "s"), ("M6", "s"), ("M7", "s"), ("M8", "s"),
@@ -192,13 +203,14 @@ NETS: dict[str, list[tuple[str, str]]] = {
                ("A2P", "g"), ("A2N", "g")],
 }
 
-#: Single-pin nets -- labelled via gen-compose's `pins[]` (no routing, since
-#: there is nothing else on the net to route to). Every other schematic pin
-#: (ibias/vdd/vss/clk/dout/doutb) is already a >=2-pin `NETS` entry above and
-#: therefore CANNOT also carry a `pins[]` label (gen-compose rejects a
-#: (block, port) used in both) -- see layout/README.md for why those
-#: boundary nets are left unlabelled at this cell's own edge, a stated scope
-#: cut, not an oversight.
+#: Single-pin nets -- labelled via gen-compose's `pins[]` (nothing to route:
+#: each is one gate terminal with no other pin on its net). Every other
+#: schematic pin (ibias/vdd/vss/clk/dout/doutb) is a >=2-pin `NETS` entry
+#: above and therefore cannot ALSO carry a `pins[]` label (gen-compose
+#: rejects a (block, port) used in both) -- those six carry their boundary
+#: name from the Metal3 trunk label `route_nets.py` draws on every net
+#: instead, which is what `klt extract --pins` then promotes to a top-level
+#: pin (see `run_lvs.py`'s `INTERFACE_PINS`).
 PIN_LABELS = {
     "vinp": _p("MIP", "g"),
     "vinn": _p("MIN", "g"),
@@ -257,7 +269,14 @@ def build_request() -> dict:
         "placement": {"strategy": "row", "order": order, "spacing_um": 3.0},
         "connectivity": connectivity,
         "pins": pins_top,
-        "routing": {"layer_role": "metal", "width_um": ROUTE_WIDTH_UM},
+        # No `routing` block: this is a declare-only request (klt gen-compose
+        # #1188). Every connectivity[] net is still validated against the
+        # blocks' own reported ports -- a typo'd or stale port name is still
+        # a hard request error -- but no metal is drawn here. `route_nets.py`
+        # draws all of it instead, on the vertical/horizontal layer pair this
+        # design's non-planar net graph needs and gen-compose's one-plane-per
+        # -net router cannot express (see that module's docstring and
+        # layout/README.md's "Routing" section).
         "options": {
             "cell_name": "COMPARATOR",
             "output": os.path.join(HERE, "comparator.gds"),
@@ -284,18 +303,15 @@ def main() -> None:
     response = gen_compose()
     n_mos = sum(len(devs) for bid, gp, devs in BLOCKS if gp[0] != "res_array")
     n_res = sum(len(devs) for bid, gp, devs in BLOCKS if gp[0] == "res_array")
-    print(f"\nwrote comparator.gds  transistors={n_mos}  resistors={n_res}")
-    print(f"bbox_um: {response['bbox_um']}")
-    routed = [n["net"] for n in response["nets"] if n["status"] == "routed"]
-    partial = [n["net"] for n in response["nets"] if n["status"] == "partial"]
-    unrouted = response["unrouted_nets"]
-    print(f"nets routed={len(routed)} partial={len(partial)} "
-          f"unrouted={len(unrouted)} (of {len(response['nets'])})")
-    if unrouted:
-        print(f"unrouted_nets: {unrouted}")
+    print(f"\nplaced comparator.gds  transistors={n_mos}  resistors={n_res}")
+    print(f"bbox_um (placement only): {response['bbox_um']}")
+    print(f"connectivity validated for {len(response['nets'])} nets "
+          f"({sum(len(n['pins']) for n in response['nets'])} pins)")
 
-    print("\nfixing klt gen-compose's metal1.space.1 violations (issue #20)...")
-    fix_metal1_space.fix()
+    print("\nrouting every net (layout/route_nets.py)...")
+    route_nets.route()
+    drc = route_nets.run_drc()
+    print(f"klt drc: status={drc['status']} violations={drc['violation_count']}")
 
 
 if __name__ == "__main__":

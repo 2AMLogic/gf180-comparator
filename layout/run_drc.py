@@ -8,9 +8,9 @@ WHAT THIS SCRIPT DOES
 json` -- the gf180mcu deck `klt pdk find`/`klt deck hash` resolves for the
 installed PDK/klt build, run against the committed GDS exactly as
 `layout/gen_comparator.py`'s own pipeline leaves it (that script's last
-step, `fix_metal1_space.py`, closes the `metal1.space.1` violations `klt
-gen-compose`'s router leaves behind -- see that module's docstring and
-`layout/README.md`'s "DRC signoff" section). Writes the structured JSON
+step, `route_nets.py`, draws every net's metal and re-runs `klt drc` inline;
+this script is the standalone re-run that writes the committed artifact --
+see `layout/README.md`'s "DRC signoff" section). Writes the structured JSON
 report to `layout/drc/comparator.drc.json` (committed evidence; the
 `layout/lvs/` directory's own sibling, same convention).
 

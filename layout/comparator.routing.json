@@ -1,0 +1,1099 @@
+{
+  "channel": {
+    "lower_first_track_um": -1.75,
+    "upper_first_track_um": 64.49
+  },
+  "nets": [
+    {
+      "link_x_um": null,
+      "net": "ibias",
+      "pins": 3,
+      "risers": [
+        {
+          "block": "mb",
+          "channel": "up",
+          "length_um": 61.99,
+          "port": "U0_D",
+          "stub_um": 0.0,
+          "x_um": 4.79
+        },
+        {
+          "block": "mb",
+          "channel": "up",
+          "length_um": 58.53,
+          "port": "U0_G",
+          "stub_um": 0.0,
+          "x_um": 2.5
+        },
+        {
+          "block": "mt",
+          "channel": "up",
+          "length_um": 53.53,
+          "port": "U0_G",
+          "stub_um": 0.0,
+          "x_um": 11.0
+        }
+      ],
+      "route_length_um": 182.55,
+      "trunks": [
+        {
+          "channel": "up",
+          "x0_um": 2.5,
+          "x1_um": 11.0,
+          "y_um": 64.49
+        }
+      ]
+    },
+    {
+      "link_x_um": 5.71,
+      "net": "atail",
+      "pins": 3,
+      "risers": [
+        {
+          "block": "mt",
+          "channel": "up",
+          "length_um": 60.29,
+          "port": "U0_D",
+          "stub_um": 0.0,
+          "x_um": 13.29
+        },
+        {
+          "block": "mip_min",
+          "channel": "up",
+          "length_um": 18.47,
+          "port": "Q2_1_S",
+          "stub_um": 0.7,
+          "x_um": 16.51
+        },
+        {
+          "block": "mip_min",
+          "channel": "down",
+          "length_um": 16.75,
+          "port": "Q1_1_S",
+          "stub_um": 0.7,
+          "x_um": 16.51
+        }
+      ],
+      "route_length_um": 184.15,
+      "trunks": [
+        {
+          "channel": "up",
+          "x0_um": 5.71,
+          "x1_um": 16.51,
+          "y_um": 65.29
+        },
+        {
+          "channel": "down",
+          "x0_um": 5.71,
+          "x1_um": 16.51,
+          "y_um": -1.75
+        }
+      ]
+    },
+    {
+      "link_x_um": 14.21,
+      "net": "aon",
+      "pins": 3,
+      "risers": [
+        {
+          "block": "rn_rp",
+          "channel": "up",
+          "length_um": 65.59,
+          "port": "R0_A",
+          "stub_um": 0.0,
+          "x_um": 23.46
+        },
+        {
+          "block": "m1_m2",
+          "channel": "up",
+          "length_um": 47.31,
+          "port": "Q2_1_G",
+          "stub_um": 0.0,
+          "x_um": 274.43
+        },
+        {
+          "block": "mip_min",
+          "channel": "down",
+          "length_um": 17.55,
+          "port": "Q1_1_D",
+          "stub_um": 0.7,
+          "x_um": 20.49
+        }
+      ],
+      "route_length_um": 465.59,
+      "trunks": [
+        {
+          "channel": "up",
+          "x0_um": 14.21,
+          "x1_um": 274.43,
+          "y_um": 66.09
+        },
+        {
+          "channel": "down",
+          "x0_um": 14.21,
+          "x1_um": 20.49,
+          "y_um": -2.55
+        }
+      ]
+    },
+    {
+      "link_x_um": 21.950000000000003,
+      "net": "aop",
+      "pins": 3,
+      "risers": [
+        {
+          "block": "mip_min",
+          "channel": "up",
+          "length_um": 20.07,
+          "port": "Q2_1_D",
+          "stub_um": 0.7,
+          "x_um": 20.49
+        },
+        {
+          "block": "rn_rp",
+          "channel": "up",
+          "length_um": 66.39,
+          "port": "R1_A",
+          "stub_um": 0.0,
+          "x_um": 144.8
+        },
+        {
+          "block": "m1_m2",
+          "channel": "down",
+          "length_um": 12.31,
+          "port": "Q1_1_G",
+          "stub_um": 0.0,
+          "x_um": 274.43
+        }
+      ],
+      "route_length_um": 545.8,
+      "trunks": [
+        {
+          "channel": "up",
+          "x0_um": 20.49,
+          "x1_um": 144.8,
+          "y_um": 66.89
+        },
+        {
+          "channel": "down",
+          "x0_um": 21.95,
+          "x1_um": 274.43,
+          "y_um": -3.35
+        }
+      ]
+    },
+    {
+      "link_x_um": 265.89000000000004,
+      "net": "vdd",
+      "pins": 18,
+      "risers": [
+        {
+          "block": "rn_rp",
+          "channel": "up",
+          "length_um": 67.19,
+          "port": "R0_B",
+          "stub_um": 0.0,
+          "x_um": 143.88
+        },
+        {
+          "block": "rn_rp",
+          "channel": "up",
+          "length_um": 67.19,
+          "port": "R1_B",
+          "stub_um": 0.0,
+          "x_um": 265.22
+        },
+        {
+          "block": "m5_m6",
+          "channel": "up",
+          "length_um": 56.87,
+          "port": "Q2_1_S",
+          "stub_um": 0.7,
+          "x_um": 283.19
+        },
+        {
+          "block": "m7_m8",
+          "channel": "up",
+          "length_um": 59.87,
+          "port": "Q2_1_S",
+          "stub_um": 0.7,
+          "x_um": 288.19
+        },
+        {
+          "block": "m9_m10",
+          "channel": "up",
+          "length_um": 62.87,
+          "port": "Q2_1_S",
+          "stub_um": 0.7,
+          "x_um": 293.19
+        },
+        {
+          "block": "ip1_ip2",
+          "channel": "up",
+          "length_um": 58.37,
+          "port": "Q2_1_S",
+          "stub_um": 0.7,
+          "x_um": 298.19
+        },
+        {
+          "block": "a1p_b1p",
+          "channel": "up",
+          "length_um": 50.87,
+          "port": "Q2_1_S",
+          "stub_um": 0.7,
+          "x_um": 308.19
+        },
+        {
+          "block": "m5_m6",
+          "channel": "up",
+          "length_um": 52.72,
+          "port": "NWELL_TAP",
+          "stub_um": 0.0,
+          "x_um": 286.35
+        },
+        {
+          "block": "m7_m8",
+          "channel": "up",
+          "length_um": 56.72,
+          "port": "NWELL_TAP",
+          "stub_um": 0.0,
+          "x_um": 291.35
+        },
+        {
+          "block": "m9_m10",
+          "channel": "up",
+          "length_um": 60.72,
+          "port": "NWELL_TAP",
+          "stub_um": 0.0,
+          "x_um": 296.35
+        },
+        {
+          "block": "ip1_ip2",
+          "channel": "up",
+          "length_um": 54.72,
+          "port": "NWELL_TAP",
+          "stub_um": 0.0,
+          "x_um": 301.35
+        },
+        {
+          "block": "a1p_b1p",
+          "channel": "up",
+          "length_um": 44.72,
+          "port": "NWELL_TAP",
+          "stub_um": 0.0,
+          "x_um": 311.35
+        },
+        {
+          "block": "a2p_b2p",
+          "channel": "up",
+          "length_um": 44.72,
+          "port": "NWELL_TAP",
+          "stub_um": 0.0,
+          "x_um": 316.35
+        },
+        {
+          "block": "m5_m6",
+          "channel": "down",
+          "length_um": 7.15,
+          "port": "Q1_1_S",
+          "stub_um": 0.7,
+          "x_um": 283.19
+        },
+        {
+          "block": "m7_m8",
+          "channel": "down",
+          "length_um": 6.15,
+          "port": "Q1_1_S",
+          "stub_um": 0.7,
+          "x_um": 288.19
+        },
+        {
+          "block": "m9_m10",
+          "channel": "down",
+          "length_um": 5.15,
+          "port": "Q1_1_S",
+          "stub_um": 0.7,
+          "x_um": 293.19
+        },
+        {
+          "block": "ip1_ip2",
+          "channel": "down",
+          "length_um": 6.65,
+          "port": "Q1_1_S",
+          "stub_um": 0.7,
+          "x_um": 298.19
+        },
+        {
+          "block": "a1p_b1p",
+          "channel": "down",
+          "length_um": 9.15,
+          "port": "Q1_1_S",
+          "stub_um": 0.7,
+          "x_um": 308.19
+        }
+      ],
+      "route_length_um": 1058.41,
+      "trunks": [
+        {
+          "channel": "up",
+          "x0_um": 143.88,
+          "x1_um": 316.35,
+          "y_um": 67.69
+        },
+        {
+          "channel": "down",
+          "x0_um": 265.89,
+          "x1_um": 308.19,
+          "y_um": -4.15
+        }
+      ]
+    },
+    {
+      "link_x_um": 271.51000000000005,
+      "net": "vss",
+      "pins": 11,
+      "risers": [
+        {
+          "block": "mb",
+          "channel": "up",
+          "length_um": 65.99,
+          "port": "U0_S",
+          "stub_um": 0.0,
+          "x_um": 0.21
+        },
+        {
+          "block": "mt",
+          "channel": "up",
+          "length_um": 63.49,
+          "port": "U0_S",
+          "stub_um": 0.0,
+          "x_um": 8.71
+        },
+        {
+          "block": "mtl",
+          "channel": "up",
+          "length_um": 60.49,
+          "port": "U0_S",
+          "stub_um": 0.7,
+          "x_um": 268.19
+        },
+        {
+          "block": "in1_in2",
+          "channel": "up",
+          "length_um": 63.67,
+          "port": "Q2_1_S",
+          "stub_um": 0.7,
+          "x_um": 303.19
+        },
+        {
+          "block": "a1n_b1n",
+          "channel": "up",
+          "length_um": 63.67,
+          "port": "Q2_1_S",
+          "stub_um": 0.7,
+          "x_um": 318.19
+        },
+        {
+          "block": "a2n_b2n",
+          "channel": "up",
+          "length_um": 63.67,
+          "port": "Q2_1_S",
+          "stub_um": 0.7,
+          "x_um": 323.19
+        },
+        {
+          "block": "in1_in2",
+          "channel": "down",
+          "length_um": 5.95,
+          "port": "Q1_1_S",
+          "stub_um": 0.7,
+          "x_um": 303.19
+        },
+        {
+          "block": "a1n_b1n",
+          "channel": "down",
+          "length_um": 5.95,
+          "port": "Q1_1_S",
+          "stub_um": 0.7,
+          "x_um": 318.19
+        },
+        {
+          "block": "a2n_b2n",
+          "channel": "down",
+          "length_um": 5.95,
+          "port": "Q1_1_S",
+          "stub_um": 0.7,
+          "x_um": 323.19
+        },
+        {
+          "block": "substrate_tap_0",
+          "channel": "down",
+          "length_um": 4.35,
+          "port": "TAP",
+          "stub_um": 0.0,
+          "x_um": 6.75
+        },
+        {
+          "block": "substrate_tap_1",
+          "channel": "down",
+          "length_um": 4.35,
+          "port": "TAP",
+          "stub_um": 0.0,
+          "x_um": 15.25
+        }
+      ],
+      "route_length_um": 1120.39,
+      "trunks": [
+        {
+          "channel": "up",
+          "x0_um": 0.21,
+          "x1_um": 323.19,
+          "y_um": 68.49
+        },
+        {
+          "channel": "down",
+          "x0_um": 6.75,
+          "x1_um": 323.19,
+          "y_um": -4.95
+        }
+      ]
+    },
+    {
+      "link_x_um": 276.51000000000005,
+      "net": "clk",
+      "pins": 5,
+      "risers": [
+        {
+          "block": "mtl",
+          "channel": "up",
+          "length_um": 52.33,
+          "port": "U0_G",
+          "stub_um": 0.0,
+          "x_um": 269.43
+        },
+        {
+          "block": "m7_m8",
+          "channel": "up",
+          "length_um": 58.51,
+          "port": "Q2_1_G",
+          "stub_um": 0.0,
+          "x_um": 289.43
+        },
+        {
+          "block": "m9_m10",
+          "channel": "up",
+          "length_um": 62.51,
+          "port": "Q2_1_G",
+          "stub_um": 0.0,
+          "x_um": 294.43
+        },
+        {
+          "block": "m7_m8",
+          "channel": "down",
+          "length_um": 10.71,
+          "port": "Q1_1_G",
+          "stub_um": 0.0,
+          "x_um": 289.43
+        },
+        {
+          "block": "m9_m10",
+          "channel": "down",
+          "length_um": 8.71,
+          "port": "Q1_1_G",
+          "stub_um": 0.0,
+          "x_um": 294.43
+        }
+      ],
+      "route_length_um": 310.73,
+      "trunks": [
+        {
+          "channel": "up",
+          "x0_um": 269.43,
+          "x1_um": 294.43,
+          "y_um": 69.29
+        },
+        {
+          "channel": "down",
+          "x0_um": 276.51,
+          "x1_um": 294.43,
+          "y_um": -5.75
+        }
+      ]
+    },
+    {
+      "link_x_um": 281.51000000000005,
+      "net": "ltail",
+      "pins": 3,
+      "risers": [
+        {
+          "block": "mtl",
+          "channel": "up",
+          "length_um": 62.09,
+          "port": "U0_D",
+          "stub_um": 0.7,
+          "x_um": 270.67
+        },
+        {
+          "block": "m1_m2",
+          "channel": "up",
+          "length_um": 56.27,
+          "port": "Q2_1_S",
+          "stub_um": 0.7,
+          "x_um": 273.19
+        },
+        {
+          "block": "m1_m2",
+          "channel": "down",
+          "length_um": 10.55,
+          "port": "Q1_1_S",
+          "stub_um": 0.7,
+          "x_um": 273.19
+        }
+      ],
+      "route_length_um": 224.71,
+      "trunks": [
+        {
+          "channel": "up",
+          "x0_um": 270.67,
+          "x1_um": 281.51,
+          "y_um": 70.09
+        },
+        {
+          "channel": "down",
+          "x0_um": 273.19,
+          "x1_um": 281.51,
+          "y_um": -6.55
+        }
+      ]
+    },
+    {
+      "link_x_um": null,
+      "net": "mn",
+      "pins": 3,
+      "risers": [
+        {
+          "block": "m1_m2",
+          "channel": "down",
+          "length_um": 11.35,
+          "port": "Q1_1_D",
+          "stub_um": 0.7,
+          "x_um": 275.67
+        },
+        {
+          "block": "m3_m4",
+          "channel": "down",
+          "length_um": 10.35,
+          "port": "Q1_1_S",
+          "stub_um": 0.7,
+          "x_um": 278.19
+        },
+        {
+          "block": "m9_m10",
+          "channel": "down",
+          "length_um": 8.35,
+          "port": "Q1_1_D",
+          "stub_um": 0.7,
+          "x_um": 295.67
+        }
+      ],
+      "route_length_um": 50.05,
+      "trunks": [
+        {
+          "channel": "down",
+          "x0_um": 275.67,
+          "x1_um": 295.67,
+          "y_um": -7.35
+        }
+      ]
+    },
+    {
+      "link_x_um": null,
+      "net": "mp",
+      "pins": 3,
+      "risers": [
+        {
+          "block": "m1_m2",
+          "channel": "up",
+          "length_um": 57.07,
+          "port": "Q2_1_D",
+          "stub_um": 0.7,
+          "x_um": 275.67
+        },
+        {
+          "block": "m3_m4",
+          "channel": "up",
+          "length_um": 60.07,
+          "port": "Q2_1_S",
+          "stub_um": 0.7,
+          "x_um": 278.19
+        },
+        {
+          "block": "m9_m10",
+          "channel": "up",
+          "length_um": 66.07,
+          "port": "Q2_1_D",
+          "stub_um": 0.7,
+          "x_um": 295.67
+        }
+      ],
+      "route_length_um": 203.21,
+      "trunks": [
+        {
+          "channel": "up",
+          "x0_um": 275.67,
+          "x1_um": 295.67,
+          "y_um": 70.89
+        }
+      ]
+    },
+    {
+      "link_x_um": 287.13000000000005,
+      "net": "qn",
+      "pins": 7,
+      "risers": [
+        {
+          "block": "m3_m4",
+          "channel": "up",
+          "length_um": 56.91,
+          "port": "Q2_1_G",
+          "stub_um": 0.0,
+          "x_um": 279.43
+        },
+        {
+          "block": "m5_m6",
+          "channel": "up",
+          "length_um": 56.91,
+          "port": "Q2_1_G",
+          "stub_um": 0.0,
+          "x_um": 284.43
+        },
+        {
+          "block": "ip1_ip2",
+          "channel": "up",
+          "length_um": 58.91,
+          "port": "Q2_1_G",
+          "stub_um": 0.0,
+          "x_um": 299.43
+        },
+        {
+          "block": "in1_in2",
+          "channel": "up",
+          "length_um": 64.91,
+          "port": "Q2_1_G",
+          "stub_um": 0.0,
+          "x_um": 304.43
+        },
+        {
+          "block": "m3_m4",
+          "channel": "down",
+          "length_um": 11.15,
+          "port": "Q1_1_D",
+          "stub_um": 0.7,
+          "x_um": 280.67
+        },
+        {
+          "block": "m5_m6",
+          "channel": "down",
+          "length_um": 11.15,
+          "port": "Q1_1_D",
+          "stub_um": 0.7,
+          "x_um": 285.67
+        },
+        {
+          "block": "m7_m8",
+          "channel": "down",
+          "length_um": 10.15,
+          "port": "Q1_1_D",
+          "stub_um": 0.7,
+          "x_um": 290.67
+        }
+      ],
+      "route_length_um": 384.93,
+      "trunks": [
+        {
+          "channel": "up",
+          "x0_um": 279.43,
+          "x1_um": 304.43,
+          "y_um": 71.69
+        },
+        {
+          "channel": "down",
+          "x0_um": 280.67,
+          "x1_um": 290.67,
+          "y_um": -8.15
+        }
+      ]
+    },
+    {
+      "link_x_um": 302.13000000000005,
+      "net": "qp",
+      "pins": 7,
+      "risers": [
+        {
+          "block": "m3_m4",
+          "channel": "up",
+          "length_um": 61.67,
+          "port": "Q2_1_D",
+          "stub_um": 0.7,
+          "x_um": 280.67
+        },
+        {
+          "block": "m5_m6",
+          "channel": "up",
+          "length_um": 61.67,
+          "port": "Q2_1_D",
+          "stub_um": 0.7,
+          "x_um": 285.67
+        },
+        {
+          "block": "m7_m8",
+          "channel": "up",
+          "length_um": 64.67,
+          "port": "Q2_1_D",
+          "stub_um": 0.7,
+          "x_um": 290.67
+        },
+        {
+          "block": "m3_m4",
+          "channel": "down",
+          "length_um": 15.91,
+          "port": "Q1_1_G",
+          "stub_um": 0.0,
+          "x_um": 279.43
+        },
+        {
+          "block": "m5_m6",
+          "channel": "down",
+          "length_um": 15.91,
+          "port": "Q1_1_G",
+          "stub_um": 0.0,
+          "x_um": 284.43
+        },
+        {
+          "block": "ip1_ip2",
+          "channel": "down",
+          "length_um": 14.91,
+          "port": "Q1_1_G",
+          "stub_um": 0.0,
+          "x_um": 299.43
+        },
+        {
+          "block": "in1_in2",
+          "channel": "down",
+          "length_um": 11.91,
+          "port": "Q1_1_G",
+          "stub_um": 0.0,
+          "x_um": 304.43
+        }
+      ],
+      "route_length_um": 374.55,
+      "trunks": [
+        {
+          "channel": "up",
+          "x0_um": 280.67,
+          "x1_um": 302.13,
+          "y_um": 72.49
+        },
+        {
+          "channel": "down",
+          "x0_um": 279.43,
+          "x1_um": 304.43,
+          "y_um": -8.95
+        }
+      ]
+    },
+    {
+      "link_x_um": null,
+      "net": "sp",
+      "pins": 4,
+      "risers": [
+        {
+          "block": "ip1_ip2",
+          "channel": "down",
+          "length_um": 12.25,
+          "port": "Q1_1_D",
+          "stub_um": 0.7,
+          "x_um": 300.67
+        },
+        {
+          "block": "in1_in2",
+          "channel": "down",
+          "length_um": 10.75,
+          "port": "Q1_1_D",
+          "stub_um": 0.7,
+          "x_um": 305.67
+        },
+        {
+          "block": "a1p_b1p",
+          "channel": "down",
+          "length_um": 20.71,
+          "port": "Q1_1_G",
+          "stub_um": 0.0,
+          "x_um": 309.43
+        },
+        {
+          "block": "a1n_b1n",
+          "channel": "down",
+          "length_um": 12.71,
+          "port": "Q1_1_G",
+          "stub_um": 0.0,
+          "x_um": 319.43
+        }
+      ],
+      "route_length_um": 75.18,
+      "trunks": [
+        {
+          "channel": "down",
+          "x0_um": 300.67,
+          "x1_um": 319.43,
+          "y_um": -9.75
+        }
+      ]
+    },
+    {
+      "link_x_um": null,
+      "net": "sn",
+      "pins": 4,
+      "risers": [
+        {
+          "block": "ip1_ip2",
+          "channel": "up",
+          "length_um": 63.97,
+          "port": "Q2_1_D",
+          "stub_um": 0.7,
+          "x_um": 300.67
+        },
+        {
+          "block": "in1_in2",
+          "channel": "up",
+          "length_um": 68.47,
+          "port": "Q2_1_D",
+          "stub_um": 0.7,
+          "x_um": 305.67
+        },
+        {
+          "block": "a1p_b1p",
+          "channel": "up",
+          "length_um": 50.51,
+          "port": "Q2_1_G",
+          "stub_um": 0.0,
+          "x_um": 309.43
+        },
+        {
+          "block": "a1n_b1n",
+          "channel": "up",
+          "length_um": 66.51,
+          "port": "Q2_1_G",
+          "stub_um": 0.0,
+          "x_um": 319.43
+        }
+      ],
+      "route_length_um": 268.22,
+      "trunks": [
+        {
+          "channel": "up",
+          "x0_um": 300.67,
+          "x1_um": 319.43,
+          "y_um": 73.29
+        }
+      ]
+    },
+    {
+      "link_x_um": null,
+      "net": "na",
+      "pins": 2,
+      "risers": [
+        {
+          "block": "a1p_b1p",
+          "channel": "down",
+          "length_um": 15.55,
+          "port": "Q1_1_D",
+          "stub_um": 0.7,
+          "x_um": 310.67
+        },
+        {
+          "block": "a2p_b2p",
+          "channel": "down",
+          "length_um": 15.55,
+          "port": "Q1_1_S",
+          "stub_um": 0.7,
+          "x_um": 313.19
+        }
+      ],
+      "route_length_um": 33.62,
+      "trunks": [
+        {
+          "channel": "down",
+          "x0_um": 310.67,
+          "x1_um": 313.19,
+          "y_um": -10.55
+        }
+      ]
+    },
+    {
+      "link_x_um": null,
+      "net": "nb",
+      "pins": 2,
+      "risers": [
+        {
+          "block": "a1p_b1p",
+          "channel": "up",
+          "length_um": 57.27,
+          "port": "Q2_1_D",
+          "stub_um": 0.7,
+          "x_um": 310.67
+        },
+        {
+          "block": "a2p_b2p",
+          "channel": "up",
+          "length_um": 57.27,
+          "port": "Q2_1_S",
+          "stub_um": 0.7,
+          "x_um": 313.19
+        }
+      ],
+      "route_length_um": 117.06,
+      "trunks": [
+        {
+          "channel": "up",
+          "x0_um": 310.67,
+          "x1_um": 313.19,
+          "y_um": 74.09
+        }
+      ]
+    },
+    {
+      "link_x_um": 307.13000000000005,
+      "net": "dout",
+      "pins": 5,
+      "risers": [
+        {
+          "block": "a2p_b2p",
+          "channel": "up",
+          "length_um": 52.11,
+          "port": "Q2_1_G",
+          "stub_um": 0.0,
+          "x_um": 314.43
+        },
+        {
+          "block": "a2n_b2n",
+          "channel": "up",
+          "length_um": 68.11,
+          "port": "Q2_1_G",
+          "stub_um": 0.0,
+          "x_um": 324.43
+        },
+        {
+          "block": "a2p_b2p",
+          "channel": "down",
+          "length_um": 16.35,
+          "port": "Q1_1_D",
+          "stub_um": 0.7,
+          "x_um": 315.67
+        },
+        {
+          "block": "a1n_b1n",
+          "channel": "down",
+          "length_um": 12.35,
+          "port": "Q1_1_D",
+          "stub_um": 0.7,
+          "x_um": 320.67
+        },
+        {
+          "block": "a2n_b2n",
+          "channel": "down",
+          "length_um": 12.35,
+          "port": "Q1_1_D",
+          "stub_um": 0.7,
+          "x_um": 325.67
+        }
+      ],
+      "route_length_um": 283.35,
+      "trunks": [
+        {
+          "channel": "up",
+          "x0_um": 307.13,
+          "x1_um": 324.43,
+          "y_um": 74.89
+        },
+        {
+          "channel": "down",
+          "x0_um": 307.13,
+          "x1_um": 325.67,
+          "y_um": -11.35
+        }
+      ]
+    },
+    {
+      "link_x_um": 317.13000000000005,
+      "net": "doutb",
+      "pins": 5,
+      "risers": [
+        {
+          "block": "a2p_b2p",
+          "channel": "up",
+          "length_um": 58.87,
+          "port": "Q2_1_D",
+          "stub_um": 0.7,
+          "x_um": 315.67
+        },
+        {
+          "block": "a1n_b1n",
+          "channel": "up",
+          "length_um": 70.87,
+          "port": "Q2_1_D",
+          "stub_um": 0.7,
+          "x_um": 320.67
+        },
+        {
+          "block": "a2n_b2n",
+          "channel": "up",
+          "length_um": 70.87,
+          "port": "Q2_1_D",
+          "stub_um": 0.7,
+          "x_um": 325.67
+        },
+        {
+          "block": "a2p_b2p",
+          "channel": "down",
+          "length_um": 23.11,
+          "port": "Q1_1_G",
+          "stub_um": 0.0,
+          "x_um": 314.43
+        },
+        {
+          "block": "a2n_b2n",
+          "channel": "down",
+          "length_um": 15.11,
+          "port": "Q1_1_G",
+          "stub_um": 0.0,
+          "x_um": 324.43
+        }
+      ],
+      "route_length_um": 346.67,
+      "trunks": [
+        {
+          "channel": "up",
+          "x0_um": 315.67,
+          "x1_um": 325.67,
+          "y_um": 75.69
+        },
+        {
+          "channel": "down",
+          "x0_um": 314.43,
+          "x1_um": 324.43,
+          "y_um": -12.15
+        }
+      ]
+    }
+  ],
+  "schema": "gf180-comparator.routing/1",
+  "totals": {
+    "channel_links": 11,
+    "device_pins": 83,
+    "nets": 18,
+    "pins": 91,
+    "route_length_um": 6229.17,
+    "tap_pins": 8
+  }
+}

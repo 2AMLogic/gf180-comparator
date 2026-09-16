@@ -39,12 +39,15 @@
       "33/0",
       "34/0",
       "35/0",
-      "36/0"
+      "36/0",
+      "38/0",
+      "42/0"
     ],
     "layers_in_stream_without_rules": [
       "31/0",
       "32/0",
       "34/10",
+      "42/10",
       "49/0",
       "62/0",
       "110/5"
@@ -53,11 +56,7 @@
       "bjt.separation.comp.1",
       "comp.space.mv.1",
       "comp.width.mv.1",
-      "metal2.enclosing.via2.1",
-      "metal3.enclosing.via2.1",
       "metal3.enclosing.via3.1",
-      "metal3.space.1",
-      "metal3.width.1",
       "metal4.enclosing.via3.1",
       "metal4.enclosing.via4.1",
       "metal4.space.1",
@@ -71,8 +70,6 @@
       "mim.enclosing.via4.1",
       "mim.space.1",
       "pad.enclosing.metal5.1",
-      "via2.space.1",
-      "via2.width.1",
       "via3.space.1",
       "via3.width.1",
       "via4.space.1",
@@ -90,7 +87,7 @@
       "released": true
     },
     "input": {
-      "content_hash": "sha256:f9fbd89a125d77031fd9c314ba0a1b7fe156f6bc095e9ea0fbcce9f1ed4ab8fc"
+      "content_hash": "sha256:d668ccb543c4ec6482ee78fb00805a7472955944fce07022c505e78eeec6b8ed"
     },
     "klayout_version": "0.30.12",
     "klt_version": "0.5.0",
