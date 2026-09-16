@@ -17,10 +17,14 @@ generator is the reviewable source", are reused here).
 
 | File | What it is |
 |---|---|
-| `gen_comparator.py` | The generator script — the reviewable source of the GDS, not the GDS itself (same rule `gf180-sar-adc/layout/adc-top/README.md` states for its own generated cells). Re-running it reproduces `comparator.gds` byte-for-byte at a fixed `klt` pin. |
-| `comparator.gds` | The composed layout: 27 transistors + 2 `ppolyf_u_1k` load resistors (29 devices total), one flat `COMPARATOR` top cell. |
-| `comparator.gen-compose.json` | The full `klt gen-compose` JSON response — every net's routing status, every leg's `routed`/`reason`, `drc_hints`, `warnings`. This is the routing/connectivity **evidence**, not just a byproduct: read `nets[]`/`unrouted_nets[]` before trusting any claim about what is and is not actually wired in the GDS. |
+| `gen_comparator.py` | The generator script — the reviewable source of the GDS, not the GDS itself (same rule `gf180-sar-adc/layout/adc-top/README.md` states for its own generated cells). Re-running it reproduces `comparator.gds` byte-for-byte at a fixed `klt` pin (its last step calls `fix_metal1_space.py`, below). |
+| `fix_metal1_space.py` | The DRC-fix post-process (issue #20) — closes `klt gen-compose`'s own `metal1.space.1` violations via Metal1/Metal2/Via1 geometry edits, connectivity untouched. See "DRC signoff" below for the full writeup; this module's own docstring documents the technique. |
+| `comparator.gds` | The composed, DRC-clean layout: 27 transistors + 2 `ppolyf_u_1k` load resistors (29 devices total), one flat `COMPARATOR` top cell (genuinely flat — `fix_metal1_space.py`'s own edit step flattens `gen-compose`'s per-block cell hierarchy). |
+| `comparator.gen-compose.json` | The full `klt gen-compose` JSON response — every net's routing status, every leg's `routed`/`reason`, `drc_hints`, `warnings`. This is the routing/connectivity **evidence**, not just a byproduct: read `nets[]`/`unrouted_nets[]` before trusting any claim about what is and is not actually wired in the GDS. Reflects the *pre*-DRC-fix geometry (routing/placement, not the post-fix Metal1/Metal2/Via1 edits) since that is what `gen-compose` itself produced. |
 | `routing_table.py` | Emits this README's routing-status table mechanically from `comparator.gen-compose.json`'s own `nets[].status` field, so the prose cannot drift from the evidence. `--write` regenerates the table; `--check` exits 1 if the README is stale. |
+| `run_drc.py` | Regenerates `drc/comparator.drc.json` (issue #20's own signoff artifact) via `klt drc`. See "DRC signoff" below. |
+| `drc/comparator.drc.json` | The committed `klt drc` JSON envelope — `status`, `violation_count`, and the deck's own `provenance.deck.content_hash`. |
+| `run_lvs.py` / `lvs/*.json` | Issue #22's own LVS signoff evidence (unaffected by this issue — see "DRC signoff"'s connectivity-neutrality verification). |
 
 `layout/_gen/` (per-device `klt gen` blocks + the `gen-compose` request) and
 `layout/comparator.spice` (a `klt extract` scratch artifact) are
@@ -373,6 +377,140 @@ for bundle-type top-level nets" gap below is also closed for the pins that
 need it) before treating a future `status: "match"` as trustworthy on this
 dimension.
 
+## DRC signoff: `status: clean` (issue #20)
+
+`python3 layout/run_drc.py` regenerates `layout/drc/comparator.drc.json`
+(committed evidence, `layout/lvs/`'s own sibling) by running
+
+```
+klt drc layout/comparator.gds --deck gf180mcu --top COMPARATOR --format json
+```
+
+-- the gf180mcu deck `klt pdk find`/`klt deck hash` resolves for the
+installed PDK/`klt` build. Current result: **`status: "clean"`**,
+`violation_count: 0`, deck `content_hash:
+sha256:3c2f4e4be2524a0fe964cd1b2c4c171c0f904586c10eaa8c4ffe3511909e4706`
+(`klt deck hash --deck gf180mcu`; `klt` `0.5.0`) -- both fields are `klt
+drc`'s own output, read from the committed JSON's `provenance` block, not
+hand-added.
+
+### The starting point: 12 `metal1.space.1` violations, all one root cause
+
+A preliminary `klt drc` run against the GDS #18 committed reported 12
+`metal1.space.1` violations. All twelve are the *same* class, confirmed by
+direct investigation: every one is a leg `klt gen-compose` reports
+`routed: true` that lands on a `diff_pair` block's own `Q1_1_G` port -- the
+interleaved pair's physically-interior device row, whose gate landing pad
+sits sandwiched between the two rows' own S/D metal (unlike `Q2_1_G`'s pad,
+which sits clear at the block's outer edge). Reaching it forces the
+router's approach to thread a gap narrower than gf180mcu's own
+`metal1.space.1` minimum (0.23 µm) -- a real violation `gen-compose`'s own
+routability heuristics never flag (exactly the caveat `klt gen-compose
+--help` itself states: `routed: true` is not a DRC-clean guarantee).
+
+**Confirmed not fixable by any `klt gen-compose` caller-side knob** (direct
+experiment, not just reasoning): `routing.width_um` (reducing the drawn
+route to gf180mcu's own `metal1.width.1` minimum, 0.23 µm, still leaves the
+clearance 0.015 µm short -- the internal S-to-D gap a `diff_pair` block
+draws for its own `Q1_1_G` approach is a fixed ≈0.66 µm regardless of route
+width, and 0.66 µm cannot fit a legal-width wire (≥0.23 µm) with legal
+spacing (≥0.23 µm) on *both* sides: 3 × 0.23 µm = 0.69 µm > 0.66 µm),
+`placement.spacing_um`, `diff_pair`'s own `row_spacing_um`, a
+`connectivity[].legs[].waypoints_um` detour (rejected by the router for
+crossing an unrelated block's bbox), and swapping which schematic device
+maps to Q1 vs Q2 (relocates the violation onto the newly-Q1 device instead
+of resolving it, and regresses other, previously-clean routes elsewhere).
+Filed generically per `CLAUDE.md`'s friction protocol as
+[klayout-tools#1904](https://github.com/2AMLogic/klayout-tools/issues/1904)
+(checked against the two klayout-tools issues this repo had already hit on
+this PDK, #595 and #555 -- both closed, both scoped to poly-resistor
+sheet-rho selection, unrelated to this gap; not a duplicate).
+
+### The fix: a Metal1/Metal2/Via1 geometry post-process, not a routing change
+
+`layout/fix_metal1_space.py` (run automatically by `gen_comparator.py`'s
+own `main()`, right after `gen_compose()` writes `comparator.gds` -- see
+that module's own docstring for the full technique writeup) closes every
+one of the 12 violations by editing *only* Metal1/Metal2/Via1 geometry.
+**`NETS`/connectivity is untouched** -- every net `gen_comparator.py` wires
+is wired exactly the same before and after this step runs. Two techniques:
+
+1. **Corridor bridge** (5 of 6 hops): the squeezed segment is cut out of
+   Metal1 and re-drawn on Metal2 with a Via1 drop on each end, landing on
+   the *same* net's own remaining metal -- verified (not assumed) before
+   being drawn.
+2. **Shave the wider side** (the rest): when one side of the violation has
+   ample width margin (a `vdd`/`vss`/tail-node plate, not the thin route
+   itself), that plate's edge is nudged back just enough to restore legal
+   spacing, split proportional to each side's own safe headroom.
+
+The `doutb` net's `a1n_b1n → a2n_b2n.Q1_1_G` leg is bespoke: that
+`diff_pair` sits at the design's own right edge, immediately next to a
+contact whose enclosure margin a generic bridge or shave both clip: the
+fix removes the whole tight junction and re-joins it with a Metal2 jumper
+landing on two independently-verified-clear Metal1 pads.
+
+**Verified connectivity-neutral, not just DRC-clean.** `klt lvs` against
+this GDS (`python3 layout/run_lvs.py`) reports the *identical* mismatch
+signature as the pre-fix GDS: `mismatch_count: 103`, `error_count: 102`,
+`category_counts: {"device.unmatched": 31, "net.merged": 17, "net.split":
+54, "topology.flattened": 1}` -- byte-for-byte the same counts, same
+category multiset (the only diffs in the committed `layout/lvs/*.json` are
+`klt extract`'s own anonymous net renumbering, `\$N` labels not stable
+across runs -- [klayout-tools#1063](https://github.com/2AMLogic/klayout-tools/issues/1063)
+-- and the new `layout_sha256`). This is the strongest evidence available
+short of a matching LVS run (out of scope here, tracked by #30) that
+closing these 12 DRC violations neither dropped nor accidentally shorted
+any of this layout's existing connectivity.
+
+**A hierarchy gotcha this fix's own development hit, worth recording**:
+`comparator.gds` (as `gen-compose` writes it) is a real cell hierarchy (one
+cell per `klt gen` block), not a flat stream -- `begin_shapes_rec` reads it
+flattened, but `Shapes.clear()`/`.insert()` only ever touch the *top*
+cell's own shape list. Editing without flattening first (`top.flatten(-1,
+True)`) silently leaves the original geometry untouched in its child cell
+while adding new geometry over it -- `klt drc` then still reports the
+original violation, unchanged, with no error raised anywhere. This cost
+significant debugging time before being traced to its root cause; a
+generic `klt` capability to warn (or refuse) when `Shapes.insert()` is
+used on a cell that still has un-flattened children holding shapes on the
+same layer might be worth raising with `2AMLogic/klayout-tools`, though
+this is arguably a `klayout` API usage pitfall rather than a `klt`-specific
+gap, so it is recorded here rather than filed as its own issue.
+
+### Deck coverage gaps (enumerated, not silently omitted)
+
+Per `layout/drc/comparator.drc.json`'s own `coverage` block:
+
+- **Checked layers** (this design only ever uses Poly2/Comp/Nwell/Contact/
+  Metal1, plus the Metal2/Via1 this issue's own fix adds): `21/0`, `22/0`,
+  `30/0`, `33/0`, `34/0`, `35/0`, `36/0`.
+- **Rules skipped** (27 rules, all because their own layer -- Metal3/4/5,
+  Via2/3/4, MiM, bond pad -- never appears in this design at all, not
+  because the deck can't check them): `metal{2,3,4,5}.{width,space}.1` and
+  siblings, `via{2,3,4}.{width,space}.1`, `mim.*`, `pad.enclosing.metal5.1`,
+  `comp.{width,space}.mv.1` (medium-voltage `Comp` -- this design is 3.3 V
+  only, per `CLAUDE.md`'s rail discipline), `bjt.separation.comp.1` (no BJT
+  devices here).
+- **Layers present in the stream with no deck rule at all**: `31/0`,
+  `32/0`, `34/10`, `49/0`, `62/0`, `110/5` -- these are `klt gen`'s own
+  pin/label/text and cell-boundary marker layers (not physical mask
+  layers), outside this deck's own DRC scope by design, not a coverage gap
+  in the checked physical layers.
+- **Known approximations in the gf180mcu deck itself** (from
+  `klayout_tools/decks/gf180mcu.py`'s own module docstring -- these could
+  theoretically under- or over-report on a *different* layout even though
+  they did not change this signoff's outcome here): `contact.width.1`/
+  `via1.width.1` check only the minimum half of a min/max-size rule (a
+  fixed-size square in the real deck); `via1.space.1` uses the ordinary
+  two-via threshold (0.26 µm) everywhere, not the tighter ≥4×4-array
+  threshold (0.36 µm) the official rule applies in that specific context
+  (no via array of that density exists in this design); `poly2.space.1`
+  does not distinguish "space on `Comp`" from "space on field" sub-cases.
+  None of these approximations were in play for the 12 violations this
+  issue closed (all `metal1.space.1`, an ordinary two-shape space check
+  with no such context-collapsing caveat).
+
 ## What is not attempted, and why (stated, not hidden)
 
 - **MOSFET body/well ties.** Neither `mos_array` nor `diff_pair` reports a
@@ -400,28 +538,25 @@ dimension.
   unbundled gate pin) get a `pins[]` label. The internal device-level
   connectivity for the other six nets is real (where routed -- see the
   table above); only the top-cell-boundary LABEL is not drawn for them.
-- **DRC/LVS signoff.** Explicitly out of scope for issue #18 itself --
-  tracked by #20 (DRC) and #22 (LVS). `klt drc` against the committed GDS
-  today reports 12 `metal1.space.1` violations (ordinary close-routing
-  artifacts of an unoptimized auto-router, not shorts -- re-confirmed clean
-  of merge warnings under `klt extract`, see above) and is not expected to
-  be clean until #20 does the DRC-driven pass. #22 has since run `klt lvs`
-  for real -- see "LVS" above -- and reports `status: "mismatch"`, traced to
-  this same routing incompleteness; closing that gap is tracked by #30.
+- **LVS signoff.** Explicitly out of scope for issue #18 itself -- tracked
+  by #22, which has since run `klt lvs` for real (see "LVS" above) and
+  reports `status: "mismatch"`, traced to this layout's routing
+  incompleteness; closing that gap is tracked by #30. DRC signoff (#20) has
+  since been closed -- see "DRC signoff" below.
 
 ## Toolchain
 
-- `klt` `0.4.0+g3e9ac1da2671` (`klt version --format json`;
-  `git_commit: 3e9ac1da2671dc5cdd67b30617a4e74f4e01747f`,
-  `2AMLogic/klayout-tools`). Not yet pinned in a `toolchain.json` the way
-  `sim/`'s ngspice/PDK pin or `gf180-sar-adc/layout/toolchain.json` are --
-  a natural follow-up once #20 stands up its own runner against this
-  layout, mirroring that repo's own capability-pin convention. #22's own
-  `layout/run_lvs.py` runner reports `klt` `0.4.0`, `klayout` `0.30.12` in
-  its committed `provenance`/`environment` blocks -- see "LVS" above; a
-  version drift between that and this bullet's `klt gen`/`klt gen-compose`
-  pin is expected across separate tool invocations on the same host and is
-  not itself a defect.
+- `klt` `0.5.0` (`klt version --format json`) as of #20's own `run_drc.py`
+  run -- version drift from earlier bullets/runs in this file (`0.4.0` for
+  #18/#22's own tool pins) is expected across separate tool invocations
+  made at different times on possibly-different hosts and is not itself a
+  defect; not yet pinned in a `toolchain.json` the way `sim/`'s ngspice/PDK
+  pin or `gf180-sar-adc/layout/toolchain.json` are -- a natural follow-up,
+  not attempted here (disproportionate to what #20 itself asks for).
+  `layout/run_drc.py`'s own committed `layout/drc/comparator.drc.json`
+  records the deck's `content_hash` directly (`klt drc`'s own provenance
+  field, not hand-added) -- that hash, not a `klt` version string, is what
+  actually pins DRC-signoff reproducibility.
 - PDK: `gf180mcuC` (`klt pdk find --pdk gf180mcuC` -- `open_pdks
   f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7`), the 3.3 V variant, per
   `CLAUDE.md`'s rail discipline and DR-0001's own device flavor choice
@@ -429,11 +564,13 @@ dimension.
 
 ## Manual verification (this issue's Test Plan)
 
-Opens cleanly in KLayout (`klayout layout/comparator.gds`) -- one top cell
-`COMPARATOR`, 16 sub-cell instances in a single row, drawn Metal1 routing
-visible between them. Device count/type sanity check: see "Devices" above
-(`klt extract`'s independent re-derivation, exact match to DR-0001).
-Automated DRC tests are N/A at this stage per issue #18's own Test Plan
-(#20 tracks DRC). LVS (#22) has since been run for real -- `python3
-layout/run_lvs.py`, `status: "mismatch"` -- see "LVS" above; closing that
-gap to `status: "match"` is tracked by #30.
+Opens cleanly in KLayout (`klayout layout/comparator.gds`) -- one flat top
+cell `COMPARATOR` (16 blocks' worth of devices plus the DRC-fix's own
+Metal2/Via1 jumpers, all flattened into it by `fix_metal1_space.py`; no
+remaining sub-cell hierarchy), drawn Metal1/Metal2 routing visible between
+devices. Device count/type sanity check: see "Devices" above (`klt
+extract`'s independent re-derivation, exact match to DR-0001). DRC (#20)
+has since been run for real -- `python3 layout/run_drc.py`,
+`status: "clean"` -- see "DRC signoff" above. LVS (#22) has also been run
+for real -- `python3 layout/run_lvs.py`, `status: "mismatch"` -- see "LVS"
+above; closing that gap to `status: "match"` is tracked by #30.

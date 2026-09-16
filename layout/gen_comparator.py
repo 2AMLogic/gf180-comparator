@@ -30,6 +30,16 @@ WHAT THIS SCRIPT DOES
    `klt gen-compose` JSON response (`layout/comparator.gen-compose.json`,
    committed as the routing/connectivity evidence -- which nets actually got
    real drawn metal and which did not, see `unrouted_nets`).
+5. Runs `layout/fix_metal1_space.py` against the composed `comparator.gds`
+   (issue #20, DRC signoff) -- a Metal1/Metal2/Via1 *geometry* post-process
+   that closes the twelve `metal1.space.1` violations `klt gen-compose`'s
+   own router leaves behind (a confirmed `klt gen-compose`/`diff_pair`
+   limitation, filed as
+   [klayout-tools#1904](https://github.com/2AMLogic/klayout-tools/issues/1904)
+   -- see that module's own docstring and `layout/README.md`'s "DRC
+   signoff" section for the full derivation). This step never touches
+   `NETS`/connectivity -- every net this script wires above is still wired
+   exactly the same after it runs.
 
 WHAT IS NOT ATTEMPTED HERE (stated, not hidden -- see `layout/README.md`)
 --------------------------------------------------------------------------
@@ -40,8 +50,8 @@ WHAT IS NOT ATTEMPTED HERE (stated, not hidden -- see `layout/README.md`)
   mirrors the gf180-sar-adc comparator layout's own stated deviation
   ("NMOS bodies on the deck's `vsubs` global ... PMOS bodies on their own
   Nwell island's net, not on `vdd`") -- same tool family, same gap.
-* DRC/LVS signoff. Explicitly out of scope for this issue (#20/#22 track
-  it). `unrouted_nets` in the committed response is read, not silenced.
+* LVS signoff. Explicitly out of scope for this issue (#22 tracks it).
+  `unrouted_nets` in the committed response is read, not silenced.
 """
 
 from __future__ import annotations
@@ -50,6 +60,8 @@ import json
 import os
 import subprocess
 import sys
+
+import fix_metal1_space
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 GENDIR = os.path.join(HERE, "_gen")
@@ -281,6 +293,9 @@ def main() -> None:
           f"unrouted={len(unrouted)} (of {len(response['nets'])})")
     if unrouted:
         print(f"unrouted_nets: {unrouted}")
+
+    print("\nfixing klt gen-compose's metal1.space.1 violations (issue #20)...")
+    fix_metal1_space.fix()
 
 
 if __name__ == "__main__":
