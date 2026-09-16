@@ -25,7 +25,7 @@ generator is the reviewable source", are reused here).
 | `routing_table.py` | Emits this README's routing-status table mechanically from `comparator.routing.json` (cross-checked against `comparator.gen-compose.json`'s declared connectivity), so the prose cannot drift from the evidence. `--write` regenerates the table; `--check` exits 1 if the README is stale. |
 | `run_drc.py` | Regenerates `drc/comparator.drc.json` (issue #20's own signoff artifact) via `klt drc`. See "DRC signoff" below. |
 | `drc/comparator.drc.json` | The committed `klt drc` JSON envelope — `status`, `violation_count`, and the deck's own `provenance.deck.content_hash`. |
-| `run_lvs.py` / `lvs/*.json` | The LVS signoff evidence (#22, #30) — `klt extract` + `klt lvs` against the reference `design/comparator.spice`, the pin-order interface-contract check `klt lvs`'s own verdict cannot make, and a `netgen`-engine cross-check (`lvs/comparator.netgen.json`) run through a second, independent comparator. See "LVS" below. |
+| `run_lvs.py` / `lvs/*.json` | The LVS signoff evidence (#22, #30) — `klt extract` + `klt lvs` against the reference `design/comparator.spice`, the two contract checks `klt lvs`'s own verdict cannot make (pin order, and drawn device geometry), and a `netgen`-engine cross-check (`lvs/comparator.netgen.json`) run through a second, independent comparator. See "LVS" below. |
 
 `layout/_gen/` (per-device `klt gen` blocks + the `gen-compose` request) and
 `layout/comparator.spice` (a `klt extract` scratch artifact) are
@@ -117,6 +117,14 @@ own parameters. The stronger statement -- that each of those devices sits
 on the same nets as its schematic counterpart -- is the LVS compare's, and
 is now available: 27 of 29 devices and every named net pair with their
 reference counterparts (see "LVS" below).
+
+Device **sizing** is asserted too, and separately from the compare:
+`run_lvs.py`'s `check_device_geometry_contract()` censuses every extracted
+device's measured `l_um`/`w_um` and requires it to equal
+`design/comparator.spice`'s own declared `L`/`W` (`r_length`/`r_width` for
+the resistors), device for device. It has to be a separate check because
+`klt lvs`'s own `l_um`/`w_um` comparison is *vacuous* for this design's two
+resistors -- see "Device-geometry contract check" under "LVS" below.
 
 ## Routing: complete, and how it got there
 
@@ -495,7 +503,19 @@ the same thing:
   `reference.device_map`/`device_bulk` all address other axes entirely.
   Switching to `klt lvs`'s inline-extraction form (`layout.file`, no SPICE
   round trip) makes `l_um`/`w_um` agree but simply moves the disagreement
-  to `r`/`a`/`p` -- still six errors, still the same placeholder.
+  to `r`/`a`/`p` -- still six errors (plus four new `topology` "nets were
+  paired despite a name/identity conflict" errors), still the same
+  placeholder. Re-verified against `klt` 0.5.0, not carried forward from
+  the 0.4.0 run this section was first written against.
+- **Nor is there a way to say which parameters the compare should use.**
+  `klayout.db.DeviceClass.enable_parameter()` exists and `NetlistComparer`
+  honours it, but no field of `klt.lvs.request/1` reaches it, so every
+  declared parameter is always compared. That is the *generic* gap behind
+  this one, and the one whose closure would let a caller reach `match`
+  honestly here (compare the resistors on geometry, disclose the derived
+  resistance as unverified) rather than waiting on either side to learn to
+  state a value it does not have. Filed generically as
+  [klayout-tools#1928](https://github.com/2AMLogic/klayout-tools/issues/1928).
 
 This is a real tool gap, and per `CLAUDE.md`'s friction protocol it is
 tracked generically on the tool's own tracker, not worked around here:
@@ -527,9 +547,10 @@ that had one.)
 `"mismatch"`, `run_lvs.py` exits non-zero, and no claim in this repo may be
 made on the basis of an unverified match. What can honestly be claimed from
 the committed evidence is narrower and still substantial: *every device and
-every net of this layout pairs with its reference counterpart, and the only
-residual findings are a parameter-encoding asymmetry in the compare
-front-end.*
+every net of this layout pairs with its reference counterpart, the drawn
+geometry of every device equals the schematic's own declared geometry (by
+the separate check below, not by the compare), and the only residual
+findings are a parameter-encoding asymmetry in the compare front-end.*
 
 **Why `options.flatten_reference: true` is in the request, and is not a
 tolerance being smuggled in.** `design/comparator.spice`'s `comparator_dut`
@@ -577,6 +598,71 @@ have shipped a cell whose outputs are the complement of the schematic's.
 The fix is in `gen_comparator.NETS`; the standing lesson is recorded here
 because no automated field in the report flags it: **read
 `net_correspondence` for name-crossed pairings, not just `status`.**
+
+### Device-geometry contract check
+
+The placeholder-`0` gap above is not only noisy, it leaves a **hole in what
+this signoff actually verifies**. On `RN`/`RP`, `klt lvs`'s `l_um`/`w_um`/`r`
+comparison is *vacuous*: the reference card carries `r=0, l_um=120, w_um=1`
+and the layout card carries `r=120000, l_um=0, w_um=0` no matter what is
+drawn, so a load resistor generated at 100 µm instead of DR-0001's 120 µm
+would produce a byte-identical set of six `device.property` findings. The
+compare cannot distinguish a correct layout from a mis-sized one for the two
+devices its own findings are about.
+
+`run_lvs.py`'s `check_device_geometry_contract()` closes that hole, the same
+way `check_interface_contract()` closes the pin-order one -- by asserting
+directly what the compare's verdict structurally cannot:
+
+1. `reference_device_geometry()` parses `design/comparator.spice` (joining
+   `+` continuations, skipping the `XA`/`XL` hierarchy instances) into a
+   census of `(device class, L µm, W µm) -> count`, reading each device
+   subcircuit's own call-site geometry spelling -- `L`/`W` for
+   `nfet_03v3`/`pfet_03v3`, `r_length`/`r_width` for `ppolyf_u_1k` -- out of
+   `run_lvs.py`'s `DEVICE_GEOMETRY_MAP`. It restates no dimension of its own,
+   so it tracks the schematic automatically rather than drifting from it the
+   way a hand-copied sizing table would.
+2. `extracted_device_geometry()` takes the same census from
+   `comparator.extract.json`'s per-device `params` block -- the measured
+   geometry, which is correct in the report even where the SPICE netlist
+   written alongside it drops it (klayout-tools#1927).
+3. The two censuses must be equal as multisets. Device *pairing* is
+   `NetlistComparer`'s job and is already evidenced by
+   `counts.devices.matched`; what this adds is that the *inventory* of drawn
+   geometry is exactly the inventory the schematic declares.
+
+Current result, printed by `run_lvs.py` and reproducible from the committed
+artifacts alone:
+
+```
+device-geometry contract: OK -- all 29 drawn devices carry
+design/comparator.spice's own declared L/W
+  6 x nfet  L=0.5um W=2um     2 x pfet  L=0.5um W=2um
+  2 x nfet  L=0.5um W=6um     2 x pfet  L=0.5um W=4um
+  2 x nfet  L=0.5um W=8um     2 x pfet  L=0.5um W=5um
+  1 x nfet  L=0.5um W=16um    2 x pfet  L=0.5um W=6um
+  2 x nfet  L=2um W=30um      4 x pfet  L=0.5um W=10um
+  1 x nfet  L=4um W=5um       2 x ppolyf_u_1k  L=120um W=1um
+  1 x nfet  L=4um W=10um
+```
+
+Two deliberate loud-failure behaviours, so the check cannot rot into a
+rubber stamp: a reference device subcircuit missing from
+`DEVICE_GEOMETRY_MAP` is a hard error (adding a device family to the
+schematic must fail this until someone declares how its geometry is
+verified, never be silently skipped), and an `nf`/`m` other than `1` is a
+hard error too (a folded or multiplied call would break the
+one-call-to-one-device census this check is built on). A contract break
+exits `5`, the same code an interface-contract break uses -- **even if `klt
+lvs` itself were to report `match`.**
+
+The resistance *value* (`r_ohm: 120000.0`) remains unverified against the
+schematic, because `design/comparator.spice` never states one: the
+schematic selects sheet resistance by device flavour (`ppolyf_u_1k`), and
+that flavour is what the class-name half of the census compares. What is not
+checked anywhere is that gf180mcu's `ppolyf_u_1k` sheet rho really is what
+`klt extract`'s deck says it is -- that is a PDK-deck property, tracked as a
+deck-coverage question, not a layout one.
 
 ## DRC signoff: `status: clean` (issue #20)
 
@@ -756,6 +842,6 @@ scripted checks, each writing its own committed evidence:
 python3 layout/gen_comparator.py        # regenerates the GDS (+ inline klt drc)
 python3 layout/routing_table.py --check # README routing table vs. the evidence
 python3 layout/run_drc.py               # status: clean, violation_count: 0
-python3 layout/run_lvs.py               # interface contract OK; see "LVS" above
+python3 layout/run_lvs.py               # interface + device-geometry contracts OK; see "LVS" above
 git status --short layout/              # should be empty: byte-reproducible
 ```

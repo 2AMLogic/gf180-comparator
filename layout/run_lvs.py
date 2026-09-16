@@ -40,7 +40,22 @@ WHAT THIS SCRIPT DOES
    `sim/dut/README.md`'s own contract (`check_interface_contract`) -- the
    check `klt lvs`'s `status` verdict structurally cannot make, since
    `klayout.db.NetlistComparer` never compares pin ORDER.
-4. Re-runs the same compare through `klt lvs`'s second engine, `netgen`
+4. Asserts every extracted device's DRAWN GEOMETRY against the same
+   reference netlist's own declared geometry
+   (`check_device_geometry_contract`) -- the second check `klt lvs`'s
+   `status` verdict structurally cannot make here. `klt lvs`'s
+   `reference.form: "subckt-call"` conversion writes a placeholder `0` for a
+   converted resistor's value and `klt extract`'s SPICE writer drops a
+   resistor's L/W, so the `l_um`/`w_um`/`r` comparison on `RN`/`RP` is
+   *vacuous*: it reports the same three findings whatever geometry is
+   actually drawn (klayout-tools#1907 / #1927, see `layout/README.md`'s
+   "LVS" section). Without this check a real drift in the drawn load
+   resistors -- a 100 um instead of DR-0001's 120 um -- would be invisible
+   to this whole flow. The check reads both sides' own committed artifacts
+   (`comparator.extract.json`'s per-device `params`, and
+   `design/comparator.spice`'s own device call lines), so it tracks the
+   schematic automatically and restates no dimension of its own.
+5. Re-runs the same compare through `klt lvs`'s second engine, `netgen`
    (`run_netgen_crosscheck`), writing `layout/lvs/comparator.netgen.json`.
    A corroboration step, not a second verdict -- it is what lets a residual
    finding be attributed to the netlists rather than to one comparator's
@@ -58,17 +73,20 @@ Usage
 Requires `klt` on `PATH` and the `gf180mcuC` PDK variant resolvable (same
 pin as `layout/gen_comparator.py` -- see `layout/README.md`'s "Toolchain").
 Exits non-zero (mirroring `klt lvs`'s own exit code) when the run does not
-reach `status: match`, or 5 when the interface-contract check fails. The
-run does not reach `status: match` today, for one remaining reason that is
-upstream of this repo -- see `layout/README.md`'s "LVS" section and
+reach `status: match`, or 5 when either contract check (interface pins,
+device geometry) fails. The run does not reach `status: match` today, for
+one remaining reason that is upstream of this repo -- see
+`layout/README.md`'s "LVS" section and
 [klayout-tools#1907](https://github.com/2AMLogic/klayout-tools/issues/1907)
 -- and that is not a bug in this script.
 """
 
 from __future__ import annotations
 
+import collections
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -102,6 +120,41 @@ REFERENCE_TOP = "comparator_dut"
 #: prove the pinout -- see layout/README.md's "Pin-order interface-contract
 #: check".
 INTERFACE_PINS = ("vinp", "vinn", "clk", "ibias", "dout", "doutb", "vdd", "vss")
+
+#: How a device subcircuit named by `design/comparator.spice` maps onto the
+#: gf180mcu extraction deck's own device class, plus that subcircuit's own
+#: call-site spelling of the two geometry parameters
+#: `check_device_geometry_contract()` compares:
+#: `{<reference subckt name>: (<klt extract device class>, <length param>,
+#: <width param>)}`.
+#:
+#: gf180mcu's resistor subcircuits spell geometry `r_length`/`r_width`, not
+#: `l`/`w` (the same asymmetry `klt lvs`'s own `reference.device_map` object
+#: form exists to express) -- which is exactly why this mapping is stated
+#: rather than inferred from the parameter names. A reference device whose
+#: subcircuit is NOT in this table is a hard failure, never a silent skip:
+#: adding a device family to the schematic must fail this check loudly until
+#: someone declares how to verify its geometry.
+DEVICE_GEOMETRY_MAP = {
+    "nfet_03v3": ("nfet", "l", "w"),
+    "pfet_03v3": ("pfet", "l", "w"),
+    "ppolyf_u_1k": ("ppolyf_u_1k", "r_length", "r_width"),
+}
+
+#: Instance-multiplicity parameters that would make a single reference call
+#: describe more than one drawn device, so that a simple one-call-to-one-
+#: extracted-device geometry census would no longer be valid. Every one of
+#: them is asserted to be exactly 1 rather than interpreted -- this repo's
+#: schematic uses no folded or multiplied devices today, and the day it does,
+#: this check must fail rather than quietly compare the wrong thing.
+UNIT_MULTIPLICITY_PARAMS = ("nf", "m")
+
+#: `key=value` (or `key='expr with spaces'`) on a SPICE device card.
+_PARAM_RE = re.compile(r"([A-Za-z_][A-Za-z0-9_]*)\s*=\s*('[^']*'|\"[^\"]*\"|\S+)")
+
+#: SPICE engineering suffixes, as a multiplier into micrometres. A bare
+#: number (no suffix) is metres, SPICE's own default for a geometry value.
+_UM_SUFFIXES = {"": 1e6, "m": 1e3, "u": 1.0, "n": 1e-3, "p": 1e-6}
 
 
 def run_extract() -> dict:
@@ -265,6 +318,150 @@ def check_interface_contract(extract_report: dict) -> list[str]:
     return problems
 
 
+def _parse_um(value: str, *, where: str, param: str) -> float:
+    """A SPICE geometry literal (`4u`, `120u`, `1e-6`) in micrometres.
+
+    Raises `ValueError` on anything this repo's netlist does not actually
+    use -- a parameter expression (`'W/nf * 0.18u'`), a unit this table does
+    not cover -- rather than guessing. The geometry parameters this check
+    reads (`L`/`W`, `r_length`/`r_width`) are plain literals in
+    `design/comparator.spice`; the expression-valued ones (`ad`/`as`/`pd`/
+    `ps`/`nrd`/`nrs`) are never read here.
+    """
+    token = value.strip().strip("'\"")
+    match = re.fullmatch(r"([+-]?[0-9.]+(?:[eE][+-]?[0-9]+)?)\s*([A-Za-z]*)", token)
+    if match is None:
+        raise ValueError(
+            f"{where}: {param}={value!r} is not a plain numeric literal")
+    number, suffix = match.group(1), match.group(2).lower()
+    # SPICE's convention that a trailing unit spelling ("1.6um", "0.18meter")
+    # is ignorable: keep the multiplier letter, drop the unit that follows it.
+    if (suffix not in _UM_SUFFIXES and suffix[:1] in _UM_SUFFIXES
+            and suffix[1:] in ("m", "meter", "meters")):
+        suffix = suffix[:1]
+    if suffix not in _UM_SUFFIXES:
+        raise ValueError(
+            f"{where}: {param}={value!r} has an unsupported unit suffix")
+    return float(number) * _UM_SUFFIXES[suffix]
+
+
+def reference_device_geometry() -> collections.Counter:
+    """A census of `design/comparator.spice`'s own declared device geometry:
+    `Counter[(device_class, l_um, w_um)]`.
+
+    Read from the reference netlist itself (the file `klt lvs` compares
+    against, generated from the schematic by `design/netlist.sh`), so this
+    check restates no dimension of its own and cannot drift from the
+    schematic the way a hand-copied sizing table would. Subcircuit-call lines
+    that instantiate another `.subckt` declared in the same file (the
+    `XA`/`XL` hierarchy instances) are skipped; every other `X` card must
+    resolve through `DEVICE_GEOMETRY_MAP` or this raises.
+    """
+    with open(REFERENCE) as f:
+        raw = f.read().splitlines()
+
+    # Join SPICE '+' continuation lines, and drop comments/directives.
+    cards: list[str] = []
+    for line in raw:
+        stripped = line.strip()
+        if not stripped or stripped.startswith("*"):
+            continue
+        if stripped.startswith("+") and cards:
+            cards[-1] += " " + stripped[1:].strip()
+        else:
+            cards.append(stripped)
+
+    subckts = {c.split()[1].lower()
+               for c in cards if c.lower().startswith(".subckt ")}
+
+    census: collections.Counter = collections.Counter()
+    for card in cards:
+        if card[:1].upper() != "X":
+            continue
+        params = {m.group(1).lower(): m.group(2) for m in _PARAM_RE.finditer(card)}
+        first_param = _PARAM_RE.search(card)
+        head = card[: first_param.start()] if first_param else card
+        tokens = head.split()
+        instance, model = tokens[0], tokens[-1].lower()
+        if model in subckts:
+            continue  # a hierarchy instance (XA/XL), not a PDK device
+        where = f"design/comparator.spice: {instance}"
+        if model not in DEVICE_GEOMETRY_MAP:
+            raise ValueError(
+                f"{where}: device subcircuit {model!r} is not in "
+                f"run_lvs.py's DEVICE_GEOMETRY_MAP -- declare how its drawn "
+                f"geometry is verified before this signoff can run")
+        device_class, length_param, width_param = DEVICE_GEOMETRY_MAP[model]
+        for mult in UNIT_MULTIPLICITY_PARAMS:
+            given = params.get(mult, "1").strip().strip("'\"")
+            if given not in ("1", "1.0"):
+                raise ValueError(
+                    f"{where}: {mult}={params[mult]} -- this check compares one "
+                    f"reference call against one extracted device and cannot "
+                    f"account for folded/multiplied instances")
+        for param in (length_param, width_param):
+            if param not in params:
+                raise ValueError(f"{where}: no {param!r} on the device card")
+        l_um = _parse_um(params[length_param], where=where, param=length_param)
+        w_um = _parse_um(params[width_param], where=where, param=width_param)
+        census[(device_class, round(l_um, 6), round(w_um, 6))] += 1
+    return census
+
+
+def extracted_device_geometry(extract_report: dict) -> collections.Counter:
+    """The same census taken from `klt extract`'s own committed report:
+    `Counter[(device_class, l_um, w_um)]`, read from each device's `params`
+    block (which carries the real measured geometry even where the SPICE
+    netlist `klt extract` writes alongside it does not -- klayout-tools#1927).
+    """
+    census: collections.Counter = collections.Counter()
+    for device in extract_report["devices"]:
+        params = device["params"]
+        census[(
+            device["class"].lower(),
+            round(float(params["l_um"]), 6),
+            round(float(params["w_um"]), 6),
+        )] += 1
+    return census
+
+
+def check_device_geometry_contract(extract_report: dict) -> list[str]:
+    """Assert the drawn device geometry against the reference netlist's own.
+
+    This is the geometry half of the compare that `klt lvs` cannot actually
+    perform for this design. On `RN`/`RP` its `l_um`/`w_um`/`r` findings are
+    vacuous -- the reference side's converted card carries a placeholder `0`
+    resistance (klayout-tools#1907) and the layout side's written card drops
+    L/W (klayout-tools#1927), so the same three `device.property` entries are
+    reported no matter what is drawn. A 100 um load resistor would pass
+    through `klt lvs` looking exactly like DR-0001's 120 um one.
+
+    Comparing the two censuses as multisets (rather than per paired device)
+    is deliberate: device pairing is `NetlistComparer`'s job and is already
+    verified by `counts.devices.matched` in the committed report, so what is
+    missing -- and all this adds -- is that the *inventory* of drawn
+    geometry is exactly the inventory the schematic declares. Returns a list
+    of problem strings (empty when the two censuses are identical).
+    """
+    reference = reference_device_geometry()
+    extracted = extracted_device_geometry(extract_report)
+    if reference == extracted:
+        return []
+
+    def render(entry: tuple) -> str:
+        device_class, l_um, w_um = entry
+        return f"{device_class} L={l_um:g}um W={w_um:g}um"
+
+    problems = []
+    for entry in sorted(set(reference) | set(extracted)):
+        want, got = reference[entry], extracted[entry]
+        if want != got:
+            problems.append(
+                f"{render(entry)}: layout draws {got}, "
+                f"design/comparator.spice declares {want}")
+    return problems
+
+
 def main() -> int:
     os.makedirs(OUTDIR, exist_ok=True)
 
@@ -285,6 +482,17 @@ def main() -> int:
         print(f"interface contract: OK -- top-level pins are exactly "
               f"{' '.join(INTERFACE_PINS)} (sim/dut/README.md)")
 
+    geometry_problems = check_device_geometry_contract(extract_report)
+    if geometry_problems:
+        for p in geometry_problems:
+            print(f"  GEOMETRY: {p}")
+    else:
+        census = reference_device_geometry()
+        print(f"device-geometry contract: OK -- all {sum(census.values())} "
+              f"drawn devices carry design/comparator.spice's own declared L/W")
+        for (device_class, l_um, w_um), count in sorted(census.items()):
+            print(f"  {count} x {device_class}  L={l_um:g}um W={w_um:g}um")
+
     lvs_report, lvs_exit = run_lvs()
     print(f"klt lvs: status={lvs_report['status']} "
           f"mismatch_count={lvs_report['mismatch_count']} "
@@ -302,9 +510,11 @@ def main() -> int:
               f"error_count={netgen_report['error_count']} "
               f"category_counts={netgen_report['category_counts']}")
 
-    if interface_problems:
-        # An interface-contract break is a real signoff failure even when
-        # `klt lvs` itself says `match` -- never silently exit 0 on one.
+    if interface_problems or geometry_problems:
+        # A contract break -- pin interface or drawn device geometry -- is a
+        # real signoff failure even when `klt lvs` itself says `match`, since
+        # neither is a thing `NetlistComparer`'s verdict covers for this
+        # design. Never silently exit 0 on one.
         return 5
     return 0 if lvs_report["status"] == "match" else lvs_exit
 
