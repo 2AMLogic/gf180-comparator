@@ -2,7 +2,7 @@
   "schema_version": 1,
   "generator": "gen-compose",
   "cell_name": "COMPARATOR",
-  "gds_path": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-18/layout/comparator.gds",
+  "gds_path": "/Users/rwalters/GitHub/gf180-comparator/.loom/worktrees/issue-20/layout/comparator.gds",
   "pdk": {
     "name": "gf180mcuC",
     "variant": "gf180mcuC",

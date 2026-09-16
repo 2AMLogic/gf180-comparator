@@ -41,7 +41,7 @@
     "engine": "klayout",
     "engine_version": "0.30.12",
     "extracted_netlist": null,
-    "layout_sha256": "cd65389469e998b8a61c1e828bbb857d95957d03c3fa9972de188b57f1f24d3b",
+    "layout_sha256": "483e005eacbb0c1d79360ed6fa95cfefd0a5e858982c39032baebc7c42fe0d01",
     "reference_sha256": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a"
   },
   "error_count": 102,
@@ -1063,22 +1063,6 @@
       "device": null,
       "instance": null,
       "net": {
-        "layout": "\\$10",
-        "reference": null
-      },
-      "property": null,
-      "severity": "error",
-      "side": "layout",
-      "subcircuit": null
-    },
-    {
-      "category": "net.split",
-      "circuit": null,
-      "description": "a reference net's role is divided across multiple layout nets",
-      "details": null,
-      "device": null,
-      "instance": null,
-      "net": {
         "layout": "\\$11",
         "reference": null
       },
@@ -1127,7 +1111,7 @@
       "device": null,
       "instance": null,
       "net": {
-        "layout": "\\$17",
+        "layout": "\\$14",
         "reference": null
       },
       "property": null,
@@ -1143,7 +1127,7 @@
       "device": null,
       "instance": null,
       "net": {
-        "layout": "\\$18",
+        "layout": "\\$19",
         "reference": null
       },
       "property": null,
@@ -1287,7 +1271,7 @@
       "device": null,
       "instance": null,
       "net": {
-        "layout": "\\$29",
+        "layout": "\\$28",
         "reference": null
       },
       "property": null,
@@ -1431,7 +1415,7 @@
       "device": null,
       "instance": null,
       "net": {
-        "layout": "\\$4",
+        "layout": "\\$39",
         "reference": null
       },
       "property": null,
@@ -1447,7 +1431,7 @@
       "device": null,
       "instance": null,
       "net": {
-        "layout": "\\$41",
+        "layout": "\\$4",
         "reference": null
       },
       "property": null,
@@ -1559,7 +1543,7 @@
       "device": null,
       "instance": null,
       "net": {
-        "layout": "\\$49",
+        "layout": "\\$48",
         "reference": null
       },
       "property": null,
@@ -1576,6 +1560,22 @@
       "instance": null,
       "net": {
         "layout": "\\$5",
+        "reference": null
+      },
+      "property": null,
+      "severity": "error",
+      "side": "layout",
+      "subcircuit": null
+    },
+    {
+      "category": "net.split",
+      "circuit": null,
+      "description": "a reference net's role is divided across multiple layout nets",
+      "details": null,
+      "device": null,
+      "instance": null,
+      "net": {
+        "layout": "\\$50",
         "reference": null
       },
       "property": null,
@@ -1687,7 +1687,7 @@
       "device": null,
       "instance": null,
       "net": {
-        "layout": "\\$7",
+        "layout": "\\$8",
         "reference": null
       },
       "property": null,
@@ -1703,7 +1703,7 @@
       "device": null,
       "instance": null,
       "net": {
-        "layout": "\\$8",
+        "layout": "\\$9",
         "reference": null
       },
       "property": null,
@@ -1748,13 +1748,13 @@
   "parameter_tolerance": null,
   "provenance": {
     "deck": {
-      "content_hash": "sha256:79e71a1e7d84be3cfc82e4c70afbdf7b743ac1f361fb8e981f57831014d2e8b0",
+      "content_hash": "sha256:3c2f4e4be2524a0fe964cd1b2c4c171c0f904586c10eaa8c4ffe3511909e4706",
       "name": "gf180mcu",
       "released": true
     },
     "input": null,
     "klayout_version": "0.30.12",
-    "klt_version": "0.4.0",
+    "klt_version": "0.5.0",
     "pdk": null
   },
   "reference": "../../design/comparator.spice",
