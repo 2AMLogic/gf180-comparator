@@ -254,6 +254,78 @@ already documents, disproportionate to what this issue asks for. Filed as
 [#28](https://github.com/2AMLogic/gf180-comparator/issues/28) rather than
 attempted here or silently dropped.
 
+### Issue #28: four floorplan candidates tried, `"row"` kept (finding, not a fix)
+
+Four concrete placement candidates were built and run through the real `klt
+gen-compose` (not a paper estimate -- each candidate is this script's own
+`BLOCKS`/`NETS`/`PIN_LABELS` request with only `placement` mutated) to check
+whether a non-`"row"` floorplan could beat the committed baseline on this
+issue's two target metrics -- `vinp`/`vinn`-to-nearest-`clk`-block
+separation, and `aon`/`aop` route length -- without regressing routed-net
+coverage below this issue's own baseline. That baseline was re-verified
+directly against `origin/main` before running any candidate (`python3
+layout/routing_table.py --check` passes clean against the committed
+`comparator.gen-compose.json`: 6/18 nets fully routed, 7/18 partial, 5/18
+not routed at all, 30/65 MST legs (46%) -- no drift from this issue's
+"Verified corrections" had occurred).
+
+| Candidate | Change from baseline | `vinp`/`vinn`-to-nearest-`clk` clearance | `aon` route length | `aop` status | MST legs (of 65) | Verdict |
+|---|---|---|---|---|---|---|
+| **Baseline (`"row"`, committed)** | — | 248.18 µm | 288.27 µm | unrouted (`route_length_um: null`) | 30 (46%) | committed |
+| Reorder: `mtl` moved to end of `placement.order` (still `"row"`) | latch group re-sequenced so `m1_m2` sits immediately after `rn_rp` | 263.18 µm (+6%) | 273.85 µm (−5%) | partial (277.68 µm) | 29 (45%) | rejected — regresses coverage (`ltail` routed→unrouted, `sp` partial→unrouted) |
+| Reorder: swap `mtl`/`m1_m2` (still `"row"`) | same intent, smaller move | 253.18 µm (+2%) | 273.85 µm (−5%) | partial (277.68 µm) | 27 (42%) | rejected — larger coverage regression (`ltail`, `mn`, `mp` all broken) |
+| `"explicit"`: 2-row fold — latch group folded back above the preamp row, `mtl` placed farthest along the fold | genuine 2D floorplan | 13.79 µm (−94%) | 116.58 µm (−60%) | still unrouted | 15 (23%) | rejected — catastrophic coverage loss, **and** the input/`clk` separation this issue exists to protect got far worse, not better |
+| `"explicit"`: lift `mtl` +40 µm in `y` only, `x` unchanged | minimal 2D perturbation | 248.18 µm (0%, see below) | 278.85 µm (−3%) | partial (304.82 µm) | 29 (45%) | rejected — regresses coverage (`ltail` routed→unrouted) for no separation benefit |
+
+(Field citations, matching this README's existing convention: clearance is
+the bbox-to-bbox Euclidean gap between each candidate response's own
+`blocks[]` entries for `mip_min` and each of `mtl`/`m7_m8`/`m9_m10` -- the
+three `clk`-bearing blocks -- taking the minimum, read from
+`blocks[].offset_um`/`blocks[].bbox_um`; route lengths and net status are
+`nets[].route_length_um`/`nets[].status`, the same fields
+`routing_table.py` reads for the committed table above; MST-leg counts are
+`routing_table.py`'s own `render()` logic applied to each candidate's
+response, not a separately-maintained count.)
+
+**Why the two target metrics are coupled, not independent, for this
+topology.** `rn_rp` (DR-0001's two 120 µm-long load resistors) composes to
+a single 242 µm-wide block -- by a wide margin the largest dimension in
+this design (`mip_min`, the next largest, is 63 µm tall and only 3.5 µm
+wide, per its own placed `bbox_um` in `comparator.gen-compose.json`). In the
+committed `"row"` floorplan, `rn_rp` sits directly between `mip_min` and
+the latch group, so its own fixed 242 µm length is *simultaneously*:
+(a) most of the ~250 µm input-to-`clk` separation the section above credits
+to declaration order "almost for free", and (b) most of `aon`'s 288.27 µm
+route length. Any floorplan change that brings the latch group (and
+therefore `mtl`/`m7_m8`/`m9_m10`) physically closer to `rn_rp`'s far end to
+shorten `aon`/`aop` moves those same `clk`-bearing blocks closer to
+`mip_min` too -- confirmed directly by the `"explicit"` 2-row fold
+candidate above, where compacting the latch group near the preamp row cut
+`aon`'s route by 60% *and* cut the `clk` clearance by 94% in the same run.
+Lifting only `mtl` out of the row plane (the fourth candidate) avoids that
+particular coupling but is defeated by `mip_min`'s own 63 µm bbox height: a
+40 µm `y`-offset does not clear `mip_min`'s own vertical span at all, so
+the bbox-clearance metric (which only credits a gap once the two ranges
+stop overlapping on both axes) reports zero benefit; an offset large enough
+to actually clear it would be a disproportionate area/routing-risk cost for
+a still-marginal, single-digit-percent clearance gain once it did.
+
+**Conclusion: kept `"row"`, no floorplan change adopted.** Neither
+placement strategy `klt gen-compose` supports beyond `"row"` (`"explicit"`,
+tried above in two forms; `"array"` does not apply here -- it takes exactly
+one `blocks[]` entry, per its own validation, and this composition has 16)
+improved on the committed baseline on either target metric without
+regressing routed-net coverage below the 30/65-leg (46%) floor this issue's
+own Acceptance Criteria set as the hard constraint. This is **not** a `klt
+gen-compose` tool gap to file against `2AMLogic/klayout-tools` -- every
+candidate's `"row"`/`"explicit"` behavior matched its documented contract
+exactly (`resolve_explicit_offsets`/`_parse_explicit_origins` in
+`klayout_tools/gen_compose.py`); the constraint is intrinsic to this
+design's own device geometry (`rn_rp`'s DR-0001-mandated resistor length,
+`mip_min`'s own tall diff-pair bbox), not a capability the tool lacks.
+`gen_comparator.py`/`comparator.gds`/`comparator.gen-compose.json` are
+therefore unchanged by this issue -- this section is the deliverable.
+
 ## LVS: `status: mismatch`, blocked on routing completion (issue #22)
 
 `klt extract` + `klt lvs` (issue #22, T1 checklist item 4) were run against
