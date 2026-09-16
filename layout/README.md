@@ -713,10 +713,14 @@ re-read it rather than trusting this prose):
   suspect rather than a surprise.
 - **A `toolchain.json` pin.** See "Toolchain" below.
 - **`status: "match"` on LVS.** Not reachable today for a reason upstream
-  of this repo -- see "LVS" above and
-  [klayout-tools#1907](https://github.com/2AMLogic/klayout-tools/issues/1907).
-  What *is* verified is stated there precisely, with the committed reports
-  to read it out of.
+  of this repo -- see "LVS" above,
+  [klayout-tools#1907](https://github.com/2AMLogic/klayout-tools/issues/1907)
+  and
+  [klayout-tools#1927](https://github.com/2AMLogic/klayout-tools/issues/1927),
+  tracked here as
+  [#40](https://github.com/2AMLogic/gf180-comparator/issues/40). What *is*
+  verified is stated there precisely, with the committed reports to read it
+  out of.
 
 ## Toolchain
 
