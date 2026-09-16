@@ -87,10 +87,6 @@ class Pdk:
         return self.path / "libs.tech" / "ngspice"
 
     @property
-    def xschem_dir(self) -> Path:
-        return self.path / "libs.tech" / "xschem"
-
-    @property
     def design_include(self) -> Path:
         """Global switches / corner params. Must be included before models."""
         return self.ngspice_dir / "design.ngspice"
