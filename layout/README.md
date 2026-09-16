@@ -699,7 +699,10 @@ construction, not of a post-process:
   than emitting a violating GDS.
 - `klt drc` against the real deck then re-checks it independently, inline
   at the end of `gen_comparator.py` and again as the standalone
-  `run_drc.py` that writes the committed artifact.
+  `run_drc.py` that writes the committed artifact. Both runs go through the
+  same `run_drc.run_drc(path)` helper -- the deck, the top cell, and the
+  `klt drc` 0/3 exit-code contract have exactly one home, and only the
+  standalone script adds the report-writing step (`write_report()`).
 
 ### Superseded: the 12 `metal1.space.1` violations #20 closed
 
