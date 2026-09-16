@@ -163,16 +163,7 @@ for raw_candidate in ${CANDIDATES[@]+"${CANDIDATES[@]}"}; do
     is_recognized_top "$path" || continue
     CHECKED_PATHS=$((CHECKED_PATHS + 1))
 
-    # NOTE: no `-q` here. `grep -q` exits as soon as it finds a match without
-    # reading the rest of stdin; if the match is not the LAST line of
-    # full_tree's output, the pipe's writer (the `printf` inside full_tree)
-    # can still be mid-write when grep closes its read end, earning SIGPIPE
-    # (exit 141). Under this script's `set -o pipefail`, that 141 — not
-    # grep's own 0 — becomes the pipeline's reported status, producing a
-    # false MISSING FILE for a path that genuinely exists (#48). Reading to
-    # EOF (dropping -q, redirecting matched output to /dev/null instead)
-    # avoids the early-exit/SIGPIPE interaction entirely.
-    if ! full_tree | grep -Fx "$path" >/dev/null; then
+    if ! full_tree | grep -qFx "$path"; then
         MISSES+=("MISSING FILE: \`$path\` does not exist on origin/main")
         continue
     fi

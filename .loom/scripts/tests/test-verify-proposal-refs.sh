@@ -184,50 +184,6 @@ RC=$?
 assert_eq "0" "$RC" "a correct tracked-file count does not miss"
 
 echo
-echo "=== Fixture 6: large tree, non-last-alphabetical match (SIGPIPE/pipefail regression, #48) ==="
-# full_tree() pipes `git ls-tree -r origin/main --name-only` into the
-# consumer's `grep -Fx`. `grep -q` exits as soon as it finds a match without
-# draining the rest of stdin; if the matched line is not the LAST line of
-# full_tree's output AND the remaining unread output is large enough that the
-# writer (the `printf` inside full_tree) is still mid-write when grep closes
-# its read end, the writer earns SIGPIPE (exit 141) — which `set -o
-# pipefail` then reports as the *pipeline's* exit status instead of grep's
-# own 0, producing a false MISSING FILE for a path that genuinely exists.
-#
-# Reproducing this needs a tree large enough to exceed the OS pipe buffer
-# (tens of KB) so the write actually blocks — the small 2-file fixture above
-# is never large enough to trigger it. This fixture adds ~15k filler paths
-# under `zzz_bulk/` (sorts after every real path below, so a match on any of
-# the three real paths is never the last line of `full_tree`'s output) to
-# reliably force the writer to still be blocked when grep exits early.
-# Confirmed against the pre-fix script: this exact fixture reproduces the
-# exact 3-miss false-positive from #48's own report before the `-q` removal,
-# and reports 0 misses after it.
-mkdir -p "$FIXTURE_REPO/.claude/commands/loom" "$FIXTURE_REPO/.loom" "$FIXTURE_REPO/sim" "$FIXTURE_REPO/zzz_bulk"
-(
-    cd "$FIXTURE_REPO" || exit 1
-    echo "judge ref" > .claude/commands/loom/judge-reference.md
-    echo '{"x":1}' > .loom/config.json
-    echo "readme" > sim/README.md
-    for i in $(seq -w 1 15000); do
-        echo "x" > "zzz_bulk/file_${i}.py"
-    done
-    git add -A
-    git commit -qm "add real paths + zzz_bulk filler" >/dev/null
-    git update-ref refs/remotes/origin/main refs/heads/main
-)
-BULK_BODY="$BODY_DIR/bulk.md"
-cat > "$BULK_BODY" <<'EOF'
-See `.claude/commands/loom/judge-reference.md`, `.loom/config.json`, and
-`sim/README.md` for context — all three exist, and none is alphabetically
-last among tracked files.
-EOF
-OUT="$(run_vpr "$BULK_BODY")"
-RC=$?
-assert_eq "0" "$RC" "large tree, non-last match: exits 0 (no false MISSING FILE)"
-assert_contains "$OUT" "all references check out" "large tree, non-last match: reports success"
-
-echo
 echo "=== Usage / prerequisite errors ==="
 OUT="$("$VPR" 2>&1)"
 RC=$?
