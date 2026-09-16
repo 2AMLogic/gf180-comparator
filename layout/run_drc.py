@@ -43,9 +43,19 @@ TOP = "COMPARATOR"
 REPORT = os.path.join(OUTDIR, "comparator.drc.json")
 
 
-def run_drc() -> tuple[dict, int]:
+def run_drc(path: str = GDS) -> tuple[dict, int]:
+    """Run `klt drc` on `path` against this block's deck/top cell and return
+    `(report, klt_exit_code)`.
+
+    This is the single source of truth for the `klt drc` invocation --
+    `layout/route_nets.py`'s inline post-routing sanity re-check calls it too
+    (issue #42), so the deck, the top cell, and the exit-code contract below
+    only ever have to change in one place. Pure invocation: writing the
+    committed JSON evidence is `write_report()`'s job, so a caller that only
+    wants the numbers does not get the side effect.
+    """
     cmd = [
-        "klt", "drc", os.path.relpath(GDS, REPO_ROOT),
+        "klt", "drc", os.path.relpath(path, REPO_ROOT),
         "--deck", DECK,
         "--top", TOP,
         "--format", "json",
@@ -56,16 +66,20 @@ def run_drc() -> tuple[dict, int]:
     if proc.returncode not in (0, 3):
         sys.stderr.write(proc.stderr)
         sys.exit(f"klt drc failed (exit {proc.returncode})")
-    report = json.loads(proc.stdout)
-    with open(REPORT, "w") as f:
+    return json.loads(proc.stdout), proc.returncode
+
+
+def write_report(report: dict, path: str = REPORT) -> None:
+    """Write the committed DRC evidence artifact (`layout/drc/*.drc.json`)."""
+    with open(path, "w") as f:
         json.dump(report, f, indent=2, sort_keys=True)
         f.write("\n")
-    return report, proc.returncode
 
 
 def main() -> int:
     os.makedirs(OUTDIR, exist_ok=True)
     report, exit_code = run_drc()
+    write_report(report)
     print(f"klt drc: status={report['status']} "
           f"violation_count={report.get('violation_count')} "
           f"rule_counts={report.get('rule_counts')}")

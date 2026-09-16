@@ -79,6 +79,13 @@ from collections import defaultdict
 
 import klayout.db as db
 
+# The `klt drc` invocation (deck, top cell, 0/3 exit-code contract) has one
+# home: the standalone signoff script. `run_drc()` below is the inline
+# post-routing re-check that reuses it -- issue #42. Same sibling-module
+# import convention `gen_comparator.py` uses for `route_nets` itself
+# (`layout/` is on sys.path[0] whichever of the three scripts is run).
+from run_drc import run_drc as _klt_drc
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 # --- gf180mcu layers, as the curated klt extraction deck resolves them -----
@@ -574,17 +581,16 @@ def run_drc(gds_path=None):
     """Re-check the drawn result against the real deck -- this module's own
     `check_spacing()` only knows about the shapes it drew itself, so the
     rule authority is always `klt drc` (issue #20 keeps the committed
-    evidence; this is the inline sanity re-check)."""
-    import subprocess
+    evidence; this is the inline sanity re-check).
 
-    gds_path = gds_path or os.path.join(HERE, "comparator.gds")
-    proc = subprocess.run(
-        ["klt", "drc", gds_path, "--deck", "gf180mcu", "--top", "COMPARATOR",
-         "--format", "json"],
-        capture_output=True, text=True)
-    if proc.returncode not in (0, 3):
-        raise SystemExit(f"klt drc failed (exit {proc.returncode}): {proc.stderr}")
-    return json.loads(proc.stdout)
+    The invocation itself lives in `run_drc.run_drc()` -- the standalone
+    signoff script owns the deck/top-cell/exit-code contract, and this
+    re-check reuses it rather than keeping a second copy (issue #42). The
+    signoff script's report-writing step is deliberately not invoked here:
+    `layout/drc/comparator.drc.json` is written by `python3
+    layout/run_drc.py`, not as a side effect of routing."""
+    report, _klt_exit_code = _klt_drc(gds_path or os.path.join(HERE, "comparator.gds"))
+    return report
 
 
 if __name__ == "__main__":
