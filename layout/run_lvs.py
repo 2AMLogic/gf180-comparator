@@ -180,14 +180,22 @@ def run_extract() -> dict:
     return report
 
 
-def run_lvs() -> tuple[dict, int]:
-    # Relative paths resolve against the request FILE's own directory (see
-    # docs/cli/lvs.md's `<request>` bullet) -- written relative rather than
-    # absolute so the committed request document (and the `layout`/
-    # `reference` fields the report echoes verbatim) stay host-independent.
+def lvs_request(engine: str, **options: object) -> dict:
+    """The `klt.lvs.request/1` document comparing this block's extracted
+    layout netlist against `design/comparator.spice`'s `comparator_dut`,
+    for `engine` (`"klayout"` or `"netgen"`) -- the single source of truth
+    for what the two engines are asked to compare, so the `layout`/
+    `reference` blocks are only ever stated once. `options` becomes the
+    request's `options` object; passing none omits the key entirely.
+
+    Relative paths resolve against the request FILE's own directory (see
+    docs/cli/lvs.md's `<request>` bullet) -- written relative rather than
+    absolute so the committed request document (and the `layout`/
+    `reference` fields the report echoes verbatim) stay host-independent.
+    """
     request = {
         "schema": "klt.lvs.request/1",
-        "engine": "klayout",
+        "engine": engine,
         "layout": {
             "netlist": os.path.relpath(EXTRACT_NETLIST, OUTDIR),
             "top": TOP,
@@ -199,34 +207,52 @@ def run_lvs() -> tuple[dict, int]:
             "form": "subckt-call",
             "deck": DECK,
         },
-        "options": {
-            # design/comparator.spice's comparator_dut is a two-level
-            # hierarchy (XA/XL instances of comparator_dut_analog /
-            # comparator_dut_latch); klt extract's layout-side output is
-            # always flat. Without this, every sub-circuit reports an
-            # unmatchable `topology` finding instead of the real
-            # connectivity comparison -- see docs/cli/lvs.md's
-            # `options.flatten_reference`.
-            "flatten_reference": True,
-        },
     }
-    with open(LVS_REQUEST, "w") as f:
+    if options:
+        request["options"] = dict(options)
+    return request
+
+
+def run_lvs_request(request: dict, request_path: str, report_path: str,
+                    *, label: str = "klt lvs") -> tuple[dict, int]:
+    """Write `request` to `request_path`, run `klt lvs` on it, and write the
+    resulting report to `report_path` -- returning `(report, klt_exit_code)`.
+
+    The single source of truth for the `klt lvs` invocation, shared by both
+    engines' runs below (issue #53), so the exit-code contract and the two
+    committed-artifact writes only ever have to change in one place. `label`
+    names the invocation in the fatal error message, distinguishing the
+    primary run from the netgen cross-check.
+    """
+    with open(request_path, "w") as f:
         json.dump(request, f, indent=2, sort_keys=True)
         f.write("\n")
 
-    cmd = ["klt", "lvs", os.path.relpath(LVS_REQUEST, REPO_ROOT), "--format", "json"]
+    cmd = ["klt", "lvs", os.path.relpath(request_path, REPO_ROOT),
+           "--format", "json"]
     proc = subprocess.run(cmd, capture_output=True, text=True, cwd=REPO_ROOT)
     # klt lvs exits 0 (match), 3 (mismatch), or 4 (inconclusive) with the
     # JSON payload still on stdout for 0/3/4 -- only exit 1/2 mean no
     # payload was produced at all.
     if proc.returncode not in (0, 3, 4):
         sys.stderr.write(proc.stderr)
-        sys.exit(f"klt lvs failed (exit {proc.returncode})")
+        sys.exit(f"{label} failed (exit {proc.returncode})")
     report = json.loads(proc.stdout)
-    with open(LVS_REPORT, "w") as f:
+    with open(report_path, "w") as f:
         json.dump(report, f, indent=2, sort_keys=True)
         f.write("\n")
     return report, proc.returncode
+
+
+def run_lvs() -> tuple[dict, int]:
+    # flatten_reference: design/comparator.spice's comparator_dut is a
+    # two-level hierarchy (XA/XL instances of comparator_dut_analog /
+    # comparator_dut_latch); klt extract's layout-side output is always
+    # flat. Without it, every sub-circuit reports an unmatchable `topology`
+    # finding instead of the real connectivity comparison -- see
+    # docs/cli/lvs.md's `options.flatten_reference`.
+    request = lvs_request("klayout", flatten_reference=True)
+    return run_lvs_request(request, LVS_REQUEST, LVS_REPORT)
 
 
 def run_netgen_crosscheck() -> dict | None:
@@ -244,34 +270,13 @@ def run_netgen_crosscheck() -> dict | None:
     """
     if shutil.which("netgen") is None:
         return None
-    request = {
-        "schema": "klt.lvs.request/1",
-        "engine": "netgen",
-        "layout": {
-            "netlist": os.path.relpath(EXTRACT_NETLIST, OUTDIR),
-            "top": TOP,
-            "deck": DECK,
-        },
-        "reference": {
-            "netlist": os.path.relpath(REFERENCE, OUTDIR),
-            "top": REFERENCE_TOP,
-            "form": "subckt-call",
-            "deck": DECK,
-        },
-    }
-    with open(NETGEN_REQUEST, "w") as f:
-        json.dump(request, f, indent=2, sort_keys=True)
-        f.write("\n")
-    cmd = ["klt", "lvs", os.path.relpath(NETGEN_REQUEST, REPO_ROOT),
-           "--format", "json"]
-    proc = subprocess.run(cmd, capture_output=True, text=True, cwd=REPO_ROOT)
-    if proc.returncode not in (0, 3, 4):
-        sys.stderr.write(proc.stderr)
-        sys.exit(f"klt lvs (netgen) failed (exit {proc.returncode})")
-    report = json.loads(proc.stdout)
-    with open(NETGEN_REPORT, "w") as f:
-        json.dump(report, f, indent=2, sort_keys=True)
-        f.write("\n")
+    # The same layout/reference pair the primary run compares, with no
+    # `options` block -- `flatten_reference` is the klayout engine's own
+    # hierarchy workaround (see run_lvs() above), not something asked of
+    # netgen.
+    request = lvs_request("netgen")
+    report, _ = run_lvs_request(request, NETGEN_REQUEST, NETGEN_REPORT,
+                                label="klt lvs (netgen)")
     return report
 
 
