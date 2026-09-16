@@ -42,10 +42,10 @@
       "instance_path": [],
       "name": "$1",
       "nets": {
-        "b": "vsubs",
-        "d": "\\$28",
-        "g": "\\$9",
-        "s": "\\$26"
+        "b": "vss",
+        "d": "sp",
+        "g": "qp",
+        "s": "vss"
       },
       "params": {
         "ad_um2": 1.0,
@@ -61,10 +61,10 @@
       "instance_path": [],
       "name": "$10",
       "nets": {
-        "b": "vsubs",
+        "b": "vss",
         "d": "atail",
         "g": "ibias",
-        "s": "\\$14"
+        "s": "vss"
       },
       "params": {
         "ad_um2": 5.0,
@@ -80,8 +80,8 @@
       "instance_path": [],
       "name": "$11",
       "nets": {
-        "b": "vsubs",
-        "d": "\\$42",
+        "b": "vss",
+        "d": "qp",
         "g": "qn",
         "s": "mp"
       },
@@ -99,10 +99,10 @@
       "instance_path": [],
       "name": "$12",
       "nets": {
-        "b": "vsubs",
+        "b": "vss",
         "d": "ltail",
-        "g": "\\$4",
-        "s": "\\$39"
+        "g": "clk",
+        "s": "vss"
       },
       "params": {
         "ad_um2": 8.0,
@@ -118,7 +118,7 @@
       "instance_path": [],
       "name": "$13",
       "nets": {
-        "b": "vsubs",
+        "b": "vss",
         "d": "mp",
         "g": "aon",
         "s": "ltail"
@@ -137,7 +137,7 @@
       "instance_path": [],
       "name": "$14",
       "nets": {
-        "b": "vsubs",
+        "b": "vss",
         "d": "aon",
         "g": "vinp",
         "s": "atail"
@@ -156,8 +156,8 @@
       "instance_path": [],
       "name": "$15",
       "nets": {
-        "b": "vsubs",
-        "d": "\\$50",
+        "b": "vss",
+        "d": "aop",
         "g": "vinn",
         "s": "atail"
       },
@@ -175,8 +175,8 @@
       "instance_path": [],
       "name": "$16",
       "nets": {
-        "b": "\\$48",
-        "d": "\\$22",
+        "b": "vdd",
+        "d": "mn",
         "g": "clk",
         "s": "vdd"
       },
@@ -194,8 +194,8 @@
       "instance_path": [],
       "name": "$17",
       "nets": {
-        "b": "\\$47",
-        "d": "\\$21",
+        "b": "vdd",
+        "d": "qn",
         "g": "clk",
         "s": "vdd"
       },
@@ -213,9 +213,9 @@
       "instance_path": [],
       "name": "$18",
       "nets": {
-        "b": "\\$54",
-        "d": "\\$24",
-        "g": "\\$8",
+        "b": "vdd",
+        "d": "sp",
+        "g": "qp",
         "s": "vdd"
       },
       "params": {
@@ -232,8 +232,8 @@
       "instance_path": [],
       "name": "$19",
       "nets": {
-        "b": "\\$48",
-        "d": "\\$23",
+        "b": "vdd",
+        "d": "mp",
         "g": "clk",
         "s": "vdd"
       },
@@ -251,10 +251,10 @@
       "instance_path": [],
       "name": "$2",
       "nets": {
-        "b": "vsubs",
-        "d": "\\$34",
+        "b": "vss",
+        "d": "dout",
         "g": "sp",
-        "s": "\\$31"
+        "s": "vss"
       },
       "params": {
         "ad_um2": 1.0,
@@ -270,9 +270,9 @@
       "instance_path": [],
       "name": "$20",
       "nets": {
-        "b": "\\$53",
-        "d": "\\$20",
-        "g": "\\$6",
+        "b": "vdd",
+        "d": "qn",
+        "g": "qp",
         "s": "vdd"
       },
       "params": {
@@ -289,8 +289,8 @@
       "instance_path": [],
       "name": "$21",
       "nets": {
-        "b": "\\$47",
-        "d": "\\$44",
+        "b": "vdd",
+        "d": "qp",
         "g": "clk",
         "s": "vdd"
       },
@@ -308,7 +308,7 @@
       "instance_path": [],
       "name": "$22",
       "nets": {
-        "b": "\\$55",
+        "b": "vdd",
         "d": "na",
         "g": "sp",
         "s": "vdd"
@@ -327,9 +327,9 @@
       "instance_path": [],
       "name": "$23",
       "nets": {
-        "b": "\\$56",
-        "d": "\\$30",
-        "g": "\\$11",
+        "b": "vdd",
+        "d": "dout",
+        "g": "doutb",
         "s": "na"
       },
       "params": {
@@ -346,8 +346,8 @@
       "instance_path": [],
       "name": "$24",
       "nets": {
-        "b": "\\$54",
-        "d": "\\$45",
+        "b": "vdd",
+        "d": "sn",
         "g": "qn",
         "s": "vdd"
       },
@@ -365,8 +365,8 @@
       "instance_path": [],
       "name": "$25",
       "nets": {
-        "b": "\\$53",
-        "d": "\\$43",
+        "b": "vdd",
+        "d": "qp",
         "g": "qn",
         "s": "vdd"
       },
@@ -384,9 +384,9 @@
       "instance_path": [],
       "name": "$26",
       "nets": {
-        "b": "\\$55",
+        "b": "vdd",
         "d": "nb",
-        "g": "sp",
+        "g": "sn",
         "s": "vdd"
       },
       "params": {
@@ -403,9 +403,9 @@
       "instance_path": [],
       "name": "$27",
       "nets": {
-        "b": "\\$56",
-        "d": "\\$52",
-        "g": "\\$46",
+        "b": "vdd",
+        "d": "doutb",
+        "g": "dout",
         "s": "nb"
       },
       "params": {
@@ -424,7 +424,7 @@
       "nets": {
         "a": "aon",
         "b": "vdd",
-        "w": "vsubs"
+        "w": "vss"
       },
       "params": {
         "area_um2": 120.0,
@@ -439,9 +439,9 @@
       "instance_path": [],
       "name": "$29",
       "nets": {
-        "a": "vdd",
+        "a": "aop",
         "b": "vdd",
-        "w": "vsubs"
+        "w": "vss"
       },
       "params": {
         "area_um2": 120.0,
@@ -456,10 +456,10 @@
       "instance_path": [],
       "name": "$3",
       "nets": {
-        "b": "vsubs",
-        "d": "\\$38",
+        "b": "vss",
+        "d": "dout",
         "g": "doutb",
-        "s": "\\$35"
+        "s": "vss"
       },
       "params": {
         "ad_um2": 1.0,
@@ -475,10 +475,10 @@
       "instance_path": [],
       "name": "$4",
       "nets": {
-        "b": "vsubs",
-        "d": "\\$13",
+        "b": "vss",
+        "d": "ibias",
         "g": "ibias",
-        "s": "\\$12"
+        "s": "vss"
       },
       "params": {
         "ad_um2": 2.5,
@@ -494,10 +494,10 @@
       "instance_path": [],
       "name": "$5",
       "nets": {
-        "b": "vsubs",
-        "d": "\\$27",
+        "b": "vss",
+        "d": "sn",
         "g": "qn",
-        "s": "\\$25"
+        "s": "vss"
       },
       "params": {
         "ad_um2": 1.0,
@@ -513,10 +513,10 @@
       "instance_path": [],
       "name": "$6",
       "nets": {
-        "b": "vsubs",
+        "b": "vss",
         "d": "doutb",
-        "g": "sp",
-        "s": "\\$32"
+        "g": "sn",
+        "s": "vss"
       },
       "params": {
         "ad_um2": 1.0,
@@ -532,10 +532,10 @@
       "instance_path": [],
       "name": "$7",
       "nets": {
-        "b": "vsubs",
-        "d": "\\$37",
-        "g": "\\$36",
-        "s": "doutb"
+        "b": "vss",
+        "d": "doutb",
+        "g": "dout",
+        "s": "vss"
       },
       "params": {
         "ad_um2": 1.0,
@@ -551,9 +551,9 @@
       "instance_path": [],
       "name": "$8",
       "nets": {
-        "b": "vsubs",
-        "d": "\\$19",
-        "g": "\\$5",
+        "b": "vss",
+        "d": "qn",
+        "g": "qp",
         "s": "mn"
       },
       "params": {
@@ -570,9 +570,9 @@
       "instance_path": [],
       "name": "$9",
       "nets": {
-        "b": "vsubs",
+        "b": "vss",
         "d": "mn",
-        "g": "aon",
+        "g": "aop",
         "s": "ltail"
       },
       "params": {
@@ -590,377 +590,121 @@
   "ignored_layers": [],
   "matched_device_groups": [],
   "merged_net_labels": [],
-  "net_count": 57,
+  "net_count": 20,
   "netlist_path": "layout/lvs/comparator.extracted.spice",
-  "netlist_sha256": "483e005eacbb0c1d79360ed6fa95cfefd0a5e858982c39032baebc7c42fe0d01",
+  "netlist_sha256": "9f7c3dab36a25bea3cb27240233cb014a469f9229863869cda035c5e84540c25",
   "nets": [
     {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$11",
-      "net_id": 11,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$12",
-      "net_id": 12,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$13",
+      "device_count": 3,
+      "label_positions_um": [
+        {
+          "text": "aon",
+          "x_um": 17.35,
+          "y_um": -2.55
+        },
+        {
+          "text": "aon",
+          "x_um": 144.32,
+          "y_um": 66.09
+        }
+      ],
+      "name": "aon",
       "net_id": 13,
       "pin": false,
       "pin_index": null
     },
     {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$14",
-      "net_id": 14,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$19",
-      "net_id": 19,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$20",
-      "net_id": 20,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$21",
-      "net_id": 21,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$22",
-      "net_id": 22,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$23",
-      "net_id": 23,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$24",
-      "net_id": 24,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$25",
-      "net_id": 25,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$26",
-      "net_id": 26,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$27",
-      "net_id": 27,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$28",
-      "net_id": 28,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$30",
-      "net_id": 30,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$31",
-      "net_id": 31,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$32",
-      "net_id": 32,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$34",
-      "net_id": 34,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$35",
-      "net_id": 35,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$36",
-      "net_id": 36,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$37",
-      "net_id": 37,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$38",
-      "net_id": 38,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$39",
-      "net_id": 39,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$4",
-      "net_id": 4,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$42",
-      "net_id": 42,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$43",
-      "net_id": 43,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$44",
-      "net_id": 44,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$45",
-      "net_id": 45,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$46",
-      "net_id": 46,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 2,
-      "label_positions_um": [],
-      "name": "\\$47",
-      "net_id": 47,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 2,
-      "label_positions_um": [],
-      "name": "\\$48",
-      "net_id": 48,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$5",
-      "net_id": 5,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$50",
-      "net_id": 50,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$52",
-      "net_id": 52,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 2,
-      "label_positions_um": [],
-      "name": "\\$53",
-      "net_id": 53,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 2,
-      "label_positions_um": [],
-      "name": "\\$54",
-      "net_id": 54,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 2,
-      "label_positions_um": [],
-      "name": "\\$55",
-      "net_id": 55,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 2,
-      "label_positions_um": [],
-      "name": "\\$56",
-      "net_id": 56,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$6",
-      "net_id": 6,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$8",
-      "net_id": 8,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 1,
-      "label_positions_um": [],
-      "name": "\\$9",
-      "net_id": 9,
-      "pin": false,
-      "pin_index": null
-    },
-    {
-      "device_count": 4,
+      "device_count": 3,
       "label_positions_um": [
         {
-          "text": "aon",
-          "x_um": 21.625,
-          "y_um": 7.75
+          "text": "aop",
+          "x_um": 82.645,
+          "y_um": 66.89
+        },
+        {
+          "text": "aop",
+          "x_um": 148.19,
+          "y_um": -3.35
         }
       ],
-      "name": "aon",
-      "net_id": 16,
-      "pin": true,
-      "pin_index": 0
+      "name": "aop",
+      "net_id": 15,
+      "pin": false,
+      "pin_index": null
     },
     {
       "device_count": 3,
       "label_positions_um": [
         {
           "text": "atail",
-          "x_um": 15.25,
-          "y_um": 10.0
+          "x_um": 11.11,
+          "y_um": -1.75
+        },
+        {
+          "text": "atail",
+          "x_um": 11.11,
+          "y_um": 65.29
         }
       ],
       "name": "atail",
-      "net_id": 15,
+      "net_id": 12,
+      "pin": false,
+      "pin_index": null
+    },
+    {
+      "device_count": 5,
+      "label_positions_um": [
+        {
+          "text": "clk",
+          "x_um": 281.93,
+          "y_um": 69.29
+        },
+        {
+          "text": "clk",
+          "x_um": 285.47,
+          "y_um": -5.75
+        }
+      ],
+      "name": "clk",
+      "net_id": 8,
+      "pin": true,
+      "pin_index": 0
+    },
+    {
+      "device_count": 5,
+      "label_positions_um": [
+        {
+          "text": "dout",
+          "x_um": 315.78,
+          "y_um": 74.89
+        },
+        {
+          "text": "dout",
+          "x_um": 316.4,
+          "y_um": -11.35
+        }
+      ],
+      "name": "dout",
+      "net_id": 2,
       "pin": true,
       "pin_index": 1
     },
     {
-      "device_count": 4,
+      "device_count": 5,
       "label_positions_um": [
         {
-          "text": "clk",
-          "x_um": 291.02,
-          "y_um": 11.75
+          "text": "doutb",
+          "x_um": 319.43,
+          "y_um": -12.15
+        },
+        {
+          "text": "doutb",
+          "x_um": 320.67,
+          "y_um": 75.69
         }
       ],
-      "name": "clk",
-      "net_id": 7,
+      "name": "doutb",
+      "net_id": 1,
       "pin": true,
       "pin_index": 2
     },
@@ -968,71 +712,62 @@
       "device_count": 3,
       "label_positions_um": [
         {
-          "text": "doutb",
-          "x_um": 323.13,
-          "y_um": 4.82
-        }
-      ],
-      "name": "doutb",
-      "net_id": 33,
-      "pin": true,
-      "pin_index": 3
-    },
-    {
-      "device_count": 2,
-      "label_positions_um": [
-        {
           "text": "ibias",
-          "x_um": 4.25,
-          "y_um": 11.53
+          "x_um": 6.75,
+          "y_um": 64.49
         }
       ],
       "name": "ibias",
-      "net_id": 2,
+      "net_id": 11,
       "pin": true,
-      "pin_index": 4
+      "pin_index": 3
     },
     {
       "device_count": 3,
       "label_positions_um": [
         {
           "text": "ltail",
-          "x_um": 271.93,
-          "y_um": 6.0
+          "x_um": 276.09,
+          "y_um": 70.09
+        },
+        {
+          "text": "ltail",
+          "x_um": 277.35,
+          "y_um": -6.55
         }
       ],
       "name": "ltail",
-      "net_id": 17,
-      "pin": true,
-      "pin_index": 5
+      "net_id": 16,
+      "pin": false,
+      "pin_index": null
     },
     {
-      "device_count": 2,
+      "device_count": 3,
       "label_positions_um": [
         {
           "text": "mn",
-          "x_um": 276.93,
-          "y_um": 3.5
+          "x_um": 285.67,
+          "y_um": -7.35
         }
       ],
       "name": "mn",
-      "net_id": 18,
-      "pin": true,
-      "pin_index": 6
+      "net_id": 7,
+      "pin": false,
+      "pin_index": null
     },
     {
-      "device_count": 2,
+      "device_count": 3,
       "label_positions_um": [
         {
           "text": "mp",
-          "x_um": 276.93,
-          "y_um": 12.32
+          "x_um": 285.67,
+          "y_um": 70.89
         }
       ],
       "name": "mp",
-      "net_id": 40,
-      "pin": true,
-      "pin_index": 7
+      "net_id": 17,
+      "pin": false,
+      "pin_index": null
     },
     {
       "device_count": 2,
@@ -1040,13 +775,13 @@
         {
           "text": "na",
           "x_um": 311.93,
-          "y_um": 5.0
+          "y_um": -10.55
         }
       ],
       "name": "na",
-      "net_id": 29,
-      "pin": true,
-      "pin_index": 8
+      "net_id": 3,
+      "pin": false,
+      "pin_index": null
     },
     {
       "device_count": 2,
@@ -1054,55 +789,98 @@
         {
           "text": "nb",
           "x_um": 311.93,
-          "y_um": 16.82
+          "y_um": 74.09
         }
       ],
       "name": "nb",
-      "net_id": 51,
-      "pin": true,
-      "pin_index": 9
+      "net_id": 20,
+      "pin": false,
+      "pin_index": null
+    },
+    {
+      "device_count": 7,
+      "label_positions_um": [
+        {
+          "text": "qn",
+          "x_um": 285.67,
+          "y_um": -8.15
+        },
+        {
+          "text": "qn",
+          "x_um": 291.93,
+          "y_um": 71.69
+        }
+      ],
+      "name": "qn",
+      "net_id": 6,
+      "pin": false,
+      "pin_index": null
+    },
+    {
+      "device_count": 7,
+      "label_positions_um": [
+        {
+          "text": "qp",
+          "x_um": 291.4,
+          "y_um": 72.49
+        },
+        {
+          "text": "qp",
+          "x_um": 291.93,
+          "y_um": -8.95
+        }
+      ],
+      "name": "qp",
+      "net_id": 5,
+      "pin": false,
+      "pin_index": null
     },
     {
       "device_count": 4,
       "label_positions_um": [
         {
-          "text": "qn",
-          "x_um": 281.93,
-          "y_um": 15.75
+          "text": "sn",
+          "x_um": 310.05,
+          "y_um": 73.29
         }
       ],
-      "name": "qn",
-      "net_id": 41,
-      "pin": true,
-      "pin_index": 10
+      "name": "sn",
+      "net_id": 18,
+      "pin": false,
+      "pin_index": null
     },
     {
       "device_count": 4,
       "label_positions_um": [
         {
           "text": "sp",
-          "x_um": 318.43,
-          "y_um": 23.75
+          "x_um": 310.05,
+          "y_um": -9.75
         }
       ],
       "name": "sp",
-      "net_id": 10,
-      "pin": true,
-      "pin_index": 11
+      "net_id": 4,
+      "pin": false,
+      "pin_index": null
     },
     {
-      "device_count": 13,
+      "device_count": 24,
       "label_positions_um": [
         {
           "text": "vdd",
-          "x_um": 275.805,
-          "y_um": -0.97
+          "x_um": 230.115,
+          "y_um": 67.69
+        },
+        {
+          "text": "vdd",
+          "x_um": 287.04,
+          "y_um": -4.15
         }
       ],
       "name": "vdd",
-      "net_id": 1,
+      "net_id": 10,
       "pin": true,
-      "pin_index": 12
+      "pin_index": 4
     },
     {
       "device_count": 1,
@@ -1114,9 +892,9 @@
         }
       ],
       "name": "vinn",
-      "net_id": 49,
+      "net_id": 19,
       "pin": true,
-      "pin_index": 13
+      "pin_index": 5
     },
     {
       "device_count": 1,
@@ -1128,22 +906,33 @@
         }
       ],
       "name": "vinp",
-      "net_id": 3,
+      "net_id": 14,
       "pin": true,
-      "pin_index": 14
+      "pin_index": 6
     },
     {
-      "device_count": 17,
-      "label_positions_um": [],
-      "name": "vsubs",
-      "net_id": 57,
+      "device_count": 26,
+      "label_positions_um": [
+        {
+          "text": "vss",
+          "x_um": 161.7,
+          "y_um": 68.49
+        },
+        {
+          "text": "vss",
+          "x_um": 164.97,
+          "y_um": -4.95
+        }
+      ],
+      "name": "vss",
+      "net_id": 21,
       "pin": true,
-      "pin_index": 15
+      "pin_index": 7
     }
   ],
   "parasitics": null,
   "pdk": null,
-  "pin_count": 16,
+  "pin_count": 8,
   "provenance": {
     "deck": {
       "content_hash": "sha256:3c2f4e4be2524a0fe964cd1b2c4c171c0f904586c10eaa8c4ffe3511909e4706",
@@ -1151,283 +940,21 @@
       "released": true
     },
     "input": {
-      "content_hash": "sha256:f9fbd89a125d77031fd9c314ba0a1b7fe156f6bc095e9ea0fbcce9f1ed4ab8fc"
+      "content_hash": "sha256:d668ccb543c4ec6482ee78fb00805a7472955944fce07022c505e78eeec6b8ed"
     },
     "klayout_version": "0.30.12",
     "klt_version": "0.5.0",
     "pdk": null
   },
   "schema_version": 3,
-  "single_terminal_nets": [
-    {
-      "device": "$23",
-      "net": "\\$11",
-      "terminal": "g",
-      "terminal_kind": "gate"
-    },
-    {
-      "device": "$4",
-      "net": "\\$12",
-      "terminal": "s",
-      "terminal_kind": "source"
-    },
-    {
-      "device": "$4",
-      "net": "\\$13",
-      "terminal": "d",
-      "terminal_kind": "drain"
-    },
-    {
-      "device": "$10",
-      "net": "\\$14",
-      "terminal": "s",
-      "terminal_kind": "source"
-    },
-    {
-      "device": "$8",
-      "net": "\\$19",
-      "terminal": "d",
-      "terminal_kind": "drain"
-    },
-    {
-      "device": "$20",
-      "net": "\\$20",
-      "terminal": "d",
-      "terminal_kind": "drain"
-    },
-    {
-      "device": "$17",
-      "net": "\\$21",
-      "terminal": "d",
-      "terminal_kind": "drain"
-    },
-    {
-      "device": "$16",
-      "net": "\\$22",
-      "terminal": "d",
-      "terminal_kind": "drain"
-    },
-    {
-      "device": "$19",
-      "net": "\\$23",
-      "terminal": "d",
-      "terminal_kind": "drain"
-    },
-    {
-      "device": "$18",
-      "net": "\\$24",
-      "terminal": "d",
-      "terminal_kind": "drain"
-    },
-    {
-      "device": "$5",
-      "net": "\\$25",
-      "terminal": "s",
-      "terminal_kind": "source"
-    },
-    {
-      "device": "$1",
-      "net": "\\$26",
-      "terminal": "s",
-      "terminal_kind": "source"
-    },
-    {
-      "device": "$5",
-      "net": "\\$27",
-      "terminal": "d",
-      "terminal_kind": "drain"
-    },
-    {
-      "device": "$1",
-      "net": "\\$28",
-      "terminal": "d",
-      "terminal_kind": "drain"
-    },
-    {
-      "device": "$23",
-      "net": "\\$30",
-      "terminal": "d",
-      "terminal_kind": "drain"
-    },
-    {
-      "device": "$2",
-      "net": "\\$31",
-      "terminal": "s",
-      "terminal_kind": "source"
-    },
-    {
-      "device": "$6",
-      "net": "\\$32",
-      "terminal": "s",
-      "terminal_kind": "source"
-    },
-    {
-      "device": "$2",
-      "net": "\\$34",
-      "terminal": "d",
-      "terminal_kind": "drain"
-    },
-    {
-      "device": "$3",
-      "net": "\\$35",
-      "terminal": "s",
-      "terminal_kind": "source"
-    },
-    {
-      "device": "$7",
-      "net": "\\$36",
-      "terminal": "g",
-      "terminal_kind": "gate"
-    },
-    {
-      "device": "$7",
-      "net": "\\$37",
-      "terminal": "d",
-      "terminal_kind": "drain"
-    },
-    {
-      "device": "$3",
-      "net": "\\$38",
-      "terminal": "d",
-      "terminal_kind": "drain"
-    },
-    {
-      "device": "$12",
-      "net": "\\$39",
-      "terminal": "s",
-      "terminal_kind": "source"
-    },
-    {
-      "device": "$12",
-      "net": "\\$4",
-      "terminal": "g",
-      "terminal_kind": "gate"
-    },
-    {
-      "device": "$11",
-      "net": "\\$42",
-      "terminal": "d",
-      "terminal_kind": "drain"
-    },
-    {
-      "device": "$25",
-      "net": "\\$43",
-      "terminal": "d",
-      "terminal_kind": "drain"
-    },
-    {
-      "device": "$21",
-      "net": "\\$44",
-      "terminal": "d",
-      "terminal_kind": "drain"
-    },
-    {
-      "device": "$24",
-      "net": "\\$45",
-      "terminal": "d",
-      "terminal_kind": "drain"
-    },
-    {
-      "device": "$27",
-      "net": "\\$46",
-      "terminal": "g",
-      "terminal_kind": "gate"
-    },
-    {
-      "device": "$8",
-      "net": "\\$5",
-      "terminal": "g",
-      "terminal_kind": "gate"
-    },
-    {
-      "device": "$15",
-      "net": "\\$50",
-      "terminal": "d",
-      "terminal_kind": "drain"
-    },
-    {
-      "device": "$27",
-      "net": "\\$52",
-      "terminal": "d",
-      "terminal_kind": "drain"
-    },
-    {
-      "device": "$20",
-      "net": "\\$6",
-      "terminal": "g",
-      "terminal_kind": "gate"
-    },
-    {
-      "device": "$18",
-      "net": "\\$8",
-      "terminal": "g",
-      "terminal_kind": "gate"
-    },
-    {
-      "device": "$1",
-      "net": "\\$9",
-      "terminal": "g",
-      "terminal_kind": "gate"
-    }
-  ],
+  "single_terminal_nets": [],
   "spef_path": null,
   "status": "extracted",
   "top": "COMPARATOR",
-  "unbiased_pmos_body_nets": [
-    {
-      "device": "$16",
-      "net": "\\$48"
-    },
-    {
-      "device": "$17",
-      "net": "\\$47"
-    },
-    {
-      "device": "$18",
-      "net": "\\$54"
-    },
-    {
-      "device": "$19",
-      "net": "\\$48"
-    },
-    {
-      "device": "$20",
-      "net": "\\$53"
-    },
-    {
-      "device": "$21",
-      "net": "\\$47"
-    },
-    {
-      "device": "$22",
-      "net": "\\$55"
-    },
-    {
-      "device": "$23",
-      "net": "\\$56"
-    },
-    {
-      "device": "$24",
-      "net": "\\$54"
-    },
-    {
-      "device": "$25",
-      "net": "\\$53"
-    },
-    {
-      "device": "$26",
-      "net": "\\$55"
-    },
-    {
-      "device": "$27",
-      "net": "\\$56"
-    }
-  ],
+  "unbiased_pmos_body_nets": [],
   "unmodelled_poly": [],
   "voltage_domain_warnings": [],
   "warnings": [
-    "12 PMOS devices tie their body to an anonymous net with no DC bias path -- no drawn (or derivable) well tie connects this PMOS body to a real supply rail on this layout, so it is left floating rather than tied to a real supply rail; resimulating this netlist directly will not reproduce the schematic-level PMOS body bias -- see unbiased_pmos_body_nets[] for the full list. See docs/cli/extract.md's 'Parasitic (RC) extraction' section.",
-    "8 nets connect to exactly one device terminal -- a MOS gate -- and are not a declared pin: these gates have no DC path from anywhere else in the netlist, so they are almost certainly unconnected inputs rather than legitimate floating nodes; resimulating this netlist directly will hit a singular matrix on these nets -- see single_terminal_nets[] for the full list.",
-    "27 nets connect to exactly one device terminal -- source/drain/body/resistor-equivalent, not a gate -- and are not a declared pin; this can be a legitimate single-terminal tie (e.g. an intentionally unterminated dummy's diffusion tie), but confirm these nets have no other intended connectivity -- see single_terminal_nets[] for the full list."
+    "kept 12 net(s) internal: not in the declared pin set (--pins / layout.declared_pins) (aon, aop, atail, ltail, mn, mp, na, nb, qn, qp, sn, sp) -- issue #514"
   ]
 }

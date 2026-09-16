@@ -1,7 +1,7 @@
 # layout/
 
-Physical layout of DR-0001's comparator topology (issue #18, T1 checklist
-item 2). `layout/comparator.gds` implements
+Physical layout of DR-0001's comparator topology (issues #18, #20, #22 and
+#30 — T1 checklist items 2, 3 and 4). `layout/comparator.gds` implements
 [`design/comparator_dut_analog.sch`](../design/comparator_dut_analog.sch) +
 [`design/comparator_dut_latch.sch`](../design/comparator_dut_latch.sch) —
 the static differential preamplifier, the StrongARM latch, the isolation
@@ -17,21 +17,22 @@ generator is the reviewable source", are reused here).
 
 | File | What it is |
 |---|---|
-| `gen_comparator.py` | The generator script — the reviewable source of the GDS, not the GDS itself (same rule `gf180-sar-adc/layout/adc-top/README.md` states for its own generated cells). Re-running it reproduces `comparator.gds` byte-for-byte at a fixed `klt` pin (its last step calls `fix_metal1_space.py`, below). |
-| `fix_metal1_space.py` | The DRC-fix post-process (issue #20) — closes `klt gen-compose`'s own `metal1.space.1` violations via Metal1/Metal2/Via1 geometry edits, connectivity untouched. See "DRC signoff" below for the full writeup; this module's own docstring documents the technique. |
-| `comparator.gds` | The composed, DRC-clean layout: 27 transistors + 2 `ppolyf_u_1k` load resistors (29 devices total), one flat `COMPARATOR` top cell (genuinely flat — `fix_metal1_space.py`'s own edit step flattens `gen-compose`'s per-block cell hierarchy). |
-| `comparator.gen-compose.json` | The full `klt gen-compose` JSON response — every net's routing status, every leg's `routed`/`reason`, `drc_hints`, `warnings`. This is the routing/connectivity **evidence**, not just a byproduct: read `nets[]`/`unrouted_nets[]` before trusting any claim about what is and is not actually wired in the GDS. Reflects the *pre*-DRC-fix geometry (routing/placement, not the post-fix Metal1/Metal2/Via1 edits) since that is what `gen-compose` itself produced. |
-| `routing_table.py` | Emits this README's routing-status table mechanically from `comparator.gen-compose.json`'s own `nets[].status` field, so the prose cannot drift from the evidence. `--write` regenerates the table; `--check` exits 1 if the README is stale. |
+| `gen_comparator.py` | The generator script — the reviewable source of the GDS, not the GDS itself (same rule `gf180-sar-adc/layout/adc-top/README.md` states for its own generated cells). Re-running it reproduces `comparator.gds` byte-for-byte at a fixed `klt` pin (it calls `klt gen` per block, `klt gen-compose` to place them, then `route_nets.py` to draw every net). |
+| `route_nets.py` | The router (issue #30) — draws the well/substrate body ties the device generators expose no port for, then routes 100% of `gen_comparator.py`'s `NETS` as a Metal2 (vertical) / Metal3 (horizontal) channel route. See "Routing" below for the full writeup; this module's own docstring documents the technique and why `klt gen-compose`'s own router cannot express it. |
+| `comparator.gds` | The composed, routed, DRC-clean layout: 27 transistors + 2 `ppolyf_u_1k` load resistors (29 devices total), one flat `COMPARATOR` top cell (genuinely flat — `route_nets.py` flattens `gen-compose`'s per-block cell hierarchy before drawing). |
+| `comparator.gen-compose.json` | The full `klt gen-compose` JSON response. Since #30 the request is **declare-only** (no `routing` block), so this file is the **placement + connectivity-declaration** evidence: `blocks[].offset_um`/`bbox_um` (where every block landed) and `nets[].pins[]` (every pin gen-compose validated against the blocks' own reported ports). What got *drawn* is `comparator.routing.json`, below. |
+| `comparator.routing.json` | `route_nets.py`'s own per-net report — risers, trunks, channel links, drawn length, and the pin/tap totals. This is the routing **evidence**: read it before trusting any claim about what is wired in the GDS. |
+| `routing_table.py` | Emits this README's routing-status table mechanically from `comparator.routing.json` (cross-checked against `comparator.gen-compose.json`'s declared connectivity), so the prose cannot drift from the evidence. `--write` regenerates the table; `--check` exits 1 if the README is stale. |
 | `run_drc.py` | Regenerates `drc/comparator.drc.json` (issue #20's own signoff artifact) via `klt drc`. See "DRC signoff" below. |
 | `drc/comparator.drc.json` | The committed `klt drc` JSON envelope — `status`, `violation_count`, and the deck's own `provenance.deck.content_hash`. |
-| `run_lvs.py` / `lvs/*.json` | Issue #22's own LVS signoff evidence (unaffected by this issue — see "DRC signoff"'s connectivity-neutrality verification). |
+| `run_lvs.py` / `lvs/*.json` | The LVS signoff evidence (#22, #30) — `klt extract` + `klt lvs` against the reference `design/comparator.spice`, the pin-order interface-contract check `klt lvs`'s own verdict cannot make, and a `netgen`-engine cross-check (`lvs/comparator.netgen.json`) run through a second, independent comparator. See "LVS" below. |
 
 `layout/_gen/` (per-device `klt gen` blocks + the `gen-compose` request) and
 `layout/comparator.spice` (a `klt extract` scratch artifact) are
 regenerated by the script and **not committed** — `.gitignore`'d, same
 treatment `sim/.work/` already gets.
 
-## Methodology: `klt gen` + `klt gen-compose`, not hand layout
+## Methodology: `klt gen` + `klt gen-compose` + a channel router, not hand layout
 
 [`2AMLogic/klayout-tools`](https://github.com/2AMLogic/klayout-tools)'s
 `klt gen` device generators (`mos_array`, `diff_pair`, `res_array`) and `klt
@@ -45,7 +46,11 @@ P&R flow. This is genuinely the intended, documented path for exactly this
 kind of composition (`docs/cli/gen-compose.md`'s own worked example is a
 sky130 5T OTA: a differential pair, a current-mirror load, and a tail
 current source — the same *class* of small analog composition as this
-comparator, just smaller).
+comparator, just smaller). What `gen-compose` is *not* asked to do here is
+route: this design's net graph is not planar in any single-row floorplan, so
+`layout/route_nets.py` draws the metal as a two-layer channel route
+instead — see "Routing" below for the derivation, and "Known `klt
+gen-compose` limitations hit here" for what was tried first.
 
 `gen_comparator.py`:
 
@@ -63,11 +68,15 @@ comparator, just smaller).
    them (preamp, then the StrongARM latch, then the isolation inverters,
    then the NOR SR latch) -- the floorplan reads the same direction the
    decision record does.
-3. Wires **every schematic net** (`gen_comparator.py`'s `NETS`, transcribed
-   directly from both `.sch` files' own `N {...} {lab=...}` labels) as a
-   `connectivity[]` entry, and runs `klt gen-compose` with routing enabled
-   on the PDK's `metal` role (Metal1, 0.36 um wires).
-4. Writes `comparator.gds` and the full `gen-compose` JSON response.
+3. Declares **every schematic net** (`gen_comparator.py`'s `NETS`,
+   transcribed directly from both `.sch` files' own `N {...} {lab=...}`
+   labels plus `comparator_dut.sch`'s own `XA`/`XL` instance lines) as a
+   `connectivity[]` entry, and runs `klt gen-compose` **declare-only** — no
+   `routing` block, so gen-compose places the blocks and validates every
+   declared pin against their own reported ports without drawing metal.
+4. Writes `comparator.gds` and the full `gen-compose` JSON response, then
+   runs `route_nets.py` over the placed GDS to draw the body ties and route
+   every net (see "Routing" below).
 
 ### Reproducing it
 
@@ -75,6 +84,11 @@ comparator, just smaller).
 python3 layout/gen_comparator.py
 git status --short layout/          # should be empty: byte-reproducible
 ```
+
+That `git status` check is real, not aspirational: `route_nets.py` writes
+the stream with `SaveLayoutOptions.gds2_write_timestamps = False`, so the
+BGNLIB/BGNSTR clock readings (the only bytes that otherwise differ between
+two runs of an already-deterministic pipeline) are zeroed.
 
 Requires `klt` on `PATH` and the `gf180mcuC` PDK variant resolvable (`klt
 pdk find --pdk gf180mcuC`) -- see "Toolchain" below for the exact pin.
@@ -96,80 +110,128 @@ device_counts: {"nfet": 15, "pfet": 12, "ppolyf_u_1k": 2}
 
 This is an **exact match** to DR-0001's own device list (both sizing
 tables, `MB`/`MT`/`MIP`/`MIN` + `MTL`/`M1`-`M10` = 15 nfet, `M5`-`M10` +
-`IP1`/`IP2` + `A1P`/`A2P`/`B1P`/`B2P` = 12 pfet, `RN`/`RP` = 2 resistors) --
-the strongest sanity check available short of full LVS (out of scope here,
-tracked by #20/#22): the right device COUNT and the right device TYPE for
-every one of them, read back from the drawn geometry, not merely from the
-generator script's own parameters.
+`IP1`/`IP2` + `A1P`/`A2P`/`B1P`/`B2P` = 12 pfet, `RN`/`RP` = 2 resistors):
+the right device COUNT and the right device TYPE for every one of them,
+read back from the drawn geometry, not merely from the generator script's
+own parameters. The stronger statement -- that each of those devices sits
+on the same nets as its schematic counterpart -- is the LVS compare's, and
+is now available: 27 of 29 devices and every named net pair with their
+reference counterparts (see "LVS" below).
 
-## Routing: real, partial, and honestly reported
+## Routing: complete, and how it got there
 
-`klt gen-compose`'s own router does not fully connect every net in one
-pass -- this is expected and documented behavior of the tool at this
-composition's scale (18 nets, several with 5-12 pins -- see
-`docs/cli/gen-compose.md`'s own "Known limitations" section, and the
-friction filed below), not a defect in this script. The committed
-`comparator.gen-compose.json` reports, per net, exactly which legs got real
-drawn Metal1 and which did not (and why -- `legs[].reason`).
+**Every net is routed.** All 18 declared nets carry real drawn metal
+joining every one of their pins, plus the eight drawn well/substrate body
+ties (below). This closed the gap #18/#22 left open and documented, where
+`klt gen-compose`'s own router drew only 30 of the 65
+minimum-spanning-tree legs this design needs (46%), with five whole nets
+(`aop`, `vss`, `qp`, `sn`, `dout`) carrying zero metal at all.
+
+**Why a different router, rather than more `gen-compose` tuning.** `klt
+gen-compose` draws each net as a spanning tree of two-pin legs on **one**
+routing plane, and rejects any leg that would cross a net already drawn on
+that plane (`route-vs-route` — a real short). The set of nets it can draw in
+one call is therefore exactly the set whose connectivity graph is *planar
+in the chosen floorplan*: for a single-row placement, the set whose pin
+intervals along the row never interleave. This comparator's nets interleave
+heavily in the latch region (channel density well above 4), so no
+assignment onto the four planes gf180mcu's deck exposes
+(`metal`/`metal2`/`metal3`/`metal4`) can draw them all — measured directly,
+a greedy three-plane packing still leaves 5 of 18 nets undrawable
+(`doutb`/`qn`/`qp`/`vss`/`vdd`). Hand-supplied `waypoints_um`/`legs[]`
+detours (the remedy `docs/cli/gen-compose.md`'s own "Known limitations"
+section names for the same-facing GATE port pairs that dominate the
+rejections here) move individual legs around each other, but they cannot
+change that a single L-shaped leg's horizontal and vertical halves always
+land on the same layer, which is what makes the crossings unavoidable.
+
+The classical answer — and what `layout/route_nets.py` implements — is
+**channel routing with a dedicated vertical layer and a dedicated
+horizontal layer**: every net's trunk runs horizontally on Metal3 at its
+own `y` track, and every pin reaches its trunk by a vertical riser on
+Metal2. A trunk can never short against a riser because the two are never
+on the same layer, two trunks never collide because each net owns its own
+track, and two risers never collide because `route_nets.classify()` gives
+them disjoint columns.
+Crossings stop being a constraint at all, so *every* net routes by
+construction, whatever the floorplan. The one structural rule that makes
+that safe is asserted mechanically before anything is written: on any
+single layer, two shapes closer than 0.30 µm must belong to the same net
+(`route_nets.check_spacing()`), and `klt drc` then re-checks it
+independently against the real deck.
+
+**Body ties are drawn here too.** Neither `mos_array` nor `diff_pair`
+reports a body/bulk port, and this PDK's extraction deck resolves an untied
+PMOS body to its own anonymous Nwell net (and every NMOS body to the deck's
+global `vsubs`) — against a reference netlist that ties them to `vdd`/`vss`
+that is a real LVS mismatch, not a naming nuance. `route_nets.plant_taps()`
+draws the missing ties: an Nwell tab extending each PMOS block's own well
+into the free channel beside it, carrying an `Nplus`-over-`Comp` tie up to
+a Metal1 pad, plus `Pplus`-over-`Comp` substrate ties in two inter-block
+gaps. Each tap pad then joins `vdd`/`vss` as an ordinary router pin — which
+is why those two rows of the table below carry more pins than the
+schematic declares.
 
 **The table below is generated, not transcribed.** It is emitted by
 `layout/routing_table.py` straight from the committed
-`comparator.gen-compose.json`'s own `nets[].status` / `nets[].legs[].routed`
-fields -- regenerate with `python3 layout/routing_table.py --write`, and
-prove it is still in sync with `python3 layout/routing_table.py --check`
-(exit 1 if stale). An earlier hand-written version of this table
-mislabelled six nets, which is why it is machine-derived now.
+`comparator.routing.json`, cross-checked net-for-net against
+`comparator.gen-compose.json`'s own declared `connectivity[]` --
+regenerate with `python3 layout/routing_table.py --write`, and prove it is
+still in sync with `python3 layout/routing_table.py --check` (exit 1 if
+stale). An earlier hand-written version of this table mislabelled six nets,
+which is why it is machine-derived now.
 
 <!-- BEGIN generated: python3 layout/routing_table.py --write -->
 
-| Outcome | Nets | MST legs drawn | Meaning |
-|---|---|---|---|
-| **Fully routed** (6/18) | `atail`, `aon`, `vdd`, `ltail`, `na`, `nb` | 19/19 | Every pin on the net is joined by real, drawn Metal1 -- including the 12-pin `vdd` supply bundle. |
-| **Partially routed** (7/18) | `ibias`, `clk`, `mn`, `mp`, `qn`, `sp`, `doutb` | 11/23 | Some legs carry real drawn metal, but at least one pin is still isolated; `nets[].legs[].reason` names the specific rejection (overwhelmingly "same-facing port pair" -- see "Known klt gen-compose limitations hit here" below). |
-| **Not routed at all** (5/18) | `aop`, `vss`, `qp`, `sn`, `dout` | 0/23 | Every attempted leg was rejected (`routed: false`, `route_length_um: null` on the net) -- these nets have NO drawn metal in `comparator.gds` today and are the bulk of the follow-up hand-routing effort. |
+| Net | Pins joined | Metal3 trunks | Channel link | Metal drawn (um) |
+|---|---|---|---|---|
+| `ibias` | 3/3 | 1 (up) | - | 182.6 |
+| `atail` | 3/3 | 2 (up, down) | yes | 184.2 |
+| `aon` | 3/3 | 2 (up, down) | yes | 465.6 |
+| `aop` | 3/3 | 2 (up, down) | yes | 545.8 |
+| `vdd` | 18/12 (+6 body ties) | 2 (up, down) | yes | 1058.4 |
+| `vss` | 11/9 (+2 body ties) | 2 (up, down) | yes | 1120.4 |
+| `clk` | 5/5 | 2 (up, down) | yes | 310.7 |
+| `ltail` | 3/3 | 2 (up, down) | yes | 224.7 |
+| `mn` | 3/3 | 1 (down) | - | 50.0 |
+| `mp` | 3/3 | 1 (up) | - | 203.2 |
+| `qn` | 7/7 | 2 (up, down) | yes | 384.9 |
+| `qp` | 7/7 | 2 (up, down) | yes | 374.6 |
+| `sp` | 4/4 | 1 (down) | - | 75.2 |
+| `sn` | 4/4 | 1 (up) | - | 268.2 |
+| `na` | 2/2 | 1 (down) | - | 33.6 |
+| `nb` | 2/2 | 1 (up) | - | 117.1 |
+| `dout` | 5/5 | 2 (up, down) | yes | 283.4 |
+| `doutb` | 5/5 | 2 (up, down) | yes | 346.7 |
 
-Overall: **30 of the 65 minimum-spanning-tree legs this design's connectivity needs (46%) carry real drawn metal.**
+Overall: **18 of 18 declared nets routed, 91 pins (83 device terminals + 8 drawn body ties), 6229 um of metal, 11 channel links -- every pin of every net is joined by real drawn metal.**
 
 <!-- END generated -->
 
-Note what the third row means for reading the rest of this document:
-`aop` -- one of the two preamp-to-latch analog signal nets DR-0001
-describes -- is in it. The drawn GDS today carries `aon`'s preamp-to-latch
-path in real metal but not `aop`'s; both are declared identically in the
-composition's `connectivity[]` (and therefore in the request the generator
-submits), but only one survived the router. Read that asymmetry before
-reasoning about which signal paths are physically connected in this cell:
-the `aop` row of `comparator.gen-compose.json` has `routed: false` and
-`route_length_um: null`, with a rejection `reason` on every leg.
+`vinp`/`vinn` do not appear in the table: each is a single gate terminal
+with no other pin on its net at this composition's boundary, so there is
+nothing to route. They carry a `gen-compose` `pins[]` label instead.
 
-`vinp`/`vinn` are additionally labelled (not routed, nothing to route to --
-each is a single gate pin) via `gen-compose`'s `pins[]`.
-
-**Why this script does not push harder for 100%.** The two things that
-would close most of the remaining gap -- hand-supplied
-`waypoints_um`/`legs[]` routing a channel-style bus above the block row for
-every unrouted bundle net, and `routing.cross_block_layer_role` for the
-same-block self-net cases -- were both tried. The first is proportionate
-future work (tracked generically as friction, not fixed here -- see below)
-but is a substantial per-net hand-routing effort at this composition's
-scale, disproportionate to what this issue asks for (a real,
-topology-faithful GDS with documented provenance -- not DRC/LVS signoff,
-explicitly out of scope, #20/#22). The second
-(`cross_block_layer_role: "metal2"`) **was tried and reverted**: it raised
-the routed-leg count from 30/65 to 43/65 -- but a *direct A/B test* (same
-composition, only that one field toggled) showed it also draws a silent
-short between two otherwise-unrelated nets that `klt gen-compose`'s own
-`routed`/`unrouted_nets`/`warnings` fields never flag -- only a downstream
-`klt extract` catches it (`net 'aon|aop|qp|vdd' merges 4 distinct labels`,
-`net 'sn|sp' merges 2 distinct labels`, with `cross_block_layer_role`
-enabled; zero merge warnings with it disabled, same composition otherwise).
-**A real, defect-free 46%-routed layout was chosen over a not-really-66%-
-routed layout with two live shorts in it** -- see "do not fabricate a GDS
-that doesn't reflect the real topology" in this issue's own instructions.
-The committed `comparator.gds` was independently re-verified clean of any
-`klt extract` merge warning before being committed.
+**The preamp-to-latch hand-off is transcribed from the instance line, not
+from the two cells' pin names.** `design/comparator_dut.sch` wires
+`XL aop aon clk dout doutb vdd vss comparator_dut_latch` — the latch's
+`inp` is `aop` (the *non-inverting* preamp output) and its `inn` is `aon`.
+Wiring those the other way round still compares **topologically** clean:
+this comparator is fully symmetric, so `klayout.db.NetlistComparer` simply
+resolves the ambiguity by pairing every latch-internal net with its twin
+and reports `status` unchanged — but it inverts the sense of the
+`dout`/`doutb` boundary pins against `sim/dut/README.md`'s interface
+contract. The layout carried exactly that crossing until #30 (`M1`'s gate
+was on `aon`); what caught it was the LVS report's `net_correspondence`
+block (layout `dout` paired with reference `DOUTB`, layout `qp` with
+`L.QN`, and so on down the latch), never its `status`. See "Pin-order
+interface-contract check" under "LVS" below — and read
+`net_correspondence`, not just `status`, on any future run.
 
 ### Known `klt gen-compose` limitations hit here
+
+These are why the composition is declare-only and `route_nets.py` draws the
+metal. They are recorded, not worked around silently.
 
 - **Same-facing port pairs.** `mos_array`/`diff_pair` gate ports always
   report `direction_deg: 90` (poly/gate risers point the same way on every
@@ -177,13 +239,22 @@ The committed `comparator.gds` was independently re-verified clean of any
   single-row placement is structurally a same-facing pair -- the exact case
   `docs/cli/gen-compose.md`'s "Known limitations" section names as needing a
   caller-supplied `waypoints_um`/`legs[]` detour, with no automatic remedy.
-  This is the dominant rejection reason across every net the table above
-  reports as partially routed or not routed at all (`qn`/`qp`/`sp`/`sn`/
-  `dout`/`doutb` are all gate-heavy bundle nets).
+  This was the dominant rejection reason across every net the router left
+  partial or undrawn (`qn`/`qp`/`sp`/`sn`/`dout`/`doutb` are all gate-heavy
+  bundle nets).
+- **One plane per net, so a non-planar net graph cannot be drawn at all.**
+  See "Why a different router" above: `routing.layer_role` names one plane
+  per request, and a single L-shaped leg's horizontal and vertical halves
+  always land on the same layer, so the vertical/horizontal layer split a
+  channel route needs cannot be expressed in a `gen-compose` request.
 - **`routing.cross_block_layer_role` can silently short two unrelated
-  nets.** Confirmed by direct A/B test on this exact composition (see
-  above) and reproduced generically (no comparator-specific device
-  semantics) as
+  nets.** Confirmed by direct A/B test on this exact composition while it
+  was still gen-compose-routed (it raised the routed-leg count from 30/65
+  to 43/65 while drawing a short `gen-compose`'s own
+  `routed`/`unrouted_nets`/`warnings` fields never flag -- only a
+  downstream `klt extract` catches it, as `net 'aon|aop|qp|vdd' merges 4
+  distinct labels`), and reproduced generically (no comparator-specific
+  device semantics) as
   [klayout-tools#1895](https://github.com/2AMLogic/klayout-tools/issues/1895)
   -- filed per `CLAUDE.md`'s friction protocol. Related to, but distinct
   from, the already-open
@@ -210,7 +281,8 @@ missing its DRAFT target at nominal (7.60 mV vs. ≤ 5 mV,
 `sim/comparator-kickback/records/20260910-125341-4805118.md`). That
 asymmetry, not DRC/LVS cleanliness, is this layout's real risk, so it drove
 two concrete choices, both verifiable against the committed
-`comparator.gen-compose.json`:
+`comparator.gen-compose.json` (placement) and `comparator.routing.json`
+(what was drawn where):
 
 - **`vinp`/`vinn` carry zero drawn bus metal.** They are the *only* two
   schematic pins promoted to `gen-compose`'s `pins[]` (see `PIN_LABELS` in
@@ -231,11 +303,14 @@ two concrete choices, both verifiable against the committed
   µm` in the row; the nearest `clk`-carrying block (`mtl`, the StrongARM tail
   switch) starts at `x = 268.43 µm` — **≈ 250 µm of separation** along the
   row, with seven other blocks physically between them. `clk` itself (fed to
-  `mtl`/`m7_m8`/`m9_m10`) never routes anywhere near `x ≈ 17–20 µm`; its one
-  committed partial route (`route_length_um: 48.28`, see the routing table
-  above) stays entirely within the `x ≈ 268–295 µm` span. This is a direct
-  consequence of `BLOCKS`' declared order (preamp group first, `clk`-gated
-  devices well into the latch group) — not incidental.
+  `mtl`/`m7_m8`/`m9_m10`) never routes anywhere near `x ≈ 17–20 µm`, and
+  completing the routing did not change that: its two Metal3 trunks span
+  `x = 269.43–294.43 µm` and `x = 276.51–294.43 µm`, and its channel link
+  sits at `x = 276.51 µm` (`comparator.routing.json`'s own `trunks[]`/
+  `link_x_um` fields — the router's link placement spreads links across the
+  row, and `clk`'s landed inside its own span). This is a direct consequence
+  of `BLOCKS`' declared order (preamp group first, `clk`-gated devices well
+  into the latch group) — not incidental.
 
 **Tradeoff made, stated plainly.** `klt gen-compose`'s `placement.strategy`
 this script uses is `"row"` (a single left-to-right strip — the only
@@ -244,7 +319,9 @@ request at this device count; see "Known `klt gen-compose` limitations hit
 here" above). A `"row"` strategy is what makes the ~250 µm input-to-`clk`
 separation above happen almost for free, but it is also why `aon`/`aop` (the
 preamplifier's *output* nodes, not the input) run the full width of the row
-to reach the latch (`route_length_um: 288.27` for `aon`) — long routes, but
+to reach the latch (`route_length_um: 465.59` for `aon`, `545.80` for `aop`
+in `comparator.routing.json` — each is a ≈260 µm trunk plus its risers and
+channel link) — long routes, but
 on the output side of the asymmetry `design/README.md` describes, where
 added capacitance is stated to help (lower noise), not hurt. A hand-tuned 2D
 `"explicit"`-strategy floorplan (fold the row so the latch sits nearer the
@@ -259,6 +336,17 @@ already documents, disproportionate to what this issue asks for. Filed as
 attempted here or silently dropped.
 
 ### Issue #28: four floorplan candidates tried, `"row"` kept (finding, not a fix)
+
+> **Read this subsection as a dated record.** Every number in it was
+> measured against the *pre-#30* composition, where `klt gen-compose`'s own
+> router drew the metal and routed-leg coverage was the binding constraint
+> on any floorplan change. Since #30 the router is `route_nets.py`, which
+> routes every net on any floorplan by construction, so the "MST legs"
+> column no longer constrains anything. The conclusion — keep `"row"` — is
+> unaffected and still stands: it rests on the *geometric* coupling between
+> the two target metrics (`rn_rp`'s DR-0001-mandated 242 µm length sitting
+> between the input pair and the latch), which is a property of the device
+> sizes, not of the router.
 
 Four concrete placement candidates were built and run through the real `klt
 gen-compose` (not a paper estimate -- each candidate is this script's own
@@ -327,77 +415,121 @@ exactly (`resolve_explicit_offsets`/`_parse_explicit_origins` in
 `klayout_tools/gen_compose.py`); the constraint is intrinsic to this
 design's own device geometry (`rn_rp`'s DR-0001-mandated resistor length,
 `mip_min`'s own tall diff-pair bbox), not a capability the tool lacks.
-`gen_comparator.py`/`comparator.gds`/`comparator.gen-compose.json` are
-therefore unchanged by this issue -- this section is the deliverable.
+`gen_comparator.py`/`comparator.gds`/`comparator.gen-compose.json` were
+therefore unchanged by issue #28 -- that section is its whole deliverable.
 
-## LVS: `status: mismatch`, blocked on routing completion (issue #22)
+## LVS: topology matches; one upstream parameter gap remains
 
-`klt extract` + `klt lvs` (issue #22, T1 checklist item 4) were run against
-the committed `comparator.gds` for real -- this is not a placeholder or a
-deferred check. Regenerate both steps in one command from the repo root:
+`klt extract` + `klt lvs` (issues #22 and #30, T1 checklist item 4) are run
+against the committed `comparator.gds` for real. Regenerate every step in
+one command from the repo root:
 
 ```bash
 python3 layout/run_lvs.py
 ```
 
-which writes `layout/lvs/comparator.extract.json` and
+which writes `layout/lvs/comparator.extract.json`,
+`layout/lvs/comparator.lvs.request.json` and
 `layout/lvs/comparator.lvs.json` (the committed signoff evidence --
-`layout/lvs/comparator.extracted.spice` and `comparator.lvs.request.json`
-are regenerated scratch, `.gitignore`'d for the same "anonymous net
-numbering is not a stable contract" reason `layout/comparator.spice`
-already is). Engine: `klt lvs`'s own `"klayout"` engine
-(`klayout.db.NetlistComparer`, in-process, no external LVS binary) --
-`environment.engine`/`environment.engine_version` in the committed report
-name it and pin the exact `klayout` build. The gf180mcu deck is pinned by
-content hash in `provenance.deck.content_hash`.
+`layout/lvs/comparator.extracted.spice` is regenerated scratch,
+`.gitignore`'d for the "anonymous net numbering is not a stable contract"
+reason `layout/comparator.spice` already is). Engine: `klt lvs`'s own
+`"klayout"` engine (`klayout.db.NetlistComparer`, in-process, no external
+LVS binary) -- `environment.engine`/`environment.engine_version` in the
+committed report name it and pin the exact `klayout` build. The gf180mcu
+deck is pinned by content hash in `provenance.deck.content_hash`.
 
-**Extraction is clean and matches DR-0001 exactly** -- see "Devices" above:
-29 devices (15 nfet, 12 pfet, 2 `ppolyf_u_1k`), independently re-confirmed
-by this run. The one extraction-side warning worth naming explicitly (the
-friction-protocol check issue #22 asked for): **12 PMOS devices tie their
-body to an anonymous net with no DC bias path.**
-[`klayout-tools#555`](https://github.com/2AMLogic/klayout-tools/issues/555)
-(gf180mcu had no tap/well-label mechanism at all) is closed, and issue #1084
-now lets `klt extract` *derive* an equivalent tap from a drawn
-`Nplus`/`Pplus`-over-`Comp` tie -- but this layout draws no such tie for any
-`nwell` island (see "What is not attempted" below, "MOSFET body/well
-ties"), so every PMOS body still lands on the deck's anonymous synthesized
-net. This is the *already-documented* consequence of a layout choice, not a
-new tool gap -- no new `klayout-tools` issue was filed for it. `klt lvs`
-itself would additionally surface this as a `device.body_unverified`
-warning once the compare gets far enough to reach it (it does not here --
-see below).
+### Where it stands
 
-**The compare itself reports `status: "mismatch"`, exit 3 -- 102
-`severity: "error"` findings, 0 warnings-only.** This is not a tolerance or
-device-arity nuance to list as "warnings-only" per issue #22's own
-acceptance criteria -- it is a real, structural connectivity mismatch, and
-it is reported honestly here rather than massaged into a false
-`status: "match"` (`CLAUDE.md`'s "no claim without a testbench" / this
-document's own "do not fabricate a GDS that doesn't reflect the real
-topology" standard applies to a signoff claim exactly as much as to a
-netlist):
+| Field (committed `comparator.lvs.json`) | Value |
+|---|---|
+| `status` | `"mismatch"` (exit 3) |
+| `error_count` | **6** -- all `device.property`, all on the same two devices (was 102 across `device.unmatched`/`net.merged`/`net.split` before #30) |
+| `counts.devices` | 29 layout / 29 reference, **27 matched** (the 2 unmatched are those same two resistors) |
+| `counts.nets` | 20 layout / 20 reference, 16 matched; **every net pairs with its same-named reference counterpart** in `net_correspondence` |
+| `counts.pins` | 8 layout / 8 reference, **8 matched** -- exactly `sim/dut/README.md`'s interface |
+| warnings | 1, `topology.flattened` (a disclosure, see below) |
 
-| Category | Count | Severity | What it means here |
-|---|---|---|---|
-| `device.unmatched` | 31 | error | Neither side's 29 devices could be paired at all -- `counts.devices.matched: 0` of 29/29. |
-| `net.merged` | 17 | error | 17 reference-side nets have no layout-side counterpart at all: the 7 top-level nets `AON`, `AOP`, `CLK`, `DOUT`, `DOUTB`, `IBIAS`, `VDD`; `comparator_dut_analog`'s internal `A.ATAIL`; and 9 of `comparator_dut_latch`'s internal nets (`L.LTAIL`, `L.MN`, `L.MP`, `L.NA`, `L.NB`, `L.QN`, `L.QP`, `L.SN`, `L.SP`). |
-| `net.split` | 54 | error | The layout side's own 13 named nets (`AON`, `ATAIL`, `CLK`, `DOUTB`, `IBIAS`, `LTAIL`, `MN`, `MP`, `NA`, `NB`, `QN`, `SP`, `VDD`) plus 41 anonymous `\$N` nets never reach a matching reference net. |
-| `topology.flattened` | 1 | warning | Disclosure that `options.flatten_reference: true` was applied (see below) -- not a defect. |
+**The whole connectivity comparison passes.** Every transistor pairs, every
+net pairs to the reference net of the same name (not to its symmetric
+twin -- see below), and the boundary interface is exactly the eight
+contract pins. The `device.body_unverified`-style PMOS body-bias problem
+this section used to document is **gone**: `klt extract`'s
+`unbiased_pmos_body_nets` is now `[]`, because `route_nets.py` draws real
+well and substrate ties (see "Routing" above) instead of leaving every PMOS
+body on the deck's anonymous synthesized net.
 
-**Root cause, traced directly to the already-committed evidence, not
-re-derived here**: this design needs 65 minimum-spanning-tree legs of
-Metal1 connectivity; `comparator.gen-compose.json` (see "Routing" above)
-drew real metal for only 30 of them (46%), and five whole nets --
-`aop`, `vss`, `qp`, `sn`, `dout` -- carry **zero** drawn metal at all. With
-that much of the design physically unwired, essentially no layout device
-sits on the same combination of nets as its schematic counterpart, so
-`NetlistComparer` cannot pair a single device (`device.unmatched`
-dominates) and every named net reports as merged-away or split apart. This
-is exactly what an honest LVS run against a 46%-routed layout should
-report -- the mismatch is the routing gap already documented above, seen
-from a second, independent tool (`klt lvs`'s graph comparator, not
-`klt gen-compose`'s own `routed`/`unrouted_nets` self-report).
+### The one remaining gap is upstream, in `klt lvs` itself
+
+All six errors are the same fact, reported three ways per device, on `RN`
+and `RP` (DR-0001's two `ppolyf_u_1k` 120 µm load resistors):
+
+```
+matched device parameter 'r'    differs   layout 120000.0  reference 0.0
+matched device parameter 'l_um' differs   layout      0.0  reference 120.0
+matched device parameter 'w_um' differs   layout      0.0  reference 1.0
+```
+
+Neither side is wrong about the device; the two sides simply cannot state
+the same thing:
+
+- **Reference side.** `klt lvs`'s `reference.form: "subckt-call"`
+  conversion (`netlist_normalize._convert_geometry_card`) writes a literal
+  **placeholder `0`** for a converted resistor's value -- by design: that
+  module has no PDK sheet-resistance table and deliberately does not depend
+  on `klayout_tools.decks` -- and carries the call's geometry onto
+  `L=`/`W=` instead. So the reference resistor is `r=0, l_um=120, w_um=1`.
+- **Layout side.** `klt extract` computes the real geometry-derived
+  resistance (`r_ohm: 120000.0`, alongside `l_um: 120.0, w_um: 1.0` in
+  `comparator.extract.json`), but its SPICE *writer* emits the KLayout
+  plain-element resistor card `R$28 aon vdd vss 120000 ppolyf_u_1k` --
+  value only. Re-read by the compare, that is `r=120000, l_um=0, w_um=0`.
+  So two of the three findings per device (`l_um`, `w_um`) are the compare
+  *misattributing* a serialisation loss to the layout: this layout's
+  resistors really are 120 µm x 1 µm, and the extractor's own report says
+  so. Filed generically per `CLAUDE.md`'s friction protocol as
+  [klayout-tools#1927](https://github.com/2AMLogic/klayout-tools/issues/1927).
+- **No request-level reconciliation exists.** `options.parameter_tolerance`
+  is a *relative* tolerance and is rejected at `>= 1.0` by design, so it
+  cannot bridge `0` vs `120000`; `hints`, `options.combine_devices`, and
+  `reference.device_map`/`device_bulk` all address other axes entirely.
+  Switching to `klt lvs`'s inline-extraction form (`layout.file`, no SPICE
+  round trip) makes `l_um`/`w_um` agree but simply moves the disagreement
+  to `r`/`a`/`p` -- still six errors, still the same placeholder.
+
+This is a real tool gap, and per `CLAUDE.md`'s friction protocol it is
+tracked generically on the tool's own tracker, not worked around here:
+[klayout-tools#1907](https://github.com/2AMLogic/klayout-tools/issues/1907)
+("subckt-call's placeholder-0 resistor/capacitor value ..."), whose own
+Impact statement is exactly this case -- `form: "subckt-call"` cannot reach
+`status: "match"` for any design using a curated resistor class against a
+schematic-style reference. The one workaround it names (hand-compute every
+device's real value into a `form: "plain-element"` reference) is declined
+here for the reason that issue itself gives: it would replace a reference
+netlist that is *verbatim the schematic's own netlist* with a hand-derived
+copy that no longer tracks `design/comparator.spice` automatically -- a
+worse signoff artifact than an honestly-reported six-error compare.
+
+**Independently corroborated by a second comparator.** `run_lvs.py` also
+runs the same two netlists through `klt lvs`'s `"netgen"` engine
+(`RTimothyEdwards/netgen`, an entirely separate implementation, no shared
+matching code with `klayout.db.NetlistComparer`) and commits the result as
+`lvs/comparator.netgen.json`. It reports `error_count: 2`,
+`category_counts: {"device.property": 2}` -- one "matched device parameter
+'value' differs" per resistor, and nothing else. Two independent
+comparators agreeing that the *only* residual is those two resistor values
+is what makes the attribution above evidence rather than an argument. (The
+cross-check is skipped, not failed, on a host with no `netgen` binary; the
+committed report then keeps its own provenance block from the last host
+that had one.)
+
+**What this does NOT mean.** It does not mean "LVS is clean". `status` is
+`"mismatch"`, `run_lvs.py` exits non-zero, and no claim in this repo may be
+made on the basis of an unverified match. What can honestly be claimed from
+the committed evidence is narrower and still substantial: *every device and
+every net of this layout pairs with its reference counterpart, and the only
+residual findings are a parameter-encoding asymmetry in the compare
+front-end.*
 
 **Why `options.flatten_reference: true` is in the request, and is not a
 tolerance being smuggled in.** `design/comparator.spice`'s `comparator_dut`
@@ -406,48 +538,45 @@ is a two-level hierarchy (`XA`/`XL` instances of
 layout-side output is always flat (single top cell, no subcircuit calls).
 Without flattening the reference first, every sub-circuit reports an
 unmatchable `topology` "circuit could not be matched to a counterpart"
-finding on both sides instead of the real connectivity comparison --
-confirmed directly: the un-flattened request reports only 3 such findings
-(all `topology`, all attributable to the hierarchy shape itself) with
-`counts.devices.matched: 0` because the compare cannot even begin, which is
-strictly less informative than the flattened result above. `klt lvs`
-discloses every flatten it performs as a `severity: "warning"`,
+finding on both sides instead of the real connectivity comparison. `klt
+lvs` discloses every flatten it performs as a `severity: "warning"`,
 `category: "topology.flattened"` entry (`mismatch_count` includes it; it
 never changes `status`) -- see `docs/cli/lvs.md`'s own field description.
 
-**This is not fixable by tuning the LVS request.** No combination of
-`hints`, `options.combine_devices`, or `options.parameter_tolerance`
-reconciles a device or net that was never given real metal in the first
-place -- those knobs reconcile *naming*/*folding*/*rounding* differences
-between two netlists that both describe the same real connectivity, not a
-layout that is missing the connectivity outright. Reaching
-`status: "match"` requires completing this layout's routing -- tracked as
-[#30](https://github.com/2AMLogic/gf180-comparator/issues/30), a follow-up
-to this issue and to #18, not attempted here (disproportionate to what
-issue #22 itself asks for -- "run the LVS tool and report honestly", the
-same scope boundary #18's own "Known `klt gen-compose` limitations" section
-already drew for the same reason).
+### Pin-order interface-contract check
 
-**Pin-order interface-contract check (issue #22's own Test Plan edge
-case).** `NetlistComparer` does not use a top circuit's declared pin *order*
-to constrain the compare beyond pinning the two named circuits together
-(`docs/cli/lvs.md`: "a clean LVS run ... does not by itself establish that a
-top-level pinout is correct"), so this has to be checked directly rather
-than inferred from a future clean run. Today it is moot in the strongest
-possible way: the layout's 16 declared pins (`aon`, `atail`, `clk`,
-`doutb`, `ibias`, `ltail`, `mn`, `mp`, `na`, `nb`, `qn`, `sp`, `vdd`,
-`vinn`, `vinp`, `vsubs`) neither match the reference `comparator_dut`'s 8
-declared pins (`vinp vinn clk ibias dout doutb vdd vss`, per
-`sim/dut/README.md`'s interface contract) in count, in name set (`vinp`/
-`vinn`/`clk`/`ibias`/`vdd` are common; `dout`/`doutb`/`vss` are not, since
-`dout`/`vss` carry no drawn metal at all and `doutb` only partially routed
--- see above), or therefore in order. #30's own Acceptance Criteria do not
-yet require re-checking pin order once routing is complete -- add that
-check (compare `sim/dut/README.md`'s 8-pin order directly against the
-completed layout's declared boundary pins, once #30's "Boundary pin labels
-for bundle-type top-level nets" gap below is also closed for the pins that
-need it) before treating a future `status: "match"` as trustworthy on this
-dimension.
+`NetlistComparer` does not use a top circuit's declared pin *order* to
+constrain the compare beyond pinning the two named circuits together
+(`docs/cli/lvs.md`: "a clean LVS run ... does not by itself establish that
+a top-level pinout is correct"), so this is checked directly rather than
+inferred from the compare. `run_lvs.py` does it in two parts, and exits `5`
+if either fails -- even if `klt lvs` itself were to report `match`:
+
+1. `klt extract --pins vinp,vinn,clk,ibias,dout,doutb,vdd,vss` (issue
+   #514) declares the intended interface, so the extracted top cell exposes
+   exactly those eight nets as pins and keeps the other twelve labelled
+   nets internal (`aon`, `aop`, `atail`, `ltail`, `mn`, `mp`, `na`, `nb`,
+   `qn`, `qp`, `sn`, `sp` -- named in the extract report's own `warnings`).
+   Before #30 the layout exposed 16 pins, none of which matched the
+   contract in count, name set, or order.
+2. `check_interface_contract()` re-reads the `.subckt comparator_dut` line
+   out of `design/comparator.spice` itself (not a copy of it in this repo)
+   and asserts that order against `run_lvs.py`'s `INTERFACE_PINS`, then
+   asserts the extracted pin set equals it exactly. Current result:
+   `interface contract: OK -- top-level pins are exactly vinp vinn clk
+   ibias dout doutb vdd vss`.
+
+**The check that actually caught a defect was `net_correspondence`.** The
+pre-#30 layout wired the preamp's `aon` into the latch's `M1` gate, where
+`design/comparator_dut.sch`'s own `XL aop aon clk ...` instance line puts
+`aop`. Because this comparator is fully symmetric, that crossing is
+*topologically invisible*: the compare simply pairs layout `dout` with
+reference `DOUTB`, layout `qp` with `L.QN`, layout `mn` with `L.MP`, and so
+on down the latch, and nothing in `status`/`error_count` changes. It would
+have shipped a cell whose outputs are the complement of the schematic's.
+The fix is in `gen_comparator.NETS`; the standing lesson is recorded here
+because no automated field in the report flags it: **read
+`net_correspondence` for name-crossed pairings, not just `status`.**
 
 ## DRC signoff: `status: clean` (issue #20)
 
@@ -466,183 +595,167 @@ sha256:3c2f4e4be2524a0fe964cd1b2c4c171c0f904586c10eaa8c4ffe3511909e4706`
 drc`'s own output, read from the committed JSON's `provenance` block, not
 hand-added.
 
-### The starting point: 12 `metal1.space.1` violations, all one root cause
+### How DRC cleanliness is maintained
 
-A preliminary `klt drc` run against the GDS #18 committed reported 12
-`metal1.space.1` violations. All twelve are the *same* class, confirmed by
-direct investigation: every one is a leg `klt gen-compose` reports
-`routed: true` that lands on a `diff_pair` block's own `Q1_1_G` port -- the
-interleaved pair's physically-interior device row, whose gate landing pad
-sits sandwiched between the two rows' own S/D metal (unlike `Q2_1_G`'s pad,
-which sits clear at the block's outer edge). Reaching it forces the
-router's approach to thread a gap narrower than gf180mcu's own
-`metal1.space.1` minimum (0.23 µm) -- a real violation `gen-compose`'s own
-routability heuristics never flag (exactly the caveat `klt gen-compose
---help` itself states: `routed: true` is not a DRC-clean guarantee).
+`route_nets.py` is written so that a DRC-clean result is a property of the
+construction, not of a post-process:
 
-**Confirmed not fixable by any `klt gen-compose` caller-side knob** (direct
-experiment, not just reasoning): `routing.width_um` (reducing the drawn
-route to gf180mcu's own `metal1.width.1` minimum, 0.23 µm, still leaves the
-clearance 0.015 µm short -- the internal S-to-D gap a `diff_pair` block
+- Every drawn width, via size, enclosure and spacing constant in that
+  module clears the gf180mcu deck's own minimum with margin (its module
+  docstring lists the deck rule each one is derived from).
+- Trunks are vertically pitched (`TRACK_PITCH_UM`), risers are horizontally
+  separated by construction (the two-row rule plus the escape stubs in
+  `classify()`), and the two never share a layer -- so the only remaining
+  same-layer neighbours are within one net.
+- `check_spacing()` asserts exactly that invariant over the whole drawn
+  result *before* anything is written: on any single layer, two shapes
+  closer than `MIN_SPACE_UM` must belong to the same net. It raises rather
+  than emitting a violating GDS.
+- `klt drc` against the real deck then re-checks it independently, inline
+  at the end of `gen_comparator.py` and again as the standalone
+  `run_drc.py` that writes the committed artifact.
+
+### Superseded: the 12 `metal1.space.1` violations #20 closed
+
+Recorded because the underlying tool gap is still open, and because a
+future contributor reading `klt gen-compose`'s own output should know it.
+When this cell was still routed by `klt gen-compose` (before #30), `klt
+drc` reported 12 `metal1.space.1` violations, all one root cause: every one
+was a leg gen-compose reports `routed: true` that lands on a `diff_pair`
+block's own `Q1_1_G` port -- the interleaved pair's physically-interior
+device row, whose gate pad sits sandwiched between the two rows' own S/D
+metal. Reaching it forces the router's approach through a gap narrower than
+gf180mcu's `metal1.space.1` minimum (0.23 µm), a real violation gen-compose's
+own routability heuristics never flag (exactly the caveat `klt gen-compose
+--help` states: `routed: true` is not a DRC-clean guarantee). No caller-side
+knob fixed it -- `routing.width_um` (the internal S-to-D gap a `diff_pair`
 draws for its own `Q1_1_G` approach is a fixed ≈0.66 µm regardless of route
-width, and 0.66 µm cannot fit a legal-width wire (≥0.23 µm) with legal
-spacing (≥0.23 µm) on *both* sides: 3 × 0.23 µm = 0.69 µm > 0.66 µm),
-`placement.spacing_um`, `diff_pair`'s own `row_spacing_um`, a
-`connectivity[].legs[].waypoints_um` detour (rejected by the router for
-crossing an unrelated block's bbox), and swapping which schematic device
-maps to Q1 vs Q2 (relocates the violation onto the newly-Q1 device instead
-of resolving it, and regresses other, previously-clean routes elsewhere).
-Filed generically per `CLAUDE.md`'s friction protocol as
-[klayout-tools#1904](https://github.com/2AMLogic/klayout-tools/issues/1904)
-(checked against the two klayout-tools issues this repo had already hit on
-this PDK, #595 and #555 -- both closed, both scoped to poly-resistor
-sheet-rho selection, unrelated to this gap; not a duplicate).
+width, and 0.66 µm cannot fit a legal-width wire with legal spacing on both
+sides: 3 × 0.23 µm = 0.69 µm > 0.66 µm), `placement.spacing_um`,
+`diff_pair`'s `row_spacing_um`, a `waypoints_um` detour, or swapping which
+schematic device maps to Q1 vs Q2 -- and it was filed generically per
+`CLAUDE.md`'s friction protocol as
+[klayout-tools#1904](https://github.com/2AMLogic/klayout-tools/issues/1904).
+Issue #20 closed those violations with a Metal1/Metal2/Via1 geometry
+post-process (`fix_metal1_space.py`). **That module is deleted as of #30**:
+the gen-compose-drawn Metal1 legs it patched no longer exist, since
+`route_nets.py` never approaches a `Q1_1_G` pad through that gap -- it
+escapes each crowded pad outward on a Metal1 stub and rises onto its own
+Metal2 column instead. `klayout-tools#1904` remains open and remains real
+for any caller who does route with gen-compose on these blocks.
 
-### The fix: a Metal1/Metal2/Via1 geometry post-process, not a routing change
-
-`layout/fix_metal1_space.py` (run automatically by `gen_comparator.py`'s
-own `main()`, right after `gen_compose()` writes `comparator.gds` -- see
-that module's own docstring for the full technique writeup) closes every
-one of the 12 violations by editing *only* Metal1/Metal2/Via1 geometry.
-**`NETS`/connectivity is untouched** -- every net `gen_comparator.py` wires
-is wired exactly the same before and after this step runs. Two techniques:
-
-1. **Corridor bridge** (5 of 6 hops): the squeezed segment is cut out of
-   Metal1 and re-drawn on Metal2 with a Via1 drop on each end, landing on
-   the *same* net's own remaining metal -- verified (not assumed) before
-   being drawn.
-2. **Shave the wider side** (the rest): when one side of the violation has
-   ample width margin (a `vdd`/`vss`/tail-node plate, not the thin route
-   itself), that plate's edge is nudged back just enough to restore legal
-   spacing, split proportional to each side's own safe headroom.
-
-The `doutb` net's `a1n_b1n → a2n_b2n.Q1_1_G` leg is bespoke: that
-`diff_pair` sits at the design's own right edge, immediately next to a
-contact whose enclosure margin a generic bridge or shave both clip: the
-fix removes the whole tight junction and re-joins it with a Metal2 jumper
-landing on two independently-verified-clear Metal1 pads.
-
-**Verified connectivity-neutral, not just DRC-clean.** `klt lvs` against
-this GDS (`python3 layout/run_lvs.py`) reports the *identical* mismatch
-signature as the pre-fix GDS: `mismatch_count: 103`, `error_count: 102`,
-`category_counts: {"device.unmatched": 31, "net.merged": 17, "net.split":
-54, "topology.flattened": 1}` -- byte-for-byte the same counts, same
-category multiset (the only diffs in the committed `layout/lvs/*.json` are
-`klt extract`'s own anonymous net renumbering, `\$N` labels not stable
-across runs -- [klayout-tools#1063](https://github.com/2AMLogic/klayout-tools/issues/1063)
--- and the new `layout_sha256`). This is the strongest evidence available
-short of a matching LVS run (out of scope here, tracked by #30) that
-closing these 12 DRC violations neither dropped nor accidentally shorted
-any of this layout's existing connectivity.
-
-**A hierarchy gotcha this fix's own development hit, worth recording**:
-`comparator.gds` (as `gen-compose` writes it) is a real cell hierarchy (one
+**A hierarchy gotcha worth keeping** (it cost significant debugging time
+under #20, and `route_nets.py` depends on the same fact):
+`comparator.gds` as `gen-compose` writes it is a real cell hierarchy (one
 cell per `klt gen` block), not a flat stream -- `begin_shapes_rec` reads it
 flattened, but `Shapes.clear()`/`.insert()` only ever touch the *top*
 cell's own shape list. Editing without flattening first (`top.flatten(-1,
-True)`) silently leaves the original geometry untouched in its child cell
-while adding new geometry over it -- `klt drc` then still reports the
-original violation, unchanged, with no error raised anywhere. This cost
-significant debugging time before being traced to its root cause; a
-generic `klt` capability to warn (or refuse) when `Shapes.insert()` is
-used on a cell that still has un-flattened children holding shapes on the
-same layer might be worth raising with `2AMLogic/klayout-tools`, though
-this is arguably a `klayout` API usage pitfall rather than a `klt`-specific
-gap, so it is recorded here rather than filed as its own issue.
+True)`, which `route_nets.route()` does) silently leaves the original
+geometry in its child cell while adding new geometry over it, with no error
+raised anywhere.
 
 ### Deck coverage gaps (enumerated, not silently omitted)
 
-Per `layout/drc/comparator.drc.json`'s own `coverage` block:
+Per `layout/drc/comparator.drc.json`'s own `coverage` block (regenerate and
+re-read it rather than trusting this prose):
 
-- **Checked layers** (this design only ever uses Poly2/Comp/Nwell/Contact/
-  Metal1, plus the Metal2/Via1 this issue's own fix adds): `21/0`, `22/0`,
-  `30/0`, `33/0`, `34/0`, `35/0`, `36/0`.
-- **Rules skipped** (27 rules, all because their own layer -- Metal3/4/5,
-  Via2/3/4, MiM, bond pad -- never appears in this design at all, not
-  because the deck can't check them): `metal{2,3,4,5}.{width,space}.1` and
-  siblings, `via{2,3,4}.{width,space}.1`, `mim.*`, `pad.enclosing.metal5.1`,
-  `comp.{width,space}.mv.1` (medium-voltage `Comp` -- this design is 3.3 V
-  only, per `CLAUDE.md`'s rail discipline), `bjt.separation.comp.1` (no BJT
-  devices here).
-- **Layers present in the stream with no deck rule at all**: `31/0`,
-  `32/0`, `34/10`, `49/0`, `62/0`, `110/5` -- these are `klt gen`'s own
-  pin/label/text and cell-boundary marker layers (not physical mask
-  layers), outside this deck's own DRC scope by design, not a coverage gap
-  in the checked physical layers.
+- **Checked layers** (9): `21/0` Nwell, `22/0` Comp, `30/0` Poly2, `33/0`
+  Contact, `34/0` Metal1, `35/0` Via1, `36/0` Metal2, `38/0` Via2, `42/0`
+  Metal3. Completing the routing *added* Metal2/Via2/Metal3 coverage
+  (`metal2.*`, `via2.*`, `metal3.*` and their enclosure rules now run on
+  real geometry, where before #30 they were in the skipped list for want of
+  any shape on those layers).
+- **Rules skipped** (21, all because their own layer -- Metal4/5, MetalTop,
+  Via3/4, MiM, bond pad -- never appears in this design at all, not because
+  the deck cannot check them): `metal{4,5}.{width,space}.1`,
+  `metaltop.{width,space}.1`, `via{3,4}.{width,space}.1`, the
+  `metal{3,4,5}.enclosing.via{3,4}.1` family, `mim.*`,
+  `pad.enclosing.metal5.1`, `comp.{width,space}.mv.1` (medium-voltage
+  `Comp` -- this design is 3.3 V only, per `CLAUDE.md`'s rail discipline),
+  `bjt.separation.comp.1` (no BJT devices here).
+- **Layers present in the stream with no deck rule at all**: `31/0`, `32/0`,
+  `34/10`, `42/10`, `49/0`, `62/0`, `110/5` -- implant layers the deck
+  models through the devices that require them, plus `klt gen`'s own
+  pin/label/text and cell-boundary marker layers and `route_nets.py`'s own
+  Metal3 net-label layer (`42/10`). Not physical mask geometry, outside this
+  deck's DRC scope by design.
 - **Known approximations in the gf180mcu deck itself** (from
   `klayout_tools/decks/gf180mcu.py`'s own module docstring -- these could
-  theoretically under- or over-report on a *different* layout even though
-  they did not change this signoff's outcome here): `contact.width.1`/
-  `via1.width.1` check only the minimum half of a min/max-size rule (a
-  fixed-size square in the real deck); `via1.space.1` uses the ordinary
-  two-via threshold (0.26 µm) everywhere, not the tighter ≥4×4-array
-  threshold (0.36 µm) the official rule applies in that specific context
+  theoretically under- or over-report on a *different* layout):
+  `contact.width.1`/`via1.width.1` check only the minimum half of a
+  min/max-size rule (a fixed-size square in the real deck); `via1.space.1`
+  uses the ordinary two-via threshold (0.26 µm) everywhere, not the tighter
+  >=4x4-array threshold (0.36 µm) the official rule applies in that context
   (no via array of that density exists in this design); `poly2.space.1`
   does not distinguish "space on `Comp`" from "space on field" sub-cases.
-  None of these approximations were in play for the 12 violations this
-  issue closed (all `metal1.space.1`, an ordinary two-shape space check
-  with no such context-collapsing caveat).
+  `route_nets.py`'s own drawn geometry is deliberately clear of all three
+  caveats: single isolated vias (never arrays), fixed-size via squares, and
+  no drawn Poly2 at all.
 
 ## What is not attempted, and why (stated, not hidden)
 
-- **MOSFET body/well ties.** Neither `mos_array` nor `diff_pair` reports a
-  body/bulk port at all -- confirmed directly against every `klt gen` call
-  this script makes (every block's `ports[]` is S/D/G only). There is
-  nothing in `NETS` to wire an NMOS body to `vss` or a PMOS body to `vdd`
-  with. `klt extract`'s own warnings confirm the consequence: "12 PMOS
-  devices tie their body to an anonymous net with no DC bias path." This
-  mirrors `gf180-sar-adc`'s own comparator layout's stated deviation
-  ("NMOS bodies on the deck's `vsubs` global ... PMOS bodies on their own
-  Nwell island's net, not on `vdd`") -- same tool family, same underlying
-  gap, independently re-hit here.
 - **Guard rings.** Every `diff_pair` block is drawn with
-  `add_guard_ring: false`. `klt gen-compose`'s router cannot route to a
-  port on a block whose ring is closed (`docs/cli/gen-compose.md`'s "Known
-  limitations", case 2) -- a ring on every block here would make nearly
-  every net in this design unroutable, since nearly every block's ports
-  need external connections.
-- **Boundary pin labels for bundle-type top-level nets.** `ibias`, `vdd`,
-  `vss`, `clk`, `dout`, `doutb` are each internally a multi-pin
-  `connectivity[]` bundle; `gen-compose` rejects a `(block, port)` used in
-  both `connectivity[]` and `pins[]`, so none of their member ports can
-  additionally carry a `pins[]` label promoting them to a named boundary
-  port of the composed cell. Only `vinp`/`vinn` (each a single, otherwise
-  unbundled gate pin) get a `pins[]` label. The internal device-level
-  connectivity for the other six nets is real (where routed -- see the
-  table above); only the top-cell-boundary LABEL is not drawn for them.
-- **LVS signoff.** Explicitly out of scope for issue #18 itself -- tracked
-  by #22, which has since run `klt lvs` for real (see "LVS" above) and
-  reports `status: "mismatch"`, traced to this layout's routing
-  incompleteness; closing that gap is tracked by #30. DRC signoff (#20) has
-  since been closed -- see "DRC signoff" below.
+  `add_guard_ring: false` -- no router can reach a port on a block whose
+  ring is closed (`docs/cli/gen-compose.md`'s "Known limitations", case 2),
+  and a ring on every block here would make nearly every net in this design
+  unroutable, since nearly every block's ports need external connections.
+  The consequence is a real one and is stated rather than hidden: this cell
+  has no per-block isolation ring, only the substrate/well ties
+  `route_nets.plant_taps()` draws.
+- **Parasitic-aware routing.** Track order and channel side are assigned
+  ordinally (declaration order, and which device row a pin sits in), not by
+  any extracted R/C, matching constraint, or shielding requirement. `aon`
+  and `aop` in particular get adjacent tracks of unequal length (465.59 µm
+  vs 545.80 µm in `comparator.routing.json`) on a differential pair that
+  DR-0001 expects to be matched. Whether that asymmetry matters is a
+  question for post-layout simulation (#23), which is the only thing that
+  can answer it -- it is recorded here so that step starts from a known
+  suspect rather than a surprise.
+- **A `toolchain.json` pin.** See "Toolchain" below.
+- **`status: "match"` on LVS.** Not reachable today for a reason upstream
+  of this repo -- see "LVS" above,
+  [klayout-tools#1907](https://github.com/2AMLogic/klayout-tools/issues/1907)
+  and
+  [klayout-tools#1927](https://github.com/2AMLogic/klayout-tools/issues/1927),
+  tracked here as
+  [#40](https://github.com/2AMLogic/gf180-comparator/issues/40). What *is*
+  verified is stated there precisely, with the committed reports to read it
+  out of.
 
 ## Toolchain
 
-- `klt` `0.5.0` (`klt version --format json`) as of #20's own `run_drc.py`
-  run -- version drift from earlier bullets/runs in this file (`0.4.0` for
-  #18/#22's own tool pins) is expected across separate tool invocations
-  made at different times on possibly-different hosts and is not itself a
-  defect; not yet pinned in a `toolchain.json` the way `sim/`'s ngspice/PDK
-  pin or `gf180-sar-adc/layout/toolchain.json` are -- a natural follow-up,
-  not attempted here (disproportionate to what #20 itself asks for).
-  `layout/run_drc.py`'s own committed `layout/drc/comparator.drc.json`
-  records the deck's `content_hash` directly (`klt drc`'s own provenance
-  field, not hand-added) -- that hash, not a `klt` version string, is what
-  actually pins DRC-signoff reproducibility.
+- `klt` `0.5.0` (`klt version --format json`), `klayout` `0.30.12`
+  (`comparator.lvs.json`'s own `environment.engine_version`), `netgen`
+  for the LVS cross-check. Version drift from earlier bullets/runs in this
+  file (`0.4.0` for #18/#22's original tool pins) is expected across
+  separate tool invocations made at different times on possibly-different
+  hosts and is not itself a defect; there is still no `toolchain.json` pin
+  the way `sim/`'s ngspice/PDK pin or `gf180-sar-adc/layout/toolchain.json`
+  are -- a natural follow-up, not attempted here. The committed
+  `drc/comparator.drc.json` and `lvs/comparator.lvs.json` record the deck's
+  `content_hash` and both netlists' `sha256` directly (each tool's own
+  provenance fields, not hand-added) -- those hashes, not a `klt` version
+  string, are what actually pin signoff reproducibility.
 - PDK: `gf180mcuC` (`klt pdk find --pdk gf180mcuC` -- `open_pdks
   f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7`), the 3.3 V variant, per
   `CLAUDE.md`'s rail discipline and DR-0001's own device flavor choice
   (`nfet_03v3`/`pfet_03v3`).
 
-## Manual verification (this issue's Test Plan)
+## Manual verification (the layout issues' own Test Plans)
 
 Opens cleanly in KLayout (`klayout layout/comparator.gds`) -- one flat top
-cell `COMPARATOR` (16 blocks' worth of devices plus the DRC-fix's own
-Metal2/Via1 jumpers, all flattened into it by `fix_metal1_space.py`; no
-remaining sub-cell hierarchy), drawn Metal1/Metal2 routing visible between
-devices. Device count/type sanity check: see "Devices" above (`klt
-extract`'s independent re-derivation, exact match to DR-0001). DRC (#20)
-has since been run for real -- `python3 layout/run_drc.py`,
-`status: "clean"` -- see "DRC signoff" above. LVS (#22) has also been run
-for real -- `python3 layout/run_lvs.py`, `status: "mismatch"` -- see "LVS"
-above; closing that gap to `status: "match"` is tracked by #30.
+cell `COMPARATOR` (16 blocks' worth of devices plus `route_nets.py`'s own
+body ties, Metal1 escape stubs, Metal2 risers/links and Metal3 trunks, all
+flattened into it; no remaining sub-cell hierarchy), with the two routing
+channels visible as horizontal Metal3 track bundles above and below the
+device row. Device count/type sanity check: see "Devices" above (`klt
+extract`'s independent re-derivation, an exact match to DR-0001). The three
+scripted checks, each writing its own committed evidence:
+
+```bash
+python3 layout/gen_comparator.py        # regenerates the GDS (+ inline klt drc)
+python3 layout/routing_table.py --check # README routing table vs. the evidence
+python3 layout/run_drc.py               # status: clean, violation_count: 0
+python3 layout/run_lvs.py               # interface contract OK; see "LVS" above
+git status --short layout/              # should be empty: byte-reproducible
+```
