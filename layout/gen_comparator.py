@@ -217,9 +217,9 @@ PIN_LABELS = {
 }
 
 
-def run_klt(*args) -> str:
+def run_klt(*args, cwd: str | None = None) -> str:
     cmd = ["klt", *args]
-    proc = subprocess.run(cmd, capture_output=True, text=True)
+    proc = subprocess.run(cmd, capture_output=True, text=True, cwd=cwd)
     if proc.returncode not in (0, 3):
         sys.stderr.write(proc.stdout)
         sys.stderr.write(proc.stderr)
@@ -279,7 +279,17 @@ def build_request() -> dict:
         # layout/README.md's "Routing" section).
         "options": {
             "cell_name": "COMPARATOR",
-            "output": os.path.join(HERE, "comparator.gds"),
+            # Relative, not `os.path.join(HERE, "comparator.gds")`: `klt
+            # gen-compose` echoes `options.output` back verbatim (resolved
+            # against its own process cwd, not the request file's directory)
+            # as the response's top-level `gds_path` -- an absolute path
+            # here would bake this checkout's host filesystem layout into
+            # `comparator.gen-compose.json`, which is committed as evidence
+            # (see #45). `gen_compose()` below runs this call with
+            # `cwd=HERE` so the relative name still resolves to the correct
+            # `layout/comparator.gds`, and the committed response stays
+            # portable across clones/worktrees.
+            "output": "comparator.gds",
         },
     }
 
@@ -290,7 +300,7 @@ def gen_compose() -> dict:
     with open(req_path, "w", encoding="utf-8") as fh:
         json.dump(request, fh, indent=2)
         fh.write("\n")
-    out = run_klt("gen-compose", req_path, "--format", "json")
+    out = run_klt("gen-compose", req_path, "--format", "json", cwd=HERE)
     response = json.loads(out)
     with open(os.path.join(HERE, "comparator.gen-compose.json"), "w", encoding="utf-8") as fh:
         json.dump(response, fh, indent=2)
