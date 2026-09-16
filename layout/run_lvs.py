@@ -158,8 +158,7 @@ def main() -> int:
           f"error_count={lvs_report['error_count']} "
           f"category_counts={lvs_report['category_counts']}")
     print(f"engine={lvs_report['engine']} "
-          f"engine_version={lvs_report['environment']['engine_version']} "
-          f"klayout_version={lvs_report['environment'].get('engine_version')}")
+          f"engine_version={lvs_report['environment']['engine_version']}")
 
     return 0 if lvs_report["status"] == "match" else lvs_exit
 
