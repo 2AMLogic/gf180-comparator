@@ -29,12 +29,18 @@ Never edit a ratified record after the fact — if a decision changes,
 supersede it with a new `DR-NNNN` that says so, per the same convention
 `gf180-sar-adc` uses.
 
-**This pass sets no decision record.** The target-spec table filled in by
-issue #2 stays **DRAFT** — these are original engineering-judgment bounds
-(numerically matched to the `sg13g2-comparator`/`sky130-comparator` twin set
-for cross-PDK comparability, per `README.md`'s own basis notes), each
-stating its own basis, not a ratified commitment. A DR is owed the first
-time that table's rows are ratified, changed, or rescoped, not before.
+**Issue #2's pass set no decision record**, and the target-spec table stayed
+**DRAFT** through several subsequent measurement passes — these are original
+engineering-judgment bounds (numerically matched to the
+`sg13g2-comparator`/`sky130-comparator` twin set for cross-PDK comparability,
+per `README.md`'s own basis notes), each stating its own basis, not a ratified
+commitment. Ratification against the first measured result against every row
+is now proposed in
+[`decision-records/DR-0002-target-spec-ratification.md`](decision-records/DR-0002-target-spec-ratification.md)
+(`Status: proposed`, no numeric bound changed); the table stays DRAFT until
+that record's PR is approved and merged, per
+[2AMLogic/2am#357](https://github.com/2AMLogic/2am/issues/357)'s ratify-by-PR-approval
+pattern.
 
 ## Review bar
 
