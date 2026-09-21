@@ -1,0 +1,74 @@
+name: Signoff
+
+# Mechanical re-grading of the klt-signoff block manifest -- the verdict of
+# record for this block's T1 (sim-validated) status per
+# klayout-tools/docs/design-evidence-tiers.md, replacing the hand-maintained
+# checklist in the gap-to-T1 tracker (issue #3). Landed by issue #57;
+# per-criterion contract: a manifest citing an artifact that has since
+# changed fails here instead of rotting.
+#
+# PDK-free by design: `klt signoff --manifest` on file-backed citations
+# grades committed evidence envelopes, it never runs DRC/LVS/sim gates, so
+# this job needs no PDK download, no xschem, no ngspice -- it runs on a bare
+# ubuntu runner with python3 only.
+#
+# What is checked (all inside signoff/verify-report.py):
+#   1. `klt signoff --manifest signoff/block-manifest.json
+#      --tiers-doc signoff/design-evidence-tiers.md --format json` runs.
+#      Exit 3 means "graded below T1" (unmet items exist) and is data, not
+#      failure; exit 1 (a real error) fails the job.
+#   2. The fresh per-item grades match the committed verdict of record
+#      (signoff/signoff-report.json), so a manifest or evidence envelope
+#      edited without re-grading and re-committing the report cannot pass.
+#   3. Every pinned content_hash matches the current bytes of the artifact it
+#      names, so a manifest citing an artifact that has since changed fails
+#      rather than rotting.
+#
+# Both pins below are load-bearing and MUST stay in sync with
+# signoff/regenerate.sh and signoff/README.md ("The two pins"):
+#   - the distribution: klayout-tools==0.5.0, the PyPI registry wheel (the
+#     release whose byte-identical wheel graded the committed report;
+#     same-version snapshots grade differently);
+#   - the rulebook: the vendored signoff/design-evidence-tiers.md, the
+#     11-item checklist including item 11 (Power delivery, structural,
+#     klayout-tools#2025) which shipped after the 0.5.0 release -- the
+#     wheel's bundled copy is the older 10-item one, so grading without the
+#     vendored doc would disagree with the verdict of record on
+#     t1_item_count and the verifier fails it by name.
+# When a klayout-tools release carrying the 11-item rulebook ships, move
+# both pins forward and re-grade per signoff/README.md's refresh contract.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: signoff-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  signoff:
+    name: klt signoff --manifest (re-grade committed evidence)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      # Keep this pin in sync with signoff/regenerate.sh's KLT_VERSION. The
+      # released registry wheel carries the git-tag identity regenerate.sh
+      # asserts; same-version snapshots can grade differently.
+      - name: Install the pinned grading klt (klayout-tools)
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install klayout-tools==0.5.0
+          klt version --format json
+
+      - name: Re-grade the manifest and verify the committed pins
+        run: python3 signoff/verify-report.py

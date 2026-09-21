@@ -1,0 +1,14 @@
+{
+  "block": "gf180-comparator",
+  "kind": "analog",
+  "evidence": {
+    "2": {
+      "file": "layout/lvs/comparator.extract.json",
+      "content_hash": "sha256:d668ccb543c4ec6482ee78fb00805a7472955944fce07022c505e78eeec6b8ed"
+    },
+    "3": {
+      "file": "layout/drc/comparator.drc.json",
+      "content_hash": "sha256:d668ccb543c4ec6482ee78fb00805a7472955944fce07022c505e78eeec6b8ed"
+    }
+  }
+}
