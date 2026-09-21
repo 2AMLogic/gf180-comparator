@@ -9,11 +9,11 @@ open-source xschem + ngspice flow.
 is a static differential preamplifier into a StrongARM latch, decided and
 sized in [`spec/decision-records/DR-0001-comparator-topology.md`](spec/decision-records/DR-0001-comparator-topology.md)
 and bound into `sim/dut.json` at `provenance: schematic`. The four benches
-below have a first measured result at this sizing; ratification of the
-target-specification table against those results is proposed in
+below have a first measured result at this sizing; the target-specification
+table is ratified against those results by
 [`spec/decision-records/DR-0002-target-spec-ratification.md`](spec/decision-records/DR-0002-target-spec-ratification.md)
-(status: proposed — ratification happens when that record's PR merges, not
-before) — see the Target specification section below.
+(status: ratified — the record's ratification PR #27 was approved and merged
+2026-09-19) — see the Target specification section below.
 
 **Built agent-native.** Every specification, decision record, testbench, and
 line of documentation here is produced by AI agents working from a ratified
@@ -58,28 +58,27 @@ the binding contract. The four benches' new records carry no placeholder
 banner; the earlier placeholder-DUT records remain committed (`sim/` is
 append-only evidence) but are superseded as the current reference.
 
-## Target specification (ratification proposed via DR-0002)
+## Target specification (ratified via DR-0002)
 
-Ratification of this table against the measured results below is proposed in
+This table is ratified against the measured results below by
 [`spec/decision-records/DR-0002-target-spec-ratification.md`](spec/decision-records/DR-0002-target-spec-ratification.md)
-(`Status: proposed`) — no numeric bound is changed by that record; it only
-proposes ratifying the existing bounds against the first measured result
-against every row. Per the fleet-wide ratification pattern
-([2AMLogic/2am#357](https://github.com/2AMLogic/2am/issues/357)), ratification
-itself happens when that record's PR is approved and merged, not before — the
-table below is treated as DRAFT until then. These are original
-engineering-judgment bounds for the gf180mcu 3.3 V rail, each row stating its
-own basis, not a value inherited from any sibling. See
+(`Status: ratified`) — no numeric bound was changed by that record; it
+ratified the existing bounds against the first measured result against every
+row. Ratification happened when that record's PR (#27) was approved and
+merged (2026-09-19), per the fleet-wide ratification pattern
+([2AMLogic/2am#357](https://github.com/2AMLogic/2am/issues/357)). These are
+original engineering-judgment bounds for the gf180mcu 3.3 V rail, each row
+stating its own basis, not a value inherited from any sibling. See
 [`spec/porting-plan.md`](spec/porting-plan.md) for what *does* transfer
 (testbench/measurement methodology and same-PDK device-flavor facts, not
 topology, sizing, or spec numbers) from
 [`gf180-sar-adc`](https://github.com/2AMLogic/gf180-sar-adc)'s embedded
 comparator, and [`spec/README.md`](spec/README.md) for when a decision record
-is required to move a row out of DRAFT.
+is required to set, change, or scope a row of this ratified table.
 
 | Parameter | Target | Stretch | Basis |
 |---|---|---|---|
-| Offset sigma | ≤ 15 mV, 3σ (input-referred, post-calibration-free) | ≤ 8 mV, 3σ | Monte Carlo via gf180mcu's `sw_stat_mismatch`-based local-mismatch models (per-instance statistical mismatch, confirmed real and present on this PDK — not just global-process corners — by `gf180-sar-adc`'s [`sim/comparator-offset-mc/`](https://github.com/2AMLogic/gf180-sar-adc/tree/main/sim/comparator-offset-mc): `setseed <n>` then N = 150 draws per PVT point via a `dowhile` reset loop). This repo has no schematic yet, so no measurement exists; the bound matches the sg13g2-comparator/sky130-comparator twin set so the three PDKs' eventual measured results are directly comparable, not because it was independently re-derived per PDK. `gf180-sar-adc`'s own *embedded* comparator (40/1 µm input-pair sizing, not a target this repo inherits) measured ≈ 3.84 mV 3σ offset at `tt`/27 °C, N = 150 — same-PDK context that this target is achievable at *some* sizing, nothing more. **First measurement of this repo's own design** (static preamp + StrongARM latch, [DR-0001](spec/decision-records/DR-0001-comparator-topology.md)): [`sim/comparator-offset-mc/records/20260910-124917-4805118.md`](sim/comparator-offset-mc/records/20260910-124917-4805118.md) reports 3σ = 2.80 mV at the nominal corner, corner-invariant to within 0.4% across the 45-point grid — reference against this still-DRAFT row, not a verdict. |
+| Offset sigma | ≤ 15 mV, 3σ (input-referred, post-calibration-free) | ≤ 8 mV, 3σ | Monte Carlo via gf180mcu's `sw_stat_mismatch`-based local-mismatch models (per-instance statistical mismatch, confirmed real and present on this PDK — not just global-process corners — by `gf180-sar-adc`'s [`sim/comparator-offset-mc/`](https://github.com/2AMLogic/gf180-sar-adc/tree/main/sim/comparator-offset-mc): `setseed <n>` then N = 150 draws per PVT point via a `dowhile` reset loop); the bound matches the sg13g2-comparator/sky130-comparator twin set so the three PDKs' eventual measured results are directly comparable, not because it was independently re-derived per PDK. `gf180-sar-adc`'s own *embedded* comparator (40/1 µm input-pair sizing, not a target this repo inherits) measured ≈ 3.84 mV 3σ offset at `tt`/27 °C, N = 150 — same-PDK context that this target is achievable at *some* sizing, nothing more. **Verdict — meets target and stretch at every corner** (scored against the ratified bound per [DR-0002](spec/decision-records/DR-0002-target-spec-ratification.md), scoring pass tracked as [#24](https://github.com/2AMLogic/gf180-comparator/issues/24); static preamp + StrongARM latch per [DR-0001](spec/decision-records/DR-0001-comparator-topology.md)): [`sim/comparator-offset-mc/records/20260910-124917-4805118.md`](sim/comparator-offset-mc/records/20260910-124917-4805118.md) reports nominal 3σ = 2.80063 mV at `tt_27c_3.30v`, and 2.796–2.807 mV 3σ at every one of the 45 corners of the PVT grid — best case `fs_-40c_2.97v` at 2.79617 mV, worst case `sf_125c_3.30v` at 2.80688 mV, corner-invariant to within 0.4% — so every corner clears the ≤ 15 mV target and the ≤ 8 mV stretch. Method per this repo's evidence rules: N = 200 mismatch-only draws per corner (`sw_stat_mismatch` models, global process swept by the corner axis), `setseed 20260909` held common across all corners (common random numbers), 1-sigma of input-referred offset reported alongside the 3-sigma value, statistical precision 1/√(2N) = 5.0 % at N = 200, run counts/seed/derivation committed in the record; the campaign's negative control is `sim/selftest.sh`'s `--sabotage-corners` loop. |
 | Input-referred noise | ≤ 1.0 mV rms, differential | ≤ 0.6 mV rms, differential | ngspice `.noise` on the preamplifier with the latch held in reset, **total integrated output noise divided by measured DC gain** — the exact methodology of `gf180-sar-adc`'s [`sim/comparator-preamp-noise/`](https://github.com/2AMLogic/gf180-sar-adc/tree/main/sim/comparator-preamp-noise), whose own record documents a prior 200×-magnitude unit error from reporting ngspice's raw `sqrt(onoise_total)` directly instead of dividing by gain — this repo's future noise testbench applies the same divide-by-gain step and the same units caution. `gf180-sar-adc`'s embedded comparator measured ≈ 0.08–0.13 mV rms at its own sizing — same-PDK context on achievable magnitude, not a ported value. **First measurement of this repo's own design** ([DR-0001](spec/decision-records/DR-0001-comparator-topology.md)): [`sim/comparator-preamp-noise/records/20260910-125200-4805118.md`](sim/comparator-preamp-noise/records/20260910-125200-4805118.md) reports 91.25 µV rms at nominal, 128.8 µV rms worst-case across the grid — reference against this still-DRAFT row, not a verdict. |
 | Decision time vs. overdrive | ≤ 1.5 ns at 50 mV overdrive, 3.3 V | ≤ 0.8 ns at 50 mV overdrive | Transient decision-time-vs-overdrive sweep, methodology mirroring `gf180-sar-adc`'s [`sim/comparator-regeneration/`](https://github.com/2AMLogic/gf180-sar-adc/tree/main/sim/comparator-regeneration) (schematic-level sweep, plus a separate bespoke extracted-netlist script for post-layout margin once layout exists here). `gf180-sar-adc`'s DR-0015 provided the topology-class rationale this repo's own [DR-0001](spec/decision-records/DR-0001-comparator-topology.md) re-derives independently. **First measurement of this repo's own design**: [`sim/comparator-regeneration/records/20260910-125206-4805118.md`](sim/comparator-regeneration/records/20260910-125206-4805118.md) reports 0.708 ns at nominal, 1.237 ns worst-case at `ss_125c_2.97v` — meets the target at every corner, misses the stretch at the slow/hot/low-supply corner; reference against this still-DRAFT row, not a verdict. |
 | Kickback | ≤ 5 mV disturbance into a 1 kΩ source impedance at the input nodes, single decision edge | ≤ 2 mV | Drive the input nodes from a floating, high-impedance bias through a realistic RC (not an ideal voltage source, which would falsely report ≈ 0 kickback) — the methodology of `gf180-sar-adc`'s [`sim/comparator-kickback/`](https://github.com/2AMLogic/gf180-sar-adc/tree/main/sim/comparator-kickback). That repo's own preamp-isolated topology (per DR-0015) measured a near-zero kickback residual — same-PDK context that a preamp-ahead-of-latch topology *can* hit this bound, not evidence this repo's own topology will at its own sizing. **First measurement of this repo's own design** ([DR-0001](spec/decision-records/DR-0001-comparator-topology.md)): [`sim/comparator-kickback/records/20260910-125341-4805118.md`](sim/comparator-kickback/records/20260910-125341-4805118.md) reports 7.60 mV at nominal, 4.53–10.01 mV across the grid — misses this target row at most corners and the stretch row everywhere; reference against this still-DRAFT row, not a verdict, and named in DR-0001 as the gap most likely to need revisiting first. |
@@ -90,10 +89,12 @@ local-mismatch models enable real per-instance device-mismatch draws (not a
 global-process-only fallback) — the "strong" statistical story this repo's
 own `CLAUDE.md` calls the headline result is available on this PDK, confirmed
 by `gf180-sar-adc`'s own Monte-Carlo offset methodology
-(`sim/comparator-offset-mc/`, N = 150 draws/corner). No Monte Carlo run exists
-yet for *this* repo's own (not-yet-designed) comparator; the offset row's
-basis column states the methodology this repo commits to using once a
-schematic exists.
+(`sim/comparator-offset-mc/`, N = 150 draws/corner) and now realized by this
+repo's own scored run: 200 mismatch-only draws per corner through the full
+45-point grid, `setseed 20260909` held common across corners, scoring the
+offset row at 2.796–2.807 mV 3σ (meets the ratified target and stretch at
+every corner — see the offset row's Basis column and
+[#24](https://github.com/2AMLogic/gf180-comparator/issues/24)).
 
 **Numeric consistency across the twin set.** The Target/Stretch bounds above
 match `sg13g2-comparator` and `sky130-comparator` (≤ 15 mV / ≤ 8 mV 3σ offset;
@@ -105,20 +106,27 @@ the Basis column are same-PDK context showing these targets are achievable at
 *some* sizing, not inherited values; this repo's own sizing and measurement
 are original work (see `spec/porting-plan.md`).
 
-**Ratification status.** This table stays **DRAFT** until
-[DR-0002](spec/decision-records/DR-0002-target-spec-ratification.md)'s PR is
-approved and merged — the record has been drafted and proposes ratifying
-every row's existing bound against the measured results above (including two
-rows, decision time and kickback, that carry a known gap at some or all PVT
-corners; DR-0002 presents both "accept the gap" and "revise the row" as
-options rather than resolving them), but per
-[2AMLogic/2am#357](https://github.com/2AMLogic/2am/issues/357) the operator's
-PR approval is the ratification act itself, not this drafting step.
-`spec/README.md` documents when a DR is required (whenever this table is set,
-changed, or scoped) and how to write one. See
+**Ratification status.** This table is **ratified** by
+[DR-0002](spec/decision-records/DR-0002-target-spec-ratification.md) — its
+ratification PR (#27) was approved and merged 2026-09-19, and per
+[2AMLogic/2am#357](https://github.com/2AMLogic/2am/issues/357) that PR
+approval was the ratification act itself. The record ratified every row's
+existing bound against the measured results above — including two rows,
+decision time and kickback, that carry a known gap at some or all PVT
+corners, where approving the record as drafted enacted the "accept the gap,
+record it as known" option (a bound revision would have required rejecting
+or amending that PR, and no such revision was made). Per-row scored verdicts
+land in each row's Basis column as its scoring pass runs: the offset-sigma
+row is scored above (meets target and stretch at every corner,
+[#24](https://github.com/2AMLogic/gf180-comparator/issues/24)); the other
+four rows' measured verdicts are tabulated in DR-0002's Decision table with
+their per-row scoring passes still to land. `spec/README.md` documents when a
+DR is required (whenever this table is set, changed, or scoped) and how to
+write one. See
 [issue #3](https://github.com/2AMLogic/gf180-comparator/issues/3) for the
-honest artifact-presence checklist this table's DRAFT status feeds (full PVT
-corner sim vs. a *ratified* spec is blocked on this table's ratification).
+honest artifact-presence checklist this table's ratification unblocks (full
+PVT corner sim vs. a *ratified* spec and Monte Carlo scoring are no longer
+blocked on this table's ratification).
 
 ## License
 

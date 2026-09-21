@@ -1,8 +1,10 @@
 # DR-0002: Target-specification table — ratification as measured
 
-- **Status**: proposed — ratification is the act of this record's PR being
-  approved and merged, not the act of drafting it (2AMLogic/2am#357); do not
-  hand-set `ratified` before merge.
+- **Status**: ratified — the ratification act was this record's PR (#27)
+  being approved and merged (2026-09-19), not the act of drafting it
+  (2AMLogic/2am#357); this field flipped from `proposed` to `ratified`
+  post-merge, exactly as the record's own pre-merge instruction directed
+  ("do not hand-set `ratified` before merge").
 - **Date**: 2026-09-15
 - **Decided by**: Builder agent, issue #17
 - **Supersedes**: none — first record that ratifies (or proposes to ratify)
