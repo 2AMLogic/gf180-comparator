@@ -87,10 +87,13 @@ kept = raw[:start[0]] + raw[end[0] + 1:]
 kept = [l for l in kept if l.strip().lower() not in (".end",)]
 
 # 3. make xschem's absolute path stamps repo-relative and reproducible.
+#    The plain prefix strip is the whole rewrite; the assertion only guards
+#    against an absolute path surviving it.
 out = []
 for line in kept:
     line = line.replace(repo_root.rstrip("/") + "/", "")
-    line = re.sub(r"(\*\* (?:sch|sym)_path:)\s*\S+", lambda m: m.group(0), line)
+    if "path:" in line and line.split("path:", 1)[1].lstrip().startswith("/"):
+        sys.exit(f"absolute path survived the repo-root strip: {line.strip()!r}")
     out.append(line)
 
 header = f"""* ===========================================================================
