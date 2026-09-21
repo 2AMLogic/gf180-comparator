@@ -60,9 +60,15 @@ rather than added retroactively.
 
 [#3](https://github.com/2AMLogic/gf180-comparator/issues/3) tracks this
 block's gap to T1 sim-validated per the klayout-tools design-evidence
-ladder — a 10-item checklist, every item honestly unchecked as of this pass
-(0/10; no schematic, layout, or `sim/` content exists yet beyond the
-`design/`, `layout/`, `sim/`, and `measurements/` directory scaffolding).
+ladder — a checklist that began as 10 items, every one honestly unchecked
+as of the original 2026-09-06 survey pass (0/10; no schematic, layout, or
+`sim/` content existed yet beyond the `design/`, `layout/`, `sim/`, and
+`measurements/` directory scaffolding), and gained an eleventh item —
+*power delivery (structural)*, graded from a `klt erc` supply-spec run —
+on 2026-09-17
+([klayout-tools#2025](https://github.com/2AMLogic/klayout-tools/issues/2025);
+this repo's evidence is #56's). The tracker issue itself, not this stub,
+is the live per-item state.
 
 ## Porting plan
 

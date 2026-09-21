@@ -89,6 +89,10 @@ PINNED_ARTIFACTS = {
         REPO_ROOT / "layout" / "drc" / "comparator.drc.json",
         REPO_ROOT / "layout" / "comparator.gds",
     ),
+    "11": (
+        REPO_ROOT / "layout" / "erc" / "comparator.erc.json",
+        REPO_ROOT / "layout" / "comparator.gds",
+    ),
 }
 
 BLOCK_LEVEL_FIELDS = (

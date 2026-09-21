@@ -9,6 +9,10 @@
     "3": {
       "file": "layout/drc/comparator.drc.json",
       "content_hash": "sha256:d668ccb543c4ec6482ee78fb00805a7472955944fce07022c505e78eeec6b8ed"
+    },
+    "11": {
+      "file": "layout/erc/comparator.erc.json",
+      "content_hash": "sha256:d668ccb543c4ec6482ee78fb00805a7472955944fce07022c505e78eeec6b8ed"
     }
   }
 }
