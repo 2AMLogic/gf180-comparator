@@ -1,7 +1,7 @@
 # layout/
 
-Physical layout of DR-0001's comparator topology (issues #18, #20, #22 and
-#30 — T1 checklist items 2, 3 and 4). `layout/comparator.gds` implements
+Physical layout of DR-0001's comparator topology (issues #18, #20, #22, #30
+and #56 — T1 checklist items 2, 3, 4 and 11). `layout/comparator.gds` implements
 [`design/comparator_dut_analog.sch`](../design/comparator_dut_analog.sch) +
 [`design/comparator_dut_latch.sch`](../design/comparator_dut_latch.sch) —
 the static differential preamplifier, the StrongARM latch, the isolation
@@ -26,6 +26,8 @@ generator is the reviewable source", are reused here).
 | `run_drc.py` | Regenerates `drc/comparator.drc.json` (issue #20's own signoff artifact) via `klt drc`. See "DRC signoff" below. |
 | `drc/comparator.drc.json` | The committed `klt drc` JSON envelope — `status`, `violation_count`, and the deck's own `provenance.deck.content_hash`. |
 | `run_lvs.py` / `lvs/*.json` | The LVS signoff evidence (#22, #30) — `klt extract` + `klt lvs` against the reference `design/comparator.spice`, the two contract checks `klt lvs`'s own verdict cannot make (pin order, and drawn device geometry), and a `netgen`-engine cross-check (`lvs/comparator.netgen.json`) run through a second, independent comparator. See "LVS" below. |
+| `erc-supply-spec.json` | The `klt erc` supply spec (issue #56, T1 item 11) — the declared stackup/vias/nets a `klt erc` run grades this block's *structural* power delivery from, with every field's justification written inline in its `_comment`. See "ERC" below. |
+| `erc/comparator.erc.json` | The committed `klt erc --deck gf180mcu` JSON envelope — the supply read itself: `erc_status`, `erc_findings`, the per-supply connectivity verdict, `erc_coverage`, and `provenance` carrying this GDS's own `input.content_hash`. See "ERC" below. |
 
 `layout/_gen/` (per-device `klt gen` blocks + the `gen-compose` request) and
 `layout/comparator.spice` (a `klt extract` scratch artifact) are
@@ -787,6 +789,109 @@ re-read it rather than trusting this prose):
   caveats: single isolated vias (never arrays), fixed-size via squares, and
   no drawn Poly2 at all.
 
+## ERC (T1 item 11): the structural power-delivery read
+
+[#56](https://github.com/2AMLogic/gf180-comparator/issues/56) adds the
+klayout-tools design-evidence ladder's **eleventh** T1 item — *power
+delivery (structural)* — and this section lands its evidence: is the supply
+actually connected to what it powers, as asked of the geometry alone
+(`klt erc`, no IR-drop/EM analysis — `klt power` stays outside item 11 by
+its own text).
+
+Regenerate the committed report in one command from the repo root:
+
+```bash
+klt erc layout/comparator.gds layout/erc-supply-spec.json \
+  --deck gf180mcu --format json > layout/erc/comparator.erc.json
+```
+
+The committed `comparator.erc.json` was produced by `klt
+0.5.0+gb15edf5e3a2e` (built from
+[klayout-tools@2AMLogic](https://github.com/2AMLogic/klayout-tools) commit
+`b15edf5e`: `git clone` at that commit, `uv build --wheel`, then run the
+wheel — the host-installed `klt` `0.5.0` release predates the erc
+`status`/`provenance` envelope that carries the `input.content_hash`
+item 11 cites, so the report could not otherwise pin its own input). The
+report's `provenance.input.content_hash` is `sha256:d668ccb…eeec6b8ed` —
+byte-equal to the committed `layout/comparator.gds` — and its
+`provenance.spec.content_hash` pins the committed
+`layout/erc-supply-spec.json` the same way. Like the DRC/LVS reports, these
+are each tool's own provenance fields, not hand-added.
+
+### Reading the committed report
+
+| Field (`erc/comparator.erc.json`) | Value | What it means |
+|---|---|---|
+| `erc_status` | `"clean"` | The connectivity half item 11 grades: **zero `erc_findings`** and zero skipped connectivity work (`erc_coverage.skipped: []`) |
+| `erc.net_connectivity` (in `erc_coverage.checked`) | `["vdd"]`, `["vss"]` | Both declared supplies were actually checked. Both were declared `kind: "supply"` in the spec's `nets[]`, so a short between them would be the severe `erc.supply_short`, not the general `erc.multiply_driven_net` |
+| zero `erc.unconnected_net` naming `vdd`/`vss` | 0 findings | **Exactly one electrical island per supply.** `erc.unconnected_net` fires on zero matches *and* on >1 matches, so "zero findings" is the one-island verdict itself, not merely an absence — the split-rail failure mode this item exists to catch is ruled out on the geometry |
+| `status` | `"not_checked"` (exit 4) | The *antenna* half of the same run: `klt erc` has no gf180mcu antenna-ratio limit table yet (`erc_coverage`'s antenna skips, reason `missing_antenna_pdk`), so that half rolls `not_checked` by the documented rollup contract. Per item 11's own text (#1994) an antenna verdict is not the item's subject and does not block it |
+| `provenance.devices` | `[{"name": "ppolyf_u_1k", "body_layer": "30/0", "on": "poly2", …, "source": "deck"}]` | The `--deck gf180mcu` carve-out (klayout-tools #2205/#2217), machine-recorded — see below for why it is load-bearing on this exact design |
+
+### Why the run needs `--deck gf180mcu` here — the #2183 mirror artifact
+
+The two `ppolyf_u_1k` preamp load resistors are drawn **on the declared
+gate-role layer**: their bodies are Poly2 `30/0` (salicide block `49/0`,
+`Resistor` `62/0`, `RES_MK` `110/5` — the deck's own comment records that a
+marked poly segment "stays ordinary connected poly"), and each spans from
+its `aon`/`aop` terminal to its `vdd` terminal through that body. A
+deviceless connectivity model reads each body as a wire: without the
+carve-out, `vdd`'s single island swallows the `aon` and `aop` nets (a
+no-deck run of the same spec literally reports `gates[]` net
+`'aon,aop,vdd'`), making the "one island" verdict read partially on device
+bodies rather than on metal. `--deck gf180mcu` subtracts the
+deck-recognized resistor bodies from connectivity and echoes
+`ppolyf_u_1k` into `provenance.devices` exactly as a hand-declared
+`devices[]` entry would be — the committed one-island-per-supply verdict
+is the honest metal-only read, with the carve-out recorded in the report
+rather than asserted in prose.
+
+### `erc.missing_tie`: not computed, and what stands in for it
+
+The spec deliberately declares **no `ties[]`** (recorded in its `_comment`
+with the reason), so `erc.missing_tie` is **not computed** by this run —
+the report records that mechanically, `erc_coverage.inapplicable` =
+`[{"id": "erc.missing_tie:[]", "reason": "no_ties_declared"}]`. That
+omission is upstream-mandated, not an oversight: `klt erc`'s `ties[]`
+collapses a real routed design into one electrical island and reports a
+**false** `erc.supply_short`
+([klayout-tools#2169](https://github.com/2AMLogic/klayout-tools/issues/2169),
+reproduced four ways in `gf180-drone-fc`'s FRICTION F-034 — the sibling
+repo's item-11 spec lands on the same omission for the same reason). So
+the report's zero `missing_tie` count is an **absence of evidence, not
+evidence of absence**, and the well/substrate ties are evidenced by what
+did get drawn and extracted instead:
+
+- `route_nets.plant_taps()` plants **6 Nwell taps tied up to `vdd` Metal1
+  pads and 2 Pplus/Comp substrate ties tied up to `vss`** ("Body ties are
+  drawn here too" under "Routing"; the generated routing table's
+  `vdd`/`vss` rows carry them, `+6 body ties` / `+2 body ties`);
+- `comparator.routing.json` `totals.tap_pins` = 8 — the machine record that
+  those tap pads joined the two supply nets as ordinary router pins;
+- `lvs/comparator.extract.json` extracts them as part of the named
+  `vdd`/`vss` nets — and it is why `klt extract`'s
+  `unbiased_pmos_body_nets` is `[]` (see "LVS" above): every PMOS body
+  resolves to `vdd` through a drawn, contacted well tie, not to an
+  anonymous Nwell net.
+
+### Where the item honestly stands
+
+The supply evidence above is one of item 11's two legs for an analog
+block. The other — per the item's own text — is that *item 4's own LVS
+report's `net_correspondence` carries every declared supply net paired to
+a reference-side net* (a SPICE reference carries them by construction, so
+the pairing must show in the compare's outcome). Today
+`lvs/comparator.lvs.json`'s `net_correspondence` pairs 16 nets and **`vdd`
+and `vss` are among the 4 uncorrelated** — not because the reference
+omits them (it is `design/comparator.spice`, which declares both) but
+because the same two `ppolyf_u_1k` resistor devices whose 6 property
+errors hold item 4 open ("The one remaining gap is upstream" above) are
+also the only devices whose terminals make those nets unmatched. Item 11
+therefore remains **unchecked** on the gap-to-T1 tracker even with this
+ERC evidence committed, until item 4's resistor-parameter mismatch clears
+and a fresh LVS run pairs both supplies. That dependency is stated in the
+tracker row, not buried here.
+
 ## What is not attempted, and why (stated, not hidden)
 
 - **Guard rings.** Every `diff_pair` block is drawn with
@@ -821,7 +926,11 @@ re-read it rather than trusting this prose):
 
 - `klt` `0.5.0` (`klt version --format json`), `klayout` `0.30.12`
   (`comparator.lvs.json`'s own `environment.engine_version`), `netgen`
-  for the LVS cross-check. Version drift from earlier bullets/runs in this
+  for the LVS cross-check. The #56 ERC run additionally used a wheel
+  built from klayout-tools commit `b15edf5e` (self-identified
+  `0.5.0+gb15edf5e3a2e`) because the released `0.5.0` predates the erc
+  `status`/`provenance` envelope; `erc/comparator.erc.json`'s own
+  `provenance.klt_version` records it. Version drift from earlier bullets/runs in this
   file (`0.4.0` for #18/#22's original tool pins) is expected across
   separate tool invocations made at different times on possibly-different
   hosts and is not itself a defect; there is still no `toolchain.json` pin

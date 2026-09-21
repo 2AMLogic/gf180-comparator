@@ -93,7 +93,9 @@ Today the machine grades this block (see `signoff-report.json`, regenerated
 by `./signoff/regenerate.sh`):
 
 - **met — item 2 (Layout), item 3 (DRC clean)**
-- **unmet, reason `no_evidence` — items 1, 4, 5, 6, 7, 8, 9, 10, 11**
+- **unmet, reason `no_evidence` — items 1, 4, 5, 6, 7, 8, 9, 10**
+- **unmet, reason `unrecognized_envelope` — item 11** (evidence is now cited;
+  the pinned grader predates item-11 recognition — see the item-11 section)
 
 `no_evidence` means exactly what it says mechanically: the manifest names no
 citation for that item. It is **not** an assertion that the underlying work
@@ -232,22 +234,37 @@ machine-readable part of this item's hygiene duty is exactly the anti-rot
 gate below. The full sweep is issue
 [#26](https://github.com/2AMLogic/gf180-comparator/issues/26).
 
-### unmet — item 11 (Power delivery, structural): the row exists; companion issue #56 owns it
+### unmet — item 11 (Power delivery, structural): first supply evidence cited; the grader cannot read it yet
 
 The 11-item rulebook renders the row (that is why the rulebook is pinned at
-the vendored 11-item revision); `unmet`/`no_evidence` is today's honest
-state — this repo has no `klt erc` supply spec or report yet. Companion
-issue
-[#56](https://github.com/2AMLogic/gf180-comparator/issues/56) owns landing
-the first `klt erc` supply spec and run; when it lands, wire its citation
-here (the analog column's compound entry — the ERC supply report plus item
-4's own LVS reference carrying the supply nets, per the rulebook's item 11
-and [docs/cli/signoff.md](https://github.com/2AMLogic/klayout-tools/blob/main/docs/cli/signoff.md))
-and add the corresponding pin row to `verify-report.py`, per the refresh
-contract. (The pinned 0.5.0 wheel predates item 11's grading rules — a
-cited item-11 envelope renders `unrecognized_envelope` until a released
-`klt` that grades item 11 ships; upgrade the distribution pin together
-with the citation.)
+the vendored 11-item revision). Issue
+[#56](https://github.com/2AMLogic/gf180-comparator/issues/56) has now
+landed the first `klt erc` supply evidence, and this manifest cites the
+compound analog entry the rulebook's item 11 names: the ERC supply report
+`layout/erc/comparator.erc.json` (spec
+`layout/erc-supply-spec.json`; run `klt erc ... --deck gf180mcu`;
+`erc_status: "clean"`, zero findings, one electrical island per declared
+supply, `provenance.input.content_hash` pinning the same committed GDS
+items 2/3 cite) — item 4's own LVS leg of the compound entry is *not*
+citable yet and is deliberately absent: `comparator.lvs.json`'s
+`net_correspondence` still leaves `vdd`/`vss` uncorrelated while item 4's
+two `ppolyf_u_1k` property errors hold it open (see the item-4 section
+above), so item 11 stays unmet even at the next pin refresh. The reason
+the row renders `unrecognized_envelope` and not a graded verdict is the
+distribution pin, not the evidence: the pinned 0.5.0 release predates
+item 11's grading rules (klayout-tools#1984 and later), so the grader
+cannot read the cited ERC envelope at all — a state
+[docs/cli/signoff.md](https://github.com/2AMLogic/klayout-tools/blob/main/docs/cli/signoff.md)
+anticipates. When a released `klt` that grades item 11 ships, upgrade the
+distribution pin together with this citation (the refresh contract) and
+re-grade — the row will then render its real state on this same evidence
+(`unmet` until both the `ties[]` blocker klayout-tools#2169 clears and
+item 4's LVS carries the supply nets in `net_correspondence`; the
+`erc.missing_tie` leg is not computed in the cited run, with the drawn
+tap evidence the report's `erc_coverage.inapplicable` /
+`provenance.devices` blocks record mechanically). The full claim-side
+write-up, including exactly what stands in for the not-computed
+`missing_tie`, is `layout/README.md`'s "ERC (T1 item 11)" section.
 
 ## The anti-rot gate (`verify-report.py`, what CI runs)
 
