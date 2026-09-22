@@ -70,6 +70,14 @@ on 2026-09-17
 this repo's evidence is #56's). The tracker issue itself, not this stub,
 is the live per-item state.
 
+## Consumers
+
+[`spec/consumers.md`](consumers.md) names this block's consumers (today:
+`gf180-sar-adc`, per the `2AMLogic/2am` `repos.yml` `consumes:` edge), carries
+one requirement row per constraint each consumer imposes, and states the
+same-block-class facts once. The structured integrator view it complements
+lives at [`manifests/integrator.json`](../manifests/integrator.json).
+
 ## Porting plan
 
 [`spec/porting-plan.md`](porting-plan.md) names the nearest mature sibling
