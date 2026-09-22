@@ -1,0 +1,58 @@
+{
+  "block": "gf180-comparator",
+  "pdk": "gf180mcu",
+  "description": "Dynamic latched comparator (static differential preamplifier into a StrongARM latch with isolation inverters and a NOR SR output latch) for the GF180MCU open PDK. This is the integrator view: what a full-chip integrator takes, as structured data. Prose lives in README.md; consumer requirement rows live in spec/consumers.md.",
+  "top_cell": "COMPARATOR",
+  "supply": {
+    "vdd_v": 3.3,
+    "tolerance": "±10%",
+    "devices": ["nfet_03v3", "pfet_03v3"]
+  },
+  "netlist": {
+    "path": "design/comparator.spice",
+    "top_subckt": "comparator_dut",
+    "provenance": "schematic",
+    "binding": "sim/dut.json",
+    "interface_contract": "sim/dut/README.md"
+  },
+  "layout": {
+    "gds": "layout/comparator.gds",
+    "placement_evidence": "layout/comparator.gen-compose.json",
+    "notes": "One flat COMPARATOR top cell (29 devices: 27 transistors + 2 ppolyf_u_1k load resistors), generator source layout/gen_comparator.py."
+  },
+  "ports": [
+    {"name": "vinp", "direction": "input", "meaning": "differential input; v(vinp) > v(vinn) => dout HIGH"},
+    {"name": "vinn", "direction": "input", "meaning": "differential input"},
+    {"name": "clk", "direction": "input", "meaning": "decision strobe; LOW = reset, HIGH = evaluate"},
+    {"name": "ibias", "direction": "input", "meaning": "bias-current input pin; the testbench forces dut_ib into it"},
+    {"name": "dout", "direction": "output", "meaning": "complementary decision outputs, held between strobes"},
+    {"name": "doutb", "direction": "output", "meaning": "complementary decision outputs, held between strobes"},
+    {"name": "vdd", "direction": "power", "meaning": "supply"},
+    {"name": "vss", "direction": "power", "meaning": "ground"}
+  ],
+  "port_list_source": "sim/dut/README.md (Interface contract; checked textually at load time by sim/harness/dut.py)",
+  "area": {
+    "value_um2": 20596.0,
+    "value_mm2": 0.0206,
+    "derivation": "placed bbox from layout/comparator.gen-compose.json bbox_um: x0=-0.25, y0=-0.25, x1=325.43, y1=62.99 -> 325.68 um x 63.24 um = 20596.0 um2",
+    "source": "layout/comparator.gen-compose.json (klt gen-compose placement evidence)"
+  },
+  "maturity": {
+    "rung": "T1 (design-evidence tiers, graded)",
+    "verdict_of_record": "signoff/signoff-report.json",
+    "manifest": "signoff/block-manifest.json",
+    "readme": "signoff/README.md",
+    "grader": "klt signoff --manifest",
+    "regenerate": "signoff/regenerate.sh",
+    "note": "Honestly graded, not padded: items without committed klt envelopes stay unmet (LVS open while #22/#40 are open). See signoff/README.md."
+  },
+  "spec": {
+    "target_table": "README.md#target-specification-ratified-via-dr-0002",
+    "consumers": "spec/consumers.md"
+  },
+  "provenance": {
+    "as_of_commit": "5649686",
+    "generated_for": "issue #64",
+    "generated_on": "2026-09-22"
+  }
+}

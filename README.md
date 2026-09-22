@@ -36,7 +36,9 @@ opened together).
 GF180MCU ships statistical mismatch models, so the offset story here is the
 strong version: Monte-Carlo sigma with run counts and seeds committed. The
 existing SAR's behavior is context, not a source — this repo derives its own
-numbers from the models.
+numbers from the models. Integrators: [`manifests/integrator.json`](manifests/integrator.json)
+publishes what this block takes and exposes (consumer requirement rows:
+[`spec/consumers.md`](spec/consumers.md)).
 
 ## Verification harness
 
