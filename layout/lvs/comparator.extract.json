@@ -4,6 +4,7 @@
   "dbu_um": 0.0005,
   "dead_metal": [],
   "deck": "gf180mcu",
+  "def_pin_promotion": null,
   "device_classes": [
     "nfet",
     "pfet",
@@ -590,9 +591,14 @@
   "ignored_layers": [],
   "matched_device_groups": [],
   "merged_net_labels": [],
+  "metrics": {
+    "extract__device__count": 29,
+    "extract__net__count": 20,
+    "extract__pin__count": 8
+  },
   "net_count": 20,
   "netlist_path": "layout/lvs/comparator.extracted.spice",
-  "netlist_sha256": "9f7c3dab36a25bea3cb27240233cb014a469f9229863869cda035c5e84540c25",
+  "netlist_sha256": "594f54be04819f3bf3a8466a8c0f4d863267a9e9ba459b39ddf09249da80d98c",
   "nets": [
     {
       "device_count": 3,
@@ -666,7 +672,7 @@
         }
       ],
       "name": "clk",
-      "net_id": 8,
+      "net_id": 10,
       "pin": true,
       "pin_index": 0
     },
@@ -878,7 +884,7 @@
         }
       ],
       "name": "vdd",
-      "net_id": 10,
+      "net_id": 9,
       "pin": true,
       "pin_index": 4
     },
@@ -935,21 +941,34 @@
   "pin_count": 8,
   "provenance": {
     "deck": {
-      "content_hash": "sha256:3c2f4e4be2524a0fe964cd1b2c4c171c0f904586c10eaa8c4ffe3511909e4706",
+      "content_hash": "sha256:9babf6fd5d623fea50d380168ebf8f7c0f0f6e70eb7d89b221476dc47c7f6a85",
       "name": "gf180mcu",
-      "released": true
+      "options": {
+        "metal_top": "9K",
+        "mim_cap": "cap_mim_2f0_m4m5_noshield",
+        "poly_res": "1k"
+      },
+      "options_explicit": {
+        "metal_top": false,
+        "mim_cap": false,
+        "poly_res": false
+      },
+      "options_hash": "sha256:6a7dc7660a470994263c5ca8ace6d8ac8c605d77e6876a9c5490949de6e7cb05",
+      "released": false
     },
     "input": {
-      "content_hash": "sha256:d668ccb543c4ec6482ee78fb00805a7472955944fce07022c505e78eeec6b8ed"
+      "content_hash": "sha256:d668ccb543c4ec6482ee78fb00805a7472955944fce07022c505e78eeec6b8ed",
+      "role": "layout"
     },
     "klayout_version": "0.30.12",
-    "klt_version": "0.5.0",
+    "klt_version": "0.6.0+g28c362e9b021",
     "pdk": null
   },
   "schema_version": 3,
   "single_terminal_nets": [],
   "spef_path": null,
   "status": "extracted",
+  "subcircuit": null,
   "top": "COMPARATOR",
   "unbiased_pmos_body_nets": [],
   "unmodelled_poly": [],
