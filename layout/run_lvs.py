@@ -45,22 +45,32 @@ WHAT THIS SCRIPT DOES
    (`check_device_geometry_contract`) -- the second check `klt lvs`'s
    `status` verdict structurally cannot make here. `klt lvs`'s
    `reference.form: "subckt-call"` conversion writes a placeholder `0` for a
-   converted resistor's value and `klt extract`'s SPICE writer drops a
-   resistor's L/W, so the `l_um`/`w_um`/`r` comparison on `RN`/`RP` is
-   *vacuous*: it reports the same three findings whatever geometry is
-   actually drawn (klayout-tools#1907 / #1927, see `layout/README.md`'s
-   "LVS" section). Without this check a real drift in the drawn load
-   resistors -- a 100 um instead of DR-0001's 120 um -- would be invisible
-   to this whole flow. The check reads both sides' own committed artifacts
-   (`comparator.extract.json`'s per-device `params`, and
-   `design/comparator.spice`'s own device call lines), so it tracks the
-   schematic automatically and restates no dimension of its own.
+   converted resistor's value, so since klayout-tools#1907 closed it
+   *excludes* `R` (and, as KLayout-secondary parameters, `L`/`W`/`A`/`P`)
+   from the compare entirely and discloses the exclusion as
+   `device.placeholder_value` / `device.geometry_not_compared` warnings plus
+   a `device_parameter_coverage` entry. That is the honest outcome, but it
+   means `klt lvs` verifies NOTHING about the two load resistors' geometry:
+   a 100 um resistor instead of DR-0001's 120 um would produce a
+   byte-identical `status: "match"`, `error_count: 0` report. Without this
+   check that drift would be invisible to the whole flow. The check reads
+   both sides' own committed artifacts (`comparator.extract.json`'s
+   per-device `params`, and `design/comparator.spice`'s own device call
+   lines), so it tracks the schematic automatically and restates no
+   dimension of its own. See `layout/README.md`'s "LVS" section.
 5. Re-runs the same compare through `klt lvs`'s second engine, `netgen`
    (`run_netgen_crosscheck`), writing `layout/lvs/comparator.netgen.json`.
    A corroboration step, not a second verdict -- it is what lets a residual
    finding be attributed to the netlists rather than to one comparator's
    matching strategy. Skipped (never failed) when `netgen` is not
-   installed.
+   installed. netgen confirms the match ("Netlists match uniquely. /
+   Circuits match correctly.") but still reports the reference-side
+   placeholder `0` as a `device.property` error, because step 4's exclusion
+   is applied on the `"klayout"` engine only (klayout-tools#2673); its
+   report's `status` is therefore `"mismatch"` while the primary report's is
+   `"match"`, over the same single fact. That asymmetry is disclosed, not
+   suppressed -- see `layout/README.md`'s "LVS" section for why
+   `options.netgen_setup` was declined.
 
 Both JSON reports are the actual signoff artifacts this issue's acceptance
 criteria ask for -- read `status`/`mismatches[]`/`category_counts` in them,
@@ -74,11 +84,13 @@ Requires `klt` on `PATH` and the `gf180mcuC` PDK variant resolvable (same
 pin as `layout/gen_comparator.py` -- see `layout/README.md`'s "Toolchain").
 Exits non-zero (mirroring `klt lvs`'s own exit code) when the run does not
 reach `status: match`, or 5 when either contract check (interface pins,
-device geometry) fails. The run does not reach `status: match` today, for
-one remaining reason that is upstream of this repo -- see
-`layout/README.md`'s "LVS" section and
-[klayout-tools#1907](https://github.com/2AMLogic/klayout-tools/issues/1907)
--- and that is not a bug in this script.
+device geometry) fails. Since klayout-tools#1907/#1927/#1928 closed, the
+primary run DOES reach `status: match` with `error_count: 0` (issue #40), so
+the contract checks in steps 3-4 are now the only things that can fail this
+script -- read `layout/README.md`'s "LVS" section for exactly what that
+`match` covers and what it deliberately does not. The netgen cross-check's
+own `status` is not part of this script's exit code (step 5: corroboration,
+not a second verdict).
 """
 
 from __future__ import annotations
@@ -416,8 +428,10 @@ def reference_device_geometry() -> collections.Counter:
 def extracted_device_geometry(extract_report: dict) -> collections.Counter:
     """The same census taken from `klt extract`'s own committed report:
     `Counter[(device_class, l_um, w_um)]`, read from each device's `params`
-    block (which carries the real measured geometry even where the SPICE
-    netlist `klt extract` writes alongside it does not -- klayout-tools#1927).
+    block -- the measured geometry, and deliberately not the SPICE netlist
+    written alongside it (which once dropped a resistor's L/W entirely,
+    klayout-tools#1927, now closed; reading the report means this census
+    never depended on that fix).
     """
     census: collections.Counter = collections.Counter()
     for device in extract_report["devices"]:
@@ -434,12 +448,14 @@ def check_device_geometry_contract(extract_report: dict) -> list[str]:
     """Assert the drawn device geometry against the reference netlist's own.
 
     This is the geometry half of the compare that `klt lvs` cannot actually
-    perform for this design. On `RN`/`RP` its `l_um`/`w_um`/`r` findings are
-    vacuous -- the reference side's converted card carries a placeholder `0`
-    resistance (klayout-tools#1907) and the layout side's written card drops
-    L/W (klayout-tools#1927), so the same three `device.property` entries are
-    reported no matter what is drawn. A 100 um load resistor would pass
-    through `klt lvs` looking exactly like DR-0001's 120 um one.
+    perform for this design. On `RN`/`RP` it compares no parameter at all:
+    the reference side's converted card carries a placeholder `0` resistance,
+    so `R` is excluded (`device.placeholder_value`), and KLayout declares a
+    resistor class's `L`/`W`/`A`/`P` *secondary*, so those never took part
+    either (`device.geometry_not_compared`). Both exclusions are disclosed in
+    the report, which is the honest outcome -- but it means a 100 um load
+    resistor would pass through `klt lvs` looking exactly like DR-0001's
+    120 um one, with a byte-identical `status: "match"`.
 
     Comparing the two censuses as multisets (rather than per paired device)
     is deliberate: device pairing is `NetlistComparer`'s job and is already

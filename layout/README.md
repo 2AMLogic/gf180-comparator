@@ -434,10 +434,10 @@ design's own device geometry (`rn_rp`'s DR-0001-mandated resistor length,
 `gen_comparator.py`/`comparator.gds`/`comparator.gen-compose.json` were
 therefore unchanged by issue #28 -- that section is its whole deliverable.
 
-## LVS: topology matches; one upstream parameter gap remains
+## LVS: `status: "match"`, `error_count: 0` (issue #40)
 
-`klt extract` + `klt lvs` (issues #22 and #30, T1 checklist item 4) are run
-against the committed `comparator.gds` for real. Regenerate every step in
+`klt extract` + `klt lvs` (issues #22, #30 and #40, T1 checklist item 4) are
+run against the committed `comparator.gds` for real. Regenerate every step in
 one command from the repo root:
 
 ```bash
@@ -459,12 +459,13 @@ deck is pinned by content hash in `provenance.deck.content_hash`.
 
 | Field (committed `comparator.lvs.json`) | Value |
 |---|---|
-| `status` | `"mismatch"` (exit 3) |
-| `error_count` | **6** -- all `device.property`, all on the same two devices (was 102 across `device.unmatched`/`net.merged`/`net.split` before #30) |
-| `counts.devices` | 29 layout / 29 reference, **27 matched** (the 2 unmatched are those same two resistors) |
-| `counts.nets` | 20 layout / 20 reference, 16 matched; **every net pairs with its same-named reference counterpart** in `net_correspondence` |
+| `status` | `"match"` (exit 0) |
+| `error_count` | **0** (was **6** before the upstream fix described below -- all `device.property` on the same two resistors; and 102 across `device.unmatched`/`net.merged`/`net.split` before #30's routing) |
+| `counts.devices` | 29 layout / 29 reference, **29 matched** (was 27 -- the 2 unmatched were those same two resistors) |
+| `counts.nets` | 20 layout / 20 reference, **20 matched**; **every net pairs with its same-named reference counterpart** in `net_correspondence` |
 | `counts.pins` | 8 layout / 8 reference, **8 matched** -- exactly `sim/dut/README.md`'s interface |
-| warnings | 1, `topology.flattened` (a disclosure, see below) |
+| `mismatch_count` | 3, **all `severity: "warning"`** -- `device.placeholder_value`, `device.geometry_not_compared`, `topology.flattened`. Each is a *disclosure* of something the compare did not verify, not a finding against the layout; `mismatch_count` includes warnings, `status`/`error_count` do not. All three are read out below. |
+| `provenance.klt_version` | `0.6.0+g28c362e9b021` -- see "Which `klt` build carries the fix" below |
 
 **The whole connectivity comparison passes.** Every transistor pairs, every
 net pairs to the reference net of the same name (not to its symmetric
@@ -475,9 +476,18 @@ this section used to document is **gone**: `klt extract`'s
 well and substrate ties (see "Routing" above) instead of leaving every PMOS
 body on the deck's anonymous synthesized net.
 
-### The one remaining gap is upstream, in `klt lvs` itself
+### How `match` was reached: upstream started disclosing the gap instead of mis-reporting it
 
-All six errors are the same fact, reported three ways per device, on `RN`
+**Nothing in `layout/` or `design/` changed to get here, and the reference
+netlist is still `design/comparator.spice` in `reference.form:
+"subckt-call"`** -- verbatim the schematic's own netlist, not a hand-derived
+copy. The committed request documents
+(`lvs/comparator.lvs.request.json`, `lvs/comparator.netgen.request.json`) are
+**byte-identical to the ones that produced the six-error report** -- #40's
+diff does not touch them, which is the checkable form of "no option was
+relaxed to get here". What changed is `klt lvs`.
+
+The six errors were all one fact, reported three ways per device, on `RN`
 and `RP` (DR-0001's two `ppolyf_u_1k` 120 µm load resistors):
 
 ```
@@ -486,79 +496,156 @@ matched device parameter 'l_um' differs   layout      0.0  reference 120.0
 matched device parameter 'w_um' differs   layout      0.0  reference 1.0
 ```
 
-Neither side is wrong about the device; the two sides simply cannot state
-the same thing:
-
-- **Reference side.** `klt lvs`'s `reference.form: "subckt-call"`
-  conversion (`netlist_normalize._convert_geometry_card`) writes a literal
-  **placeholder `0`** for a converted resistor's value -- by design: that
-  module has no PDK sheet-resistance table and deliberately does not depend
-  on `klayout_tools.decks` -- and carries the call's geometry onto
-  `L=`/`W=` instead. So the reference resistor is `r=0, l_um=120, w_um=1`.
-- **Layout side.** `klt extract` computes the real geometry-derived
-  resistance (`r_ohm: 120000.0`, alongside `l_um: 120.0, w_um: 1.0` in
-  `comparator.extract.json`), but its SPICE *writer* emits the KLayout
-  plain-element resistor card `R$28 aon vdd vss 120000 ppolyf_u_1k` --
-  value only. Re-read by the compare, that is `r=120000, l_um=0, w_um=0`.
-  So two of the three findings per device (`l_um`, `w_um`) are the compare
-  *misattributing* a serialisation loss to the layout: this layout's
-  resistors really are 120 µm x 1 µm, and the extractor's own report says
-  so. Filed generically per `CLAUDE.md`'s friction protocol as
-  [klayout-tools#1927](https://github.com/2AMLogic/klayout-tools/issues/1927).
-- **No request-level reconciliation exists.** `options.parameter_tolerance`
-  is a *relative* tolerance and is rejected at `>= 1.0` by design, so it
-  cannot bridge `0` vs `120000`; `hints`, `options.combine_devices`, and
-  `reference.device_map`/`device_bulk` all address other axes entirely.
-  Switching to `klt lvs`'s inline-extraction form (`layout.file`, no SPICE
-  round trip) makes `l_um`/`w_um` agree but simply moves the disagreement
-  to `r`/`a`/`p` -- still six errors (plus four new `topology` "nets were
-  paired despite a name/identity conflict" errors), still the same
-  placeholder. Re-verified against `klt` 0.5.0, not carried forward from
-  the 0.4.0 run this section was first written against.
-- **Nor is there a way to say which parameters the compare should use.**
-  `klayout.db.DeviceClass.enable_parameter()` exists and `NetlistComparer`
-  honours it, but no field of `klt.lvs.request/1` reaches it, so every
-  declared parameter is always compared. That is the *generic* gap behind
-  this one, and the one whose closure would let a caller reach `match`
-  honestly here (compare the resistors on geometry, disclose the derived
-  resistance as unverified) rather than waiting on either side to learn to
-  state a value it does not have. Filed generically as
-  [klayout-tools#1928](https://github.com/2AMLogic/klayout-tools/issues/1928).
-
-This is a real tool gap, and per `CLAUDE.md`'s friction protocol it is
-tracked generically on the tool's own tracker, not worked around here:
+Neither side was wrong about the device; the two sides could not state the
+same thing. The `reference.form: "subckt-call"` conversion writes a literal
+**placeholder `0`** for a converted resistor's value (it has no PDK
+sheet-resistance table), and `klt extract`'s SPICE *writer* then emitted the
+plain-element card value-only, so the re-read layout card was `r=120000,
+l_um=0, w_um=0` even though the extractor's own report had the real geometry.
+(The writer half is fixed: the current `comparator.extracted.spice` carries
+`X$28 aon vdd vss ppolyf_u_1k r=120000 L=120U W=1U`.)
+Filed generically per `CLAUDE.md`'s friction protocol as
 [klayout-tools#1907](https://github.com/2AMLogic/klayout-tools/issues/1907)
-("subckt-call's placeholder-0 resistor/capacitor value ..."), whose own
-Impact statement is exactly this case -- `form: "subckt-call"` cannot reach
-`status: "match"` for any design using a curated resistor class against a
-schematic-style reference. The one workaround it names (hand-compute every
-device's real value into a `form: "plain-element"` reference) is declined
-here for the reason that issue itself gives: it would replace a reference
-netlist that is *verbatim the schematic's own netlist* with a hand-derived
-copy that no longer tracks `design/comparator.spice` automatically -- a
-worse signoff artifact than an honestly-reported six-error compare.
+(the placeholder), [#1927](https://github.com/2AMLogic/klayout-tools/issues/1927)
+(the writer's dropped L/W) and
+[#1928](https://github.com/2AMLogic/klayout-tools/issues/1928) (no
+request-level way to scope which parameters are compared). **All three are
+closed.**
 
-**Independently corroborated by a second comparator.** `run_lvs.py` also
-runs the same two netlists through `klt lvs`'s `"netgen"` engine
-(`RTimothyEdwards/netgen`, an entirely separate implementation, no shared
-matching code with `klayout.db.NetlistComparer`) and commits the result as
-`lvs/comparator.netgen.json`. It reports `error_count: 2`,
-`category_counts: {"device.property": 2}` -- one "matched device parameter
-'value' differs" per resistor, and nothing else. Two independent
-comparators agreeing that the *only* residual is those two resistor values
-is what makes the attribution above evidence rather than an argument. (The
-cross-check is skipped, not failed, on a host with no `netgen` binary; the
-committed report then keeps its own provenance block from the last host
-that had one.)
+The fix is not that either side learned to state a value it does not have.
+It is that `klt lvs` now **recognises its own placeholder, excludes that
+parameter from the compare on both sides, and discloses the exclusion** --
+so an uncomparable dimension is reported as "not verified" rather than as a
+parameter mismatch against the layout. Both disclosures are in the committed
+report's `mismatches[]`, at `severity: "warning"`:
 
-**What this does NOT mean.** It does not mean "LVS is clean". `status` is
-`"mismatch"`, `run_lvs.py` exits non-zero, and no claim in this repo may be
-made on the basis of an unverified match. What can honestly be claimed from
-the committed evidence is narrower and still substantial: *every device and
-every net of this layout pairs with its reference counterpart, the drawn
-geometry of every device equals the schematic's own declared geometry (by
-the separate check below, not by the compare), and the only residual
-findings are a parameter-encoding asymmetry in the compare front-end.*
+- `device.placeholder_value` -- *"reference device class `'PPOLYF_U_1K'` was
+  converted from a subcircuit call (`request.reference.form: "subckt-call"`),
+  so its `'R'` value is the literal 0 placeholder on all 2 reference
+  instance(s) ... `'R'` was therefore excluded from this compare on both
+  sides (layout: 2 instance(s), R 120000) and the two sides were paired on
+  topology alone -- that dimension of the compare is not independently
+  verified."*
+- `device.geometry_not_compared` -- *"device class `'ppolyf_u_1k'` is a
+  resistor class, whose `['A', 'L', 'P', 'W']` parameter(s) KLayout declares
+  secondary: `kdb.NetlistComparer` compares primary parameters only, so none
+  of them took part in this compare and each is NOT verified ... No parameter
+  of this class was compared at all."*
+
+The same facts are also machine-readable in the report's own
+`device_parameter_coverage` block, which this run populates as:
+
+```json
+{"class": "ppolyf_u_1k", "device_kind": "resistor",
+ "layout_devices": 2, "reference_devices": 2, "compared": [],
+ "not_compared": [{"parameter": "R", "reason": "placeholder_value"},
+                  {"parameter": "L", "reason": "secondary"},
+                  {"parameter": "W", "reason": "secondary"},
+                  {"parameter": "A", "reason": "secondary"},
+                  {"parameter": "P", "reason": "secondary"}]}
+```
+
+**So read this `match` precisely.** It says: all 29 devices, all 20 nets and
+all 8 pins pair with their reference counterparts, and every parameter the
+compare *did* examine agrees. It does **not** say the two load resistors'
+`R`/`L`/`W` were checked -- the report states in two places that they were
+not. Their drawn `L`/`W` is verified instead by
+`check_device_geometry_contract()` below, which is exactly why that check
+exists and why it is not redundant now that `status` is `"match"`; the
+resistance *value* remains unverifiable against a schematic that states none
+(see "Device-geometry contract check").
+
+### Which `klt` build carries the fix
+
+`provenance.klt_version` in the regenerated reports reads
+**`0.6.0+g28c362e9b021`** -- package version `0.6.0`, git commit
+`28c362e9b0212efd380bd511d9989f523ab70bc3`, `is_release: false`,
+`klayout` `0.30.12`. The build-identity suffix matters: an earlier `klt`
+recorded only the static package version here, so a committed report could
+not identify the build that produced it
+([klayout-tools#2090](https://github.com/2AMLogic/klayout-tools/issues/2090),
+closed) -- this report can, and that is what makes "the fix is present" a
+checkable claim rather than an assertion. `provenance.deck.content_hash`
+(`sha256:9babf6fd...`) and both netlists' `sha256` in `environment` pin the
+inputs independently of any version string; note `provenance.deck.released`
+is now `false` where it was `true`, which is a property of this dev build's
+deck revision not being in a tagged release, not a change to the deck's
+content requirements.
+
+### Independently corroborated by a second comparator -- and the one place the two engines still differ
+
+`run_lvs.py` also runs the same two netlists through `klt lvs`'s `"netgen"`
+engine (`RTimothyEdwards/netgen` `1.5.133`, an entirely separate
+implementation with no shared matching code with
+`klayout.db.NetlistComparer`) and commits the result as
+`lvs/comparator.netgen.json`. **netgen confirms the match on everything the
+verdict is about** -- its own log, preserved verbatim in the committed
+report, says:
+
+```
+NFET (15)                                  |NFET (15)
+PFET (12)                                  |PFET (12)
+Number of devices: 29                      |Number of devices: 29
+Number of nets: 20                         |Number of nets: 20
+Netlists match uniquely.
+Circuits match correctly.
+Cell pin lists are equivalent.
+Device classes COMPARATOR and COMPARATOR_DUT are equivalent.
+Circuits match uniquely.
+```
+
+The netgen report nonetheless carries `status: "mismatch"`,
+`error_count: 1`, `category_counts: {"device.property": 1}` -- and the
+report's own `details.raw` shows exactly what that one finding is:
+
+```
+There were property errors.
+VSS$29 vs. COMPARATOR_DUT_ANALOGA/VSSP:
+ value circuit1: 120000   circuit2: 0
+VSS$28 vs. COMPARATOR_DUT_ANALOGA/VSSN:
+ value circuit1: 120000   circuit2: 0
+```
+
+`120000` vs `0`, on the two load resistors: **the same placeholder-`0` fact
+the primary report discloses as `device.placeholder_value`**, not a second,
+independent finding. The two engines do not disagree about the netlists; they
+disagree about whose job it is to know that the `0` is klt's own placeholder.
+`_apply_reference_placeholder_values()` (the #1907 fix) runs on the
+`"klayout"` branch only -- the `"netgen"` branch hands netgen the converted
+reference with the literal `0` still in it, and netgen correctly reports a
+property error against the layout's real value. `options.compare_parameters`
+and `options.parameter_tolerance` are both rejected on this engine by design,
+so there is no request-level way to apply the same exclusion to it.
+
+Filed generically per `CLAUDE.md`'s friction protocol as
+[klayout-tools#2673](https://github.com/2AMLogic/klayout-tools/issues/2673)
+(the engine asymmetry) and
+[klayout-tools#2674](https://github.com/2AMLogic/klayout-tools/issues/2674)
+(a second, smaller gap found in the same output: netgen's property-error
+block header has no `class:index` colon here, so `lvs_netgen.py`'s parser
+cannot structure the per-parameter lines and collapses both devices into one
+opaque entry -- which is why `error_count` reads `1` for two devices).
+
+**What was explicitly NOT done to make netgen agree.** `options.netgen_setup`
+would let this repo hand-author a netgen setup file suppressing the `value`
+property. That is declined: it would put hand-authored suppression in the
+consumer repo for a decision `klt` already makes internally, and -- unlike
+the `"klayout"` side's self-disclosing exclusion -- it would produce a netgen
+report saying `match` with **no record** that the parameter was not compared.
+An honest residual that names its own cause is better evidence than a clean
+verdict that hides it. (The cross-check is skipped, not failed, on a host
+with no `netgen` binary; the committed report then keeps its own provenance
+block from the last host that had one.)
+
+**What this `match` does and does not license.** It licenses the claim that
+*this layout is netlist-equivalent to `design/comparator.spice`'s
+`comparator_dut`* -- 29/29 devices, 20/20 nets, 8/8 pins, confirmed
+independently by two comparators, with `error_count: 0` from the primary
+engine. It does **not** license "LVS verified every device parameter": the
+report itself names five parameters on `ppolyf_u_1k` that no engine compared,
+and the netgen run still exits non-zero on the reference-side placeholder
+behind them. Read `mismatch_count`/`mismatches[]` and
+`device_parameter_coverage`, not `status` alone.
 
 **Why `options.flatten_reference: true` is in the request, and is not a
 tolerance being smuggled in.** `design/comparator.spice`'s `comparator_dut`
@@ -579,7 +666,8 @@ constrain the compare beyond pinning the two named circuits together
 (`docs/cli/lvs.md`: "a clean LVS run ... does not by itself establish that
 a top-level pinout is correct"), so this is checked directly rather than
 inferred from the compare. `run_lvs.py` does it in two parts, and exits `5`
-if either fails -- even if `klt lvs` itself were to report `match`:
+if either fails -- **which, now that `klt lvs` itself reports `match`, is the
+only thing that would fail this run at all**:
 
 1. `klt extract --pins vinp,vinn,clk,ibias,dout,doutb,vdd,vss` (issue
    #514) declares the intended interface, so the extracted top cell exposes
@@ -609,14 +697,19 @@ because no automated field in the report flags it: **read
 
 ### Device-geometry contract check
 
-The placeholder-`0` gap above is not only noisy, it leaves a **hole in what
-this signoff actually verifies**. On `RN`/`RP`, `klt lvs`'s `l_um`/`w_um`/`r`
-comparison is *vacuous*: the reference card carries `r=0, l_um=120, w_um=1`
-and the layout card carries `r=120000, l_um=0, w_um=0` no matter what is
-drawn, so a load resistor generated at 100 µm instead of DR-0001's 120 µm
-would produce a byte-identical set of six `device.property` findings. The
-compare cannot distinguish a correct layout from a mis-sized one for the two
-devices its own findings are about.
+The placeholder-`0` gap above leaves a **hole in what this signoff actually
+verifies**, and reaching `status: "match"` did not close it -- it made it
+explicit. `klt lvs` now states outright that `R`/`L`/`W`/`A`/`P` on
+`ppolyf_u_1k` took no part in the compare (`device.placeholder_value` +
+`device.geometry_not_compared`, and `device_parameter_coverage`'s
+`"compared": []`). So a load resistor generated at 100 µm instead of
+DR-0001's 120 µm would produce a byte-identical `status: "match"` /
+`error_count: 0` report. **The compare cannot distinguish a correct layout
+from a mis-sized one for those two devices** -- before the upstream fix it
+could not either, it just said so with six misattributed `device.property`
+errors instead of two honest warnings. The check below is therefore *more*
+load-bearing now, not less: it is the only thing standing between a clean
+LVS verdict and an undetected resistor mis-size.
 
 `run_lvs.py`'s `check_device_geometry_contract()` closes that hole, the same
 way `check_interface_contract()` closes the pin-order one -- by asserting
@@ -632,8 +725,12 @@ directly what the compare's verdict structurally cannot:
    way a hand-copied sizing table would.
 2. `extracted_device_geometry()` takes the same census from
    `comparator.extract.json`'s per-device `params` block -- the measured
-   geometry, which is correct in the report even where the SPICE netlist
-   written alongside it drops it (klayout-tools#1927).
+   geometry. The report was always the trustworthy side of this: the SPICE
+   netlist written alongside it used to drop a resistor's L/W
+   (klayout-tools#1927, now closed -- the current writer emits
+   `X$28 aon vdd vss ppolyf_u_1k r=120000 L=120U W=1U`), and this check reads
+   the report rather than the netlist regardless, so it never depended on
+   that fix.
 3. The two censuses must be equal as multisets. Device *pairing* is
    `NetlistComparer`'s job and is already evidenced by
    `counts.devices.matched`; what this adds is that the *inventory* of drawn
@@ -661,8 +758,9 @@ schematic must fail this until someone declares how its geometry is
 verified, never be silently skipped), and an `nf`/`m` other than `1` is a
 hard error too (a folded or multiplied call would break the
 one-call-to-one-device census this check is built on). A contract break
-exits `5`, the same code an interface-contract break uses -- **even if `klt
-lvs` itself were to report `match`.**
+exits `5`, the same code an interface-contract break uses -- **and `klt lvs`
+reporting `match` does not soften that: `match` is precisely the verdict this
+check exists to keep honest.**
 
 The resistance *value* (`r_ohm: 120000.0`) remains unverified against the
 schematic, because `design/comparator.spice` never states one: the
@@ -880,17 +978,17 @@ The supply evidence above is one of item 11's two legs for an analog
 block. The other — per the item's own text — is that *item 4's own LVS
 report's `net_correspondence` carries every declared supply net paired to
 a reference-side net* (a SPICE reference carries them by construction, so
-the pairing must show in the compare's outcome). Today
-`lvs/comparator.lvs.json`'s `net_correspondence` pairs 16 nets and **`vdd`
-and `vss` are among the 4 uncorrelated** — not because the reference
-omits them (it is `design/comparator.spice`, which declares both) but
-because the same two `ppolyf_u_1k` resistor devices whose 6 property
-errors hold item 4 open ("The one remaining gap is upstream" above) are
-also the only devices whose terminals make those nets unmatched. Item 11
-therefore remains **unchecked** on the gap-to-T1 tracker even with this
-ERC evidence committed, until item 4's resistor-parameter mismatch clears
-and a fresh LVS run pairs both supplies. That dependency is stated in the
-tracker row, not buried here.
+the pairing must show in the compare's outcome). **That leg now passes.**
+Issue #40's regenerated `lvs/comparator.lvs.json` pairs **all 20 nets**, and
+`VDD <-> VDD` and `VSS <-> VSS` are both among them, each `"pin": true`. The
+reason they were unpaired before is gone with the rest of it: the two
+`ppolyf_u_1k` resistors are now matched devices (`counts.devices.matched`
+29/29), so their terminals no longer leave the supplies uncorrelated — see
+"How `match` was reached" above. Until #40 this section read "pairs 16 nets,
+`vdd`/`vss` among the 4 uncorrelated, item 11 blocked on item 4"; that
+dependency has cleared. Whether item 11's tracker row flips to checked is a
+call for the gap-to-T1 tracker (#3) to make against both legs, not something
+this file asserts on its own.
 
 ## What is not attempted, and why (stated, not hidden)
 
@@ -912,21 +1010,33 @@ tracker row, not buried here.
   can answer it -- it is recorded here so that step starts from a known
   suspect rather than a surprise.
 - **A `toolchain.json` pin.** See "Toolchain" below.
-- **`status: "match"` on LVS.** Not reachable today for a reason upstream
-  of this repo -- see "LVS" above,
-  [klayout-tools#1907](https://github.com/2AMLogic/klayout-tools/issues/1907)
-  and
-  [klayout-tools#1927](https://github.com/2AMLogic/klayout-tools/issues/1927),
-  tracked here as
-  [#40](https://github.com/2AMLogic/gf180-comparator/issues/40). What *is*
-  verified is stated there precisely, with the committed reports to read it
-  out of.
+- **Comparing the load resistors' `R`/`L`/`W` inside `klt lvs`.** `status` is
+  now `"match"` with `error_count: 0`
+  ([#40](https://github.com/2AMLogic/gf180-comparator/issues/40)), but the
+  compare reaches it by *excluding* those parameters and saying so
+  (`device.placeholder_value`, `device.geometry_not_compared`) -- the
+  reference-side placeholder `0` is still a reason they cannot be compared,
+  not a thing that was fixed by comparing them. Their drawn `L`/`W` is
+  verified by `run_lvs.py`'s own device-geometry contract check instead; the
+  resistance *value* is verified nowhere, because the schematic states none.
+  See "LVS" above for exactly what the verdict covers.
+- **A `netgen` cross-check that also reads `match`.** The `"netgen"` engine
+  still reports the reference-side placeholder as an error, because the
+  #1907 exclusion is `"klayout"`-engine-only in `klt`
+  ([klayout-tools#2673](https://github.com/2AMLogic/klayout-tools/issues/2673)).
+  Suppressing it with a hand-authored `options.netgen_setup` was declined --
+  see "Independently corroborated by a second comparator" above.
 
 ## Toolchain
 
-- `klt` `0.5.0` (`klt version --format json`), `klayout` `0.30.12`
+- `klt` `0.6.0+g28c362e9b021` for the #40 LVS runs (git commit
+  `28c362e9b0212efd380bd511d9989f523ab70bc3`, `is_release: false`, recorded
+  by `lvs/*.json`'s own `provenance.klt_version` -- the earlier runs in this
+  file used `0.5.0` and `0.4.0`), `klayout` `0.30.12`
   (`comparator.lvs.json`'s own `environment.engine_version`), `netgen`
-  for the LVS cross-check. The #56 ERC run additionally used a wheel
+  `1.5.133` for the LVS cross-check (`comparator.netgen.json`'s
+  `environment.engine_version`, with the resolved binary path in
+  `environment.netgen_binary`). The #56 ERC run additionally used a wheel
   built from klayout-tools commit `b15edf5e` (self-identified
   `0.5.0+gb15edf5e3a2e`) because the released `0.5.0` predates the erc
   `status`/`provenance` envelope; `erc/comparator.erc.json`'s own
@@ -960,6 +1070,6 @@ scripted checks, each writing its own committed evidence:
 python3 layout/gen_comparator.py        # regenerates the GDS (+ inline klt drc)
 python3 layout/routing_table.py --check # README routing table vs. the evidence
 python3 layout/run_drc.py               # status: clean, violation_count: 0
-python3 layout/run_lvs.py               # interface + device-geometry contracts OK; see "LVS" above
+python3 layout/run_lvs.py               # klt lvs status: match, error_count: 0; interface + device-geometry contracts OK; see "LVS" above
 git status --short layout/              # should be empty: byte-reproducible
 ```

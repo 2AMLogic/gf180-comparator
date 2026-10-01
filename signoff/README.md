@@ -163,23 +163,33 @@ plus the sibling canaries' practice is to leave this row uncited rather than
 cite something topically unrelated — an `UNMET`/`no_evidence` row here is
 the accurate machine statement, not a claim that the sources are missing.
 
-### unmet — item 4 (LVS clean): the committed report fails, so nothing is cited
+### unmet — item 4 (LVS clean): the report now passes, but citing it is a separate re-grade
 
+**The underlying check has cleared.** As of issue
+[#40](https://github.com/2AMLogic/gf180-comparator/issues/40),
 `layout/lvs/comparator.lvs.json` (`klayout` engine) reports
-`status: "mismatch"` — `error_count: 6`, all `device.property` findings on
-the two `ppolyf_u_1k` load resistors (the reference netlist's placeholder-0
-`r`/`l_um`/`w_um` values versus the layout's real ones), plus one
-`topology.flattened` **warning** row (the compare flattened the reference
-netlist's 3 circuits into 1 before comparing, per
-`docs/cli/lvs.md` "topology.flattened"). A failing check cannot be cited —
-that is exactly what this manifest exists to make visible. The open chain
-is issues
-[#22](https://github.com/2AMLogic/gf180-comparator/issues/22) →
-[#30](https://github.com/2AMLogic/gf180-comparator/issues/30) →
-[#40](https://github.com/2AMLogic/gf180-comparator/issues/40)
-(the upstream `klt` re-pin / `netgen` install holding the fix). LVS was
-never cited here, so nothing here goes stale when that work lands —
-re-cite and re-grade then, per the refresh contract below.
+`status: "match"` with `error_count: 0` and 29/29 devices, 20/20 nets and
+8/8 pins matched. The three remaining `mismatches[]` rows are all
+`severity: "warning"` disclosures, not findings against the layout:
+`device.placeholder_value` and `device.geometry_not_compared` (the
+reference-side placeholder-`0` resistor value, and the resistor geometry
+parameters KLayout declares secondary — neither took part in the compare, and
+the report says so) plus `topology.flattened` (the compare flattened the
+reference netlist's 3 circuits into 1 first, per `docs/cli/lvs.md`
+"topology.flattened"). What closed it was upstream —
+klayout-tools#1907/#1927/#1928 — not a change to this block; the full read of
+exactly what that `match` covers and what it deliberately does not is
+`layout/README.md`'s "LVS" section.
+
+**It is still uncited here, and this row still renders `unmet`, deliberately.**
+Citing item 4 means adding a `block-manifest.json` evidence entry, a
+`PINNED_ARTIFACTS` row in `verify-report.py`, and a re-grade + re-commit of
+`signoff-report.json` in one change (the refresh contract below) — a change
+that flips a T1 item and therefore belongs in its own reviewed increment, not
+as a side effect of regenerating the LVS evidence. Tracked as
+[#68](https://github.com/2AMLogic/gf180-comparator/issues/68). Nothing in
+this manifest goes stale in the meantime: LVS was never cited, so no pin
+here points at the regenerated report.
 
 ### unmet — items 5, 6 (PVT corners vs a ratified spec; Monte Carlo): substance exists, nothing gradeable
 
@@ -245,12 +255,15 @@ compound analog entry the rulebook's item 11 names: the ERC supply report
 `layout/erc-supply-spec.json`; run `klt erc ... --deck gf180mcu`;
 `erc_status: "clean"`, zero findings, one electrical island per declared
 supply, `provenance.input.content_hash` pinning the same committed GDS
-items 2/3 cite) — item 4's own LVS leg of the compound entry is *not*
-citable yet and is deliberately absent: `comparator.lvs.json`'s
-`net_correspondence` still leaves `vdd`/`vss` uncorrelated while item 4's
-two `ppolyf_u_1k` property errors hold it open (see the item-4 section
-above), so item 11 stays unmet even at the next pin refresh. The reason
-the row renders `unrecognized_envelope` and not a graded verdict is the
+items 2/3 cite) — item 4's own LVS leg of the compound entry is *not* cited
+yet and is deliberately absent, though the reason has changed: as of #40,
+`comparator.lvs.json`'s `net_correspondence` **does** pair `VDD <-> VDD` and
+`VSS <-> VSS` (both `"pin": true`, part of all 20 nets matching), so the
+"two `ppolyf_u_1k` property errors hold it open" premise this paragraph used
+to state has cleared — see the item-4 section above and
+[#68](https://github.com/2AMLogic/gf180-comparator/issues/68), which
+re-checks item 11's remaining legs in the same pass that cites item 4. The
+reason the row renders `unrecognized_envelope` and not a graded verdict is the
 distribution pin, not the evidence: the pinned 0.5.0 release predates
 item 11's grading rules (klayout-tools#1984 and later), so the grader
 cannot read the cited ERC envelope at all — a state
@@ -258,8 +271,9 @@ cannot read the cited ERC envelope at all — a state
 anticipates. When a released `klt` that grades item 11 ships, upgrade the
 distribution pin together with this citation (the refresh contract) and
 re-grade — the row will then render its real state on this same evidence
-(`unmet` until both the `ties[]` blocker klayout-tools#2169 clears and
-item 4's LVS carries the supply nets in `net_correspondence`; the
+(`unmet` until the `ties[]` blocker klayout-tools#2169 clears — the second
+condition this sentence used to name, "item 4's LVS carries the supply nets
+in `net_correspondence`", is satisfied as of #40; the
 `erc.missing_tie` leg is not computed in the cited run, with the drawn
 tap evidence the report's `erc_coverage.inapplicable` /
 `provenance.devices` blocks record mechanically). The full claim-side

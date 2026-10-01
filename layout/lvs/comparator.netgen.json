@@ -1,9 +1,17 @@
 {
+  "body_verification": {
+    "device_classes": [],
+    "device_count": 0,
+    "finding_count": 0,
+    "findings": [],
+    "reason": null,
+    "status": "verified"
+  },
   "category_counts": {
-    "device.property": 2
+    "device.property": 1
   },
   "category_error_counts": {
-    "device.property": 2
+    "device.property": 1
   },
   "counts": {
     "devices": {
@@ -31,56 +39,32 @@
     "diode_nd2ps_06v0",
     "diode_pd2nw_06v0"
   ],
+  "device_parameter_coverage": null,
   "engine": "netgen",
   "environment": {
     "engine": "netgen",
-    "engine_version": "1.5.323",
+    "engine_version": "1.5.133",
     "extracted_netlist": null,
-    "layout_sha256": "9f7c3dab36a25bea3cb27240233cb014a469f9229863869cda035c5e84540c25",
+    "layout_sha256": "594f54be04819f3bf3a8466a8c0f4d863267a9e9ba459b39ddf09249da80d98c",
+    "netgen_binary": "/home/ubuntu/.local/bin/netgen",
     "reference_sha256": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a"
   },
-  "error_count": 2,
+  "error_count": 1,
+  "hints_applied": null,
   "layout": "comparator.extracted.spice",
-  "mismatch_count": 2,
+  "mismatch_count": 1,
   "mismatches": [
     {
       "category": "device.property",
       "circuit": null,
-      "description": "netgen: matched device parameter 'value' differs (netgen reported a property difference)",
-      "details": null,
-      "device": {
-        "class": "VSS",
-        "layout": "VSS:$28",
-        "reference": "COMPARATOR_DUT_ANALOG:A/VSS:N"
+      "description": "netgen reported property errors on one or more matched devices, but the per-parameter detail lines could not be parsed -- see the 'details.raw' field for netgen's own text",
+      "details": {
+        "raw": "----|-------------------------------------------\nNFET (15)                                  |NFET (15)                                  \nPFET (12)                                  |PFET (12)                                  \nVSS (2)                                    |VSS (2)                                    \nNumber of devices: 29                      |Number of devices: 29                      \nNumber of nets: 20                         |Number of nets: 20                         \n---------------------------------------------------------------------------------------\nNetlists match uniquely.\nCircuits match correctly.\nThere were property errors.\nVSS$29 vs. COMPARATOR_DUT_ANALOGA/VSSP:\n value circuit1: 120000   circuit2: 0   \nVSS$28 vs. COMPARATOR_DUT_ANALOGA/VSSN:\n value circuit1: 120000   circuit2: 0   \n\nSubcircuit pins:\nCircuit 1: COMPARATOR                      |Circuit 2: COMPARATOR_DUT                  \n-------------------------------------------|-------------------------------------------\nVINP                                       |VINP                                       \nVINN                                       |VINN                                       \nIBIAS                                      |IBIAS                                      \nCLK                                        |CLK                                        \nDOUT                                       |DOUT                                       \nDOUTB                                      |DOUTB                                      \nVDD                                        |VDD                                        \nVSS                                        |VSS                                        \n---------------------------------------------------------------------------------------\nCell pin lists are equivalent.\nDevice classes COMPARATOR and COMPARATOR_DUT are equivalent.\nCircuits match uniquely.\nProperty errors were found.\nThe following cells had property errors: COMPARATOR"
       },
+      "device": null,
       "instance": null,
       "net": null,
-      "property": {
-        "layout": "120000",
-        "name": "value",
-        "reference": "0"
-      },
-      "severity": "error",
-      "side": "both",
-      "subcircuit": null
-    },
-    {
-      "category": "device.property",
-      "circuit": null,
-      "description": "netgen: matched device parameter 'value' differs (netgen reported a property difference)",
-      "details": null,
-      "device": {
-        "class": "VSS",
-        "layout": "VSS:$29",
-        "reference": "COMPARATOR_DUT_ANALOG:A/VSS:P"
-      },
-      "instance": null,
-      "net": null,
-      "property": {
-        "layout": "120000",
-        "name": "value",
-        "reference": "0"
-      },
+      "property": null,
       "severity": "error",
       "side": "both",
       "subcircuit": null
@@ -90,21 +74,57 @@
   "options": {
     "combine_devices": false,
     "combine_devices_per_circuit": null,
+    "compare_parameters": null,
     "flatten_layout": false,
     "flatten_reference": false,
     "netgen_setup": null,
-    "parameter_tolerance": null
+    "parameter_tolerance": null,
+    "power_connectivity": null,
+    "supply_nets": [
+      "GND",
+      "VCC",
+      "VDD",
+      "VGND",
+      "VPWR",
+      "VSS"
+    ]
   },
   "parameter_tolerance": null,
+  "power_connectivity": {
+    "expected_nets": null,
+    "finding_count": 0,
+    "findings": [],
+    "instance_count": 0,
+    "power_pins": [],
+    "power_pins_derivation": null,
+    "reason": "reference.form is 'subckt-call', whose reference netlist carries its own power/ground pins and nets -- they take part in the ordinary compare, so this check (which exists to cover the signal-only 'gate-level-verilog' form) does not apply",
+    "status": "unchecked",
+    "unchecked_expected_pins": []
+  },
   "provenance": {
     "deck": {
-      "content_hash": "sha256:3c2f4e4be2524a0fe964cd1b2c4c171c0f904586c10eaa8c4ffe3511909e4706",
+      "content_hash": "sha256:9babf6fd5d623fea50d380168ebf8f7c0f0f6e70eb7d89b221476dc47c7f6a85",
       "name": "gf180mcu",
-      "released": true
+      "options": {
+        "metal_top": "9K",
+        "mim_cap": "cap_mim_2f0_m4m5_noshield",
+        "poly_res": "1k"
+      },
+      "options_explicit": {
+        "metal_top": false,
+        "mim_cap": false,
+        "poly_res": false
+      },
+      "options_hash": "sha256:6a7dc7660a470994263c5ca8ace6d8ac8c605d77e6876a9c5490949de6e7cb05",
+      "released": false
     },
-    "input": null,
+    "input": {
+      "content_hash": "sha256:594f54be04819f3bf3a8466a8c0f4d863267a9e9ba459b39ddf09249da80d98c",
+      "role": "netlist"
+    },
     "klayout_version": "0.30.12",
-    "klt_version": "0.5.0",
+    "klayout_version_mismatch": false,
+    "klt_version": "0.6.0+g28c362e9b021",
     "pdk": null
   },
   "reference": "../../design/comparator.spice",
