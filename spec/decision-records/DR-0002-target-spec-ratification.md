@@ -1,12 +1,17 @@
 # DR-0002: Target-specification table — ratification as measured
 
-- **Status**: ratified — the ratification act was this record's PR (#27)
-  being approved and merged (2026-09-19), not the act of drafting it
-  (2AMLogic/2am#357); this field flipped from `proposed` to `ratified`
-  post-merge, exactly as the record's own pre-merge instruction directed
-  ("do not hand-set `ratified` before merge").
-- **Date**: 2026-09-15
-- **Decided by**: Builder agent, issue #17
+- **Status**: ratified — re-proposed via the two-key ceremony on this PR
+  (issue #71, enacting the operator ruling of 2026-10-02 on #3): the
+  ratification act is the pair of non-author `RATIFY-KEY` reviews (EE key +
+  market key) plus the release they clear (`loom:auto-merge-ok`), with this
+  PR's merge as the record. The original flip (PR #27's merge, 2026-09-19)
+  was ruled **not** to be ratification — operator-approval-as-ratification
+  no longer governs this repo; if the ceremony does not release, this PR
+  reverts this field to `proposed` instead of merging (issue #71, scope
+  item 3).
+- **Date**: 2026-09-15 (re-ratified 2026-10-02, issue #71)
+- **Decided by**: Builder agent, issue #17; re-ratified via the two-key
+  ceremony (non-author EE + market keys), issue #71
 - **Supersedes**: none — first record that ratifies (or proposes to ratify)
   `README.md`'s target-specification table itself. `DR-0001-comparator-topology.md`
   ratifies the comparator's topology and sizing but explicitly declines to
@@ -25,7 +30,10 @@
   against); `sim/comparator-offset-mc/records/20260910-124917-4805118.md`;
   `sim/comparator-preamp-noise/records/20260910-125200-4805118.md`;
   `sim/comparator-regeneration/records/20260910-125206-4805118.md`;
-  `sim/comparator-kickback/records/20260910-125341-4805118.md`.
+  `sim/comparator-kickback/records/20260910-125341-4805118.md`;
+  [#71](https://github.com/2AMLogic/gf180-comparator/issues/71) (the
+  two-key ceremony on this record); PR #72 (the reviewer-variant install
+  the ceremony runs on, `ratification/`).
 
 ## Context
 
@@ -69,6 +77,19 @@ measured result missing a ratified target) present the tradeoff options in
 the DR draft; the operator rules at PR review." Concretely: this record
 proposes ratification with `Status: proposed`; the operator's approval of the
 PR that carries it is what flips it to `ratified`, not any action taken here.
+
+**Superseded by the operator ruling of 2026-10-02 (issue #71, on #3).** The
+merge of PR #27 (and #58's scoring pass) was ruled **not** to be the
+ratification act: this record's `ratified` flip was premature, and the
+standing policy quoted above no longer governs this repo. Ratification now
+runs through the fleet's two-key protocol — non-author EE-key and
+market-key reviews posted as `RATIFY-KEY` markers on the ratification PR
+(the reviewer variant this repo now carries under `ratification/`, PR #72),
+with `loom:auto-merge-ok` released by the key script and the PR's merge as
+the record. This PR re-proposes the flip under that protocol; a
+non-releasing ceremony reverts the field to `proposed` instead of merging.
+No numeric bound, verdict row, or cited record changes here — only the
+ratification act's grounding.
 
 Two of the five rows have a measured result that misses a bound at some or
 all corners of the 45-point PVT grid (re-derived directly from the two cited

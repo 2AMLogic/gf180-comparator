@@ -34,13 +34,14 @@ supersede it with a new `DR-NNNN` that says so, per the same convention
 engineering-judgment bounds (numerically matched to the
 `sg13g2-comparator`/`sky130-comparator` twin set for cross-PDK comparability,
 per `README.md`'s own basis notes), each stating its own basis, not a ratified
-commitment. Ratification against the first measured result against every row
-is now proposed in
+commitment. The table was ratified against the first measured result on
+every row by
 [`decision-records/DR-0002-target-spec-ratification.md`](decision-records/DR-0002-target-spec-ratification.md)
-(`Status: proposed`, no numeric bound changed); the table stays DRAFT until
-that record's PR is approved and merged, per
-[2AMLogic/2am#357](https://github.com/2AMLogic/2am/issues/357)'s ratify-by-PR-approval
-pattern.
+(no numeric bound changed) — via the two-key ceremony (non-author EE +
+market `RATIFY-KEY` reviews and the re-ratification PR's merge as the
+record), per the operator ruling of 2026-10-02 on #3, which ruled the
+record's original flip on PR #27's merge (2026-09-19) was not the
+ratification act.
 
 ## Review bar
 

@@ -12,8 +12,9 @@ and bound into `sim/dut.json` at `provenance: schematic`. The four benches
 below have a first measured result at this sizing; the target-specification
 table is ratified against those results by
 [`spec/decision-records/DR-0002-target-spec-ratification.md`](spec/decision-records/DR-0002-target-spec-ratification.md)
-(status: ratified — the record's ratification PR #27 was approved and merged
-2026-09-19) — see the Target specification section below.
+(status: ratified via the two-key ceremony — non-author EE + market keys —
+on its re-ratification PR, per the operator ruling of 2026-10-02 on #3) —
+see the Target specification section below.
 
 **Built agent-native.** Every specification, decision record, testbench, and
 line of documentation here is produced by AI agents working from a ratified
@@ -66,9 +67,11 @@ This table is ratified against the measured results below by
 [`spec/decision-records/DR-0002-target-spec-ratification.md`](spec/decision-records/DR-0002-target-spec-ratification.md)
 (`Status: ratified`) — no numeric bound was changed by that record; it
 ratified the existing bounds against the first measured result against every
-row. Ratification happened when that record's PR (#27) was approved and
-merged (2026-09-19), per the fleet-wide ratification pattern
-([2AMLogic/2am#357](https://github.com/2AMLogic/2am/issues/357)). These are
+row. Ratification is the two-key ceremony on the record's re-ratification
+PR (non-author EE + market `RATIFY-KEY` reviews, `loom:auto-merge-ok`, and
+the merge as the record), per the operator ruling of 2026-10-02 on #3 —
+which also ruled the record's original 2026-09-19 flip (PR #27's merge)
+was not the ratification act. These are
 original engineering-judgment bounds for the gf180mcu 3.3 V rail, each row
 stating its own basis, not a value inherited from any sibling. See
 [`spec/porting-plan.md`](spec/porting-plan.md) for what *does* transfer
