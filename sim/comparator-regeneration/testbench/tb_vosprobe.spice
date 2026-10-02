@@ -17,11 +17,13 @@
 *
 * Quantisation: the ramp moves (2*vspan)/tramp per second and the decision
 * updates once per clock period, so the trip point is resolved to about
-* 40m/300u * 30n ~= 4 uV -- three orders below the smallest ladder rung.
+* 40m/80u * 30n ~= 15 uV -- a fraction of the smallest ladder rung's 100
+* uV, and ~80x finer than the 1.25 mV quantisation gf180-sar-adc
+* disclosed for the same probe shape.
 * An offset outside +/- vspan produces no crossing at all and fails the
 * point loudly (see the manifest note), never a silently wrong referral.
 .param vspan=20m
-.param tramp=300u
+.param tramp=80u
 
 vsup vdd 0 dc {vdd_val}
 vcm  cm  0 dc {dut_vcm}

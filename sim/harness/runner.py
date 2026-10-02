@@ -208,15 +208,18 @@ def _run_offset_probe(
     deck_path.write_text(
         compose_deck(probe_tb, pdk, dut, point, num_threads=num_threads)
     )
+    # The probe's long slow-ramp transient can outlast a main-deck-sized
+    # timeout at the slow corners; give it its own, wider bound.
+    probe_timeout_s = max(timeout_s, 1800)
     try:
         proc = subprocess.run(
             [NGSPICE, "-b", str(deck_path)],
-            capture_output=True, text=True, timeout=timeout_s, cwd=workdir,
+            capture_output=True, text=True, timeout=probe_timeout_s, cwd=workdir,
             check=False,
         )
         output = proc.stdout + "\n" + proc.stderr
     except subprocess.TimeoutExpired:
-        log_path.write_text(f"TIMEOUT after {timeout_s}s\n")
+        log_path.write_text(f"TIMEOUT after {probe_timeout_s}s\n")
         return None
     log_path.write_text(output)
     measurements = parse_measurements(output)

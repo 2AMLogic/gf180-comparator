@@ -113,8 +113,8 @@
   "offset_probe": {
     "netlist": "tb_vosprobe.spice",
     "analyses": [
-      "tran 100n 300u 0 100n",
-      "meas tran t_flip when v(dn)=0.5 rise=1 td=30u",
+      "tran 100n 80u 0 100n",
+      "meas tran t_flip when v(dn)=0.5 rise=1 td=8u",
       "meas tran vos_v find v(rmp) at=t_flip"
     ],
     "measure": {
