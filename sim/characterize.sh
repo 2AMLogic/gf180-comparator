@@ -27,6 +27,18 @@
 #       thing from the two modes above: it proves the HARNESS works, not that
 #       the circuit does.
 #
+#   sim/characterize.sh postlayout
+#       The post-layout (extracted-netlist) campaign, issue #23 (T1 item 7):
+#       regenerates the parasitic-extracted DUT binding via
+#       layout/run_extract_sim.py, then runs the two benches layout parasitics
+#       most affect -- regeneration and kickback (design/README.md's own
+#       asymmetry note: preamp-output parasitics lower noise, input parasitics
+#       raise kickback) -- against the comparator-dr0001-layout binding over
+#       the same full PVT grid. The two analog-partition benches (offset-mc,
+#       preamp-noise) are not post-layout-runnable: a flat extraction has no
+#       analog/latch partition, and run_corners.py refuses them with a message
+#       naming the schematic binding.
+#
 # Exit status: 0 if every campaign that ran exited 0; otherwise the number of
 # failing campaigns.
 
@@ -38,13 +50,15 @@ cd "${REPO_ROOT}"
 
 MODE="${1:-}"
 case "${MODE}" in
-  smoke|characterize) ;;
+  smoke|characterize|postlayout) ;;
   selftest) exec "${SIM_DIR}/selftest.sh" ;;
   *)
-    echo "usage: $(basename "$0") {smoke|characterize|selftest}" >&2
+    echo "usage: $(basename "$0") {smoke|characterize|selftest|postlayout}" >&2
     echo "  smoke         one nominal point per campaign, writes no evidence (seconds)" >&2
     echo "  characterize  full 45-point PVT campaign, mints sim/ evidence records" >&2
     echo "  selftest      harness acceptance test incl. the sabotage negative control" >&2
+    echo "  postlayout    regenerate the extracted DUT, then full 45-point PVT campaign" >&2
+    echo "                for regeneration + kickback against the layout binding (#23)" >&2
     exit 1
     ;;
 esac
@@ -69,6 +83,17 @@ CAMPAIGNS=(
   comparator-kickback
 )
 
+# Issue #23 (T1 item 7): the post-layout campaign scope. Only these two
+# benches are runnable against the flat extracted binding, and they are the
+# two the layout-parasitic asymmetry most affects (design/README.md):
+# decision time through the preamplifier output's added RC, kickback through
+# the input's added capacitance.
+POSTLAYOUT_CAMPAIGNS=(
+  comparator-regeneration
+  comparator-kickback
+)
+POSTLAYOUT_DUT="comparator-dr0001-layout"
+
 echo "=============================================================================="
 echo "  gf180-comparator characterization -- mode=${MODE}  jobs=${JOBS}"
 echo "=============================================================================="
@@ -77,6 +102,17 @@ echo "==========================================================================
   exit 1
 }
 echo
+
+if [ "${MODE}" = "postlayout" ]; then
+  echo "regenerating the post-layout DUT binding (layout/run_extract_sim.py)..."
+  python3 "${REPO_ROOT}/layout/run_extract_sim.py" || {
+    echo "post-layout extraction failed; see layout/run_extract_sim.py" >&2
+    exit 1
+  }
+  echo
+  CAMPAIGNS=("${POSTLAYOUT_CAMPAIGNS[@]}")
+  RUNNER+=("--dut" "${POSTLAYOUT_DUT}")
+fi
 
 FAILED=0
 declare -a RESULTS=()

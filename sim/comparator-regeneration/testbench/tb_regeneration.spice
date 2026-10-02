@@ -64,6 +64,13 @@
 .param dv_tiny=0.1m
 .param t_flip=20n
 .param c_route=10f
+* dut_vos is NOT defined here: the harness owns it (compose_deck's
+* per-point params). It is 0 for a schematic DUT (offset-free by
+* construction) and the probed systematic offset for an extracted one
+* (issue #23 -- gf180-sar-adc's post-layout precedent: refer the overdrive
+* ladder to the comparator's own measured trip point, not to 0 V). The
+* three ladders below are centred on it, so the effective overdrive at
+* each strobe is exactly dv_* for either provenance.
 
 * ---- supplies --------------------------------------------------------
 * Instance A gets its own supply so its switching charge can be integrated
@@ -78,21 +85,21 @@ vclk clk 0 pulse(0 {vdd_val} 10n 100p 100p 10n 30n)
 vcm cm 0 dc {dut_vcm}
 
 * ---- A: 50 mV overdrive, on its own supply ---------------------------
-vsa  sa 0 pwl(0 {-dv_big} {t_flip} {-dv_big} {t_flip+1n} {dv_big})
+vsa  sa 0 pwl(0 {dut_vos-dv_big} {t_flip} {dut_vos-dv_big} {t_flip+1n} {dut_vos+dv_big})
 Eapa apa cm sa 0 0.5
 Eana ana cm sa 0 -0.5
 iba  vdda ibna dc {dut_ib}
 Xa   apa ana clk ibna douta doutba vdda 0 comparator_dut
 
 * ---- B: 1 mV overdrive ------------------------------------------------
-vsb  sb 0 pwl(0 {-dv_mid} {t_flip} {-dv_mid} {t_flip+1n} {dv_mid})
+vsb  sb 0 pwl(0 {dut_vos-dv_mid} {t_flip} {dut_vos-dv_mid} {t_flip+1n} {dut_vos+dv_mid})
 Eapb apb cm sb 0 0.5
 Eanb anb cm sb 0 -0.5
 ibb  vdd ibnb dc {dut_ib}
 Xb   apb anb clk ibnb doutb doutbb vdd 0 comparator_dut
 
 * ---- C: 0.1 mV overdrive (tau lever arm / metastability probe) --------
-vsc  sc 0 pwl(0 {-dv_tiny} {t_flip} {-dv_tiny} {t_flip+1n} {dv_tiny})
+vsc  sc 0 pwl(0 {dut_vos-dv_tiny} {t_flip} {dut_vos-dv_tiny} {t_flip+1n} {dut_vos+dv_tiny})
 Eapc apc cm sc 0 0.5
 Eanc anc cm sc 0 -0.5
 ibc  vdd ibnc dc {dut_ib}

@@ -89,6 +89,15 @@ class Testbench:
     checks: dict[str, dict] = field(default_factory=dict)
     options: tuple[str, ...] = ()
     evidence: dict = field(default_factory=dict)
+    #: Optional offset-probe declaration (issue #23): a second, tiny fragment
+    #:+ analyses/measure pair that measures the DUT's deterministic
+    #: systematic input-referred offset at THIS PVT point, so the main deck's
+    #: overdrive ladder can be referred to it (the gf180-sar-adc
+    #: post-layout precedent -- a flat extracted netlist carries real layout
+    #: asymmetry that a symmetric schematic cannot have). Only runs against
+    #: an ``extracted``-provenance DUT; the measured offset is injected into
+    #: the main deck as the ``dut_vos`` parameter.
+    offset_probe: dict = field(default_factory=dict)
 
     @property
     def experiment(self) -> str:
@@ -107,6 +116,43 @@ class Testbench:
     @property
     def manifest_sha256(self) -> str:
         return hashlib.sha256((self.directory / MANIFEST_NAME).read_bytes()).hexdigest()
+
+    def offset_probe_testbench(self) -> "Testbench | None":
+        """The declared offset probe as its own :class:`Testbench`, or None.
+
+        The probe reuses this bench's supply/common-mode/clock conventions
+        (its fragment does), so only ``netlist``/``analyses``/``measure``
+        are declared; everything else inherits.
+        """
+        if not self.offset_probe:
+            return None
+        declaration = self.offset_probe
+        netlist = self.directory / declaration["netlist"]
+        if not netlist.is_file():
+            raise FileNotFoundError(
+                f"{self.directory / MANIFEST_NAME}: offset_probe names "
+                f"{netlist}, which does not exist"
+            )
+        measure = dict(declaration.get("measure") or {})
+        if "dut_vos" not in measure:
+            raise ValueError(
+                f"{self.directory / MANIFEST_NAME}: offset_probe's measure "
+                "must define 'dut_vos' (the main deck injects it as dut_vos)"
+            )
+        return Testbench(
+            directory=self.directory,
+            name=f"{self.name}-vosprobe",
+            netlist=netlist,
+            description=(
+                "systematic input-referred offset probe for the "
+                f"{self.name} bench (issue #23)"
+            ),
+            nominal_supply_v=self.nominal_supply_v,
+            supply_tolerance=self.supply_tolerance,
+            analyses=tuple(declaration.get("analyses", ("op",))),
+            measure=measure,
+            options=self.options,
+        )
 
     def provenance(self) -> dict:
         return {
@@ -229,8 +275,12 @@ def load(directory: str | Path) -> Testbench:
         checks=checks,
         options=tuple(manifest.get("options", ())),
         evidence=evidence,
+        offset_probe=dict(manifest.get("offset_probe", {})),
     )
     validate_netlist(tb)
+    probe = tb.offset_probe_testbench()
+    if probe is not None:
+        validate_netlist(probe)
     return tb
 
 

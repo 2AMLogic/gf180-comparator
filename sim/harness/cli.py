@@ -13,6 +13,7 @@ the subcommand surface this repo actually has work for. Kept: ``--check-env``,
 from __future__ import annotations
 
 import argparse
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -82,6 +83,10 @@ def _check_env(allow_drift: bool) -> int:
         flag = "  <-- PLACEHOLDER, not a design" if dut.is_placeholder else ""
         print(f"DUT        : {dut.dut_id} ({dut.provenance}){flag}")
         print(f"             {dut.netlist.relative_to(REPO_ROOT)}")
+        if dut.available_ids:
+            others = [i for i in dut.available_ids if i != dut.dut_id]
+            print(f"             (available via --dut <id>: "
+                  f"{', '.join(others) if others else 'none'})")
     except dut_mod.DutError as exc:
         print(f"DUT        : INVALID\n{exc}", file=sys.stderr)
         return 1
@@ -89,6 +94,44 @@ def _check_env(allow_drift: bool) -> int:
     experiments = tb_mod.discover(SIM_DIR)
     print(f"experiments: {len(experiments)} -> {', '.join(p.name for p in experiments)}")
     return 0 if ok else 2
+
+
+def _load_dut(selector: str | None):
+    """Resolve ``--dut``: an id into the (possibly multi-entry) default
+    binding file, or a path to an alternate binding file -- whichever the
+    value names. Returns ``(dut, selector_kind)`` or raises DutError."""
+    if selector and not selector.endswith(".json") and "/" not in selector:
+        return dut_mod.load(select=selector), "id"
+    return dut_mod.load(selector), "path"
+
+
+#: Subcircuit names a testbench fragment may instantiate, mapped to the
+#: thing that must supply them. The DUT binding owns all of these
+#: (sim/dut/README.md); a fragment never defines them.
+_FRAGMENT_DUT_SUBCKTS = ("comparator_dut", "comparator_dut_analog",
+                         "comparator_dut_latch")
+_FRAGMENT_DUT_RE = {name: re.compile(rf"\b{name}\b") for name in _FRAGMENT_DUT_SUBCKTS}
+
+
+def _check_dut_compatibility(dut: dut_mod.Dut, tb: tb_mod.Testbench) -> None:
+    """Refuse a bench whose fragment instantiates a subckt the bound DUT
+    cannot provide -- with a message naming a binding that can.
+
+    This is the runtime half of ``dut.py``'s provenance-conditional load
+    check: an extracted (flat, post-layout) binding legitimately defines
+    only ``comparator_dut``, so the two analog-partition benches must be
+    told apart BEFORE ngspice spends a grid on an undefined-subckt deck.
+    """
+    fragment = tb.netlist.read_text()
+    for name, pattern in _FRAGMENT_DUT_RE.items():
+        if pattern.search(fragment) and not dut.provides(name):
+            raise dut_mod.DutError(
+                f"sim/{tb.experiment}'s fragment instantiates `{name}`, which "
+                f"the bound DUT `{dut.dut_id}` ({dut.provenance}) does not "
+                "define -- a flat extracted netlist carries no analog/latch "
+                "partition. Re-run against the schematic binding "
+                "(--dut comparator-dr0001, or no --dut at all)."
+            )
 
 
 def _list() -> int:
@@ -125,7 +168,9 @@ def main(argv: list[str] | None = None) -> int:
                              "Per-axis process checks MUST fail. Implies --no-write.")
     parser.add_argument("--allow-toolchain-drift", action="store_true",
                         help="run despite a toolchain pin mismatch, and stamp it into the record")
-    parser.add_argument("--dut", help="path to an alternate DUT binding json (default sim/dut.json)")
+    parser.add_argument("--dut", help="DUT entry id from sim/dut.json's 'duts' map "
+                         "(e.g. comparator-dr0001-layout), or a path to an alternate "
+                         "binding json (default: the file's 'active' entry)")
     args = parser.parse_args(argv)
 
     if args.print_env:
@@ -152,7 +197,12 @@ def main(argv: list[str] | None = None) -> int:
         print(exc, file=sys.stderr)
         return 1
     try:
-        dut = dut_mod.load(args.dut)
+        dut, _ = _load_dut(args.dut)
+    except dut_mod.DutError as exc:
+        print(exc, file=sys.stderr)
+        return 1
+    try:
+        _check_dut_compatibility(dut, tb)
     except dut_mod.DutError as exc:
         print(exc, file=sys.stderr)
         return 1
@@ -183,6 +233,18 @@ def main(argv: list[str] | None = None) -> int:
     )
     supplies = corners_mod.supply_points(tb.nominal_supply_v, tolerance)
     points = corners_mod.build_grid(corner_list, temperatures, supplies)
+
+    # Issue #23: against an extracted (post-layout) DUT, a bench that
+    # declares an offset probe gets it -- the measured systematic offset
+    # refers the ladder; a schematic DUT needs no referral (its offset is
+    # zero by construction).
+    probe_tb = None
+    if dut.provenance == "extracted":
+        try:
+            probe_tb = tb.offset_probe_testbench()
+        except (FileNotFoundError, ValueError) as exc:
+            print(exc, file=sys.stderr)
+            return 1
 
     write = not (args.no_write or sabotaged)
     rid = report_mod.record_id()
@@ -221,6 +283,7 @@ def main(argv: list[str] | None = None) -> int:
         on_result=_progress,
         log_dir=log_dir,
         num_threads=args.num_threads,
+        probe_tb=probe_tb,
     )
 
     summaries = report_mod.summarize(tb, results)
