@@ -115,6 +115,37 @@ reference. It is also the record the `td_od50_ns` per-axis floors are
 calibrated from (observed weakest slices: process 15.16 %, temperature
 20.05 %).
 
+### Post-layout record (issue #23): `20261002-202641-baeffe5`
+
+The second record in `records/` is the **post-layout** one, minted against
+the extracted binding (`comparator-dr0001-layout`, `provenance: extracted`)
+over the same 45-point grid. What it shows:
+
+- **The layout parasitics roughly double the decision time**: `td_od50_ns`
+  0.708 → 1.158 ns at nominal (+63.6 %), 1.237 → 2.034 ns worst-case, and
+  `tau_ps` +59 % at nominal — the routing RC on the preamplifier output
+  nodes (`aop`/`aon` each gain ~35–40 fF and ~200–250 Ω against a 120 kΩ
+  load) sits directly on the regeneration pole.
+- **The extraction carries a deterministic systematic input-referred
+  offset** the schematic cannot have: `dut_vos_v` measures −1.8 mV
+  (`ss_-40c_2.97v`) to −21.6 mV (`ff_125c_3.63v`) across PVT, from the
+  ~10 % R / ~14 % C routing asymmetry between the two preamp output nets
+  (per-net numbers in `layout/lvs/comparator.extract-rc.json`). This is
+  larger than the Monte-Carlo 3σ offset of the same design
+  (2.8 mV) — a layout finding, not a simulation artefact: the no-parasitics
+  extraction of the same GDS runs this bench clean (see the control note in
+  `layout/README.md`'s post-layout section).
+- Because of that offset, this record's ladder is **referred to the probed
+  trip point** (`dut_vos`, per the `tb_vosprobe.spice` probe; the
+  gf180-sar-adc post-layout convention) — each rung is a true 50 mV / 1 mV /
+  0.1 mV overdrive above the comparator's own trip point at that corner.
+  The schematic record's 0 V-referenced ladder is unchanged and measures
+  byte-identically to before (`dut_vos` = 0 there).
+- The record's **Post-layout delta** table (rendered by the harness)
+  carries the full nominal + whole-grid-mean comparison against the
+  schematic record cited above, and its Reproduce block regenerates the
+  extracted binding first (`python3 layout/run_extract_sim.py`).
+
 ### Two placeholder-specific caveats on that record
 
 - `e_dec_fj` **carries no check and is not a figure.** The placeholder's

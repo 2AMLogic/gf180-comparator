@@ -115,6 +115,39 @@ result pass). It is also the record the `kick_1k_peak_mv` per-axis floors
 are now calibrated from (observed weakest slices: process 15.34 %,
 temperature 2.461 %, supply 30.1 %).
 
+### Post-layout record (issue #23): `20261002-211343-6346fad`
+
+The second record in `records/` is the **post-layout** one, minted against
+the extracted binding (`comparator-dr0001-layout`, `provenance: extracted`)
+over the same 45-point grid. What it shows:
+
+- **The kickback peak grows in exactly the direction `design/README.md`'s
+  parasitic asymmetry note predicts**: `kick_1k_peak_mv` 7.60 → 10.03 mV at
+  nominal (+32 %), 8.49–14.58 mV across the grid (schematic: 4.53–10.01) —
+  the input nodes' routing capacitance adds to the charge injected back
+  through the input pair. The DRAFT ≤ 5 mV row is now missed at every
+  corner; per that note's own instruction the result is recorded as data,
+  not hidden — this is the gap DR-0001 named "most likely to need
+  revisiting first", now with its post-layout magnitude measured.
+- The residual/signal-dependent components grow several-fold
+  (`kick_sigdep_nv` +13× at nominal) for the same reason.
+- The extraction's deterministic trip-point offset (−1.8 to −21.6 mV
+  across PVT, same source as the regeneration bench's — see that bench's
+  README) means this record's drive sources are **centred on the probed
+  trip point** (`dut_vos`, `tb_vosprobe.spice`), so the "1 mV residue"
+  rung still probes the near-threshold regime. The schematic record's
+  0 V-referenced drives are unchanged and measure byte-identically to
+  before.
+- The `kick_1k_peak_mv` per-axis floors were recalibrated for the
+  extracted grid (see the check's description in `tb.json` and the
+  calibration record `20261002-204202-baeffe5`, the first post-layout run
+  whose observed weakest slices the recalibration cites): the extracted
+  peak is less process/temperature-sensitive because the
+  corner-independent routing parasitics dominate the injected charge.
+- The record's **Post-layout delta** table carries the full
+  nominal + whole-grid-mean comparison against the schematic record cited
+  above, and its Reproduce block regenerates the extracted binding first.
+
 **Read the banner on the placeholder row.** It was taken against the
 placeholder DUT and substantiates the harness, not the kickback row; it
 stays committed as append-only evidence but is superseded as the current
