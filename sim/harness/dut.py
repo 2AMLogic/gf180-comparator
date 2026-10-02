@@ -135,7 +135,6 @@ class Dut:
         }
 
 
-
 def _declared_subckts(text: str) -> dict[str, tuple[str, ...]]:
     found: dict[str, tuple[str, ...]] = {}
     for raw in text.splitlines():
@@ -184,8 +183,6 @@ def load(path: str | Path | None = None, select: str | None = None) -> Dut:
                 + (f" (--dut {select})" if select else " ('active')")
                 + f"; available: {', '.join(available)}"
             )
-        if select and select != document.get("active"):
-            pass  # an explicit --dut selection legitimately overrides 'active'
         config = entries[chosen_id]
         if not isinstance(config, dict):
             raise DutError(f"{config_path}: DUT entry {chosen_id!r} must be an object")
