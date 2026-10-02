@@ -1,0 +1,41 @@
+* tb_vosprobe.spice -- DUT systematic input-referred offset probe (issue #23)
+*
+* Measures the bound comparator's trip point at THIS PVT point: a slow
+* differential ramp (+/- vspan around the common mode, applied
+* symmetrically) under the kickback bench's own clock, free-running, with
+* the decision output watched for the LOW->HIGH flip. The ramp value at
+* the flip is the differential input the comparator actually trips at,
+* i.e. minus its systematic input-referred offset -- the deterministic
+* asymmetry a flat extracted netlist carries (per-net parasitic R/C
+* differences between the two sides) and a symmetric schematic cannot.
+*
+* The main deck's dut_vos param takes this value, so the kickback drive
+* sources sit exactly dv_* above the comparator's own trip point -- the
+* "1 mV residue" rung keeps meaning near-threshold when the layout's own
+* asymmetry moves the trip point (gf180-sar-adc's post-layout convention;
+* their extracted-regeneration record 20260814-215626-f613571 documents
+* the same reasoning). Against a schematic DUT the probe does not run at
+* all and dut_vos is 0.
+*
+* Quantisation: the ramp moves (2*vspan)/tramp per second and the decision
+* updates once per clock period, so the trip point is resolved to about
+* 40m/300u * 30n ~= 4 uV -- three orders below the smallest residue. An
+* offset outside +/- vspan produces no crossing at all and fails the point
+* loudly (see the manifest note), never a silently wrong referral.
+.param vspan=20m
+.param tramp=300u
+
+vsup vdd 0 dc {vdd_val}
+vcm  cm  0 dc {dut_vcm}
+vclk clk 0 pulse(0 {vdd_val} 30n 100p 100p 10n 30n)
+
+* slow differential ramp, applied symmetrically about the common mode
+vrmp rmp 0 pwl(0 {-vspan} {tramp} {vspan})
+Bpp  vp 0 v = 'v(cm)+v(rmp)/2'
+Bnn  vn 0 v = 'v(cm)-v(rmp)/2'
+
+ib   vdd ibn dc {dut_ib}
+Xdut vp vn clk ibn dout doutb vdd 0 comparator_dut
+
+* supply-normalized decision output (the flip crosses 0.5)
+Bdn  dn 0 v = 'v(dout)/v(vdd)'

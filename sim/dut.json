@@ -2,31 +2,59 @@
   "_comment": [
     "THE DEVICE-UNDER-TEST BINDING. All four experiments instantiate the",
     "subcircuits this file names -- a live, swappable pointer, not a fixed",
-    "record of one netlist. It currently binds design/comparator.spice (see",
-    "netlist/id/provenance below); swapping to a different netlist (e.g. a",
-    "future revision, or back to sim/dut/placeholder_comparator.spice) is",
-    "still a one-line edit here. See sim/dut/README.md for the full contract.",
+    "record of one netlist. The 'active' entry is what a run with no --dut",
+    "flag binds; any entry in 'duts' is selectable by id via",
+    "run_corners.py --dut <id> (see sim/dut/README.md for the full contract).",
+    "Per-entry fields:",
     "  netlist     path relative to sim/, must satisfy the interface contract",
-    "              in sim/dut/README.md (checked at load time by harness/dut.py)",
-    "  id          short identifier stamped into every record and deck header",
+    "              in sim/dut/README.md (checked at load time by harness/dut.py;",
+    "              an 'extracted' entry must satisfy the whole-comparator",
+    "              subckt only -- a flat extraction has no analog/latch partition)",
+    "  id          short identifier stamped into every record and deck header;",
+    "              must equal the entry's key in 'duts'",
     "  provenance  placeholder | schematic | extracted -- 'placeholder' makes",
     "              every record it produces carry a banner saying the numbers",
-    "              substantiate the harness and not a spec row",
+    "              substantiate the harness and not a spec row; 'extracted' is",
+    "              the post-layout binding (its records document the delta",
+    "              against the latest schematic-provenance record of the same",
+    "              bench, and their netlist is regenerated scratch -- see",
+    "              layout/run_extract_sim.py, issue #23)",
     "  params      operating-point parameters the harness emits as .param, so",
     "              all four benches bias the DUT identically without each",
     "              re-stating the numbers"
   ],
-  "netlist": "../design/comparator.spice",
-  "id": "comparator-dr0001",
-  "provenance": "schematic",
-  "description": "DR-0001 topology: a resistively-loaded NMOS differential preamplifier (comparator_dut_analog) feeding a StrongARM latch with isolation inverters and a NOR SR output latch (comparator_dut_latch). See spec/decision-records/DR-0001-comparator-topology.md for the sizing rationale and design/README.md for the xschem source and netlisting command.",
-  "params": {
-    "dut_ib": 1e-05,
-    "dut_vcm": 1.65
-  },
-  "notes": [
-    "dut_ib is the tail-mirror reference current forced into the `ibias` pin.",
-    "dut_vcm is the input common mode the front end is specified at. It is a property of the DUT, not of any one testbench, so it lives here.",
-    "1.65 V is mid-rail (VDD/2 at the nominal 3.3 V supply) -- there is no CDAC or other driving circuit to inherit a common mode from here, so mid-rail is the natural standalone choice; DR-0001 states this explicitly."
-  ]
+  "active": "comparator-dr0001",
+  "duts": {
+    "comparator-dr0001": {
+      "netlist": "../design/comparator.spice",
+      "id": "comparator-dr0001",
+      "provenance": "schematic",
+      "description": "DR-0001 topology: a resistively-loaded NMOS differential preamplifier (comparator_dut_analog) feeding a StrongARM latch with isolation inverters and a NOR SR output latch (comparator_dut_latch). See spec/decision-records/DR-0001-comparator-topology.md for the sizing rationale and design/README.md for the xschem source and netlisting command.",
+      "params": {
+        "dut_ib": 1e-05,
+        "dut_vcm": 1.65
+      },
+      "notes": [
+        "dut_ib is the tail-mirror reference current forced into the `ibias` pin.",
+        "dut_vcm is the input common mode the front end is specified at. It is a property of the DUT, not of any one testbench, so it lives here.",
+        "1.65 V is mid-rail (VDD/2 at the nominal 3.3 V supply) -- there is no CDAC or other driving circuit to inherit a common mode from here, so mid-rail is the natural standalone choice; DR-0001 states this explicitly."
+      ]
+    },
+    "comparator-dr0001-layout": {
+      "netlist": "../layout/lvs/comparator.dut-layout.spice",
+      "id": "comparator-dr0001-layout",
+      "provenance": "extracted",
+      "description": "Post-layout (extracted-netlist) binding of the same DR-0001 comparator: layout/comparator.gds extracted with `klt extract --parasitics` (first-order lumped RC per net plus vertical-overlap coupling), adapted onto the PDK's ngspice simulation primitives and the comparator_dut interface by layout/run_extract_sim.py. The extraction is LVS-matched to design/comparator.spice's comparator_dut per layout/lvs/comparator.lvs.json (issue #22); the device-class-to-primitive mapping is the same correspondence run_lvs.py's DEVICE_GEOMETRY_MAP asserts.",
+      "params": {
+        "dut_ib": 1e-05,
+        "dut_vcm": 1.65
+      },
+      "notes": [
+        "The netlist is regenerated scratch (gitignored): run `python3 layout/run_extract_sim.py` before simulating against this entry (run_corners.py --dut comparator-dr0001-layout). The committed evidence for what it was extracted from is layout/lvs/comparator.extract-rc.json.",
+        "Params are identical to the schematic entry by design: the post-layout delta a record documents must be the layout parasitics' effect, not an operating-point change.",
+        "A flat extraction defines only the whole-comparator subckt -- the two analog-partition benches (comparator-offset-mc, comparator-preamp-noise) are refused against this entry with a message naming the schematic binding.",
+        "First-order lumped RC (one series R + one ground C per net, star-distributed across terminals, plus vertical-overlap coupling caps): no per-segment distributed RC ladders, no lateral coupling except on --critical-net nets (none named here). Per-net values are in the committed extract report."
+      ]
+    }
+  }
 }

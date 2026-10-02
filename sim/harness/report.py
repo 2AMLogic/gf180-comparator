@@ -248,6 +248,104 @@ def record_id(now: datetime | None = None) -> str:
     return f"{now.strftime('%Y%m%d-%H%M%S')}-{git_short_sha()}"
 
 
+def _latest_schematic_record(tb: Testbench) -> tuple[str, dict] | None:
+    """The newest committed record of this experiment measured against a
+    ``schematic``-provenance DUT -- the counterpart a post-layout
+    (``extracted``) record documents its delta against. Record ids sort
+    lexicographically by mint time (``YYYYMMDD-HHMMSS-<sha>``), so a plain
+    max() over the parsed ``context.record_id`` picks the latest.
+    """
+    best: tuple[str, dict] | None = None
+    for path in sorted((tb.experiment_dir / "records").glob("*.json")):
+        try:
+            doc = json.loads(path.read_text())
+        except (json.JSONDecodeError, OSError):
+            continue  # a torn/unparseable sibling record is not this run's problem
+        ctx = doc.get("context") or {}
+        if ctx.get("dut_provenance") != "schematic":
+            continue
+        rid = str(ctx.get("record_id") or path.stem)
+        if best is None or rid > best[0]:
+            best = (rid, doc)
+    return best
+
+
+def _nominal_measurement(doc: dict, tb: Testbench, name: str) -> float | None:
+    """Measurement ``name`` at this bench's nominal PVT point
+    (``tt`` / 27 C / nominal supply), read from a record's points."""
+    for point in doc.get("points", []):
+        if point.get("status") != "ok":
+            continue
+        if point.get("corner") != "tt" or float(point.get("temp_c", -1e9)) != 27.0:
+            continue
+        if abs(float(point.get("vdd", -1e9)) - tb.nominal_supply_v) > 1e-9:
+            continue
+        value = (point.get("measurements") or {}).get(name)
+        if value is not None:
+            return float(value)
+    return None
+
+
+def _postlayout_delta_lines(
+    tb: Testbench,
+    results: list[PointResult],
+    summaries: dict[str, MeasurementSummary],
+    context: dict,
+) -> list[str]:
+    """The schematic-vs-extracted delta section of an extracted-provenance
+    record (issue #23's acceptance criterion: a post-layout record documents
+    its delta from the schematic-level counterpart, not just the new number
+    in isolation -- the convention gf180-sar-adc's `Supersedes` delta
+    summaries follow, stated here as a table instead of prose).
+    """
+    counterpart = _latest_schematic_record(tb)
+    if counterpart is None:
+        return [
+            "",
+            "- **Post-layout delta**: NO schematic-provenance counterpart record "
+            "exists under records/ -- the delta this section exists to document "
+            "cannot be computed. This record stands alone, which is weaker "
+            "evidence than the convention asks for.",
+        ]
+    rid, doc = counterpart
+    ok = [r for r in results if r.status == "ok"]
+    lines = [
+        "",
+        f"- **Post-layout delta** vs schematic record `{rid}` "
+        f"(`{doc['context'].get('dut_id', '?')}`): nominal column is the "
+        f"`tt_27c_{tb.nominal_supply_v:.2f}v` point of each record; mean column "
+        "is each record's whole-grid mean.",
+        "",
+        "  | measurement | schematic nominal | post-layout nominal | Δ nominal | schematic mean | post-layout mean | Δ mean |",
+        "  |---|---|---|---|---|---|---|",
+    ]
+    for name in tb.measure:
+        s = summaries[name]
+        if not s.values:
+            continue
+        now_nom = next(
+            (r.measurements[name] for r in ok
+             if r.point.corner.name == "tt" and r.point.temp_c == 27.0
+             and abs(r.point.vdd - tb.nominal_supply_v) < 1e-9
+             and name in r.measurements),
+            None,
+        )
+        then_nom = _nominal_measurement(doc, tb, name)
+        then_sum = (doc.get("summary") or {}).get(name) or {}
+        then_mean = then_sum.get("mean")
+        if now_nom is None or then_nom is None or then_mean is None:
+            lines.append(f"  | `{name}` | — | — | — | — | — | — |")
+            continue
+        d_nom = (now_nom - then_nom) / abs(then_nom) * 100.0 if then_nom else float("nan")
+        d_mean = (s.mean - then_mean) / abs(then_mean) * 100.0 if then_mean else float("nan")
+        lines.append(
+            f"  | `{name}` | {_fmt(then_nom)} | {_fmt(now_nom)} | "
+            f"{d_nom:+.6g}% | {_fmt(then_mean)} | {_fmt(s.mean)} | {d_mean:+.6g}% |"
+        )
+    return lines
+
+
+
 def _fmt(value: float) -> str:
     return f"{value:.6g}"
 
@@ -272,6 +370,11 @@ def render_record(
     """Render the markdown evidence record (sim/README.md 'Record format')."""
     ok = [r for r in results if r.status == "ok"]
     names = list(tb.measure)
+    # The probed systematic offset rides along as a per-point measurement on
+    # extracted-provenance runs (issue #23) -- surfaced as an extra column
+    # so a reader sees WHAT the ladder was referred to at each corner.
+    if any("dut_vos_v" in r.measurements for r in results):
+        names.append("dut_vos_v")
     corners = sorted({r.point.corner.name for r in results}, key=lambda c: [
         r.point.index for r in results if r.point.corner.name == c
     ][0])
@@ -365,8 +468,27 @@ def render_record(
         "  |---|---|---|---|---|---|",
     ]
     for name in names:
-        s = summaries[name]
-        if not s.values:
+        if name == "dut_vos_v" and name not in summaries:
+            # The probed offset is stamped per point by the runner (issue
+            # #23), not produced by a manifest measure expr, so summarize it
+            # straight off the results.
+            values = {
+                r.point.corner_id: r.measurements[name]
+                for r in ok if name in r.measurements
+            }
+            if values:
+                at_min = min(values, key=lambda k: values[k])
+                at_max = max(values, key=lambda k: values[k])
+                mean = statistics.fmean(values.values())
+                lines.append(
+                    f"  | `{name}` | {_fmt(values[at_min])} (`{at_min}`) | "
+                    f"{_fmt(values[at_max])} (`{at_max}`) | {_fmt(mean)} | "
+                    f"{_fmt(spread_pct(list(values.values())))} | "
+                    "— (context, not checked) |"
+                )
+                continue
+        s = summaries.get(name)
+        if s is None or not s.values:
             lines.append(f"  | `{name}` | — | — | — | — | {_limits_text(tb.checks.get(name, {}))} |")
             continue
         lines.append(
@@ -384,7 +506,9 @@ def render_record(
         "  |---|---|---|---|",
     ]
     for name in names:
-        s = summaries[name]
+        s = summaries.get(name)
+        if s is None:
+            continue  # dut_vos_v context column: no per-axis sensitivity to state
         cells = []
         for axis in AXES:
             a = s.axes.get(axis)
@@ -395,6 +519,8 @@ def render_record(
 
     failures = {n: s.failures for n, s in summaries.items() if s.failures}
     skipped = {n: s.skipped for n, s in summaries.items() if s.skipped}
+    if context.get("dut_provenance") == "extracted":
+        lines += _postlayout_delta_lines(tb, results, summaries, context)
     lines += ["", f"- **Verdict**: {'PASS' if passed else 'FAIL'}"]
     if skipped:
         lines.append(
@@ -416,6 +542,15 @@ def render_record(
         for r in incomplete:
             lines.append(f"  - `{r.point.corner_id}`: {r.status} — {r.message}")
 
+    reproduce = [f"  python3 sim/run_corners.py {tb.experiment}"]
+    if context.get("dut_provenance") == "extracted":
+        # The bound netlist is regenerated scratch (gitignored): the record's
+        # reproduce step must build it first, and name the --dut entry that
+        # selects it (issue #23).
+        reproduce = [
+            "  python3 layout/run_extract_sim.py",
+            f"  python3 sim/run_corners.py {tb.experiment} --dut {context['dut_id']}",
+        ]
     lines += [
         "",
         "- **Raw logs**: "
@@ -427,7 +562,7 @@ def render_record(
         "- **Reproduce**:",
         "",
         "  ```",
-        f"  python3 sim/run_corners.py {tb.experiment}",
+        *reproduce,
         "  ```",
         "",
     ]

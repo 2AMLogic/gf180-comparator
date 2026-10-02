@@ -73,6 +73,24 @@ class DutError(RuntimeError):
     """Raised when sim/dut.json or the netlist it names is unusable."""
 
 
+#: Which subcircuits a binding must define, by provenance. A `schematic` or
+#: `placeholder` netlist carries the full two-level hierarchy from ``design/``
+#: and must define all three. An ``extracted`` netlist is FLAT by construction
+#: (``klt extract``'s layout-side output always is -- see ``layout/
+#: run_lvs.py``), so the analog/latch partition is structurally absent and
+#: only the whole-comparator ``comparator_dut`` can be required; the benches
+#: that instantiate the partition (offset-mc, preamp-noise) are refused by
+#: the CLI's DUT-compatibility check instead, with a message naming the
+#: schematic binding to use.
+REQUIRED_SUBCKTS_BY_PROVENANCE: dict[str, dict[str, tuple[str, ...]]] = {
+    "placeholder": REQUIRED_SUBCKTS,
+    "schematic": REQUIRED_SUBCKTS,
+    "extracted": {
+        "comparator_dut": REQUIRED_SUBCKTS["comparator_dut"],
+    },
+}
+
+
 @dataclass(frozen=True)
 class Dut:
     """The bound device under test."""
@@ -83,6 +101,7 @@ class Dut:
     description: str
     params: dict[str, float] = field(default_factory=dict)
     notes: tuple[str, ...] = ()
+    available_ids: tuple[str, ...] = ()
 
     @property
     def netlist_sha256(self) -> str:
@@ -91,6 +110,16 @@ class Dut:
     @property
     def is_placeholder(self) -> bool:
         return self.provenance == "placeholder"
+
+    def provides(self, name: str) -> bool:
+        """Whether the bound netlist defines subcircuit ``name``.
+
+        Load-time checking is provenance-conditional (see
+        REQUIRED_SUBCKTS_BY_PROVENANCE), so this is the runtime-facing half
+        of that contract: the CLI consults it before running a bench whose
+        fragment instantiates ``name``.
+        """
+        return name in _declared_subckts(self.netlist.read_text())
 
     def param_lines(self) -> list[str]:
         """``.param`` lines every testbench fragment may rely on."""
@@ -104,6 +133,7 @@ class Dut:
             "dut_netlist_sha256": self.netlist_sha256,
             "dut_params": dict(sorted(self.params.items())),
         }
+
 
 
 def _declared_subckts(text: str) -> dict[str, tuple[str, ...]]:
@@ -121,15 +151,51 @@ def _declared_subckts(text: str) -> dict[str, tuple[str, ...]]:
     return found
 
 
-def load(path: str | Path | None = None) -> Dut:
-    """Load ``sim/dut.json`` and validate the netlist it binds."""
+def load(path: str | Path | None = None, select: str | None = None) -> Dut:
+    """Load a DUT binding and validate the netlist it binds.
+
+    ``sim/dut.json`` may hold more than one binding: a ``{"active": <id>,
+    "duts": {<id>: <binding>}}`` document selects ``active`` by default, or
+    the id ``select`` names (this is how the post-layout
+    ``comparator-dr0001-layout`` binding is reached via ``--dut <id>``). A
+    legacy single-binding document (no ``duts`` key) loads exactly as it
+    always did, and ``select`` must be None for it.
+    """
     config_path = Path(path) if path is not None else DUT_CONFIG
     if not config_path.is_file():
         raise DutError(f"no DUT binding at {config_path}; see sim/dut/README.md")
     try:
-        config = json.loads(config_path.read_text())
+        document = json.loads(config_path.read_text())
     except json.JSONDecodeError as exc:
         raise DutError(f"{config_path} is not valid JSON: {exc}") from exc
+
+    available: tuple[str, ...] = ()
+    if "duts" in document:
+        entries = document["duts"]
+        if not isinstance(entries, dict) or not entries:
+            raise DutError(
+                f"{config_path}: 'duts' must be a non-empty object of bindings"
+            )
+        available = tuple(entries)
+        chosen_id = select or document.get("active")
+        if chosen_id not in entries:
+            raise DutError(
+                f"{config_path}: no DUT entry {chosen_id!r}"
+                + (f" (--dut {select})" if select else " ('active')")
+                + f"; available: {', '.join(available)}"
+            )
+        if select and select != document.get("active"):
+            pass  # an explicit --dut selection legitimately overrides 'active'
+        config = entries[chosen_id]
+        if not isinstance(config, dict):
+            raise DutError(f"{config_path}: DUT entry {chosen_id!r} must be an object")
+    else:
+        if select:
+            raise DutError(
+                f"{config_path}: --dut {select!r} names no entry (this binding "
+                "file holds a single entry with no 'duts' map)"
+            )
+        config = document
 
     for key in ("netlist", "id", "provenance"):
         if key not in config:
@@ -144,11 +210,20 @@ def load(path: str | Path | None = None) -> Dut:
 
     netlist = (SIM_DIR / config["netlist"]).resolve()
     if not netlist.is_file():
-        raise DutError(f"{config_path}: netlist {netlist} does not exist")
+        raise DutError(
+            f"{config_path}: netlist {netlist} does not exist"
+            + (
+                " -- a post-layout binding's netlist is regenerated by "
+                "`python3 layout/run_extract_sim.py` (issue #23)"
+                if provenance == "extracted"
+                else ""
+            )
+        )
 
     text = netlist.read_text()
     declared = _declared_subckts(text)
-    for name, pins in REQUIRED_SUBCKTS.items():
+    required = REQUIRED_SUBCKTS_BY_PROVENANCE[provenance]
+    for name, pins in required.items():
         if name not in declared:
             raise DutError(
                 f"{netlist}: DUT netlist must define `.subckt {name} "
@@ -182,4 +257,5 @@ def load(path: str | Path | None = None) -> Dut:
         description=str(config.get("description", "")),
         params=params,
         notes=tuple(config.get("notes") or ()),
+        available_ids=available,
     )
