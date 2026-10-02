@@ -16,9 +16,17 @@ PDK, xschem, or ngspice):
     envelope that changed without re-grading and re-committing the report
     rots loudly instead of passing -- this is the anti-rot gate for the part
     the grader itself does not check.
-3.  Re-hash the committed artifacts each citation pins and compare against
-    the hashes recorded in the cited envelope AND in the manifest, so a
-    citation whose artifact has since changed fails rather than rotting.
+3.  Re-hash the committed artifacts each citation's PINNED_ARTIFACTS row
+    names and compare against the hashes recorded in the cited envelope
+    AND in the manifest, so a citation whose artifact has since changed
+    fails rather than rotting. For items 2/3/11 the artifact, the manifest
+    pin, and the envelope's ``provenance.input.content_hash`` are all the
+    same sha256 (the GDS); item 4's LVS envelope instead pins the derived,
+    uncommitted extracted netlist in ``provenance.input``, so its row
+    verifies the committed reference netlist against the envelope's
+    ``environment.reference_sha256`` (see PINNED_ARTIFACTS below -- the
+    manifest pin is still compared against ``provenance.input`` exactly as
+    the grader does).
 4.  Check the grader used the vendored 11-item rulebook: the fresh grade's
     ``source_doc`` must name ``signoff/design-evidence-tiers.md`` -- anything
     else (notably the released wheel's own bundled copy,
@@ -46,10 +54,10 @@ committing a refreshed report locally, run this too -- if the freshly graded
 report is not what got committed, or an artifact drifted, it fails.
 
 Refresh contract: every citation ``signoff/block-manifest.json`` makes must
-have a row in PINNED_ARTIFACTS below. Adding a citation (e.g. the item-11
-compound entry once issue #56's ``klt erc`` supply evidence lands) means
-adding the pinned-artifact row here in the same change -- an unlisted
-citation fails this verifier by name rather than passing unverified.
+have a row in PINNED_ARTIFACTS below. Adding a citation (e.g. the item-4
+LVS entry issue #68 added, or a future compound entry) means adding the
+pinned-artifact row here in the same change -- an unlisted citation fails
+this verifier by name rather than passing unverified.
 """
 
 from __future__ import annotations
@@ -68,32 +76,64 @@ COMMITTED_REPORT = REPO_ROOT / "signoff" / "signoff-report.json"
 TIERS_DOC = REPO_ROOT / "signoff" / "design-evidence-tiers.md"
 
 # Per-citation pin re-verification (check 3). Keyed by T1 item id:
-#   (evidence envelope the manifest entry cites, committed artifact whose
-#    sha256 must equal the manifest pin AND the envelope's recorded
-#    provenance.input.content_hash).
+#   (evidence envelope the manifest entry cites,
+#    committed artifact whose sha256 must still equal the value the cited
+#    envelope records for it,
+#    the envelope field that records that value -- a path of nested keys).
 #
-# Both citations today pin the same artifact: the committed GDS whose
-# extraction (item 2) and DRC run (item 3) the two envelopes record.
+# Items 2/3/11 cite envelopes whose ``provenance.input`` pins the committed
+# GDS (``role: "layout"``): the artifact bytes, the manifest pin, and the
+# envelope's recorded input hash are all the same sha256, so all three
+# citations pin ``layout/comparator.gds`` via ``provenance.input``.
+#
+# Item 4 (LVS) pins differently, and the difference is load-bearing. The
+# LVS envelope's ``provenance.input`` carries ``role: "netlist"`` and the
+# sha256 of the *extracted* layout netlist (``layout/lvs/
+# comparator.extracted.spice``) -- a derived scratch file the repo
+# deliberately never commits (see `.gitignore` and `layout/run_lvs.py`'s
+# header), so no committed artifact can ever hash to the manifest pin. The
+# run's committed inputs are recorded elsewhere in the same envelope: the
+# reference netlist under ``environment.reference_sha256``
+# (`design/comparator.spice`), and the GDS the extraction consumed under
+# item 2's own citation (whose row below re-verifies those bytes). This
+# row therefore verifies the reference netlist against
+# ``environment.reference_sha256``; the manifest pin itself is still
+# compared against ``provenance.input.content_hash`` in verify_pins() --
+# exactly the staleness gate ``klt signoff`` applies at grade time.
 #
 # The artifact mapping lives here -- not in the envelopes -- because the
-# committed layout envelopes record the path they were generated from, which
-# does not resolve from any other checkout. That is also why these are
+# committed layout envelopes record the paths they were generated from,
+# which do not resolve from any other checkout. That is also why these are
 # exactly the citations block-manifest.json makes: adding a citation means
 # adding a row here, and signoff/README.md's refresh contract says so.
 PINNED_ARTIFACTS = {
     "2": (
         REPO_ROOT / "layout" / "lvs" / "comparator.extract.json",
         REPO_ROOT / "layout" / "comparator.gds",
+        ("provenance", "input", "content_hash"),
     ),
     "3": (
         REPO_ROOT / "layout" / "drc" / "comparator.drc.json",
         REPO_ROOT / "layout" / "comparator.gds",
+        ("provenance", "input", "content_hash"),
+    ),
+    "4": (
+        REPO_ROOT / "layout" / "lvs" / "comparator.lvs.json",
+        REPO_ROOT / "design" / "comparator.spice",
+        ("environment", "reference_sha256"),
     ),
     "11": (
         REPO_ROOT / "layout" / "erc" / "comparator.erc.json",
         REPO_ROOT / "layout" / "comparator.gds",
+        ("provenance", "input", "content_hash"),
     ),
 }
+
+#: The envelope field every citation's manifest pin is compared against --
+#: the same field `klt signoff`'s staleness gate reads. Kept separate from
+#: the per-row artifact field above because they differ for the LVS
+#: citation (see PINNED_ARTIFACTS' item-4 note).
+MANIFEST_PIN_FIELD = ("provenance", "input", "content_hash")
 
 BLOCK_LEVEL_FIELDS = (
     "schema_version",
@@ -237,15 +277,30 @@ def verify_vendored_doc(committed: dict, fresh: dict) -> list[str]:
     return problems
 
 
+def _recorded_hash(envelope: dict, field: tuple[str, ...]) -> str:
+    """Read ``field`` (a path of nested keys) out of ``envelope`` and return
+    its value minus any ``sha256:`` prefix. Missing keys read as the empty
+    string, which every comparison below then reports as a mismatch."""
+    value: Any = envelope
+    for key in field:
+        if not isinstance(value, dict):
+            return ""
+        value = value.get(key, "")
+    return str(value).removeprefix("sha256:")
+
+
 def verify_pins(manifest: dict) -> list[str]:
     """Check 3: every pinned citation's manifest pin == the cited envelope's
-    recorded input hash == the sha256 of the artifact's current bytes; every
-    manifest citation must have a PINNED_ARTIFACTS row (refresh contract)."""
-    problems = []
+    recorded input hash (the same staleness gate `klt signoff` applies), and
+    the committed artifact each row names still hashes to the value the
+    envelope records for it; every manifest citation must have a
+    PINNED_ARTIFACTS row (refresh contract)."""
+    problems: list[str] = []
     evidence = manifest.get("evidence", {})
     for item in sorted(set(list(evidence.keys()) + list(PINNED_ARTIFACTS.keys())), key=str):
         label = f"item {item} citation"
-        envelope_path, artifact_path = PINNED_ARTIFACTS.get(item, (None, None))
+        row = PINNED_ARTIFACTS.get(item)
+        envelope_path, artifact_path, artifact_field = row if row else (None, None, None)
         entry = evidence.get(item)
         if entry is None:
             problems.append(
@@ -274,22 +329,20 @@ def verify_pins(manifest: dict) -> list[str]:
             continue
         manifest_pin = entry["content_hash"].removeprefix("sha256:")
         envelope = json.loads(envelope_path.read_text())
-        recorded = (
-            (envelope.get("provenance") or {})
-            .get("input", {})
-            .get("content_hash", "")
-        ).removeprefix("sha256:")
+        recorded_input = _recorded_hash(envelope, MANIFEST_PIN_FIELD)
         actual = sha256_of(artifact_path)
-        if manifest_pin != recorded:
+        if manifest_pin != recorded_input:
             problems.append(
                 f"{label}: manifest pin {manifest_pin[:16]}... does not match "
-                f"the hash recorded in {envelope_path.name} "
-                f"({recorded[:16] if recorded else 'absent'}...)"
+                f"the input hash recorded in {envelope_path.name} "
+                f"({recorded_input[:16] if recorded_input else 'absent'}...)"
             )
-        if recorded != actual:
+        recorded_artifact = _recorded_hash(envelope, artifact_field)
+        if recorded_artifact != actual:
             problems.append(
-                f"{label}: envelope {envelope_path.name} pins "
-                f"{(recorded or 'no hash')[:16] if recorded else 'no hash'}... but "
+                f"{label}: envelope {envelope_path.name} records "
+                f"{'.'.join(artifact_field)} = "
+                f"{(recorded_artifact or 'no hash')[:16] if recorded_artifact else 'no hash'}... but "
                 f"{artifact_path.name} currently hashes to {actual[:16]}... "
                 f"({artifact_path.name} changed since the evidence was "
                 "generated -- refresh the evidence, then re-pin and re-grade "
