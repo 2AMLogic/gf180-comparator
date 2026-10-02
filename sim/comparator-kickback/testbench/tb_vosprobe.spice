@@ -19,10 +19,14 @@
 *
 * Quantisation: the ramp moves (2*vspan)/tramp per second and the decision
 * updates once per clock period, so the trip point is resolved to about
-* 40m/80u * 30n ~= 15 uV -- a fraction of the smallest residue's 1 mV. An
+* 80m/80u * 30n ~= 30 uV -- 3 % of the smallest residue's 1 mV. The
+* +/-40 mV span exists because the measured offset moves across PVT
+* (about -2 mV at ss/-40C/2.97 V to beyond -20 mV at ff/125C on this
+* layout); an offset outside the span fails the point loudly rather than
+* mis-referring the drives. An
 * offset outside +/- vspan produces no crossing at all and fails the point
 * loudly (see the manifest note), never a silently wrong referral.
-.param vspan=20m
+.param vspan=40m
 .param tramp=80u
 
 vsup vdd 0 dc {vdd_val}
