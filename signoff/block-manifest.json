@@ -10,6 +10,10 @@
       "file": "layout/drc/comparator.drc.json",
       "content_hash": "sha256:d668ccb543c4ec6482ee78fb00805a7472955944fce07022c505e78eeec6b8ed"
     },
+    "4": {
+      "file": "layout/lvs/comparator.lvs.json",
+      "content_hash": "sha256:594f54be04819f3bf3a8466a8c0f4d863267a9e9ba459b39ddf09249da80d98c"
+    },
     "11": {
       "file": "layout/erc/comparator.erc.json",
       "content_hash": "sha256:d668ccb543c4ec6482ee78fb00805a7472955944fce07022c505e78eeec6b8ed"

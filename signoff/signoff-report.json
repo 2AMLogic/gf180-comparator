@@ -4,7 +4,7 @@
   "kind": "analog",
   "tier": null,
   "t1_item_count": 11,
-  "t1_met_count": 2,
+  "t1_met_count": 3,
   "source_doc": "signoff/design-evidence-tiers.md",
   "items": [
     {
@@ -61,9 +61,16 @@
       "partition": null,
       "text": "latest LVS report `status: match`, fresh, engine named, checked against the netlist from item 1 (schematic netlist for analog, synthesized/routed gate-level netlist for digital), **and that same report's `power_connectivity.status` not `\"mismatch\"`**. Those are two verdicts, not one: `klt lvs`'s top-level `status` is the *signal*- connectivity compare's own result, and since issue #1952 the power/ground half is reported beside it in its own `power_connectivity` block (`docs/cli/lvs.md` \u2192 \"Power/ground connectivity\"). `klt signoff` already grades this item on both \u2014 an `lvs`-kind check passes only on `status == \"match\"` **and** `power_connectivity.status != \"mismatch\"` (issue #1965) \u2014 so a claim resting on `status: match` alone is weaker than the tool that grades it. What the check verifies is per-standard-cell-instance *pin-to-net* correctness: on every abstracted instance, each pin the PDK library declares power/ground must reach the net the caller declared (`options.power_connectivity.expected_nets`) or, absent a declaration, the same net every other instance's same-named pin reaches; a disagreement renders `power.inconsistent_pin_net` / `power.unexpected_pin_net`, and a pin on no net at all renders `power.unconnected_pin`. **The check's reach is narrower than \"the power grid is verified\", and a claim must not say otherwise.** A `power_connectivity.status` of `\"unchecked\"` \u2014 every `reference.form` other than `gate-level-verilog`, an explicit `options.power_connectivity: false`, or a layout whose instances declare no PG pins at all \u2014 means the question was never asked; this item and `klt signoff` both read it as \"does not apply here\", never as \"verified\", so a fleet policy of \"re-run LVS, look for `match`\" is not by itself power-connectivity evidence (#1985). And even where it does run it is *not* a geometric rail/grid continuity check: whether a rail is an unbroken annulus, and whether the grid carries the current, stay `klt ring-check`, `klt power`, and the DRC deck's business \u2014 see \"Power/IR-drop + EM evidence\" below for what is and is not covered. Warnings-only mismatches must be listed with the claim. A second, independent engine's concurring verdict (#343) strengthens this from \"one toolchain agrees with itself\" to a cross-checked result.",
       "notes": [],
-      "status": "unmet",
-      "reason": "no_evidence",
-      "citation": null
+      "status": "met",
+      "reason": null,
+      "citation": {
+        "file": "layout/lvs/comparator.lvs.json",
+        "command": null,
+        "kind": "lvs",
+        "check_status": "match",
+        "content_hash": "sha256:594f54be04819f3bf3a8466a8c0f4d863267a9e9ba459b39ddf09249da80d98c",
+        "exit_status": 0
+      }
     },
     {
       "tier": "T1",

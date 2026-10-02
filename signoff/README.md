@@ -92,9 +92,9 @@ errors.
 Today the machine grades this block (see `signoff-report.json`, regenerated
 by `./signoff/regenerate.sh`):
 
-- **met — item 2 (Layout), item 3 (DRC clean)**
-- **unmet, reason `no_evidence` — items 1, 4, 5, 6, 7, 8, 9, 10**
-- **unmet, reason `unrecognized_envelope` — item 11** (evidence is now cited;
+- **met — item 2 (Layout), item 3 (DRC clean), item 4 (LVS clean)**
+- **unmet, reason `no_evidence` — items 1, 5, 6, 7, 8, 9, 10**
+- **unmet, reason `unrecognized_envelope` — item 11** (evidence is cited;
   the pinned grader predates item-11 recognition — see the item-11 section)
 
 `no_evidence` means exactly what it says mechanically: the manifest names no
@@ -163,33 +163,40 @@ plus the sibling canaries' practice is to leave this row uncited rather than
 cite something topically unrelated — an `UNMET`/`no_evidence` row here is
 the accurate machine statement, not a claim that the sources are missing.
 
-### unmet — item 4 (LVS clean): the report now passes, but citing it is a separate re-grade
+### met — item 4 (LVS clean): `layout/lvs/comparator.lvs.json`
 
-**The underlying check has cleared.** As of issue
-[#40](https://github.com/2AMLogic/gf180-comparator/issues/40),
-`layout/lvs/comparator.lvs.json` (`klayout` engine) reports
-`status: "match"` with `error_count: 0` and 29/29 devices, 20/20 nets and
-8/8 pins matched. The three remaining `mismatches[]` rows are all
-`severity: "warning"` disclosures, not findings against the layout:
-`device.placeholder_value` and `device.geometry_not_compared` (the
-reference-side placeholder-`0` resistor value, and the resistor geometry
-parameters KLayout declares secondary — neither took part in the compare, and
-the report says so) plus `topology.flattened` (the compare flattened the
-reference netlist's 3 circuits into 1 first, per `docs/cli/lvs.md`
-"topology.flattened"). What closed it was upstream —
-klayout-tools#1907/#1927/#1928 — not a change to this block; the full read of
-exactly what that `match` covers and what it deliberately does not is
-`layout/README.md`'s "LVS" section.
+**Cited and graded `met` as of
+[#68](https://github.com/2AMLogic/gf180-comparator/issues/68).** The
+citation is the `klayout`-engine LVS report issue
+[#40](https://github.com/2AMLogic/gf180-comparator/issues/40) landed:
+`status: "match"` with `error_count: 0`, 29/29 devices, 20/20 nets and
+8/8 pins matched — including `VDD <-> VDD` and `VSS <-> VSS`, both
+`"pin": true` (part of all 20 nets matching). The three remaining
+`mismatches[]` rows are all `severity: "warning"` disclosures, not findings
+against the layout: `device.placeholder_value` and
+`device.geometry_not_compared` (the reference-side placeholder-`0` resistor
+value, and the resistor geometry parameters KLayout declares secondary —
+neither took part in the compare, and the report says so) plus
+`topology.flattened` (the compare flattened the reference netlist's 3
+circuits into 1 first, per `docs/cli/lvs.md` "topology.flattened"). What
+closed the check was upstream — klayout-tools#1907/#1927/#1928 — not a
+change to this block; the full read of exactly what that `match` covers and
+what it deliberately does not is `layout/README.md`'s "LVS" section.
 
-**It is still uncited here, and this row still renders `unmet`, deliberately.**
-Citing item 4 means adding a `block-manifest.json` evidence entry, a
-`PINNED_ARTIFACTS` row in `verify-report.py`, and a re-grade + re-commit of
-`signoff-report.json` in one change (the refresh contract below) — a change
-that flips a T1 item and therefore belongs in its own reviewed increment, not
-as a side effect of regenerating the LVS evidence. Tracked as
-[#68](https://github.com/2AMLogic/gf180-comparator/issues/68). Nothing in
-this manifest goes stale in the meantime: LVS was never cited, so no pin
-here points at the regenerated report.
+**The pin names the netlist, not the GDS — a deliberate difference from
+items 2/3.** The manifest entry pins the LVS envelope's own
+`provenance.input.content_hash`, whose `role` is `"netlist"`: the sha256 of
+the *extracted* layout netlist (`layout/lvs/comparator.extracted.spice`), a
+derived scratch file the repo deliberately never commits (see `.gitignore`
+and `layout/run_lvs.py`'s header). It cannot pin the GDS hash items 2/3 pin:
+`klt signoff`'s staleness gate compares the manifest pin against
+`provenance.input.content_hash`, and a GDS pin there would render this row
+`stale_evidence`, not `met`. Since no committed artifact hashes to the pin,
+`verify-report.py`'s item-4 row instead re-verifies the run's *committed*
+inputs: the reference netlist `design/comparator.spice` against the
+envelope's `environment.reference_sha256`, while the GDS bytes the
+extraction consumed stay pinned by item 2's own citation (rows 2/3/11
+re-hash those same bytes). Both checks run on every push and PR.
 
 ### unmet — items 5, 6 (PVT corners vs a ratified spec; Monte Carlo): substance exists, nothing gradeable
 
@@ -255,26 +262,26 @@ compound analog entry the rulebook's item 11 names: the ERC supply report
 `layout/erc-supply-spec.json`; run `klt erc ... --deck gf180mcu`;
 `erc_status: "clean"`, zero findings, one electrical island per declared
 supply, `provenance.input.content_hash` pinning the same committed GDS
-items 2/3 cite) — item 4's own LVS leg of the compound entry is *not* cited
-yet and is deliberately absent, though the reason has changed: as of #40,
-`comparator.lvs.json`'s `net_correspondence` **does** pair `VDD <-> VDD` and
-`VSS <-> VSS` (both `"pin": true`, part of all 20 nets matching), so the
-"two `ppolyf_u_1k` property errors hold it open" premise this paragraph used
-to state has cleared — see the item-4 section above and
-[#68](https://github.com/2AMLogic/gf180-comparator/issues/68), which
-re-checks item 11's remaining legs in the same pass that cites item 4. The
-reason the row renders `unrecognized_envelope` and not a graded verdict is the
-distribution pin, not the evidence: the pinned 0.5.0 release predates
-item 11's grading rules (klayout-tools#1984 and later), so the grader
-cannot read the cited ERC envelope at all — a state
+items 2/3 cite).
+
+**Re-checked in [#68](https://github.com/2AMLogic/gf180-comparator/issues/68)'s
+pass (the same re-grade that cites item 4): the row still renders `unmet`,
+reason `unrecognized_envelope` — and the premises this section used to state
+as holding it open have both cleared as of #40.** The regenerated LVS
+report's `net_correspondence` pairs `VDD <-> VDD` and `VSS <-> VSS` (both
+`"pin": true`, part of all 20 nets matching), and the two `ppolyf_u_1k`
+property findings survive only as `severity: "warning"` disclosures of the
+passing LVS report — they no longer hold anything open. What still holds the
+row at `unmet` is, first, the distribution pin: the pinned 0.5.0 release
+predates item 11's grading rules (klayout-tools#1984 and later), so the
+grader cannot read the cited ERC envelope at all — a state
 [docs/cli/signoff.md](https://github.com/2AMLogic/klayout-tools/blob/main/docs/cli/signoff.md)
-anticipates. When a released `klt` that grades item 11 ships, upgrade the
+anticipates. Moving that pin is deliberately out of #68's scope (see "The
+two pins"); when a released `klt` that grades item 11 ships, upgrade the
 distribution pin together with this citation (the refresh contract) and
-re-grade — the row will then render its real state on this same evidence
-(`unmet` until the `ties[]` blocker klayout-tools#2169 clears — the second
-condition this sentence used to name, "item 4's LVS carries the supply nets
-in `net_correspondence`", is satisfied as of #40; the
-`erc.missing_tie` leg is not computed in the cited run, with the drawn
+re-grade. Second — even then, the row will render its real state on this
+same evidence: `unmet` until the `ties[]` blocker klayout-tools#2169 clears
+(the `erc.missing_tie` leg is not computed in the cited run, with the drawn
 tap evidence the report's `erc_coverage.inapplicable` /
 `provenance.devices` blocks record mechanically). The full claim-side
 write-up, including exactly what stands in for the not-computed
@@ -293,10 +300,19 @@ push and PR (`.github/workflows/signoff.yml`):
    rulebook that changed without a re-grade + re-commit fails here.
 2. **Every pin re-verified against current bytes.** For each citation:
    manifest `content_hash` == the cited envelope's recorded
-   `provenance.input.content_hash` == the sha256 of the committed artifact's
-   current bytes. A manifest citing an artifact that has since changed
-   fails rather than rotting — the acceptance criterion this whole directory
-   exists for.
+   `provenance.input.content_hash` — the same staleness gate `klt signoff`
+   applies at grade time — and the committed artifact the citation's
+   `PINNED_ARTIFACTS` row names still hashes to the value the envelope
+   records for it. For items 2/3/11 all three are the same sha256 (the
+   GDS). Item 4 is the exception the row documents: its envelope's
+   `provenance.input` pins the *extracted* netlist — derived scratch the
+   repo deliberately never commits, so no committed artifact can hash to
+   the pin — and its row instead re-hashes the run's committed reference
+   netlist (`design/comparator.spice`) against the envelope's
+   `environment.reference_sha256`, while the GDS the extraction consumed
+   stays pinned by item 2's row. A manifest citing an artifact that has
+   since changed fails rather than rotting — the acceptance criterion this
+   whole directory exists for.
 3. **The vendored rulebook is what graded.** The fresh
    grade's `source_doc` must be `signoff/design-evidence-tiers.md`; a grade
    that ran against the wheel's bundled 10-item copy instead fails by name.
