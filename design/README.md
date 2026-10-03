@@ -70,9 +70,13 @@ records the same trap on the same PDK.
 ## What is here and what is not
 
 `design/` is schematic-level only: no parasitics, no layout, no extraction.
-Post-layout extraction (`layout/`, not started) can only add capacitance at
-the preamplifier output — which *lowers* measured noise — and at the input —
-which *raises* measured kickback. So the noise numbers under `sim/` are
+Post-layout extraction (landed since under `layout/` — the extracted-DUT
+records minted by #23 live under `sim/comparator-*/records/`) can only add
+capacitance at the
+preamplifier output — which *lowers* measured noise — and at the input —
+which *raises* measured kickback. That asymmetry held on the extracted DUT:
+noise direction conservative, kickback grown in exactly the direction
+predicted. So the noise numbers under `sim/` are
 conservative in the right direction and the kickback numbers are not; DR-0001
 states that asymmetry as a required post-layout re-check rather than a
 formality.

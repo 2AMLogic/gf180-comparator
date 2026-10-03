@@ -4,7 +4,7 @@
 over the full PVT grid — measured against two different source impedances,
 neither of them ideal.
 
-Backs [`README.md`'s kickback row](../../README.md#target-specification-draft--engineering-to-ratify)
+Backs [`README.md`'s kickback row](../../README.md#target-specification-ratified-via-dr-0002)
 (≤ 5 mV disturbance into a 1 kΩ source impedance at the input nodes, single
 decision edge; ≤ 2 mV stretch). Kickback is a first-class row here, per
 [`CLAUDE.md`](../../CLAUDE.md).
@@ -107,8 +107,8 @@ The first row is the current reference: taken against
 [DR-0001](../../spec/decision-records/DR-0001-comparator-topology.md)'s
 static preamp + StrongARM latch, no placeholder banner. `kick_1k_peak_mv` is
 7.60 mV at nominal, 4.53–10.01 mV across the grid — **misses** the README
-≤ 5 mV target at most corners and the ≤ 2 mV stretch everywhere (reference
-against a still-DRAFT row, not a verdict; DR-0001's Consequences section
+≤ 5 mV target at most corners and the ≤ 2 mV stretch everywhere; reference
+against the ratified bound, this row's verdict scoring tracked in [#75](https://github.com/2AMLogic/gf180-comparator/issues/75) (DR-0001's Consequences section
 names this as the gap most likely to need revisiting first, and it is not
 retuned here per `sim/README.md`'s rule against relaxing a check to make a
 result pass). It is also the record the `kick_1k_peak_mv` per-axis floors
@@ -125,8 +125,9 @@ over the same 45-point grid. What it shows:
   parasitic asymmetry note predicts**: `kick_1k_peak_mv` 7.60 → 10.03 mV at
   nominal (+32 %), 8.49–14.58 mV across the grid (schematic: 4.53–10.01) —
   the input nodes' routing capacitance adds to the charge injected back
-  through the input pair. The DRAFT ≤ 5 mV row is now missed at every
-  corner; per that note's own instruction the result is recorded as data,
+  through the input pair. The ≤ 5 mV row (ratified via DR-0002) is now
+  missed at every corner; per that note's own instruction the result is
+  recorded as data,
   not hidden — this is the gap DR-0001 named "most likely to need
   revisiting first", now with its post-layout magnitude measured.
 - The residual/signal-dependent components grow several-fold

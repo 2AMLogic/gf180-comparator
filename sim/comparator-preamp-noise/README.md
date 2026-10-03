@@ -4,7 +4,7 @@
 via ngspice `.noise`, reported as **total integrated output noise divided by
 the measured DC gain**.
 
-Backs [`README.md`'s noise row](../../README.md#target-specification-draft--engineering-to-ratify)
+Backs [`README.md`'s noise row](../../README.md#target-specification-ratified-via-dr-0002)
 (≤ 1.0 mV rms differential, ≤ 0.6 mV stretch) and, together with
 `sim/comparator-regeneration/`'s τ, the noise-floor half of the metastability
 story.
@@ -111,8 +111,8 @@ The first row is the current reference: taken against
 [DR-0001](../../spec/decision-records/DR-0001-comparator-topology.md)'s
 static preamp + StrongARM latch, no placeholder banner. `vn_in_uv` is
 91.25 µV rms at nominal, 128.8 µV rms worst-case — comfortably inside both
-the README ≤ 1.0 mV target and the ≤ 0.6 mV stretch (reference against a
-still-DRAFT row, not a verdict). The `av_dc` per-axis floors (calibrated
+the README ≤ 1.0 mV target and the ≤ 0.6 mV stretch; reference against the
+ratified bound, this row's verdict scoring tracked in [#75](https://github.com/2AMLogic/gf180-comparator/issues/75). The `av_dc` per-axis floors (calibrated
 against the placeholder DUT, below) held on the real schematic with margin
 and were not recalibrated.
 

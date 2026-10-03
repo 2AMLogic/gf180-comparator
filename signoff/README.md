@@ -205,15 +205,16 @@ schematic-provenance corner records (`sim/comparator-{offset-mc,preamp-noise,
 regeneration,kickback}/`, driven by `sim/characterize.sh` +
 `sim/run_corners.py`), and item 6's own MC campaign exists (offset MC,
 200 draws/corner per the tracker's survey). But (a) the target-spec table
-in `README.md` is still **DRAFT** — DR-0002's ratification is proposed, not
-completed (the two-key ceremony is unfinished per the tracker's 2026-09-21
-note), and verdicts against an unrated spec are provisional by construction;
+in `README.md` is **ratified** — DR-0002, via the two-key ceremony on PR
+#74 per the operator ruling of 2026-10-02 on #3 (this section previously
+said the ceremony was unfinished; it has since run) — though only the
+offset-σ row's scoring pass has landed
+([#24](https://github.com/2AMLogic/gf180-comparator/issues/24), PR #58),
+the other four rows' being tracked in
+[#75](https://github.com/2AMLogic/gf180-comparator/issues/75);
 (b) those records are this repo's harness format, not `klt sim`/`klt yield`
 JSON envelopes, so the grader could not read them even if they were scored.
-Scoring the MC record against the spec table is exactly issue
-[#24](https://github.com/2AMLogic/gf180-comparator/issues/24)'s in-flight
-work; when it lands a `klt`-shaped envelope and the table is ratified, cite
-and re-grade.
+When a scoring pass lands a `klt`-shaped envelope, cite and re-grade.
 
 ### unmet — item 7 (Post-layout verification): not started
 
