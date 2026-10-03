@@ -75,11 +75,12 @@ field, so decisions and evidence point at the same anchors:
 - `<file>.md#<anchor>` — <parameter / row name> — new | changed
   (`<old>` -> `<new>`) | clarified (no value change) | removed.
 
-`README.md`'s target-specification table is **DRAFT** and no record has
-ratified it (`spec/README.md`). A record that targets, but does not ratify, a
-row says so explicitly rather than implying ratification — for example:
+`README.md`'s target-specification table is **ratified** (DR-0002, via the
+two-key ceremony on PR #74 per the operator ruling of 2026-10-02 on #3; see
+`spec/README.md`). A record that targets, but does not change or re-ratify, a
+row says so explicitly rather than implying a change — for example:
 
-- `README.md#target-specification` (still DRAFT, not ratified here) —
+- `README.md#target-specification-ratified-via-dr-0002` —
   <row name> — measured against, not set.
 
 If this record genuinely changes no spec line (a scope or process decision),

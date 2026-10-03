@@ -4,7 +4,7 @@
 full PVT grid, plus the part of that offset that moves with input common
 mode, plus a null control on resistor mismatch.
 
-Backs [`README.md`'s Offset-σ row](../../README.md#target-specification-draft--engineering-to-ratify)
+Backs [`README.md`'s Offset-σ row](../../README.md#target-specification-ratified-via-dr-0002)
 (≤ 15 mV 3σ input-referred, ≤ 8 mV stretch) — the headline result for this
 block, because gf180mcu is one of the open PDKs that actually ships
 statistical mismatch models.
@@ -96,8 +96,9 @@ the record" discipline.
 The first row is the current reference: taken against
 [DR-0001](../../spec/decision-records/DR-0001-comparator-topology.md)'s
 static preamp + StrongARM latch, no placeholder banner, 3σ = 2.80 mV at
-nominal (well inside the README ≤ 15 mV target / ≤ 8 mV stretch, reference
-against a still-DRAFT row, not a verdict). It is also the record the
+nominal (well inside the README ≤ 15 mV target / ≤ 8 mV stretch; the row's
+scored verdict — meets target and stretch at every corner — landed with
+[#24](https://github.com/2AMLogic/gf180-comparator/issues/24)). It is also the record the
 `vbias_anchor_mv` per-axis floors are now calibrated from (observed weakest
 slices: process 23.55 %, temperature 1.282 %).
 

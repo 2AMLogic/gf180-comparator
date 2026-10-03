@@ -2,7 +2,7 @@
 
 This directory holds this block's specification-related documents and their
 decision history. **The target-spec table itself lives in the top-level
-[`README.md`](../README.md#target-specification-draft--engineering-to-ratify)**
+[`README.md`](../README.md#target-specification-ratified-via-dr-0002)**
 — not a `spec/target-spec.md` file. This is a deliberate fleet convention
 (confirmed against both same-wave twins:
 [`sg13g2-comparator`'s `spec/README.md`](https://github.com/2AMLogic/sg13g2-comparator/blob/main/spec/README.md)

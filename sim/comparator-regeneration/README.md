@@ -4,7 +4,7 @@
 regeneration time constant **τ** extracted from it, near-metastable
 behaviour, and the switching energy per decision.
 
-Backs [`README.md`'s decision-time row](../../README.md#target-specification-draft--engineering-to-ratify)
+Backs [`README.md`'s decision-time row](../../README.md#target-specification-ratified-via-dr-0002)
 (≤ 1.5 ns at 50 mV overdrive, 3.3 V; ≤ 0.8 ns stretch), and supplies the τ
 that **every metastability statement in this repo is computed from** —
 metastability is a first-class row here, per [`CLAUDE.md`](../../CLAUDE.md),
@@ -103,8 +103,8 @@ The first row is the current reference: taken against
 static preamp + StrongARM latch, no placeholder banner. `td_od50_ns` is
 0.708 ns at nominal, 1.237 ns worst-case at `ss_125c_2.97v` — meets the
 README ≤ 1.5 ns target at every corner, misses the ≤ 0.8 ns stretch at the
-slow/hot/low-supply corner (reference against a still-DRAFT row, not a
-verdict; not retuned here). The `td_od50_ns` per-axis floors (calibrated
+slow/hot/low-supply corner; reference against the ratified bound, this
+row's verdict scoring tracked in [#75](https://github.com/2AMLogic/gf180-comparator/issues/75) (not retuned here). The `td_od50_ns` per-axis floors (calibrated
 against the placeholder DUT, below) held on the real schematic with margin
 and were not recalibrated.
 

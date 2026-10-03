@@ -297,7 +297,7 @@ Per `design/README.md`'s "What is here and what is not" and this issue's own
 complexity note: post-layout extraction can only add capacitance at the
 preamplifier output (which *lowers* measured noise) and at the comparator's
 true input node (`vinp`/`vinn`) — which *raises* measured kickback, already
-missing its DRAFT target at nominal (7.60 mV vs. ≤ 5 mV,
+missing its target at nominal (7.60 mV vs. ≤ 5 mV,
 `sim/comparator-kickback/records/20260910-125341-4805118.md`). That
 asymmetry, not DRC/LVS cleanliness, is this layout's real risk, so it drove
 two concrete choices, both verifiable against the committed

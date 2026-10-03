@@ -4,7 +4,7 @@ xschem + ngspice testbenches and **append-only** results for
 `gf180-comparator`, on the gf180mcu 3.3 V rail.
 
 Four experiments, one per first-class row of
-[`README.md`'s target specification](../README.md#target-specification-draft--engineering-to-ratify):
+[`README.md`'s target specification](../README.md#target-specification-ratified-via-dr-0002):
 
 | experiment | row it backs | method |
 |---|---|---|
@@ -25,10 +25,12 @@ Metastability and kickback are first-class rows here, not appendices, per
 > carry **no** placeholder banner and are real schematic-level measurements.
 >
 > Two limits on what they mean. **The target-specification table in
-> [`README.md`](../README.md#target-specification-draft--engineering-to-ratify)
-> is still DRAFT** — no decision record ratifies it — so a record that meets
-> (or misses) a row is *reference, not verdict*; ratification is
-> [`spec/porting-plan.md`](../spec/porting-plan.md) next step 4. And every
+> [`README.md`](../README.md#target-specification-ratified-via-dr-0002)
+> is ratified** (DR-0002, via the two-key ceremony on PR #74 per the
+> operator ruling of 2026-10-02 on #3) — so a record that meets (or
+> misses) a row is *reference, not verdict* until that row's scoring pass
+> lands: the offset-σ row's has ([#24](https://github.com/2AMLogic/gf180-comparator/issues/24));
+> the other four rows' are tracked in [#75](https://github.com/2AMLogic/gf180-comparator/issues/75). And every
 > record is **schematic-level, with no parasitics**: post-layout extraction
 > can only add capacitance at the preamplifier output (which lowers the
 > measured noise) and at the input (which raises the measured kickback), so
@@ -157,8 +159,9 @@ sim/<experiment-slug>/
 Every record states, in its header, everything needed to judge or reproduce
 it:
 
-- the **claim** it substantiates — and, while `README.md`'s table is DRAFT,
-  that a row met or missed there is reference rather than verdict;
+- the **claim** it substantiates — and, for any row whose scoring pass has
+  not yet landed (see [#75](https://github.com/2AMLogic/gf180-comparator/issues/75)), that a
+  row met or missed there is reference rather than verdict;
 - the **DUT** — id, provenance (`placeholder` / `schematic` / `extracted`),
   path and sha256;
 - the **testbench** fragment and manifest sha256s;
