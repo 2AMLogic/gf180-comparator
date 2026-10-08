@@ -166,6 +166,9 @@ def main() -> int:
                 "supply_v": {"vdd_val": vdds},
                 "temperature_c": temps,
             },
+            # The fleet image's klt can lag the submitting client; run anyway
+            # and let the record state the runner/client versions it saw.
+            "batch": {"runner_version_check": "warn"},
             "analysis": spec["analysis"],
             "measurements": spec["measurements"],
             "options": {
