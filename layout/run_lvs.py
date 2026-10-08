@@ -103,10 +103,11 @@ import shutil
 import subprocess
 import sys
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-REPO_ROOT = os.path.dirname(HERE)
+from layout_common import (  # noqa: F401  (re-exported for importers)
+    DECK, GDS, HERE, INTERFACE_PINS, REPO_ROOT, TOP, run_extract,
+)
+
 OUTDIR = os.path.join(HERE, "lvs")
-GDS = os.path.join(HERE, "comparator.gds")
 REFERENCE = os.path.join(REPO_ROOT, "design", "comparator.spice")
 
 EXTRACT_NETLIST = os.path.join(OUTDIR, "comparator.extracted.spice")
@@ -116,22 +117,7 @@ LVS_REPORT = os.path.join(OUTDIR, "comparator.lvs.json")
 NETGEN_REQUEST = os.path.join(OUTDIR, "comparator.netgen.request.json")
 NETGEN_REPORT = os.path.join(OUTDIR, "comparator.netgen.json")
 
-DECK = "gf180mcu"
-TOP = "COMPARATOR"
 REFERENCE_TOP = "comparator_dut"
-
-#: `sim/dut/README.md`'s interface contract for `comparator_dut`, in its own
-#: declared ORDER. Passed to `klt extract --pins` so the extracted layout
-#: netlist exposes exactly this interface at the top cell (every other
-#: labelled net -- aon/aop/atail/ltail/mn/mp/na/nb/qn/qp/sn/sp -- stays an
-#: internal net, keeping its name), instead of promoting all 20 labelled
-#: nets to top-level pins the way a label-only extraction does.
-#: `check_interface_contract()` below re-asserts the result against this same
-#: tuple: `klayout.db.NetlistComparer` does not use pin order to gate its
-#: `status` verdict (docs/cli/lvs.md), so a clean LVS run does NOT by itself
-#: prove the pinout -- see layout/README.md's "Pin-order interface-contract
-#: check".
-INTERFACE_PINS = ("vinp", "vinn", "clk", "ibias", "dout", "doutb", "vdd", "vss")
 
 #: How a device subcircuit named by `design/comparator.spice` maps onto the
 #: gf180mcu extraction deck's own device class, plus that subcircuit's own
@@ -167,29 +153,6 @@ _PARAM_RE = re.compile(r"([A-Za-z_][A-Za-z0-9_]*)\s*=\s*('[^']*'|\"[^\"]*\"|\S+)
 #: SPICE engineering suffixes, as a multiplier into micrometres. A bare
 #: number (no suffix) is metres, SPICE's own default for a geometry value.
 _UM_SUFFIXES = {"": 1e6, "m": 1e3, "u": 1.0, "n": 1e-3, "p": 1e-6}
-
-
-def run_extract() -> dict:
-    # Run with cwd=REPO_ROOT and repo-relative paths so the committed report's
-    # own `file`/`netlist_path` fields stay host-independent (no absolute
-    # path baked into the signoff evidence).
-    cmd = [
-        "klt", "extract", os.path.relpath(GDS, REPO_ROOT),
-        "--deck", DECK,
-        "--top", TOP,
-        "--pins", ",".join(INTERFACE_PINS),
-        "-o", os.path.relpath(EXTRACT_NETLIST, REPO_ROOT),
-        "--format", "json",
-    ]
-    proc = subprocess.run(cmd, capture_output=True, text=True, cwd=REPO_ROOT)
-    if proc.returncode != 0:
-        sys.stderr.write(proc.stderr)
-        sys.exit(f"klt extract failed (exit {proc.returncode})")
-    report = json.loads(proc.stdout)
-    with open(EXTRACT_REPORT, "w") as f:
-        json.dump(report, f, indent=2, sort_keys=True)
-        f.write("\n")
-    return report
 
 
 def lvs_request(engine: str, **options: object) -> dict:
@@ -486,7 +449,7 @@ def check_device_geometry_contract(extract_report: dict) -> list[str]:
 def main() -> int:
     os.makedirs(OUTDIR, exist_ok=True)
 
-    extract_report = run_extract()
+    extract_report = run_extract(EXTRACT_NETLIST, EXTRACT_REPORT)
     print(f"klt extract: {extract_report['status']} -- "
           f"{extract_report['device_count']} devices "
           f"({extract_report['device_counts']}), "
