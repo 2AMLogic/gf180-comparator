@@ -2,6 +2,25 @@
 
 Chronological record of merged pull requests and closed issues. Newest entries appear first.
 
+### 2026-10-08
+
+- **PR #100**: Preserve offset-probe simulator diagnostics in post-layout evidence
+- **PR #99**: fix(sim): prevent run collisions from overwriting evidence
+- **PR #98**: feat(signoff): cite derived corner-matrix envelope for T1 item 5 (#91)
+- **PR #97**: signoff: bump grader to klayout-tools 0.6.0, re-grade T1 item 11
+- **PR #96**: signoff: audit T1 items 1, 9, 10; leave uncited, disclose (DR-0003)
+- **PR #93**: fix(manifests): mirror integrator maturity rung with the graded signoff tier
+- **PR #92**: feat(signoff): wrap characterization report in a generic evidence envelope for T1 item 8
+- **PR #87**: feat(signoff): cite klt yield report for offset MC as T1 item 6 (#82)
+- **Issue #86** (closed): Preserve offset-probe simulator diagnostics in post-layout evidence
+- **Issue #85** (closed): Prevent simulation run collisions from overwriting append-only evidence
+- **Issue #91** (closed): signoff: cite corner-matrix evidence for T1 item 5 (full corner verification)
+- **Issue #89** (closed): signoff: honestly back T1 items 1, 9, 10 with disclosed envelope citations
+- **Issue #90** (closed): signoff: bump grader pin so T1 item 11 (erc evidence) is recognized, then re-grade
+- **Issue #84** (closed): Keep integrator maturity consistent with the signoff verdict
+- **Issue #80** (closed): T1 item 8: wrap the characterization report in a generic evidence envelope, cite, re-grade
+- **Issue #82** (closed): T1 item 6: produce a klt yield report for the offset Monte Carlo campaign and cite it
+
 ### 2026-10-04
 
 - **PR #77**: docs: score noise, decision-time, kickback, supply-power rows against the ratified target-spec

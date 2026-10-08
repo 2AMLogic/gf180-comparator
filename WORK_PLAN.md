@@ -19,7 +19,9 @@ Issues the operator starred (`loom:operator-priority`); land these first.
 
 Human-approved issues ready for implementation (`loom:issue`).
 
-_None._
+- **#101**: Consolidate duplicated extract constants and run_extract across layout/run_*.py
+- **#102**: design: reduce comparator kickback to the ratified 5 mV target (sole blocker of T1 item 5)
+- **#103**: signoff: declare ties[] in the klt erc supply spec now that the upstream blocker is closed (T1 item 11)
 
 ## In Progress
 
@@ -59,7 +61,7 @@ _None._
 |------|-------|
 | Operator merge-risk holds | 0 |
 | Operator priority | 1 |
-| Ready (`loom:issue`) | 0 |
+| Ready (`loom:issue`) | 3 |
 | In Progress (`loom:building`) | 0 |
 | PRs awaiting review | 0 |
 | Approved PRs awaiting merge | 0 |
