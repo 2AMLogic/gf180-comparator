@@ -154,17 +154,21 @@ quoted from the cited envelope's own `coverage` block, not from memory):**
 it (for instance on a rule-free drawn layer, or in a skipped metal4/via3
 enclosure rule) is not excluded by this verdict.
 
-### unmet — item 1 (Design sources): present but deliberately uncited
+### unmet — item 1 (Design sources): present, no envelope shows it
 
-`design/comparator.sch` (+ sub-cells and `.sym`s), `design/xschemrc`,
-`design/netlist.sh`, and the generated `design/comparator.spice` are
-committed (PRs of issues #12/#18), with the netlist bound in `sim/dut.json`
-and the topology + sizing rationale in DR-0001. `klt signoff` cannot check
-any of that claim (no verb binds item 1; any passing envelope of any kind
-would render it `met`, however unrelated), and the checklist's own guidance
-plus the sibling canaries' practice is to leave this row uncited rather than
-cite something topically unrelated — an `UNMET`/`no_evidence` row here is
-the accurate machine statement, not a claim that the sources are missing.
+**Re-audited in [#89](https://github.com/2AMLogic/gf180-comparator/issues/89)
+(policy: DR-0003); still deliberately uncited.** `design/comparator.sch`
+(+ sub-cells and `.sym`s), `design/xschemrc`, `design/netlist.sh`, and the
+generated `design/comparator.spice` are committed, with the netlist bound in
+`sim/dut.json`. The item's claim is "sources plus the netlist derived from
+them, regenerated on change". The only candidate, the item-4 LVS envelope,
+pins `design/comparator.spice` (`environment.reference_sha256`) but shows
+layout-vs-netlist equivalence, not that the netlist derives from the
+schematic. `./design/netlist.sh --check` does check that, but it is a script
+whose result is not an envelope and CI does not run it. Citing the LVS report
+would flip the grade on a claim it does not show, so the row stays
+`no_evidence`. Tool gap filed:
+[klayout-tools#2844](https://github.com/2AMLogic/klayout-tools/issues/2844).
 
 ### met — item 4 (LVS clean): `layout/lvs/comparator.lvs.json`
 
@@ -297,24 +301,29 @@ mode to detect drift), re-pin the item-8 `content_hash` in
 `block-manifest.json`, and re-grade via `./signoff/regenerate.sh` in one
 change.
 
-### unmet — item 9 (Testbenches shipped): present but deliberately uncited
+### unmet — item 9 (Testbenches shipped): present, no `klt sim` envelope
 
-The four committed testbench directories plus the one-command drivers
-(`sim/characterize.sh`, `sim/selftest.sh`, whose 2026-09-15 re-run passed
-all 9 checks) are the substance of the claim; no `klt` envelope can back a
-"testbenches shipped" claim, and citing an unrelated passing envelope would
-render a green row the tool never actually checked — the same reasoning as
-item 1.
+**Re-audited in #89 (DR-0003); still deliberately uncited.** The four
+committed testbench directories (`sim/comparator-*/testbench/`), the
+cold-start drivers (`sim/characterize.sh`, `sim/selftest.sh`; selftest passed
+all 9 checks on 2026-09-15) and the pinned PDK variant (`sim/pdk.json`,
+`gf180mcuD`) are the substance. But no `klt sim` envelope exists: the
+`sim/*/records/*.json` files are this repo's harness format, which the grader
+does not read, and no selftest/characterize run is committed as an envelope.
+The item-6 yield report and item-8 wrapper show different claims. This
+becomes citable once #75 lands `klt sim` envelopes for the ratified rows.
+Tool gap: klayout-tools#2844.
 
-### unmet — item 10 (Repo hygiene): partially true, honestly unchecked
+### unmet — item 10 (Repo hygiene): partially true, no CI-produced evidence
 
-`README.md`, `CLAUDE.md`, `spec/`, a LICENSE, and (with this directory)
-the first CI workflow exist; the item also demands CI that keeps the
-harness and evidence formats valid, and before this PR there was no CI at
-all. `klt signoff --manifest` has no way to grade "CI exists"; the
-machine-readable part of this item's hygiene duty is exactly the anti-rot
-gate below. The full sweep is issue
-[#26](https://github.com/2AMLogic/gf180-comparator/issues/26).
+**Re-audited in #89 (DR-0003); still deliberately uncited.** `README.md`
+(with the target-spec table and reproduction commands), `CLAUDE.md`, `spec/`
+and a LICENSE exist. The item also demands CI that keeps the harness and
+evidence formats valid. The only CI is `signoff.yml` (anti-rot on the signoff
+evidence); it does not run the harness tests (`sim/harness/tests`) or
+`design/netlist.sh --check`, and no CI run evidence is committed. So the CI
+leg is only partly met and unevidenced; the row stays `no_evidence`. Adding
+those CI steps is the path to a citable claim. Tool gap: klayout-tools#2844.
 
 ### unmet — item 11 (Power delivery, structural): first supply evidence cited; the grader cannot read it yet
 
