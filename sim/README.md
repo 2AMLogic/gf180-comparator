@@ -152,7 +152,20 @@ sim/<experiment-slug>/
   netlist-snapshots/<record-id>.spice   DUT + fragment exactly as simulated
 ```
 
-`<record-id>` is `<UTC-YYYYmmdd-HHMMSS>-<short-sha>`.
+`<record-id>` is `<UTC-YYYYmmdd-HHMMSSffffff>-<short-sha>` (microseconds;
+a `.N` suffix is appended if the id was already taken). Older records use the
+one-second `<UTC-YYYYmmdd-HHMMSS>-<short-sha>` form; both stay readable and
+sort chronologically together.
+
+**Run reservation (append-only guarantee).** Before any simulation starts,
+the harness reserves `corners/<record-id>/` with an exclusive `mkdir`. If that
+directory or any published record/snapshot with the id exists, a fresh id is
+allocated; concurrent runs can never share one. The record, JSON twin and
+snapshot are created with exclusive-create, and publication aborts (leaving
+existing files untouched) rather than replace one. **Partial runs:** a run
+killed or failing before publication leaves its reserved `corners/<id>/` logs
+with no record; that directory is never reused, and is orphan evidence of an
+aborted run, not a record.
 
 ## Record format
 

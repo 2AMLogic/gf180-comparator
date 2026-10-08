@@ -244,8 +244,57 @@ def dirty_paths() -> list[str]:
 
 
 def record_id(now: datetime | None = None) -> str:
+    """Mint a candidate record id: ``YYYYmmdd-HHMMSSffffff-<sha>``.
+
+    Microsecond precision; it still sorts chronologically against legacy
+    ``YYYYmmdd-HHMMSS-<sha>`` ids (within one second, ``-`` sorts before any
+    digit). The id is only a *candidate* until ``reserve_run`` has
+    exclusively created its namespace (issue #85).
+    """
     now = now or datetime.now(timezone.utc)
-    return f"{now.strftime('%Y%m%d-%H%M%S')}-{git_short_sha()}"
+    return f"{now.strftime('%Y%m%d-%H%M%S%f')}-{git_short_sha()}"
+
+
+def reserve_run(
+    experiment_dir: Path,
+    now: datetime | None = None,
+    *,
+    logs_root: Path | None = None,
+    check_published: bool = True,
+) -> tuple[str, Path]:
+    """Atomically reserve a unique run namespace BEFORE any simulation runs.
+
+    The reservation is an exclusive ``mkdir`` of ``<logs_root>/<rid>``
+    (default ``<experiment_dir>/corners/<rid>``), which is also the
+    corner-log directory. If it already exists, or a record/snapshot with the
+    same id is already published (legacy ids), a fresh id is allocated by
+    appending ``.N``; nothing pre-existing is touched.
+    Returns ``(record_id, log_dir)``.
+    """
+    root = logs_root if logs_root is not None else experiment_dir / "corners"
+    root.mkdir(parents=True, exist_ok=True)
+    base = record_id(now)
+    n = 0
+    while True:
+        rid = base if n == 0 else f"{base}.{n}"
+        n += 1
+        if check_published and any(
+            (experiment_dir / sub / f"{rid}{ext}").exists()
+            for sub, ext in (("records", ".md"), ("records", ".json"),
+                             ("netlist-snapshots", ".spice"))
+        ):
+            continue
+        try:
+            (root / rid).mkdir()
+        except FileExistsError:
+            continue
+        return rid, root / rid
+
+
+def _write_new(path: Path, text: str) -> None:
+    """Create ``path`` exclusively; never replace an existing artifact."""
+    with open(path, "x") as fh:
+        fh.write(text)
 
 
 def _latest_schematic_record(tb: Testbench) -> tuple[str, dict] | None:
@@ -583,11 +632,19 @@ def write_record(
     records_dir = experiment_dir / "records"
     records_dir.mkdir(parents=True, exist_ok=True)
     record_path = records_dir / f"{rid}.md"
-    record_path.write_text(render_record(tb, results, summaries, context))
-
     snapshots_dir = experiment_dir / "netlist-snapshots"
     snapshots_dir.mkdir(parents=True, exist_ok=True)
-    (snapshots_dir / f"{rid}.spice").write_text(
+    json_path = records_dir / f"{rid}.json"
+    snapshot_path = snapshots_dir / f"{rid}.spice"
+    clash = [t for t in (record_path, json_path, snapshot_path) if t.exists()]
+    if clash:
+        raise FileExistsError(
+            "refusing to overwrite append-only evidence: "
+            + ", ".join(str(t) for t in clash)
+        )
+    _write_new(record_path, render_record(tb, results, summaries, context))
+
+    _write_new(snapshot_path,
         f"* Netlist snapshot for record {rid} -- exactly what was simulated.\n"
         f"* DUT: {context['dut_id']} ({context['dut_provenance']}), "
         f"{context['dut_netlist']}\n"
@@ -598,8 +655,7 @@ def write_record(
         + tb.netlist.read_text()
     )
 
-    json_path = records_dir / f"{rid}.json"
-    json_path.write_text(
+    _write_new(json_path,
         json.dumps(
             {
                 "record_id": rid,

@@ -247,12 +247,20 @@ def main(argv: list[str] | None = None) -> int:
             return 1
 
     write = not (args.no_write or sabotaged)
-    rid = report_mod.record_id()
     # Captured BEFORE the run writes anything, so the flag describes the tree
     # this record was produced from rather than the tree the run left behind.
     dirty_at_start = report_mod.dirty_paths()
-    workdir = WORK_DIR / tb.experiment / rid
-    log_dir = (tb.experiment_dir / "corners" / rid) if write else workdir
+    # Issue #85: reserve a unique run namespace (exclusive mkdir) before any
+    # simulation can write a log. Evidence runs reserve corners/<rid>; scratch
+    # runs reserve under WORK_DIR. A collision allocates a fresh id.
+    if write:
+        rid, log_dir = report_mod.reserve_run(tb.experiment_dir)
+        workdir = WORK_DIR / tb.experiment / rid
+    else:
+        rid, workdir = report_mod.reserve_run(
+            tb.experiment_dir, logs_root=WORK_DIR / tb.experiment,
+            check_published=False)
+        log_dir = workdir
 
     banner_bits = [
         f"experiment sim/{tb.experiment}",
