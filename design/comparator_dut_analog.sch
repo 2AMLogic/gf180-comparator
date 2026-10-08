@@ -61,8 +61,8 @@ nf=1
 model=nfet_03v3
 spiceprefix=X
 }
-N 260 -270 300 -270 {lab=aon}
-C {devices/lab_pin.sym} 300 -270 0 0 {name=MIP_d lab=aon}
+N 260 -270 300 -270 {lab=xcp}
+C {devices/lab_pin.sym} 300 -270 0 0 {name=MIP_d lab=xcp}
 N 220 -240 180 -240 {lab=vinp}
 C {devices/lab_pin.sym} 180 -240 0 0 {name=MIP_g lab=vinp}
 N 260 -210 300 -210 {lab=atail}
@@ -76,8 +76,8 @@ nf=1
 model=nfet_03v3
 spiceprefix=X
 }
-N 540 -270 580 -270 {lab=aop}
-C {devices/lab_pin.sym} 580 -270 0 0 {name=MIN_d lab=aop}
+N 540 -270 580 -270 {lab=xcn}
+C {devices/lab_pin.sym} 580 -270 0 0 {name=MIN_d lab=xcn}
 N 500 -240 460 -240 {lab=vinn}
 C {devices/lab_pin.sym} 460 -240 0 0 {name=MIN_g lab=vinn}
 N 540 -210 580 -210 {lab=atail}
@@ -110,3 +110,74 @@ N 520 -490 520 -530 {lab=vdd}
 C {devices/lab_pin.sym} 520 -530 0 0 {name=RP_p lab=vdd}
 N 500 -460 460 -460 {lab=vss}
 C {devices/lab_pin.sym} 460 -460 0 0 {name=RP_b lab=vss}
+C {symbols/nfet_03v3.sym} 240 -340 0 0 {name=MCP
+L=0.5u
+W=20u
+nf=1
+model=nfet_03v3
+spiceprefix=X
+}
+N 260 -370 300 -370 {lab=aon}
+C {devices/lab_pin.sym} 300 -370 0 0 {name=MCP_d lab=aon}
+N 220 -340 180 -340 {lab=vcas}
+C {devices/lab_pin.sym} 180 -340 0 0 {name=MCP_g lab=vcas}
+N 260 -310 300 -310 {lab=xcp}
+C {devices/lab_pin.sym} 300 -310 0 0 {name=MCP_s lab=xcp}
+N 260 -340 280 -340 {lab=vss}
+C {devices/lab_pin.sym} 280 -340 0 0 {name=MCP_b lab=vss}
+C {symbols/nfet_03v3.sym} 520 -340 0 0 {name=MCN
+L=0.5u
+W=20u
+nf=1
+model=nfet_03v3
+spiceprefix=X
+}
+N 540 -370 580 -370 {lab=aop}
+C {devices/lab_pin.sym} 580 -370 0 0 {name=MCN_d lab=aop}
+N 500 -340 460 -340 {lab=vcas}
+C {devices/lab_pin.sym} 460 -340 0 0 {name=MCN_g lab=vcas}
+N 540 -310 580 -310 {lab=xcn}
+C {devices/lab_pin.sym} 580 -310 0 0 {name=MCN_s lab=xcn}
+N 540 -340 560 -340 {lab=vss}
+C {devices/lab_pin.sym} 560 -340 0 0 {name=MCN_b lab=vss}
+C {symbols/ppolyf_u_1k.sym} 800 -460 0 0 {name=RCT
+W=1u
+L=240u
+model=ppolyf_u_1k
+spiceprefix=X
+m=1
+}
+N 800 -430 800 -390 {lab=vcas}
+C {devices/lab_pin.sym} 800 -390 0 0 {name=RCT_m lab=vcas}
+N 800 -490 800 -530 {lab=vdd}
+C {devices/lab_pin.sym} 800 -530 0 0 {name=RCT_p lab=vdd}
+N 780 -460 740 -460 {lab=vss}
+C {devices/lab_pin.sym} 740 -460 0 0 {name=RCT_b lab=vss}
+C {symbols/ppolyf_u_1k.sym} 800 -300 0 0 {name=RCB
+W=1u
+L=360u
+model=ppolyf_u_1k
+spiceprefix=X
+m=1
+}
+N 800 -270 800 -230 {lab=vss}
+C {devices/lab_pin.sym} 800 -230 0 0 {name=RCB_m lab=vss}
+N 800 -330 800 -370 {lab=vcas}
+C {devices/lab_pin.sym} 800 -370 0 0 {name=RCB_p lab=vcas}
+N 780 -300 740 -300 {lab=vss}
+C {devices/lab_pin.sym} 740 -300 0 0 {name=RCB_b lab=vss}
+C {symbols/nfet_03v3.sym} 1000 -380 0 0 {name=MCC
+L=20u
+W=20u
+nf=1
+model=nfet_03v3
+spiceprefix=X
+}
+N 1020 -410 1060 -410 {lab=vss}
+C {devices/lab_pin.sym} 1060 -410 0 0 {name=MCC_d lab=vss}
+N 980 -380 940 -380 {lab=vcas}
+C {devices/lab_pin.sym} 940 -380 0 0 {name=MCC_g lab=vcas}
+N 1020 -350 1060 -350 {lab=vss}
+C {devices/lab_pin.sym} 1060 -350 0 0 {name=MCC_s lab=vss}
+N 1020 -380 1040 -380 {lab=vss}
+C {devices/lab_pin.sym} 1040 -380 0 0 {name=MCC_b lab=vss}
