@@ -127,6 +127,21 @@ PINNED_ARTIFACTS = {
         REPO_ROOT / "layout" / "comparator.gds",
         ("provenance", "input", "content_hash"),
     ),
+    # Item 8 (issue #80) cites a *generic* evidence envelope -- the one T1
+    # item the grader accepts a hand-rolled ``"kind": "generic"`` wrapper
+    # for (klayout-tools#1152; every other item renders ``wrong_kind`` on
+    # one). ``signoff/make_item8_envelope.py`` writes it deterministically
+    # from the committed narrative report, pinning the report's sha256 in
+    # ``provenance.input.content_hash`` -- the same field
+    # ``MANIFEST_PIN_FIELD`` names below and the grader's staleness gate
+    # compares, so this row re-hashes ``characterization-report.md`` the
+    # same way the layout rows re-hash the GDS: a report that changed
+    # without re-wrapping, re-pinning and re-grading fails here.
+    "8": (
+        REPO_ROOT / "measurements" / "characterization-report.item8.json",
+        REPO_ROOT / "measurements" / "characterization-report.md",
+        ("provenance", "input", "content_hash"),
+    ),
 }
 
 # Item 6 cites a `klt yield` report, which (unlike the layout envelopes

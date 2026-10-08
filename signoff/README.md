@@ -22,6 +22,7 @@ directory for exactly that reason).
 | `design-evidence-tiers.md` | the vendored, verbatim copy of the **11-item** T1 rulebook the report is graded under (see "The two pins" below) |
 | `verify-report.py` | the anti-rot verifier CI runs on every push and PR (see below) |
 | `regenerate.sh` | re-grades the manifest with the pinned grader distribution and rewrites the committed report |
+| `make_item8_envelope.py` | writes the item-8 generic evidence envelope from the characterization report (`--check` detects drift); see the item-8 section |
 
 ## Block kind: `analog`
 
@@ -93,8 +94,9 @@ Today the machine grades this block (see `signoff-report.json`, regenerated
 by `./signoff/regenerate.sh`):
 
 - **met — item 2 (Layout), item 3 (DRC clean), item 4 (LVS clean), item 6
-  (Monte Carlo; offset row only — see the item 5/6 section)**
-- **unmet, reason `no_evidence` — items 1, 5, 7, 8, 9, 10**
+  (Monte Carlo; offset row only — see the item 5/6 section), item 8
+  (Characterization report; generic envelope — see the item-8 section)**
+- **unmet, reason `no_evidence` — items 1, 5, 7, 9, 10**
 - **unmet, reason `unrecognized_envelope` — item 11** (evidence is cited;
   the pinned grader predates item-11 recognition — see the item-11 section)
 
@@ -257,14 +259,43 @@ item 4's chain). Item 7 rejects every evidence kind except a `klt pex`
 report for an analog block — a clean DRC, LVS, or pre-layout sim renders
 `wrong_kind` — so there is nothing to cite until that work exists.
 
-### unmet — item 8 (Characterization report): in flight
+### met — item 8 (Characterization report): generic envelope around the narrative report
 
-Issue
-[#25](https://github.com/2AMLogic/gf180-comparator/issues/25) owns the
-one-command narrative characterization report; no aggregated record is
-committed yet. Item 8 is the one item a hand-rolled **generic evidence
-envelope** (`"kind": "generic"`) may satisfy — wrap the report in one when
-it lands, pin its content hash, cite, re-grade.
+**Cited and graded `met` as of
+[#80](https://github.com/2AMLogic/gf180-comparator/issues/80).** The
+citation is `measurements/characterization-report.item8.json`, a hand-rolled
+**generic evidence envelope** (`"kind": "generic"`, klayout-tools#1152 — the
+one T1 item that may cite one; every other item renders `wrong_kind` on a
+generic citation). `signoff/make_item8_envelope.py` writes it
+deterministically (stdlib only) from
+[`measurements/characterization-report.md`](../measurements/characterization-report.md):
+it pins the report's sha256 in the envelope's
+`provenance.input.content_hash` — the exact field the grader's staleness
+gate compares against the manifest's own `content_hash` pin, and the field
+`verify-report.py`'s item-8 `PINNED_ARTIFACTS` row re-checks against the
+current report bytes. Without that `provenance` block a pinned generic
+citation can only ever grade `stale_evidence`, never a false pass — the
+wrapper is deliberately un-provable if the report it names rots.
+
+**What the `pass` asserts, and what it does not.** `status` in a generic
+envelope is the caller-asserted verdict for *item 8's claim* — that one
+aggregated, current characterization record, scored against the ratified
+DR-0002 table with every verdict citing its committed evidence record,
+exists — not a claim that every spec row meets its target. The report itself
+scores two rows as misses against the ratified bar (decision-time stretch at
+`ss_125c_2.97v`; kickback target and stretch), and those misses are named in
+the envelope's `summary` so they travel with the citation instead of being
+laundered into a bare `pass`. The full per-row story, with each verdict's
+evidence record, is the report's own
+[Known gaps](../measurements/characterization-report.md) section; the
+narrative report and its evidence chain are unchanged by this citation
+(read-only wrap, per #80's scope).
+
+Refresh contract for this citation: the report is the artifact — if it
+changes, re-run `python3 signoff/make_item8_envelope.py` (or its `--check`
+mode to detect drift), re-pin the item-8 `content_hash` in
+`block-manifest.json`, and re-grade via `./signoff/regenerate.sh` in one
+change.
 
 ### unmet — item 9 (Testbenches shipped): present but deliberately uncited
 
@@ -353,7 +384,8 @@ push and PR (`.github/workflows/signoff.yml`):
 
 **Refresh contract.** Any change to a cited evidence envelope or to the
 cited artifacts means: re-run the producing flow (e.g.
-`layout/run_drc.py`/`layout/run_lvs.py` per `layout/README.md`), re-pin the
+`layout/run_drc.py`/`layout/run_lvs.py` per `layout/README.md`;
+`signoff/make_item8_envelope.py` for the item-8 wrap), re-pin the
 hash in `block-manifest.json`, run `./signoff/regenerate.sh`, commit the
 fresh report — in one change. A *new* citation means adding the
 corresponding pin row to `verify-report.py`'s `PINNED_ARTIFACTS` in the
