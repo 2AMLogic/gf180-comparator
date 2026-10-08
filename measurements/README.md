@@ -22,6 +22,15 @@ nothing in this directory ever supersedes a `sim/` record.
   at `ss_125c_2.97v`; kickback target/stretch miss) stated explicitly rather
   than absorbed. Each experiment's numbers cite the specific evidence record
   they come from.
+- [`characterization-report.item8.json`](characterization-report.item8.json)
+  — the **generic evidence envelope** (`"kind": "generic"`, the one T1 item
+  that accepts one) wrapping that report for the T1 signoff citation:
+  `signoff/make_item8_envelope.py` writes it deterministically, pinning the
+  report's sha256 in `provenance.input.content_hash`. The envelope's `pass`
+  asserts the report's existence, currency and evidence chain — the two
+  scored misses stand as recorded in the report, named in the envelope's
+  `summary`. See [`signoff/README.md`](../signoff/README.md)'s item-8
+  section.
 
 ## Reproducibility
 

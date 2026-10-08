@@ -18,6 +18,10 @@
       "file": "sim/comparator-offset-mc/yield/yield-20260910-124917-4805118-target.json",
       "content_hash": "sha256:8e53d5b54c585de1858de1bf4087a8b44338f04211f685b0a2a9fee206279901"
     },
+    "8": {
+      "file": "measurements/characterization-report.item8.json",
+      "content_hash": "sha256:cd33cc25f69866aedcee9676908249f62435b70ef268bc6e8fde08822fd0118e"
+    },
     "11": {
       "file": "layout/erc/comparator.erc.json",
       "content_hash": "sha256:d668ccb543c4ec6482ee78fb00805a7472955944fce07022c505e78eeec6b8ed"
