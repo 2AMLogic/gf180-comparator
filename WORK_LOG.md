@@ -111,3 +111,8 @@ Chronological record of merged pull requests and closed issues. Newest entries a
 - **Issue #8** (closed): sim harness: PvtPoint.corner_id has no uniqueness check — custom --supply-tolerance/--temps can silently collapse distinct PVT points
 - **Issue #7** (closed): sim harness: run_point() treats a non-fatal ngspice error as status=ok when all measurements still parse
 - **Issue #5** (closed): sim: stand up the harness + four comparator experiment directories with standalone stimuli, ported from gf180-sar-adc (porting-plan next steps 2-3)
+
+### 2026-09-06
+
+- **PR #4**: docs: draft target-spec table, porting plan, and gap-to-T1 tracker
+- **Issue #2** (closed): Bootstrap the block: draft target-spec, porting/design plan, gap-to-T1 tracker (wave-5 standup completion)
