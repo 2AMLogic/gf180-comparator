@@ -176,17 +176,18 @@ def main() -> int:
     ap.add_argument("--work", default=None, help="scratch dir for requests/reports")
     ap.add_argument("--from-report", default=None, help="ingest a finished work dir, skip dispatch")
     ap.add_argument("--mc-n", type=int, default=200)
+    ap.add_argument("--dut", default=None, help="DUT binding id/path (e.g. a control netlist), as run_corners.py --dut")
     ap.add_argument("--label", default="", help="free-text topology label stamped in the record")
     a = ap.parse_args()
 
     tb = htb.load(SIM / a.bench)
-    dut = hdut.load()
+    dut = hdut.load(select=a.dut)
     vdds = hc.supply_points(tb.nominal_supply_v, tb.supply_tolerance)
     names = {f"{leg}-v{v:.2f}": (leg, v) for leg in LEGS[a.bench] for v in vdds}
     work = Path(a.from_report or a.work or f"/tmp/klt-{a.bench}").resolve()
     if not a.from_report:
         work.mkdir(parents=True, exist_ok=True)
-        subprocess.check_call([sys.executable, str(HERE / "mk_klt_request.py"), a.bench, str(work), "--mc-n", str(a.mc_n)])
+        subprocess.check_call([sys.executable, str(HERE / "mk_klt_request.py"), a.bench, str(work), "--mc-n", str(a.mc_n)] + (["--dut", a.dut] if a.dut else []))
         dispatch(work, list(names))
 
     reports = {n: json.loads((work / f"report-{n}.json").read_text()) for n in names}
