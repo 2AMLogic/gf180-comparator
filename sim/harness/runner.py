@@ -187,6 +187,29 @@ def parse_measurements(text: str) -> dict[str, float]:
     return found
 
 
+def _diagnostic_warnings(output: str, returncode: int, prefix: str = "") -> list[str]:
+    """Classify simulator diagnostics (shared by the main deck and the probe).
+
+    A nonzero exit and the first few Error/Fatal/doAnalyses lines become
+    warnings; ``prefix`` names the origin (e.g. the probe and its raw log).
+    """
+    warnings: list[str] = []
+    if returncode != 0:
+        warnings.append(f"{prefix}ngspice exited {returncode}")
+    error_lines = [line.strip() for line in output.splitlines() if _ERROR_RE.match(line)]
+    warnings.extend(f"{prefix}{line}" for line in error_lines[:5])
+    return warnings
+
+
+@dataclass
+class ProbeOutcome:
+    """Structured result of the offset probe."""
+    vos: float | None = None          # None: no dut_vos (missing or timeout)
+    returncode: int | None = None     # None on timeout
+    timed_out: bool = False
+    warnings: list[str] = field(default_factory=list)
+
+
 def _run_offset_probe(
     probe_tb: Testbench,
     pdk: Pdk,
@@ -196,12 +219,14 @@ def _run_offset_probe(
     log_dir: Path,
     timeout_s: int,
     num_threads: int,
-) -> float | None:
-    """Run the offset probe at this PVT point; return ``dut_vos`` in volts.
+) -> ProbeOutcome:
+    """Run the offset probe at this PVT point; return a ``ProbeOutcome``.
 
     The probe's raw ngspice output is committed evidence alongside the main
-    log as ``<corner-id>.vosprobe.log``. Returns None when the probe fails
+    log as ``<corner-id>.vosprobe.log``. ``vos`` is None when the probe fails
     to produce the measurement (caller fails the point with a message).
+    Simulator diagnostics are carried as ``warnings`` tagged as
+    probe-originated with the raw log name (issue #86).
     """
     deck_path = workdir / f"{point.corner_id}.vosprobe.spice"
     log_path = log_dir / f"{point.corner_id}.vosprobe.log"
@@ -220,11 +245,16 @@ def _run_offset_probe(
         output = proc.stdout + "\n" + proc.stderr
     except subprocess.TimeoutExpired:
         log_path.write_text(f"TIMEOUT after {probe_timeout_s}s\n")
-        return None
+        return ProbeOutcome(timed_out=True)
     log_path.write_text(output)
     measurements = parse_measurements(output)
     vos = measurements.get("dut_vos")
-    return float(vos) if vos is not None else None
+    prefix = f"offset probe ({log_path.name}): "
+    return ProbeOutcome(
+        vos=float(vos) if vos is not None else None,
+        returncode=proc.returncode,
+        warnings=_diagnostic_warnings(output, proc.returncode, prefix),
+    )
 
 
 def run_point(
@@ -265,27 +295,30 @@ def run_point(
     log_path = log_dir / f"{point.corner_id}.log"
 
     extra_params: dict[str, float] = {}
+    probe_warnings: list[str] = []
     if getattr(tb, "offset_probe", None):
         # The fragment references dut_vos but never defines it (the harness
         # owns it); a run without a probe -- a schematic DUT, offset-free by
         # construction -- still must define it for the expressions to parse.
         extra_params["dut_vos"] = 0.0
     if probe_tb is not None:
-        probed = _run_offset_probe(probe_tb, pdk, dut, point, workdir, log_dir,
-                                   timeout_s, num_threads)
-        if probed is None:
+        probe = _run_offset_probe(probe_tb, pdk, dut, point, workdir, log_dir,
+                                  timeout_s, num_threads)
+        probe_warnings = probe.warnings
+        if probe.vos is None:
             return PointResult(
                 point=point,
                 status="failed",
                 deck=deck_path.name,
                 log=f"{point.corner_id}.vosprobe.log",
+                warnings=probe_warnings,
                 message=(
                     "offset probe produced no dut_vos measurement -- the "
                     "overdrive ladder cannot be referred (offset outside the "
                     "probe's ramp range, or the probe deck failed)"
                 ),
             )
-        extra_params["dut_vos"] = probed
+        extra_params["dut_vos"] = probe.vos
 
     deck_path.write_text(
         compose_deck(tb, pdk, dut, point, num_threads=num_threads,
@@ -334,10 +367,7 @@ def run_point(
     # (#7). `warnings` surfaces that finding on the "ok" path too, without
     # changing the point's status.
     error_lines = [line.strip() for line in output.splitlines() if _ERROR_RE.match(line)]
-    warnings: list[str] = []
-    if returncode != 0:
-        warnings.append(f"ngspice exited {returncode}")
-    warnings.extend(error_lines[:5])
+    warnings = probe_warnings + _diagnostic_warnings(output, returncode)
 
     if missing:
         errors = "; ".join(_ERROR_RE.findall(output)[:3])

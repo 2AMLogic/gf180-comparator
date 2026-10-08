@@ -87,5 +87,78 @@ class RunPointWarningsTest(unittest.TestCase):
         self.assertEqual(warned.as_dict()["warnings"], warned.warnings)
 
 
+class OffsetProbeWarningsTest(unittest.TestCase):
+    """#86: probe diagnostics propagate into the enclosing PointResult."""
+
+    MAIN = "m_vos_mv = 6.9e-01\n"
+
+    def setUp(self):
+        self.point = PvtPoint(corner=CORNERS["tt"], temp_c=27.0, vdd=3.3, index=0)
+        self.tb = types.SimpleNamespace(measure={"vos_mv": "v(out)"})
+        self.probe_tb = types.SimpleNamespace()
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.workdir = Path(self._tmp.name)
+
+    def _run(self, probe, main=None):
+        """probe/main: CompletedProcess or an exception to raise."""
+        calls = []
+        outcomes = [probe] + ([main] if main is not None else [])
+
+        def fake(*a, **kw):
+            calls.append(a)
+            out = outcomes[len(calls) - 1]
+            if isinstance(out, BaseException):
+                raise out
+            return out
+
+        with mock.patch("harness.runner.compose_deck", return_value="* stub\n"), \
+             mock.patch("harness.runner.subprocess.run", side_effect=fake):
+            result = run_point(self.tb, types.SimpleNamespace(), types.SimpleNamespace(),
+                               self.point, self.workdir, probe_tb=self.probe_tb)
+        return result, len(calls)
+
+    def test_clean_probe_adds_no_warning(self):
+        result, _ = self._run(_fake_completed("m_dut_vos = 1.5e-03\n"),
+                              _fake_completed(self.MAIN))
+        self.assertEqual(result.status, "ok")
+        self.assertEqual(result.warnings, [])
+        self.assertEqual(result.measurements["dut_vos_v"], 1.5e-03)
+
+    def test_probe_nonzero_exit_with_value_warns(self):
+        result, _ = self._run(_fake_completed("m_dut_vos = 1.5e-03\n", 1),
+                              _fake_completed(self.MAIN))
+        self.assertEqual(result.status, "ok")
+        self.assertTrue(any("offset probe" in w and "exited 1" in w and "vosprobe.log" in w
+                            for w in result.warnings))
+        self.assertEqual(result.as_dict()["warnings"], result.warnings)
+
+    def test_probe_error_lines_with_value_warn(self):
+        stdout = "doAnalyses: timestep too small\nFatal: boom\nm_dut_vos = 1.5e-03\n"
+        result, _ = self._run(_fake_completed(stdout), _fake_completed(self.MAIN))
+        self.assertEqual(result.status, "ok")
+        self.assertTrue(any("offset probe" in w and "doAnalyses" in w for w in result.warnings))
+        self.assertTrue(any("Fatal" in w for w in result.warnings))
+
+    def test_probe_and_main_warnings_both_kept(self):
+        result, _ = self._run(_fake_completed("m_dut_vos = 1e-3\n", 1),
+                              _fake_completed(self.MAIN, 2))
+        self.assertTrue(any(w.startswith("offset probe") for w in result.warnings))
+        self.assertIn("ngspice exited 2", result.warnings)
+
+    def test_missing_offset_stops_main_and_keeps_warnings(self):
+        result, ncalls = self._run(_fake_completed("Error: singular matrix\n", 1))
+        self.assertEqual(ncalls, 1)
+        self.assertEqual(result.status, "failed")
+        self.assertIn("no dut_vos", result.message)
+        self.assertTrue(any("singular matrix" in w for w in result.warnings))
+
+    def test_probe_timeout_stops_main(self):
+        result, ncalls = self._run(subprocess.TimeoutExpired("ngspice", 1800))
+        self.assertEqual(ncalls, 1)
+        self.assertEqual(result.status, "failed")
+        self.assertTrue(result.log.endswith("vosprobe.log"))
+
+
 if __name__ == "__main__":
     unittest.main()
