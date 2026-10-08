@@ -107,7 +107,7 @@ def main() -> int:
 
     tb = htb.load(SIM / a.bench)
     pdk = hpdk.find_pdk()
-    dut = hdut.load(select=a.dut)
+    dut = hdut.load(path=a.dut) if a.dut and Path(a.dut).is_file() else hdut.load(select=a.dut)
     if dut.provenance != "schematic":
         raise SystemExit("mk_klt_request.py supports the schematic binding only "
                          "(dut_vos probe leg is not implemented)")

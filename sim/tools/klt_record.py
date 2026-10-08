@@ -181,7 +181,7 @@ def main() -> int:
     a = ap.parse_args()
 
     tb = htb.load(SIM / a.bench)
-    dut = hdut.load(select=a.dut)
+    dut = hdut.load(path=a.dut) if a.dut and Path(a.dut).is_file() else hdut.load(select=a.dut)
     vdds = hc.supply_points(tb.nominal_supply_v, tb.supply_tolerance)
     names = {f"{leg}-v{v:.2f}": (leg, v) for leg in LEGS[a.bench] for v in vdds}
     work = Path(a.from_report or a.work or f"/tmp/klt-{a.bench}").resolve()
