@@ -45,6 +45,13 @@ layout/lvs/comparator.extracted.spice
 # evidence for what the post-layout DUT binding was extracted from.
 layout/lvs/comparator.extracted-rc.spice
 layout/lvs/comparator.dut-layout.spice
+# layout/pex/run_pex.py's (issue #81) scratch -- the netlist `klt pex`
+# extracts, and every SPICE deck layout/pex/pex_measure.py generates from it
+# and from the committed bench (same anonymous-net-numbering reason as
+# above). The `klt pex` report and each side's `klt sim` requests/reports
+# under layout/pex/artifacts/ ARE committed -- they are the item-7 evidence.
+layout/pex/comparator.extracted-rc.spice
+layout/pex/artifacts/**/*.spice
 # local klt install, created by the setup script
 .venv/
 # >>> loom-managed (do not edit) >>>
