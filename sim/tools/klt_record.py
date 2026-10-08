@@ -35,6 +35,7 @@ SIM = HERE.parent
 REPO = SIM.parent
 sys.path.insert(0, str(SIM))
 
+from harness import corners as hc  # noqa: E402
 from harness import dut as hdut  # noqa: E402
 from harness import testbench as htb  # noqa: E402
 
@@ -58,19 +59,24 @@ POWER_TARGET_UW = 1000.0  # <= 1 mW static, README.md supply/power row
 MATH = {"abs": abs, "max": max, "min": min, "sqrt": math.sqrt, "ln": math.log, "log": math.log10}
 
 
-def corner_id(raw: str) -> tuple[str, str]:
-    """'tt/3.300V/27C[/mcN]' -> ('tt_27c_3.30v', 'mcN' or '')."""
+def corner_id(raw: str, vdd: float) -> tuple[str, str]:
+    """'tt/27C[/mcN]' + the request's supply -> ('tt_27c_3.30v', 'mcN' or '').
+
+    The supply is not in klt's corner id: it is baked into each request's
+    body netlist (one request per supply point, see mk_klt_request.py)."""
     parts = raw.split("/")
-    proc, vdd, temp = parts[0], float(parts[1].rstrip("V")), float(parts[2].rstrip("C"))
-    return f"{proc}_{temp:g}c_{vdd:.2f}v", (parts[3] if len(parts) > 3 else "")
+    proc = parts[0]
+    temp = next(float(x.rstrip("C")) for x in parts[1:] if x.endswith("C"))
+    sample = next((x for x in parts[1:] if x.startswith("mc")), "")
+    return f"{proc}_{temp:g}c_{vdd:.2f}v", sample
 
 
-def collect(report: dict) -> tuple[dict, list]:
+def collect(report: dict, vdd: float) -> tuple[dict, list]:
     """report -> ({corner_id: {sample: {name: value}}}, bad statuses)."""
     out: dict = {}
     bad = []
     for c in report["corners"]:
-        cid, sample = corner_id(c["corner_id"])
+        cid, sample = corner_id(c["corner_id"], vdd)
         if c["status"] != "pass":
             bad.append((c["corner_id"], c["status"]))
             continue
@@ -137,21 +143,27 @@ def git_state() -> tuple[str, bool]:
     return sha, dirty
 
 
-def dispatch(work: Path, leg: str) -> None:
+def dispatch(work: Path, names: list[str]) -> None:
+    """Submit every request concurrently (each is a batch job on the fleet)."""
     backend = os.environ.get("KLT_SIM_BACKEND", "")
     if backend not in ("batch", "remote"):
         raise SystemExit(
             f"KLT_SIM_BACKEND={backend!r}: refusing to run a multi-unit grid on a "
             "local backend (shared dispatch worker). Export KLT_SIM_BACKEND=batch."
         )
-    rc = subprocess.run(
-        ["klt", "sim", "-o", str(work / f"out-{leg}"), str(work / f"request-{leg}.json"), "--format", "json"],
-        stdout=(work / f"report-{leg}.json").open("w"),
-        stderr=(work / f"stderr-{leg}.txt").open("w"),
-    ).returncode
-    if not (work / f"report-{leg}.json").read_text().strip():
-        raise SystemExit(f"klt sim leg {leg} failed (rc={rc}):\n{(work / f'stderr-{leg}.txt').read_text()}")
-    print(f"leg {leg}: klt sim rc={rc}")
+    procs = {
+        n: subprocess.Popen(
+            ["klt", "sim", "-o", str(work / f"out-{n}"), str(work / f"request-{n}.json"), "--format", "json"],
+            stdout=(work / f"report-{n}.json").open("w"),
+            stderr=(work / f"stderr-{n}.txt").open("w"),
+        )
+        for n in names
+    }
+    for n, pr in procs.items():
+        rc = pr.wait()
+        if not (work / f"report-{n}.json").read_text().strip():
+            raise SystemExit(f"klt sim request {n} failed (rc={rc}):\n{(work / f'stderr-{n}.txt').read_text()}")
+        print(f"request {n}: klt sim rc={rc}", flush=True)
 
 
 def fmt(v) -> str:
@@ -169,15 +181,20 @@ def main() -> int:
 
     tb = htb.load(SIM / a.bench)
     dut = hdut.load()
+    vdds = hc.supply_points(tb.nominal_supply_v, tb.supply_tolerance)
+    names = {f"{leg}-v{v:.2f}": (leg, v) for leg in LEGS[a.bench] for v in vdds}
     work = Path(a.from_report or a.work or f"/tmp/klt-{a.bench}").resolve()
     if not a.from_report:
         work.mkdir(parents=True, exist_ok=True)
         subprocess.check_call([sys.executable, str(HERE / "mk_klt_request.py"), a.bench, str(work), "--mc-n", str(a.mc_n)])
-        for leg in LEGS[a.bench]:
-            dispatch(work, leg)
+        dispatch(work, list(names))
 
-    reports = {leg: json.loads((work / f"report-{leg}.json").read_text()) for leg in LEGS[a.bench]}
-    legs_c = {leg: collect(rep) for leg, rep in reports.items()}
+    reports = {n: json.loads((work / f"report-{n}.json").read_text()) for n in names}
+    legs_c: dict = {leg: ({}, []) for leg in LEGS[a.bench]}
+    for n, (leg, v) in names.items():
+        ok, bad = collect(reports[n], v)
+        legs_c[leg][0].update(ok)
+        legs_c[leg][1].extend(bad)
     derived, problems = derive(a.bench, tb, legs_c)
 
     label, key, tgt, stretch, unit = SPEC[a.bench]
@@ -195,7 +212,7 @@ def main() -> int:
         (exp / sub).mkdir(exist_ok=True)
     cdir = exp / "corners" / rid
     cdir.mkdir()  # exclusive: raises if the id exists
-    for f in ["body.spice", "design.ngspice"] + [f"request-{l}.json" for l in LEGS[a.bench]] + [f"report-{l}.json" for l in LEGS[a.bench]]:
+    for f in ["design.ngspice"] + [f"body-v{v:.2f}.spice" for v in vdds] + [f"request-{n}.json" for n in names] + [f"report-{n}.json" for n in names]:
         shutil.copy2(work / f, cdir / f)
     snap = exp / "netlist-snapshots" / f"{rid}.spice"
     snap.write_text(dut.netlist.read_text() + "\n* ---- testbench fragment ----\n" + tb.netlist.read_text())
@@ -206,7 +223,7 @@ def main() -> int:
         f"# Record {rid}",
         "",
         f"- **Record ID**: {rid}",
-        f"- **Experiment**: `sim/{a.bench}/` (klt sim legs: {', '.join(LEGS[a.bench])})",
+        f"- **Experiment**: `sim/{a.bench}/` (klt sim requests, one per supply point: {', '.join(names)})",
         f"- **Topology label**: {a.label or dut.dut_id}",
         f"- **Claim**: REFERENCE against the ratified {label} row (README.md#target-specification-ratified-via-dr-0002; target <= {tgt:g} {unit}, stretch <= {stretch:g} {unit}). Scored, not relaxed.",
         f"- **DUT**: `{dut.dut_id}` -- **{dut.provenance}** -- `{dut.netlist.relative_to(REPO)}` (sha256 `{dut.netlist_sha256[:16]}`)",
@@ -216,9 +233,9 @@ def main() -> int:
         f"- **Corner matrix**: {len(derived)} of {expected} PVT points with every leg passing (process tt/ff/ss/fs/sf x -40/27/125 C x 2.97/3.30/3.63 V)",
     ]
     if a.bench == "comparator-offset-mc":
-        mc = reports["main"]["environment"].get("monte_carlo", {})
+        mc = next(iter(reports.values()))["environment"].get("monte_carlo", {})
         lines += [
-            f"- **Monte Carlo**: seed {mc.get('seed')}, n = {mc.get('n')} draws per PVT point, vary = {mc.get('vary')} (`.param sw_stat_mismatch=1` set by the fragment). sigma = population standard deviation of the per-draw input-referred offset `voa` (= -dv/gain, same draw), 3-sigma = 3 x sigma; stats are computed by `sim/tools/klt_record.py` from the raw per-draw values in `corners/{rid}/report-main.json`.",
+            f"- **Monte Carlo**: seed {mc.get('seed')}, n = {mc.get('n')} draws per PVT point, vary = {mc.get('vary')} (`.param sw_stat_mismatch=1` set by the fragment). sigma = population standard deviation of the per-draw input-referred offset `voa` (= -dv/gain, same draw), 3-sigma = 3 x sigma; stats are computed by `sim/tools/klt_record.py` from the raw per-draw values in `corners/{rid}/report-main-v*.json`.",
         ]
     if problems:
         lines += ["- **INCOMPLETE / FAILED UNITS**:"] + [f"  - {p}" for p in problems[:60]]
