@@ -27,7 +27,7 @@ generator is the reviewable source", are reused here).
 | `drc/comparator.drc.json` | The committed `klt drc` JSON envelope — `status`, `violation_count`, and the deck's own `provenance.deck.content_hash`. |
 | `run_lvs.py` / `lvs/*.json` | The LVS signoff evidence (#22, #30) — `klt extract` + `klt lvs` against the reference `design/comparator.spice`, the two contract checks `klt lvs`'s own verdict cannot make (pin order, and drawn device geometry), and a `netgen`-engine cross-check (`lvs/comparator.netgen.json`) run through a second, independent comparator. See "LVS" below. |
 | `run_extract_sim.py` / `lvs/comparator.extract-rc.json` | The post-layout simulation binding (#23, T1 item 7) — `klt extract --parasitics` on the same GDS/deck/top/pins as `run_lvs.py`, adapted onto the PDK's ngspice simulation primitives and the `comparator_dut` interface that `sim/dut.json`'s `comparator-dr0001-layout` entry binds. See "Post-layout extraction for simulation" below. |
-| `erc-supply-spec.json` | The `klt erc` supply spec (issue #56, T1 item 11) — the declared stackup/vias/nets a `klt erc` run grades this block's *structural* power delivery from, with every field's justification written inline in its `_comment`. See "ERC" below. |
+| `erc-supply-spec.json` | The `klt erc` supply spec (issue #56, T1 item 11) — the declared stackup/vias/nets a `klt erc` run grades this block's *structural* power delivery from, with every field's justification in `erc-supply-spec.notes.md` (klt 0.6.0 rejects a `_comment` key). See "ERC" below. |
 | `erc/comparator.erc.json` | The committed `klt erc --deck gf180mcu` JSON envelope — the supply read itself: `erc_status`, `erc_findings`, the per-supply connectivity verdict, `erc_coverage`, and `provenance` carrying this GDS's own `input.content_hash`. See "ERC" below. |
 
 `layout/_gen/` (per-device `klt gen` blocks + the `gen-compose` request) and
@@ -957,13 +957,9 @@ klt erc layout/comparator.gds layout/erc-supply-spec.json \
   --deck gf180mcu --format json > layout/erc/comparator.erc.json
 ```
 
-The committed `comparator.erc.json` was produced by `klt
-0.5.0+gb15edf5e3a2e` (built from
-[klayout-tools@2AMLogic](https://github.com/2AMLogic/klayout-tools) commit
-`b15edf5e`: `git clone` at that commit, `uv build --wheel`, then run the
-wheel — the host-installed `klt` `0.5.0` release predates the erc
-`status`/`provenance` envelope that carries the `input.content_hash`
-item 11 cites, so the report could not otherwise pin its own input). The
+The committed `comparator.erc.json` was produced by the released `klt
+0.6.0` registry wheel (#103; a throwaway venv, `pip install
+klayout-tools==0.6.0`, so `provenance.klt_version` is the plain `0.6.0`). The
 report's `provenance.input.content_hash` is `sha256:d668ccb…eeec6b8ed` —
 byte-equal to the committed `layout/comparator.gds` — and its
 `provenance.spec.content_hash` pins the committed
@@ -998,33 +994,31 @@ deck-recognized resistor bodies from connectivity and echoes
 is the honest metal-only read, with the carve-out recorded in the report
 rather than asserted in prose.
 
-### `erc.missing_tie`: not computed, and what stands in for it
+### `erc.missing_tie`: computed (#103)
 
-The spec deliberately declares **no `ties[]`** (recorded in its `_comment`
-with the reason), so `erc.missing_tie` is **not computed** by this run —
-the report records that mechanically, `erc_coverage.inapplicable` =
-`[{"id": "erc.missing_tie:[]", "reason": "no_ties_declared"}]`. That
-omission is upstream-mandated, not an oversight: `klt erc`'s `ties[]`
-collapses a real routed design into one electrical island and reports a
-**false** `erc.supply_short`
-([klayout-tools#2169](https://github.com/2AMLogic/klayout-tools/issues/2169),
-reproduced four ways in `gf180-drone-fc`'s FRICTION F-034 — the sibling
-repo's item-11 spec lands on the same omission for the same reason). So
-the report's zero `missing_tie` count is an **absence of evidence, not
-evidence of absence**, and the well/substrate ties are evidenced by what
-did get drawn and extracted instead:
+The spec declares `ties[]`, so `erc.missing_tie` is **computed** and the
+report's `erc_coverage.checked` lists `erc.missing_tie:["nwell_vdd"]` and
+`erc.missing_tie:["substrate_vss"]`, with `inapplicable: []` and zero findings.
+It was omitted until #103 because of
+[klayout-tools#2169](https://github.com/2AMLogic/klayout-tools/issues/2169)
+(`ties[]` collapsing a routed design into one island and reporting a false
+`erc.supply_short`); that issue and its follow-ups (#2234, #2255, #2339,
+#2540) are closed and the 0.6.0 run shows one island per supply with no
+`erc.supply_short`.
 
-- `route_nets.plant_taps()` plants **6 Nwell taps tied up to `vdd` Metal1
-  pads and 2 Pplus/Comp substrate ties tied up to `vss`** ("Body ties are
-  drawn here too" under "Routing"; the generated routing table's
-  `vdd`/`vss` rows carry them, `+6 body ties` / `+2 body ties`);
-- `comparator.routing.json` `totals.tap_pins` = 8 — the machine record that
-  those tap pads joined the two supply nets as ordinary router pins;
-- `lvs/comparator.extract.json` extracts them as part of the named
-  `vdd`/`vss` nets — and it is why `klt extract`'s
-  `unbiased_pmos_body_nets` is `[]` (see "LVS" above): every PMOS body
-  resolves to `vdd` through a drawn, contacted well tie, not to an
-  anonymous Nwell net.
+- `nwell_vdd`: every Nwell `21/0` shape holds a Comp `22/0` tap narrowed to
+  Nplus `32/0` and connected up to Metal1 `vdd` (the 6 taps
+  `route_nets.plant_taps()` draws).
+- `substrate_vss`: this PDK draws no pwell, so the tie uses
+  `well_layer: null` with asserted `well_boxes` (the die outside the Nwell
+  footprint) and Pplus-narrowed Comp taps connected to `vss` (the 2 substrate
+  ties). It is listed in `erc_coverage.checked_by_well_assertion`: the region
+  is the spec's assertion, so this tie is evidence conditional on that box
+  list, not a purely derived result.
+
+Corroborating drawn evidence: `comparator.routing.json` `totals.tap_pins` = 8,
+`lvs/comparator.extract.json` extracts the taps as part of `vdd`/`vss`, and
+`klt extract`'s `unbiased_pmos_body_nets` is `[]` (see "LVS" above).
 
 ### Where the item honestly stands
 
