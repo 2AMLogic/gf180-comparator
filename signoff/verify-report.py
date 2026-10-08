@@ -47,7 +47,7 @@ Run from anywhere inside the repository:
     python3 signoff/verify-report.py
 
 CI runs exactly this command (``.github/workflows/signoff.yml``), after
-installing the pinned grader (``klayout-tools==0.5.0``, the PyPI registry
+installing the pinned grader (``klayout-tools==0.6.0``, the PyPI registry
 wheel -- the same distribution ``signoff/regenerate.sh`` grades with; see
 that script's header for why the distribution identity matters). Before
 committing a refreshed report locally, run this too -- if the freshly graded
@@ -193,7 +193,7 @@ def find_klt() -> str:
         "no klt binary found (looked next to "
         f"{sys.executable} and on PATH) -- install the pinned grader per "
         "signoff/README.md, e.g.\n"
-        "  python -m pip install klayout-tools==0.5.0"
+        "  python -m pip install klayout-tools==0.6.0"
     )
 
 
@@ -376,6 +376,20 @@ def verify_pins(manifest: dict) -> list[str]:
                 "row added in the same change)"
             )
             continue
+        if item == "11" and isinstance(entry, list):
+            # Item 11 is graded as a compound entry (erc + the item-4 LVS
+            # report); the erc part is the one this row pins, the LVS part
+            # must stay identical to item 4's own citation.
+            if evidence.get("4") not in entry:
+                problems.append(
+                    f"{label}: the compound entry must also cite item 4's "
+                    "LVS report verbatim (the item-11 LVS-supply leg)"
+                )
+            erc_parts = [
+                e for e in entry
+                if isinstance(e, dict) and e.get("file") == str(envelope_path.relative_to(REPO_ROOT))
+            ]
+            entry = erc_parts[0] if erc_parts else None
         if not isinstance(entry, dict) or "content_hash" not in entry:
             problems.append(
                 f"{label} is expected to carry a content_hash pin -- a "

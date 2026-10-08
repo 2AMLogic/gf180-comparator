@@ -28,7 +28,7 @@ set -euo pipefail
 
 # Keep in sync with the signoff job's pip install in
 # .github/workflows/signoff.yml.
-KLT_VERSION="0.5.0"
+KLT_VERSION="0.6.0"
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
