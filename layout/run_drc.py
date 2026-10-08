@@ -33,13 +33,9 @@ import os
 import subprocess
 import sys
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-REPO_ROOT = os.path.dirname(HERE)
-OUTDIR = os.path.join(HERE, "drc")
-GDS = os.path.join(HERE, "comparator.gds")
+from layout_common import DECK, GDS, HERE, REPO_ROOT, TOP
 
-DECK = "gf180mcu"
-TOP = "COMPARATOR"
+OUTDIR = os.path.join(HERE, "drc")
 REPORT = os.path.join(OUTDIR, "comparator.drc.json")
 
 
