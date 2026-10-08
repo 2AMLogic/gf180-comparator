@@ -502,7 +502,12 @@ def render_record(
             cells = " | ".join("—" for _ in names)
             lines.append(
                 f"  | `{result.point.corner_id}` | {cells} | "
-                f"**{result.status.upper()}**: {result.message} |"
+                f"**{result.status.upper()}**: {result.message}"
+                + (
+                    f" (⚠ {len(result.warnings)} warning(s): {'; '.join(result.warnings)})"
+                    if result.warnings else ""
+                )
+                + " |"
             )
             continue
         cells = " | ".join(_fmt(result.measurements[n]) for n in names)
