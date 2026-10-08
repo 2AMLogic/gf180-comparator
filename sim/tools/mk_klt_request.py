@@ -172,7 +172,7 @@ def main() -> int:
             "analysis": spec["analysis"],
             "measurements": spec["measurements"],
             "options": {
-                "timeout_s": 600,
+                "timeout_s": 3000,
                 "keep_artifacts": True,
                 "ngspice_init": NGSPICE_INIT,
             },
