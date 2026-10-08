@@ -24,6 +24,12 @@ name: Signoff
 #      names, so a manifest citing an artifact that has since changed fails
 #      rather than rotting.
 #
+# A second, klt-free step (issue #84) keeps the integrator-facing maturity
+# claim honest: manifests/verify-integrator.py fails unless
+# manifests/integrator.json's maturity.rung equals the committed report's
+# tier (null or a supported T1-T4 ladder value) -- the structured manifest
+# can never advertise a tier the verdict of record does not support.
+#
 # Both pins below are load-bearing and MUST stay in sync with
 # signoff/regenerate.sh and signoff/README.md ("The two pins"):
 #   - the distribution: klayout-tools==0.5.0, the PyPI registry wheel (the
@@ -72,3 +78,16 @@ jobs:
 
       - name: Re-grade the manifest and verify the committed pins
         run: python3 signoff/verify-report.py
+
+      # Issue #84: the integrator view's maturity rung must mirror the
+      # committed verdict of record. No klt needed -- two committed JSON
+      # files. Fails on any mismatch (either direction) or a prose rung.
+      - name: Verify integrator manifest maturity consistency
+        run: python3 manifests/verify-integrator.py
+
+      # The verifier's own regression matrix (issue #84, added in the PR #93
+      # review round): doctored sandbox pairs must exit with the contracted
+      # status, including the malformed-report case (a missing tier key
+      # must FAIL, never pass as an implicit null).
+      - name: Run integrator verifier regression matrix
+        run: python3 manifests/test-verify-integrator.py
