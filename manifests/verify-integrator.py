@@ -17,6 +17,8 @@ that contract:
 - a value outside ``null``/``T1``-``T4`` fails on either side, so a
   prose string like ``"T1 (design-evidence tiers, graded)"`` can never
   pose as a graded rung again;
+- a report with no ``tier`` key at all fails as malformed -- an absent
+  key must never be read as an explicit graded ``null``;
 - ``maturity.verdict_of_record`` must name this repo's fixed verdict of
   record (``signoff/signoff-report.json``), so the manifest cannot dodge
   the comparison by pointing elsewhere.
@@ -90,8 +92,21 @@ def main() -> None:
             "same change)"
         )
 
+    if "tier" not in report:
+        # A missing key is a malformed report, not a graded null: reading it
+        # with .get() would silently equate "tier absent" with "tier: null"
+        # and let a report that no longer records a tier verdict pass (the
+        # gap the review of PR #93 caught).
+        problems.append(
+            "signoff/signoff-report.json has no 'tier' key at all -- a "
+            "malformed report cannot back any rung value; re-grade and "
+            "commit a well-formed report via ./signoff/regenerate.sh"
+        )
+        tier = None
+    else:
+        tier = report["tier"]
+
     rung = maturity.get("rung", "")
-    tier = report.get("tier")
 
     for side, value in (("maturity.rung", rung), ("report tier", tier)):
         if value is not None and value not in SUPPORTED_TIERS:

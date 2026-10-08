@@ -84,3 +84,10 @@ jobs:
       # files. Fails on any mismatch (either direction) or a prose rung.
       - name: Verify integrator manifest maturity consistency
         run: python3 manifests/verify-integrator.py
+
+      # The verifier's own regression matrix (issue #84, added in the PR #93
+      # review round): doctored sandbox pairs must exit with the contracted
+      # status, including the malformed-report case (a missing tier key
+      # must FAIL, never pass as an implicit null).
+      - name: Run integrator verifier regression matrix
+        run: python3 manifests/test-verify-integrator.py

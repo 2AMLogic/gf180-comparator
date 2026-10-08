@@ -59,15 +59,19 @@ consequences:
   and no field here assigns one. The rung answers only "what has the
   committed evidence been machine-graded to".
 
-This is enforced, not merely documented: CI (a step in
+This is enforced, not merely documented: CI (steps in
 [`signoff.yml`](../.github/workflows/signoff.yml)) runs
 [`verify-integrator.py`](verify-integrator.py), which fails unless the rung
 equals the committed report's `tier` — `null` on both sides, or the same
-supported ladder value. A deliberate mismatch fails in either direction, so
-the structured manifest can never advertise a tier the verdict of record
-does not support (nor hide one it does). `maturity.verdict_of_record` names
-the file the rung is compared against; the pointers (`manifest`, `readme`,
-`grader`, `regenerate`) say how the grade is produced and reproduced.
+supported ladder value; a report whose `tier` key is missing entirely
+fails as malformed rather than passing as an implicit `null`. A deliberate
+mismatch fails in either direction, so the structured manifest can never
+advertise a tier the verdict of record does not support (nor hide one it
+does). The verifier's contract is itself regression-tested by
+[`test-verify-integrator.py`](test-verify-integrator.py) in the same CI
+job. `maturity.verdict_of_record` names the file the rung is compared
+against; the pointers (`manifest`, `readme`, `grader`, `regenerate`) say
+how the grade is produced and reproduced.
 
 ## Update discipline
 
