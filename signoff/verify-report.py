@@ -137,6 +137,14 @@ PINNED_ARTIFACTS = {
     # compares, so this row re-hashes ``characterization-report.md`` the
     # same way the layout rows re-hash the GDS: a report that changed
     # without re-wrapping, re-pinning and re-grading fails here.
+    # Item 5: the klt-sim-shaped corner-matrix envelope wraps committed
+    # records (signoff/make_item5_envelope.py; its --check also re-hashes the
+    # four source records). Its provenance.input pins the DUT netlist.
+    "5": (
+        REPO_ROOT / "sim/corner-matrix/item5-corner-matrix-20260910-124917-4805118-20260910-125200-4805118-20260910-125206-4805118-20260910-125341-4805118.json",
+        REPO_ROOT / "design" / "comparator.spice",
+        ("provenance", "input", "content_hash"),
+    ),
     "8": (
         REPO_ROOT / "measurements" / "characterization-report.item8.json",
         REPO_ROOT / "measurements" / "characterization-report.md",
