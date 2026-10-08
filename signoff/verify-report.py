@@ -129,6 +129,17 @@ PINNED_ARTIFACTS = {
     ),
 }
 
+# Item 6 cites a `klt yield` report, which (unlike the layout envelopes
+# above) carries no `provenance` block: `klt signoff` pins the sha256 of the
+# *samples document* the report names in its `samples` field (the path is
+# recorded relative to the repo root, the cwd the report was produced and is
+# graded from). verify_yield_pin() re-hashes that document; item 6 is
+# therefore deliberately not a PINNED_ARTIFACTS row.
+YIELD_ITEM = "6"
+YIELD_SAMPLES_PATH = (
+    "sim/comparator-offset-mc/yield/samples-20260910-124917-4805118.json"
+)
+
 #: The envelope field every citation's manifest pin is compared against --
 #: the same field `klt signoff`'s staleness gate reads. Kept separate from
 #: the per-row artifact field above because they differ for the LVS
@@ -289,6 +300,34 @@ def _recorded_hash(envelope: dict, field: tuple[str, ...]) -> str:
     return str(value).removeprefix("sha256:")
 
 
+def verify_yield_pin(entry: Any) -> list[str]:
+    """Check 3 for item 6: the cited `klt yield` report must name the
+    committed samples document, and the manifest pin must equal that
+    document's current sha256 (the same hash `klt signoff` computes)."""
+    label = f"item {YIELD_ITEM} citation"
+    if not isinstance(entry, dict) or "file" not in entry or "content_hash" not in entry:
+        return [
+            f"{label} is expected to cite a `klt yield` report file with a "
+            "content_hash pin (sha256 of the samples document it names)"
+        ]
+    envelope = json.loads((REPO_ROOT / entry["file"]).read_text())
+    named = envelope.get("samples")
+    if named != YIELD_SAMPLES_PATH:
+        return [
+            f"{label}: {entry['file']} names samples document {named!r}, "
+            f"expected {YIELD_SAMPLES_PATH!r}"
+        ]
+    actual = sha256_of(REPO_ROOT / named)
+    pin = entry["content_hash"].removeprefix("sha256:")
+    if pin != actual:
+        return [
+            f"{label}: manifest pin {pin[:16]}... but {named} currently "
+            f"hashes to {actual[:16]}... (samples changed since the report "
+            "was produced -- re-run klt yield, re-pin and re-grade)"
+        ]
+    return []
+
+
 def verify_pins(manifest: dict) -> list[str]:
     """Check 3: every pinned citation's manifest pin == the cited envelope's
     recorded input hash (the same staleness gate `klt signoff` applies), and
@@ -298,6 +337,9 @@ def verify_pins(manifest: dict) -> list[str]:
     problems: list[str] = []
     evidence = manifest.get("evidence", {})
     for item in sorted(set(list(evidence.keys()) + list(PINNED_ARTIFACTS.keys())), key=str):
+        if item == YIELD_ITEM:
+            problems += verify_yield_pin(evidence.get(item))
+            continue
         label = f"item {item} citation"
         row = PINNED_ARTIFACTS.get(item)
         envelope_path, artifact_path, artifact_field = row if row else (None, None, None)

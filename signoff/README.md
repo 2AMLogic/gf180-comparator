@@ -92,8 +92,9 @@ errors.
 Today the machine grades this block (see `signoff-report.json`, regenerated
 by `./signoff/regenerate.sh`):
 
-- **met — item 2 (Layout), item 3 (DRC clean), item 4 (LVS clean)**
-- **unmet, reason `no_evidence` — items 1, 5, 6, 7, 8, 9, 10**
+- **met — item 2 (Layout), item 3 (DRC clean), item 4 (LVS clean), item 6
+  (Monte Carlo; offset row only — see the item 5/6 section)**
+- **unmet, reason `no_evidence` — items 1, 5, 7, 8, 9, 10**
 - **unmet, reason `unrecognized_envelope` — item 11** (evidence is cited;
   the pinned grader predates item-11 recognition — see the item-11 section)
 
@@ -198,23 +199,55 @@ envelope's `environment.reference_sha256`, while the GDS bytes the
 extraction consumed stay pinned by item 2's own citation (rows 2/3/11
 re-hash those same bytes). Both checks run on every push and PR.
 
-### unmet — items 5, 6 (PVT corners vs a ratified spec; Monte Carlo): substance exists, nothing gradeable
+### met — item 6 (Monte Carlo): `klt yield` report for the offset row
+
+**Cited and graded `met` as of
+[#82](https://github.com/2AMLogic/gf180-comparator/issues/82).** The citation
+is `sim/comparator-offset-mc/yield/yield-20260910-124917-4805118-target.json`,
+a `klt yield` report over the committed offset-MC record
+`20260910-124917-4805118` (45 PVT points x 200 draws), scored against the
+ratified offset-sigma row's +/-15 mV limit (the +/-8 mV stretch report sits
+beside it, uncited). The manifest pin is the sha256 of the **samples
+document** the report names (a `klt yield` report carries no `provenance`
+block, so `klt signoff` pins the samples it was computed from);
+`verify-report.py` re-hashes that document. Nothing was re-simulated: an
+adapter (`adapt_samples.py`) re-reads the per-draw `voa` values from the
+committed logs and cross-checks them against the record's mean/sigma. Result:
+200/200 inside the limits at every point, worst `sigma_to_spec` 15.9
+(target) / 8.5 (stretch), `sample_size.verdict: sufficient` and the negative
+control `detected` at all 45 points.
+
+**"Met" is weaker than it looks.** The pinned 0.5.0 grader reads the report's
+`status` (`reported`: no `target_yield` is declared, so it cannot fail); it
+does not grade the checklist's prose sub-requirements. The disclosed gaps,
+in full in `sim/comparator-offset-mc/yield/README.md`: one seed (`20260909`)
+with common random numbers across all points, so N is effectively 200 and
+there is no seed replication; the `sufficient` verdict certifies yield >=
+98.17 % (95 % CI), not a literal 3-sigma 99.73 %, the 3-sigma claim resting
+on `sigma_to_spec` and a normal fit; the negative control is a synthetic
++20 mV shift of the same draws (it exercises the statistic, not the
+circuit); MC is mismatch-only at deterministic process corners (no global
+process MC); schematic DUT only. The seed has no field in the `klt yield`
+report format (klayout-tools#2840). The report was produced with
+`klayout-tools==0.6.0` plus a locally built `klt_yield_native` extension
+(no published wheel — upstream klayout-tools#2531); grading it needs no
+extension.
+
+### unmet — item 5 (PVT corners vs a ratified spec): blocked on #75
 
 The four experiment directories under `sim/` carry committed
 schematic-provenance corner records (`sim/comparator-{offset-mc,preamp-noise,
 regeneration,kickback}/`, driven by `sim/characterize.sh` +
-`sim/run_corners.py`), and item 6's own MC campaign exists (offset MC,
-200 draws/corner per the tracker's survey). But (a) the target-spec table
-in `README.md` is **ratified** — DR-0002, via the two-key ceremony on PR
-#74 per the operator ruling of 2026-10-02 on #3 (this section previously
-said the ceremony was unfinished; it has since run) — though only the
-offset-σ row's scoring pass has landed
-([#24](https://github.com/2AMLogic/gf180-comparator/issues/24), PR #58),
-the other four rows' being tracked in
-[#75](https://github.com/2AMLogic/gf180-comparator/issues/75);
-(b) those records are this repo's harness format, not `klt sim`/`klt yield`
-JSON envelopes, so the grader could not read them even if they were scored.
-When a scoring pass lands a `klt`-shaped envelope, cite and re-grade.
+`sim/run_corners.py`). Item 5 needs **every** ratified spec row evaluated at
+its bound corners as a `klt sim` envelope. The target-spec table is ratified
+(DR-0002, two-key ceremony on PR #74), but only the offset-sigma row's
+scoring pass has landed ([#24](https://github.com/2AMLogic/gf180-comparator/issues/24),
+PR #58); the other four rows' scoring is tracked in
+[#75](https://github.com/2AMLogic/gf180-comparator/issues/75), and their
+records are this repo's harness format, not `klt sim` envelopes. **Item 5
+depends on #75** and stays `no_evidence` until that lands; the item-6
+citation above does not substitute for it (a Monte Carlo report is not the
+`sim` envelope item 5 accepts).
 
 ### unmet — item 7 (Post-layout verification): not started
 
@@ -324,7 +357,8 @@ cited artifacts means: re-run the producing flow (e.g.
 hash in `block-manifest.json`, run `./signoff/regenerate.sh`, commit the
 fresh report — in one change. A *new* citation means adding the
 corresponding pin row to `verify-report.py`'s `PINNED_ARTIFACTS` in the
-same change; an unlisted citation fails the verifier by name rather than
+same change (item 6's `klt yield` citation is the exception: it pins its
+samples document, handled by `verify_yield_pin()`); an unlisted citation fails the verifier by name rather than
 passing unverified.
 
 ## Where this sits in the fleet

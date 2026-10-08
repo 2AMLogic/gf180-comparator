@@ -4,7 +4,7 @@
   "kind": "analog",
   "tier": null,
   "t1_item_count": 11,
-  "t1_met_count": 3,
+  "t1_met_count": 4,
   "source_doc": "signoff/design-evidence-tiers.md",
   "items": [
     {
@@ -92,9 +92,16 @@
       "partition": null,
       "text": "any accuracy, offset, or matching spec row is statistical; a corner matrix (or STA corner sweep) cannot validate it. This applies to whichever spec rows are actually statistical, regardless of block kind \u2014 most digital spec rows (functional correctness, Fmax, timing closure) are not, and a block whose spec has no statistical row must say so explicitly rather than omit the item. Where it does apply, MC runs need a recorded seed, sample count, a deterministic negative control, and results combined with (not instead of) process corners (#344). A `klt yield` JSON report \u2014 a yield estimate with its confidence interval, sample-size verdict, and Cpk/sigma-to-spec against the row's own limits \u2014 is the machine-checkable evidence for this item (`klt signoff`'s tier-verdict mode grades it the same way it grades the deterministic items above).",
       "notes": [],
-      "status": "unmet",
-      "reason": "no_evidence",
-      "citation": null
+      "status": "met",
+      "reason": null,
+      "citation": {
+        "file": "sim/comparator-offset-mc/yield/yield-20260910-124917-4805118-target.json",
+        "command": null,
+        "kind": "yield",
+        "check_status": "reported",
+        "content_hash": "sha256:8e53d5b54c585de1858de1bf4087a8b44338f04211f685b0a2a9fee206279901",
+        "exit_status": 0
+      }
     },
     {
       "tier": "T1",
