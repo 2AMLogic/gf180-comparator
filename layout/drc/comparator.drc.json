@@ -1,48 +1,9 @@
 {
   "coverage": {
-    "checked": [
-      "comp.enclosing.contact.1",
-      "comp.space.1",
-      "comp.width.1",
-      "contact.space.1",
-      "contact.width.1",
-      "metal1.enclosing.contact.1",
-      "metal1.enclosing.via1.1",
-      "metal1.space.1",
-      "metal1.width.1",
-      "metal2.enclosing.via1.1",
-      "metal2.enclosing.via2.1",
-      "metal2.space.1",
-      "metal2.width.1",
-      "metal3.enclosing.via2.1",
-      "metal3.space.1",
-      "metal3.width.1",
-      "nplus.enclosing.comp.1",
-      "nplus.enclosing.poly2.1",
-      "nplus.space.1",
-      "nplus.space.pcomp.1",
-      "nplus.width.1",
-      "nwell.enclosing.comp.1",
-      "nwell.space.1",
-      "poly2.enclosing.contact.1",
-      "poly2.space.1",
-      "poly2.width.1",
-      "pplus.enclosing.comp.1",
-      "pplus.enclosing.poly2.1",
-      "pplus.space.1",
-      "pplus.space.ncomp.1",
-      "pplus.width.1",
-      "via1.space.1",
-      "via1.width.1",
-      "via2.space.1",
-      "via2.width.1"
-    ],
     "deck_layers": [
       "21/0",
       "22/0",
       "30/0",
-      "31/0",
-      "32/0",
       "33/0",
       "34/0",
       "35/0",
@@ -69,103 +30,12 @@
       "7.4 Nwell",
       "7.5 Comp",
       "7.7 Poly2",
-      "7.8 Nplus",
-      "7.9 Pplus",
       "9.1 Bond Pad"
     ],
-    "inapplicable": [
-      {
-        "id": "bjt.separation.comp.1",
-        "reason": "no_applicable_geometry"
-      },
-      {
-        "id": "comp.space.mv.1",
-        "reason": "no_applicable_geometry"
-      },
-      {
-        "id": "comp.width.mv.1",
-        "reason": "no_applicable_geometry"
-      },
-      {
-        "id": "metal3.enclosing.via3.1",
-        "reason": "no_applicable_geometry"
-      },
-      {
-        "id": "metal4.enclosing.via3.1",
-        "reason": "no_applicable_geometry"
-      },
-      {
-        "id": "metal4.enclosing.via4.1",
-        "reason": "no_applicable_geometry"
-      },
-      {
-        "id": "metal4.space.1",
-        "reason": "no_applicable_geometry"
-      },
-      {
-        "id": "metal4.width.1",
-        "reason": "no_applicable_geometry"
-      },
-      {
-        "id": "metal5.enclosing.via4.1",
-        "reason": "no_applicable_geometry"
-      },
-      {
-        "id": "metal5.space.1",
-        "reason": "no_applicable_geometry"
-      },
-      {
-        "id": "metal5.width.1",
-        "reason": "no_applicable_geometry"
-      },
-      {
-        "id": "metaltop.space.1",
-        "reason": "no_applicable_geometry"
-      },
-      {
-        "id": "metaltop.width.1",
-        "reason": "no_applicable_geometry"
-      },
-      {
-        "id": "mim.enclosing.fusetop.1",
-        "reason": "no_applicable_geometry"
-      },
-      {
-        "id": "mim.enclosing.via4.1",
-        "reason": "no_applicable_geometry"
-      },
-      {
-        "id": "mim.space.1",
-        "reason": "no_applicable_geometry"
-      },
-      {
-        "id": "pad.enclosing.metal5.1",
-        "reason": "no_applicable_geometry"
-      },
-      {
-        "id": "via3.space.1",
-        "reason": "no_applicable_geometry"
-      },
-      {
-        "id": "via3.width.1",
-        "reason": "no_applicable_geometry"
-      },
-      {
-        "id": "via4.space.1",
-        "reason": "no_applicable_geometry"
-      },
-      {
-        "id": "via4.width.1",
-        "reason": "no_applicable_geometry"
-      }
-    ],
-    "known": true,
     "layers_checked": [
       "21/0",
       "22/0",
       "30/0",
-      "31/0",
-      "32/0",
       "33/0",
       "34/0",
       "35/0",
@@ -174,50 +44,13 @@
       "42/0"
     ],
     "layers_in_stream_without_rules": [
+      "31/0",
+      "32/0",
       "34/10",
       "42/10",
       "49/0",
       "62/0",
       "110/5"
-    ],
-    "nothing_checked": false,
-    "nothing_checked_reasons": [],
-    "rules_checked": [
-      "comp.enclosing.contact.1",
-      "comp.space.1",
-      "comp.width.1",
-      "contact.space.1",
-      "contact.width.1",
-      "metal1.enclosing.contact.1",
-      "metal1.enclosing.via1.1",
-      "metal1.space.1",
-      "metal1.width.1",
-      "metal2.enclosing.via1.1",
-      "metal2.enclosing.via2.1",
-      "metal2.space.1",
-      "metal2.width.1",
-      "metal3.enclosing.via2.1",
-      "metal3.space.1",
-      "metal3.width.1",
-      "nplus.enclosing.comp.1",
-      "nplus.enclosing.poly2.1",
-      "nplus.space.1",
-      "nplus.space.pcomp.1",
-      "nplus.width.1",
-      "nwell.enclosing.comp.1",
-      "nwell.space.1",
-      "poly2.enclosing.contact.1",
-      "poly2.space.1",
-      "poly2.width.1",
-      "pplus.enclosing.comp.1",
-      "pplus.enclosing.poly2.1",
-      "pplus.space.1",
-      "pplus.space.ncomp.1",
-      "pplus.width.1",
-      "via1.space.1",
-      "via1.width.1",
-      "via2.space.1",
-      "via2.width.1"
     ],
     "rules_skipped": [
       "bjt.separation.comp.1",
@@ -242,302 +75,27 @@
       "via4.space.1",
       "via4.width.1"
     ],
-    "schema_version": 1,
-    "skipped": [],
-    "unknown": [],
     "voltage_domain_warnings": []
   },
   "dbu_um": 0.0005,
   "deck": "gf180mcu",
   "file": "layout/comparator.gds",
-  "metrics": {
-    "drc__error__count": 8
-  },
   "provenance": {
     "deck": {
-      "content_hash": "sha256:9babf6fd5d623fea50d380168ebf8f7c0f0f6e70eb7d89b221476dc47c7f6a85",
+      "content_hash": "sha256:3c2f4e4be2524a0fe964cd1b2c4c171c0f904586c10eaa8c4ffe3511909e4706",
       "name": "gf180mcu",
       "released": true
     },
     "input": {
-      "content_hash": "sha256:d668ccb543c4ec6482ee78fb00805a7472955944fce07022c505e78eeec6b8ed",
-      "role": "layout"
+      "content_hash": "sha256:d668ccb543c4ec6482ee78fb00805a7472955944fce07022c505e78eeec6b8ed"
     },
     "klayout_version": "0.30.12",
-    "klayout_version_mismatch": false,
-    "klt_version": "0.7.0+g4cbdfa769875",
+    "klt_version": "0.5.0",
     "pdk": null
   },
-  "rule_counts": {
-    "contact.width.1": 8
-  },
-  "schema_version": 2,
-  "status": "violations",
-  "violation_count": 8,
-  "violations": [
-    {
-      "bbox": {
-        "bottom": -1460,
-        "left": 13240,
-        "right": 13760,
-        "top": -940
-      },
-      "cell": "COMPARATOR",
-      "check": "width",
-      "description": "min/max contact size (fixed 0.22 x 0.22 um square)",
-      "layer": "Contact",
-      "polygon": [
-        [
-          13240,
-          -1460
-        ],
-        [
-          13240,
-          -940
-        ],
-        [
-          13760,
-          -940
-        ],
-        [
-          13760,
-          -1460
-        ]
-      ],
-      "rule": "contact.width.1",
-      "source_cell": null,
-      "source_path": null
-    },
-    {
-      "bbox": {
-        "bottom": -1460,
-        "left": 30240,
-        "right": 30760,
-        "top": -940
-      },
-      "cell": "COMPARATOR",
-      "check": "width",
-      "description": "min/max contact size (fixed 0.22 x 0.22 um square)",
-      "layer": "Contact",
-      "polygon": [
-        [
-          30240,
-          -1460
-        ],
-        [
-          30240,
-          -940
-        ],
-        [
-          30760,
-          -940
-        ],
-        [
-          30760,
-          -1460
-        ]
-      ],
-      "rule": "contact.width.1",
-      "source_cell": null,
-      "source_path": null
-    },
-    {
-      "bbox": {
-        "bottom": 29680,
-        "left": 572440,
-        "right": 572960,
-        "top": 30200
-      },
-      "cell": "COMPARATOR",
-      "check": "width",
-      "description": "min/max contact size (fixed 0.22 x 0.22 um square)",
-      "layer": "Contact",
-      "polygon": [
-        [
-          572440,
-          29680
-        ],
-        [
-          572440,
-          30200
-        ],
-        [
-          572960,
-          30200
-        ],
-        [
-          572960,
-          29680
-        ]
-      ],
-      "rule": "contact.width.1",
-      "source_cell": null,
-      "source_path": null
-    },
-    {
-      "bbox": {
-        "bottom": 21680,
-        "left": 582440,
-        "right": 582960,
-        "top": 22200
-      },
-      "cell": "COMPARATOR",
-      "check": "width",
-      "description": "min/max contact size (fixed 0.22 x 0.22 um square)",
-      "layer": "Contact",
-      "polygon": [
-        [
-          582440,
-          21680
-        ],
-        [
-          582440,
-          22200
-        ],
-        [
-          582960,
-          22200
-        ],
-        [
-          582960,
-          21680
-        ]
-      ],
-      "rule": "contact.width.1",
-      "source_cell": null,
-      "source_path": null
-    },
-    {
-      "bbox": {
-        "bottom": 13680,
-        "left": 592440,
-        "right": 592960,
-        "top": 14200
-      },
-      "cell": "COMPARATOR",
-      "check": "width",
-      "description": "min/max contact size (fixed 0.22 x 0.22 um square)",
-      "layer": "Contact",
-      "polygon": [
-        [
-          592440,
-          13680
-        ],
-        [
-          592440,
-          14200
-        ],
-        [
-          592960,
-          14200
-        ],
-        [
-          592960,
-          13680
-        ]
-      ],
-      "rule": "contact.width.1",
-      "source_cell": null,
-      "source_path": null
-    },
-    {
-      "bbox": {
-        "bottom": 25680,
-        "left": 602440,
-        "right": 602960,
-        "top": 26200
-      },
-      "cell": "COMPARATOR",
-      "check": "width",
-      "description": "min/max contact size (fixed 0.22 x 0.22 um square)",
-      "layer": "Contact",
-      "polygon": [
-        [
-          602440,
-          25680
-        ],
-        [
-          602440,
-          26200
-        ],
-        [
-          602960,
-          26200
-        ],
-        [
-          602960,
-          25680
-        ]
-      ],
-      "rule": "contact.width.1",
-      "source_cell": null,
-      "source_path": null
-    },
-    {
-      "bbox": {
-        "bottom": 45680,
-        "left": 622440,
-        "right": 622960,
-        "top": 46200
-      },
-      "cell": "COMPARATOR",
-      "check": "width",
-      "description": "min/max contact size (fixed 0.22 x 0.22 um square)",
-      "layer": "Contact",
-      "polygon": [
-        [
-          622440,
-          45680
-        ],
-        [
-          622440,
-          46200
-        ],
-        [
-          622960,
-          46200
-        ],
-        [
-          622960,
-          45680
-        ]
-      ],
-      "rule": "contact.width.1",
-      "source_cell": null,
-      "source_path": null
-    },
-    {
-      "bbox": {
-        "bottom": 45680,
-        "left": 632440,
-        "right": 632960,
-        "top": 46200
-      },
-      "cell": "COMPARATOR",
-      "check": "width",
-      "description": "min/max contact size (fixed 0.22 x 0.22 um square)",
-      "layer": "Contact",
-      "polygon": [
-        [
-          632440,
-          45680
-        ],
-        [
-          632440,
-          46200
-        ],
-        [
-          632960,
-          46200
-        ],
-        [
-          632960,
-          45680
-        ]
-      ],
-      "rule": "contact.width.1",
-      "source_cell": null,
-      "source_path": null
-    }
-  ]
+  "rule_counts": {},
+  "schema_version": 1,
+  "status": "clean",
+  "violation_count": 0,
+  "violations": []
 }
