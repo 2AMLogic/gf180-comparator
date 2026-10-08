@@ -38,21 +38,21 @@
     "source": "layout/comparator.gen-compose.json (klt gen-compose placement evidence)"
   },
   "maturity": {
-    "rung": "T1 (design-evidence tiers, graded)",
+    "rung": null,
     "verdict_of_record": "signoff/signoff-report.json",
     "manifest": "signoff/block-manifest.json",
     "readme": "signoff/README.md",
     "grader": "klt signoff --manifest",
     "regenerate": "signoff/regenerate.sh",
-    "note": "Honestly graded, not padded: items without committed klt envelopes stay unmet (LVS open while #22/#40 are open). See signoff/README.md."
+    "note": "Honestly graded, not padded: rung mirrors the tier recorded in the verdict of record (JSON null while the grader awards none; items without committed evidence envelopes stay unmet). A tier award is the operator's act, never inferred here. See signoff/README.md and manifests/README.md."
   },
   "spec": {
     "target_table": "README.md#target-specification-ratified-via-dr-0002",
     "consumers": "spec/consumers.md"
   },
   "provenance": {
-    "as_of_commit": "5649686",
-    "generated_for": "issue #64",
-    "generated_on": "2026-09-22"
+    "as_of_commit": "2e0528e",
+    "generated_for": "issue #84",
+    "generated_on": "2026-10-08"
   }
 }
