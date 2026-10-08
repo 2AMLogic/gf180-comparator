@@ -67,40 +67,27 @@ def legs_for(bench: str, tb, mc_n: int) -> dict[str, dict]:
         kind, args = tb.analyses[0].split(None, 1)
         return {"main": {"analysis": {"kind": kind, "args": args},
                          "measurements": tran_meas_cards(tb)}}
+    # The fleet runner's klt (0.5.0) accepts only `{name, spice}` measurement
+    # entries (no `expr` algebra), so every leg below is expressed as raw
+    # `.meas` cards; the derived quantities are computed by klt_record.py.
     if bench == "comparator-preamp-noise":
-        return {
-            "noise": {
-                "analysis": {"kind": "noise", "args": "v(aop,aon) vd dec 20 1 1e9"},
-                "measurements": [
-                    {"name": "onoise_total", "expr": "onoise_total", "unit": "V"},
-                    {"name": "inoise_total", "expr": "inoise_total", "unit": "V"},
-                ],
-            },
-            "ac": {
-                "analysis": {"kind": "ac", "args": "dec 20 1 1e9"},
-                "measurements": [
-                    {"name": "av_dc", "expr": "mag(v(aop)-v(aon))[0]", "unit": "V/V"},
-                ],
-            },
-        }
+        raise SystemExit(
+            "comparator-preamp-noise cannot be expressed for the fleet runner: its klt "
+            "(0.5.0) has no `noise` analysis / `.meas noise`. Run it as a single "
+            "nominal point with sim/run_corners.py instead (see sim/tools/README note "
+            "in the DR); file/track the tool gap at 2AMLogic/klayout-tools."
+        )
     if bench == "comparator-offset-mc":
-        # Scalars only (klt `expr` must reduce to one real number): the six
-        # operating points of `dc vd 0 2m 2m vcmd -50m 50m 50m`, then the
-        # same algebra the bench's .control loop uses.
-        m = [{"name": f"dv{i}", "expr": f"v(aop)[{i}]-v(aon)[{i}]", "unit": "V"} for i in range(6)]
-        m += [
-            {"name": "avc", "expr": "(dv1-dv0)/2e-3"},
-            {"name": "ava", "expr": "(dv3-dv2)/2e-3"},
-            {"name": "ave", "expr": "(dv5-dv4)/2e-3"},
-            {"name": "voc", "expr": "-dv0/avc", "unit": "V"},
-            {"name": "voa", "expr": "-dv2/ava", "unit": "V"},
-            {"name": "voe", "expr": "-dv4/ave", "unit": "V"},
-            {"name": "ddc", "expr": "voc-voa", "unit": "V"},
-            {"name": "dde", "expr": "voe-voa", "unit": "V"},
-            {"name": "drr", "expr": "v(rpa)[2]-v(rpb)[2]", "unit": "V"},
+        # Two operating points at vcmd = 0 (the bench's offset point `voa`):
+        # vd = 0 and vd = 2 mV, from one `dc` sweep of one draw (same-draw
+        # gain). The bench's +-50 mV CM-step points (ddc/dde/drr controls)
+        # are not requested -- see the record's "Not computed" line.
+        m = [
+            {"name": "dv0", "spice": ".meas dc dv0 find v(dd) at=0"},
+            {"name": "dv1", "spice": ".meas dc dv1 find v(dd) at=2m"},
         ]
         return {"main": {
-            "analysis": {"kind": "dc", "args": "vd 0 2m 2m vcmd -50m 50m 50m"},
+            "analysis": {"kind": "dc", "args": "vd 0 2m 2m"},
             "measurements": m,
             "monte_carlo": {"n": mc_n, "seed": OFFSET_MC_SEED, "vary": "mismatch"},
         }}
@@ -143,6 +130,9 @@ def main() -> int:
         # trip-point offset for an extracted one). Only the schematic
         # binding is supported here; an extracted DUT needs the probe leg.
         ".param dut_vos=0.0",
+        # differential probe for the dc `.meas` cards (the 0.5.0 runner cannot
+        # evaluate v(a)-v(b) inside .meas); a high-Z VCVS, no loading.
+        *(["Eddprobe dd 0 aop aon 1"] if a.bench == "comparator-offset-mc" else []),
         *(f".param {k}={v}" for k, v in tb.params.items()),
         # A copy of the PDK's design.ngspice, staged with the request: an
         # off-host runner does not expand the harness's absolute PDK path.

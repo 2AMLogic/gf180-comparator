@@ -105,23 +105,22 @@ def derive(bench: str, tb, legs: dict[str, dict]) -> tuple[dict, list]:
                 "inoise_band_uv": n["inoise_total"] * 1e6,
             }
         return res, problems
-    # offset-mc: population statistics over the draws, exactly the bench's
-    # sqrt(sum_sq/n - (sum/n)^2) form.
-    pstd = lambda xs: statistics.pstdev(xs)  # noqa: E731
+    # offset-mc: population statistics over the draws. Per draw, gain from the
+    # 0 mV and +2 mV points of one dc sweep (same draw), voa = -dv0/gain --
+    # the bench's `voa` at vcmd = 0.
+    pstd = statistics.pstdev
     for cid in ids:
         smp = list(legs["main"][0][cid].values())
-        col = lambda k: [s[k] for s in smp]  # noqa: E731
-        sig = pstd(col("voa"))
+        ava = [(s["dv1"] - s["dv0"]) / 2e-3 for s in smp]
+        voa = [-s["dv0"] / g for s, g in zip(smp, ava)]
+        sig = pstd(voa)
         res[cid] = {
             "n_samples": len(smp),
             "sig_vos_mv": sig * 1e3,
             "vos_3sig_mv": 3 * sig * 1e3,
-            "mean_vos_uv": statistics.fmean(col("voa")) * 1e6,
-            "sig_dvos_dn_uv": pstd(col("ddc")) * 1e6,
-            "sig_dvos_up_uv": pstd(col("dde")) * 1e6,
-            "av_mean": statistics.fmean(col("ava")),
-            "av_sigma_pct": pstd(col("ava")) / statistics.fmean(col("ava")) * 100,
-            "sig_rpair_uv": pstd(col("drr")) * 1e6,
+            "mean_vos_uv": statistics.fmean(voa) * 1e6,
+            "av_mean": statistics.fmean(ava),
+            "av_sigma_pct": pstd(ava) / statistics.fmean(ava) * 100,
         }
     return res, problems
 
@@ -243,7 +242,7 @@ def main() -> int:
         "- **Not computed by this executor** (single-analysis `klt sim` requests): "
         + {
             "comparator-preamp-noise": "`vn_in_hf_uv`, `onoise_hf_uv`, `flicker_frac_pct`, `white_nv_rthz`, `enbw_mhz`, `vbias_anchor_mv` (they need a second `.noise` plot / the `.op` in the same run). `vn_in_uv` is the row-facing quantity.",
-            "comparator-offset-mc": "`mean_dvos_*`, `mean_vos_sem`, `vbias_anchor_mv`, the in-run CM-step null control (`sig_rpair_uv` is computed).",
+            "comparator-offset-mc": "`sig_dvos_dn_uv`/`sig_dvos_up_uv` (the +-50 mV CM-step points), `mean_dvos_*`, `mean_vos_sem`, `vbias_anchor_mv` and the in-run `sig_rpair_uv` null control: the 0.5.0 fleet runner cannot express the nested `vcmd` sweep as `.meas` cards, so only the vcmd = 0 offset point (`voa`) is measured.",
             "comparator-kickback": "nothing (all `.meas` ingredients are requested; `.meas` precision is the executor's `measureprec=12`).",
             "comparator-regeneration": "nothing.",
         }[a.bench],
