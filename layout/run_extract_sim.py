@@ -84,25 +84,16 @@ import hashlib
 import json
 import os
 import re
-import subprocess
 import sys
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-REPO_ROOT = os.path.dirname(HERE)
+from layout_common import HERE, INTERFACE_PINS, REPO_ROOT, TOP, run_extract
+from run_lvs import DEVICE_GEOMETRY_MAP
+
 OUTDIR = os.path.join(HERE, "lvs")
-GDS = os.path.join(HERE, "comparator.gds")
 
 RAW_NETLIST = os.path.join(OUTDIR, "comparator.extracted-rc.spice")
 EXTRACT_REPORT = os.path.join(OUTDIR, "comparator.extract-rc.json")
 DUT_NETLIST = os.path.join(OUTDIR, "comparator.dut-layout.spice")
-
-DECK = "gf180mcu"
-TOP = "COMPARATOR"
-
-#: sim/dut/README.md's interface contract, in its own declared ORDER -- the
-#: same tuple `layout/run_lvs.py` passes as `--pins` (issue #514) so the
-#: extracted top cell exposes exactly the pins the testbenches wire up.
-INTERFACE_PINS = ("vinp", "vinn", "clk", "ibias", "dout", "doutb", "vdd", "vss")
 
 #: The extraction-deck device class -> PDK ngspice simulation primitive
 #: correspondence, restricted to the classes this layout actually instantiates
@@ -113,8 +104,9 @@ INTERFACE_PINS = ("vinp", "vinn", "clk", "ibias", "dout", "doutb", "vdd", "vss")
 #: skip: a new device family in the layout must fail this script loudly until
 #: someone declares how to simulate it.
 MOS_CLASS_TO_SUBCKT = {
-    "nfet": "nfet_03v3",
-    "pfet": "pfet_03v3",
+    cls: subckt
+    for subckt, (cls, _l, _w) in DEVICE_GEOMETRY_MAP.items()
+    if cls != "ppolyf_u_1k"
 }
 
 #: The resistor class whose extraction cards (R... <value> <class> L= W=)
@@ -128,30 +120,6 @@ _MOS_RE = re.compile(rf"^(M\S+)\s+(.*?\s+)({'|'.join(MOS_CLASS_TO_SUBCKT)})(\s+L
 _RES_RE = re.compile(
     rf"^(R\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+\S+\s+{RES_CLASS}\s+L=(\S+)\s+W=(\S+)\s*$"
 )
-
-
-def run_extract() -> dict:
-    # cwd=REPO_ROOT and repo-relative paths so the committed report's own
-    # `file`/`netlist_path` fields stay host-independent (same discipline as
-    # layout/run_lvs.py's run_extract).
-    cmd = [
-        "klt", "extract", os.path.relpath(GDS, REPO_ROOT),
-        "--deck", DECK,
-        "--top", TOP,
-        "--pins", ",".join(INTERFACE_PINS),
-        "--parasitics",
-        "-o", os.path.relpath(RAW_NETLIST, REPO_ROOT),
-        "--format", "json",
-    ]
-    proc = subprocess.run(cmd, capture_output=True, text=True, cwd=REPO_ROOT)
-    if proc.returncode != 0:
-        sys.stderr.write(proc.stderr)
-        sys.exit(f"klt extract --parasitics failed (exit {proc.returncode})")
-    report = json.loads(proc.stdout)
-    with open(EXTRACT_REPORT, "w") as f:
-        json.dump(report, f, indent=2, sort_keys=True)
-        f.write("\n")
-    return report
 
 
 def _check_report(report: dict) -> None:
@@ -276,7 +244,7 @@ def _check_interface_contract() -> None:
 
 
 def main() -> int:
-    report = run_extract()
+    report = run_extract(RAW_NETLIST, EXTRACT_REPORT, parasitics=True)
     _check_report(report)
     rewritten = _adapt_netlist()
     _check_interface_contract()
