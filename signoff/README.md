@@ -22,6 +22,7 @@ directory for exactly that reason).
 | `design-evidence-tiers.md` | the vendored, verbatim copy of the **11-item** T1 rulebook the report is graded under (see "The two pins" below) |
 | `verify-report.py` | the anti-rot verifier CI runs on every push and PR (see below) |
 | `regenerate.sh` | re-grades the manifest with the pinned grader distribution and rewrites the committed report |
+| `make_item5_envelope.py` | wraps the four committed corner records into the `klt sim`-shaped item-5 corner-matrix envelope under `sim/corner-matrix/` (`--check` detects drift); see the item-5 section |
 | `make_item8_envelope.py` | writes the item-8 generic evidence envelope from the characterization report (`--check` detects drift); see the item-8 section |
 
 ## Block kind: `analog`
@@ -98,7 +99,8 @@ by `./signoff/regenerate.sh`):
 - **met — item 2 (Layout), item 3 (DRC clean), item 4 (LVS clean), item 6
   (Monte Carlo; offset row only — see the item 5/6 section), item 8
   (Characterization report; generic envelope — see the item-8 section)**
-- **unmet, reason `no_evidence` — items 1, 5, 7, 9, 10**
+- **unmet, reason `check_failed` — item 5** (cited; the cited corner matrix honestly fails the ratified kickback bound — see the item-5 section)
+- **unmet, reason `no_evidence` — items 1, 7, 9, 10**
 - **unmet, reason `supply_spec_incomplete` — item 11** (the 0.6.0 grader
   reads the cited ERC + LVS evidence; the ERC run declares no `ties[]` —
   klayout-tools#2169 — see the item-11 section)
@@ -242,21 +244,43 @@ report format (klayout-tools#2840). The report was produced with
 (no published wheel — upstream klayout-tools#2531); grading it needs no
 extension.
 
-### unmet — item 5 (PVT corners vs a ratified spec): blocked on #75
+### unmet — item 5 (PVT corners vs a ratified spec): cited, `check_failed`
 
-The four experiment directories under `sim/` carry committed
-schematic-provenance corner records (`sim/comparator-{offset-mc,preamp-noise,
-regeneration,kickback}/`, driven by `sim/characterize.sh` +
-`sim/run_corners.py`). Item 5 needs **every** ratified spec row evaluated at
-its bound corners as a `klt sim` envelope. The target-spec table is ratified
-(DR-0002, two-key ceremony on PR #74), but only the offset-sigma row's
-scoring pass has landed ([#24](https://github.com/2AMLogic/gf180-comparator/issues/24),
-PR #58); the other four rows' scoring is tracked in
-[#75](https://github.com/2AMLogic/gf180-comparator/issues/75), and their
-records are this repo's harness format, not `klt sim` envelopes. **Item 5
-depends on #75** and stays `no_evidence` until that lands; the item-6
-citation above does not substitute for it (a Monte Carlo report is not the
-`sim` envelope item 5 accepts).
+**Cited as of [#91](https://github.com/2AMLogic/gf180-comparator/issues/91);
+graded `unmet`, reason `check_failed` — the evidence is read and it fails.**
+Item 5 accepts only a `klt sim` envelope (`measurements` + `corner_count`;
+generic and every other kind render `wrong_kind`). The committed corner
+records are this repo's harness format, so
+`signoff/make_item5_envelope.py` **wraps them without re-simulating**:
+`sim/corner-matrix/item5-corner-matrix-<four record ids>.json`, the 45-point
+PVT grid of the four records DR-0002 ratified
+(`20260910-{124917,125200,125206,125341}-4805118`), every value copied
+verbatim, each source record pinned by sha256 in `source_records`. The
+envelope's `wrapper` field states plainly that it is **not** `klt sim` output
+(an off-host `klt sim` re-run was not needed; none was launched).
+
+**`status` is derived, never asserted**: `pass` only if every corner meets
+every ratified *target* bound (DR-0002), else `fail`. Result: `fail`,
+1/45 corners passing. Per row (`spec_rows`): offset 3-sigma 45/45 within
+target and stretch; noise 45/45 and 45/45; decision time 45/45 target, 29/45
+stretch (worst `ss_125c_2.97v`, 1.237 ns); **kickback 1/45 within target
+(only `ss_-40c_2.97v`), 0/45 within stretch, worst 10.01 mV at
+`sf_-40c_3.63v`**; supply/power 45/45 and 45/45 (derived as
+`i_static_ua` x corner `vdd`, so its min/max, 84-105 uW, is the exact product,
+tighter than the report's loose 82-108 uW range). These match the
+characterization report's scoring. No bound is relaxed; item 5 turns `met`
+only when kickback closes through a follow-on decision record or a design
+change and a new record set is wrapped. The manifest pin is the DUT netlist
+(`provenance.input`, role `netlist`, `design/comparator.spice`), which
+`verify-report.py` re-hashes; `python3 signoff/make_item5_envelope.py --check`
+re-derives the envelope from the four records and fails on drift. The file is
+append-only: a new record set mints a new file (the old one stays).
+
+Disclosure: schematic-provenance records only (no post-layout), and the
+item-6 citation does not substitute for this one. A native `klt sim`
+re-run of the grid (batch fleet) would replace the wrapper; the harness's
+bench decks are not `klt sim` requests, so that is a re-expression, not a
+re-run, and is not done here.
 
 ### unmet — item 7 (Post-layout verification): not started
 
@@ -313,11 +337,11 @@ all 9 checks on 2026-09-15) and the pinned PDK variant (`sim/pdk.json`,
 `gf180mcuD`) are the substance. But no `klt sim` envelope exists: the
 `sim/*/records/*.json` files are this repo's harness format, which the grader
 does not read, and no selftest/characterize run is committed as an envelope.
-The item-6 yield report and item-8 wrapper show different claims. `klt sim`
-corner-sweep envelopes for the testbenches are open work under item 5
-([#91](https://github.com/2AMLogic/gf180-comparator/issues/91)). Such an
-envelope backs item 9 only if it records the cold-start invocation and the
-pinned PDK; one that does not would still leave item 9 uncited.
+The item-6 yield report and item-8 wrapper show different claims. The
+item-5 corner-matrix wrapper
+([#91](https://github.com/2AMLogic/gf180-comparator/issues/91)) is derived
+from records, not a run of the testbenches, and records neither the
+cold-start invocation nor the pinned PDK, so it does not back item 9.
 Tool gap: klayout-tools#2844.
 
 ### unmet — item 10 (Repo hygiene): partially true, no CI-produced evidence
