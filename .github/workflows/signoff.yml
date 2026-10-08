@@ -32,7 +32,7 @@ name: Signoff
 #
 # Both pins below are load-bearing and MUST stay in sync with
 # signoff/regenerate.sh and signoff/README.md ("The two pins"):
-#   - the distribution: klayout-tools==0.5.0, the PyPI registry wheel (the
+#   - the distribution: klayout-tools==0.6.0, the PyPI registry wheel (the
 #     release whose byte-identical wheel graded the committed report;
 #     same-version snapshots grade differently);
 #   - the rulebook: the vendored signoff/design-evidence-tiers.md, the
@@ -73,7 +73,7 @@ jobs:
       - name: Install the pinned grading klt (klayout-tools)
         run: |
           python -m pip install --upgrade pip
-          python -m pip install klayout-tools==0.5.0
+          python -m pip install klayout-tools==0.6.0
           klt version --format json
 
       - name: Re-grade the manifest and verify the committed pins

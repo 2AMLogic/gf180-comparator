@@ -46,10 +46,10 @@ for the same topology.
 Grading this report reproducibly depends on two pinned things, and
 `verify-report.py` refuses a grade that does not match either:
 
-1. **The grader distribution: `klayout-tools==0.5.0`, the PyPI registry
+1. **The grader distribution: `klayout-tools==0.6.0`, the PyPI registry
    wheel.** `regenerate.sh` grades with a throwaway venv install of exactly
    that wheel and asserts its identity (`klt version --format json` must
-   report `package_version: 0.5.0`, `git_tag: v0.5.0`, `is_release: true`) —
+   report `package_version: 0.6.0`, `git_tag: v0.6.0`, `is_release: true`) —
    same-version builds are *not* the same code (a git snapshot or
    full-checkout install under the same version string can grade a different
    item table than the released wheel), which is why neither regenerate nor
@@ -61,15 +61,17 @@ Grading this report reproducibly depends on two pinned things, and
    The checklist grew its **eleventh item** — *Power delivery (structural)*
    — on 2026-09-17 (klayout-tools
    [#2025](https://github.com/2AMLogic/klayout-tools/issues/2025)), *after*
-   the 0.5.0 release: the wheel still bundles the older 10-item copy and
-   without `--tiers-doc` it renders no item-11 row at all and disagrees with
-   this report on `t1_item_count`. Every grade here — regenerate, verifier,
+   the 0.5.0 release. The 0.6.0 wheel bundles an 11-item rulebook too (it
+   lists `erc: 11` under `klt signoff --describe-grader`), but its bundled
+   copy is **not** byte-identical to the vendored one (it is newer: e.g. the
+   `partition_boundary` paragraph and `degenerate_well_assertion`), so the
+   vendored copy and `--tiers-doc` stay until a deliberate re-vendor. Every grade here — regenerate, verifier,
    CI — passes `--tiers-doc signoff/design-evidence-tiers.md`; the file is a
    verbatim copy of that commit's `docs/design-evidence-tiers.md` (its
    sha256 above is the human-facing identity pin — the pinned wheel predates
    klayout-tools#2191, so it cannot itself hash the governing doc into the
-   report). When a klayout-tools release carrying the 11-item rulebook
-   ships, move both pins forward together and re-grade.
+   report). Re-vendoring the doc (dropping `--tiers-doc`) is a separate,
+   deliberate step: it changes `source_doc` and the verifier's expectations.
 
 ## How to re-run the grading
 
@@ -97,8 +99,9 @@ by `./signoff/regenerate.sh`):
   (Monte Carlo; offset row only — see the item 5/6 section), item 8
   (Characterization report; generic envelope — see the item-8 section)**
 - **unmet, reason `no_evidence` — items 1, 5, 7, 9, 10**
-- **unmet, reason `unrecognized_envelope` — item 11** (evidence is cited;
-  the pinned grader predates item-11 recognition — see the item-11 section)
+- **unmet, reason `supply_spec_incomplete` — item 11** (the 0.6.0 grader
+  reads the cited ERC + LVS evidence; the ERC run declares no `ties[]` —
+  klayout-tools#2169 — see the item-11 section)
 
 `no_evidence` means exactly what it says mechanically: the manifest names no
 citation for that item. It is **not** an assertion that the underlying work
@@ -219,7 +222,7 @@ committed logs and cross-checks them against the record's mean/sigma. Result:
 (target) / 8.5 (stretch), `sample_size.verdict: sufficient` and the negative
 control `detected` at all 45 points.
 
-**"Met" is weaker than it looks.** The pinned 0.5.0 grader reads the report's
+**"Met" is weaker than it looks.** The pinned 0.6.0 grader reads the report's
 `status` (`reported`: no `target_yield` is declared, so it cannot fail); it
 does not grade the checklist's prose sub-requirements. The disclosed gaps,
 in full in `sim/comparator-offset-mc/yield/README.md`: one seed (`20260909`)
@@ -328,6 +331,14 @@ compound analog entry the rulebook's item 11 names: the ERC supply report
 `erc_status: "clean"`, zero findings, one electrical island per declared
 supply, `provenance.input.content_hash` pinning the same committed GDS
 items 2/3 cite).
+
+**Update (#90): the pin moved to `klayout-tools==0.6.0`, which recognizes
+item 11.** Item 11's manifest entry is now the compound list the grader
+requires (the ERC report plus item 4's LVS report, same pin), because a lone
+`erc` citation grades `wrong_kind`. The row now renders `unmet`, reason
+`supply_spec_incomplete`: the cited `klt erc` run declares no `ties[]`, so
+`erc.missing_tie` is not computed (blocker klayout-tools#2169, below). The
+paragraph below is the historical #68 state under 0.5.0.
 
 **Re-checked in [#68](https://github.com/2AMLogic/gf180-comparator/issues/68)'s
 pass (the same re-grade that cites item 4): the row still renders `unmet`,

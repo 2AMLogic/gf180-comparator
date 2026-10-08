@@ -4,8 +4,19 @@
   "kind": "analog",
   "tier": null,
   "t1_item_count": 11,
+  "build_t1_item_count": 11,
   "t1_met_count": 5,
   "source_doc": "signoff/design-evidence-tiers.md",
+  "source_doc_content_hash": "sha256:c7a1e7e10627fae396007e0ff951734f37d95028b8f49f2e21e802e9f552f318",
+  "build": {
+    "version": "0.6.0",
+    "package_version": "0.6.0",
+    "git_commit": "c622e8addb362491664d44ba4d717f354ca88bbd",
+    "git_tag": "v0.6.0",
+    "dirty": false,
+    "is_release": true,
+    "grading_ruleset_id": "sha256:0d8cc27c752ce25fc78499d4c280a4b472c460ac2dbcd38e56c9694485a17156"
+  },
   "items": [
     {
       "tier": "T1",
@@ -16,6 +27,7 @@
       "notes": [],
       "status": "unmet",
       "reason": "no_evidence",
+      "graded_by_build": true,
       "citation": null
     },
     {
@@ -27,12 +39,14 @@
       "notes": [],
       "status": "met",
       "reason": null,
+      "graded_by_build": true,
       "citation": {
         "file": "layout/lvs/comparator.extract.json",
         "command": null,
         "kind": "extract",
         "check_status": "extracted",
         "content_hash": "sha256:d668ccb543c4ec6482ee78fb00805a7472955944fce07022c505e78eeec6b8ed",
+        "input_verified": true,
         "exit_status": 0
       }
     },
@@ -45,13 +59,61 @@
       "notes": [],
       "status": "met",
       "reason": null,
+      "graded_by_build": true,
       "citation": {
         "file": "layout/drc/comparator.drc.json",
         "command": null,
         "kind": "drc",
         "check_status": "clean",
         "content_hash": "sha256:d668ccb543c4ec6482ee78fb00805a7472955944fce07022c505e78eeec6b8ed",
-        "exit_status": 0
+        "input_verified": true,
+        "exit_status": 0,
+        "coverage": {
+          "layers_in_stream_without_rules": [
+            "31/0",
+            "32/0",
+            "34/10",
+            "42/10",
+            "49/0",
+            "62/0",
+            "110/5"
+          ],
+          "rules_skipped": [
+            "bjt.separation.comp.1",
+            "comp.space.mv.1",
+            "comp.width.mv.1",
+            "metal3.enclosing.via3.1",
+            "metal4.enclosing.via3.1",
+            "metal4.enclosing.via4.1",
+            "metal4.space.1",
+            "metal4.width.1",
+            "metal5.enclosing.via4.1",
+            "metal5.space.1",
+            "metal5.width.1",
+            "metaltop.space.1",
+            "metaltop.width.1",
+            "mim.enclosing.fusetop.1",
+            "mim.enclosing.via4.1",
+            "mim.space.1",
+            "pad.enclosing.metal5.1",
+            "via3.space.1",
+            "via3.width.1",
+            "via4.space.1",
+            "via4.width.1"
+          ],
+          "deck_scope": [
+            "10.4.2 MIM Option B",
+            "10.7 DRC_BJT Mark Layer",
+            "7.12 Contact",
+            "7.13 Metaln",
+            "7.14 Vian",
+            "7.15 MetalTop",
+            "7.4 Nwell",
+            "7.5 Comp",
+            "7.7 Poly2",
+            "9.1 Bond Pad"
+          ]
+        }
       }
     },
     {
@@ -63,12 +125,14 @@
       "notes": [],
       "status": "met",
       "reason": null,
+      "graded_by_build": true,
       "citation": {
         "file": "layout/lvs/comparator.lvs.json",
         "command": null,
         "kind": "lvs",
         "check_status": "match",
         "content_hash": "sha256:594f54be04819f3bf3a8466a8c0f4d863267a9e9ba459b39ddf09249da80d98c",
+        "input_verified": null,
         "exit_status": 0
       }
     },
@@ -83,6 +147,7 @@
       ],
       "status": "unmet",
       "reason": "no_evidence",
+      "graded_by_build": true,
       "citation": null
     },
     {
@@ -94,12 +159,14 @@
       "notes": [],
       "status": "met",
       "reason": null,
+      "graded_by_build": true,
       "citation": {
         "file": "sim/comparator-offset-mc/yield/yield-20260910-124917-4805118-target.json",
         "command": null,
         "kind": "yield",
         "check_status": "reported",
         "content_hash": "sha256:8e53d5b54c585de1858de1bf4087a8b44338f04211f685b0a2a9fee206279901",
+        "input_verified": true,
         "exit_status": 0
       }
     },
@@ -114,6 +181,7 @@
       ],
       "status": "unmet",
       "reason": "no_evidence",
+      "graded_by_build": true,
       "citation": null
     },
     {
@@ -125,12 +193,14 @@
       "notes": [],
       "status": "met",
       "reason": null,
+      "graded_by_build": true,
       "citation": {
         "file": "measurements/characterization-report.item8.json",
         "command": null,
         "kind": "generic",
         "check_status": "pass",
         "content_hash": "sha256:cd33cc25f69866aedcee9676908249f62435b70ef268bc6e8fde08822fd0118e",
+        "input_verified": null,
         "exit_status": 0
       }
     },
@@ -143,6 +213,7 @@
       "notes": [],
       "status": "unmet",
       "reason": "no_evidence",
+      "graded_by_build": true,
       "citation": null
     },
     {
@@ -154,6 +225,7 @@
       "notes": [],
       "status": "unmet",
       "reason": "no_evidence",
+      "graded_by_build": true,
       "citation": null
     },
     {
@@ -166,7 +238,8 @@
         "Both columns rest on the same `klt erc` **supply spec** run (`docs/cli/erc.md`): a spec declaring every supply as a `nets[]` entry with `\"kind\": \"supply\"`, a stackup covering the layers the supply is routed on, and the `ties[]` declarations for the well/substrate taps. Every declared supply must resolve to exactly **one** electrical island \u2014 no `erc.unconnected_net` and no `erc.supply_short` naming it \u2014 and the run must report zero `erc.missing_tie`, from a tie the run actually *checked*: a `ties[]` entry `klt erc` reports as degenerate (`erc_coverage.skipped[]`, reason `degenerate_tap_declaration`, issue #2199) returns zero for a reason that has nothing to do with taps, and renders `supply_spec_incomplete` rather than a met item \u2014 the same rule that already rejects a spec declaring no `ties[]` at all. **A stream with no distinguishing implant/marker layer at all** \u2014 common for generated/full-custom analog whose implants are derived downstream, see `docs/cli/erc.md`'s #2199 section \u2014 can still declare a checked tie via `ties[].tap_boxes` (issue #2234): a caller-asserted list of tap-geometry boxes, graded under its own `erc_coverage.checked_by_assertion` classification and held to the same degenerate/falsifiability test as every other narrowing form. When a stream genuinely cannot express a tap at all, a top-level `ties_disclosure` declares that explicitly; the item still renders `supply_spec_disclosed_unexpressible` rather than a met item \u2014 a disclosure proves nothing about the tap's actual connectivity \u2014 but that reason is distinguishable from a spec that omitted `ties[]` without ever considering the question. Those are the rules this item grades, not the report's overall `status`: an antenna verdict or a floating-gate finding is a real defect, but it is not this item's subject and does not block it (#1994). IR-drop and EM (`klt power`) stay deliberately **outside** this item \u2014 see \"Power/IR-drop + EM evidence\" below. This item is the *structural* question (\"is the supply connected to what it powers\"), not the *analysis* question (\"how far does it droop, and does any segment exceed its EM limit\"). **Caveat (issue #2180)**: `erc.unconnected_net` can be a false positive for a declared supply whose real continuity in silicon runs through diffusion/well material outside the declared `stackup` \u2014 see `docs/cli/erc.md`'s \"Known false-positive: diffusion/well continuity is not modeled\" section. A grader who sees a multi-island `erc.unconnected_net` finding on a guard-ring/well-tap-strapped supply should not treat it as a confirmed power-delivery defect on its own \u2014 cross-check against an independent, device-aware LVS run first (and confirm that LVS deck's own connectivity setup does not join nets by label alone, e.g. via a bare `connect_implicit('*')` rule, before trusting a \"match\" verdict as that independent check). **Caveat (issue #2183)**: the mirror-image false positive applies to `erc.supply_short`. `klt erc` traces conductor geometry with no device recognition, so a drawn device body on a declared role \u2014 a poly resistor, a poly fuse, a MiM/MOM capacitor plate \u2014 reads as a wire. A block that deliberately spans its two supplies through such a device (a power-on-reset divider, a brown-out detector, a supply-referenced bias string) therefore reports an `erc.supply_short` that is an artifact of the declaration, not a power-delivery defect. **Declare those bodies in the spec's `devices[]` array** \u2014 see `docs/cli/erc.md`'s \"Device bodies are not wires\" section \u2014 and the item becomes gradeable for such a block. A grader seeing an `erc.supply_short` on a supply-sensing analog block should check the cited report's `provenance.devices` (empty, or missing the bodies on the conducting path) before reading the finding as a real short. **`--deck` (issue #2204) removes the need for hand-declaration for a device a curated extraction deck already knows about**: running the same supply-spec check with `--deck <name>` (e.g. `gf180mcu`/`sky130`) auto-carves out every deck-recognised `ResistorDevice`/`CapacitorDevice` body whose conducting-body layer matches a declared `stackup`/`vias` role, echoed in `provenance.devices` exactly as a hand-declared entry is (plus `source: \"deck\"`) \u2014 see `docs/cli/erc.md`'s \"Deck-driven device-marker auto-detection\". A run without `--deck`, or whose device is not yet covered by any curated deck's `resistors`/ `capacitors` tables, still needs the explicit `devices[]` declaration above; a grader should check `provenance.deck` alongside `provenance.devices` before treating a clean `erc.supply_short` read as covered by auto-detection rather than a hand-declaration that happens to be present."
       ],
       "status": "unmet",
-      "reason": "unrecognized_envelope",
+      "reason": "supply_spec_incomplete",
+      "graded_by_build": true,
       "citation": null
     },
     {
