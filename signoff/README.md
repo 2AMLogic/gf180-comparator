@@ -310,8 +310,11 @@ all 9 checks on 2026-09-15) and the pinned PDK variant (`sim/pdk.json`,
 `gf180mcuD`) are the substance. But no `klt sim` envelope exists: the
 `sim/*/records/*.json` files are this repo's harness format, which the grader
 does not read, and no selftest/characterize run is committed as an envelope.
-The item-6 yield report and item-8 wrapper show different claims. This
-becomes citable once #75 lands `klt sim` envelopes for the ratified rows.
+The item-6 yield report and item-8 wrapper show different claims. `klt sim`
+corner-sweep envelopes for the testbenches are open work under item 5
+([#91](https://github.com/2AMLogic/gf180-comparator/issues/91)). Such an
+envelope backs item 9 only if it records the cold-start invocation and the
+pinned PDK; one that does not would still leave item 9 uncited.
 Tool gap: klayout-tools#2844.
 
 ### unmet — item 10 (Repo hygiene): partially true, no CI-produced evidence

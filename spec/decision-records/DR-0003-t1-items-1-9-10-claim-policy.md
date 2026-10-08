@@ -31,8 +31,10 @@ claim. Audit of the committed envelopes:
   envelope exists. The `sim/*/records/*.json` files are this repo's harness
   format, not `klt sim` envelopes, and `sim/selftest.sh` output is not
   committed as an envelope. Citing the item-8 wrapper or the yield report
-  would be citing a different claim. **Left uncited**; becomes citable when
-  #75 lands `klt sim` envelopes for the ratified rows.
+  would be citing a different claim. **Left uncited.** `klt sim` corner-sweep
+  envelopes for the testbenches are open work under item 5 (#91); such an
+  envelope backs item 9 only if it records the cold-start invocation and the
+  pinned PDK.
 - **Item 10** (README, license, CI keeping harness/evidence formats valid):
   the only CI is `signoff.yml`; it does not run the harness tests
   (`sim/harness/tests`) or `design/netlist.sh --check`, and no CI-produced
@@ -53,7 +55,8 @@ Items 1, 9, 10 stay `unmet`/`no_evidence`; the T1 count does not change. The
 README states, per item, what exists and what would make it citable. The gap
 is filed upstream as klayout-tools#2844. Follow-ups that would change this
 policy: CI running `netlist.sh --check` and the harness tests with a
-committed result envelope; `klt sim` envelopes from #75.
+committed result envelope; `klt sim` corner-sweep envelopes from #91, for
+item 9 only if they record the cold-start invocation and the pinned PDK.
 
 ## Spec lines affected
 
