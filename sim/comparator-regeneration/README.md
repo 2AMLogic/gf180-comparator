@@ -54,6 +54,12 @@ Two design decisions make the measurement robust:
   own supply, crossed at 0.5). A fixed absolute threshold would turn the
   ±10 % supply axis into a measurement artefact.
 
+The three rungs above time the **LOW→HIGH** output decision only. Since issue
+#158 the same deck also carries a **mirrored, supplemental reverse-polarity
+ladder** (HIGH→LOW). See
+[Reverse-polarity decision time](#reverse-polarity-decision-time-issue-158--supplemental-not-scored)
+below. It changes no forward card, expression, check or name.
+
 Mismatch is off (PDK default). Regeneration time and offset are separable and
 are budgeted separately: offset moves the input at which the decision flips
 (that is `sim/comparator-offset-mc/`), τ sets how fast a given overdrive
@@ -100,10 +106,13 @@ current and switching energy from the same deck.
 
 | record | DUT | grid | verdict |
 |---|---|---|---|
+| [`20261009-194212777873-3617a0b`](records/20261009-194212777873-3617a0b.md) | `comparator-dr0001` (**schematic**, same netlist as the next row) | 45/45, `mos` × 3 T × 3 V (klt sim fleet) | REFERENCE: `td_od50_ns` within target 45/45; adds the **supplemental, unscored** reverse-polarity columns ([#158](#reverse-polarity-decision-time-issue-158--supplemental-not-scored)) |
 | [`20260910-125206-4805118`](records/20260910-125206-4805118.md) | `comparator-dr0001` (**schematic**) | 45/45, `mos` × 3 T × 3 V | PASS |
 | [`20260909-055524-e2bb637`](records/20260909-055524-e2bb637.md) | `placeholder-v1` (**placeholder**) | 45/45, `mos` × 3 T × 3 V | PASS |
 
-The first row is the current reference: taken against
+The `20260910-125206-4805118` row is the current reference (the #158 row
+above re-measures the same netlist's forward ladder to within 5×10⁻⁶ and
+adds only supplemental columns): taken against
 [DR-0001](../../spec/decision-records/DR-0001-comparator-topology.md)'s
 static preamp + StrongARM latch, no placeholder banner. `td_od50_ns` is
 0.708 ns at nominal, 1.237 ns worst-case at `ss_125c_2.97v` — meets the
@@ -166,6 +175,110 @@ they are not a total-error guarantee. To re-derive the numbers, read the
 `tb_regeneration.spice`, matching `td_d`/`dout_*` measures in `tb.json`, and
 run it through `klt sim` (batch backend) to mint a new record; do not edit the
 existing ones.
+
+### Reverse-polarity decision time (issue #158) — supplemental, not scored
+
+Every row above times the **LOW→HIGH** output decision: `td_a/b/c` are
+`targ ... rise=1 td=35n`. The `dout_*_first` samples prove that the forward
+ladder decided both ways. They do **not** time the HIGH→LOW direction. Since
+#158 the deck carries a **mirrored ladder** to measure it:
+
+| instances | stimulus | timed edge | columns |
+|---|---|---|---|
+| `Xa/Xb/Xc` (unchanged) | −dv on strobe 1, **+dv** on strobe 2 | output **rise**, 2nd strobe | `td_od*_ns`, `tau_ps`, `dout_*_first/_end` |
+| `Xra/Xrb/Xrc` (new) | +dv on strobe 1, **−dv** on strobe 2 | output **fall**, 2nd strobe | `td_od*_rev_ns`, `tau_rev_ps`, `dout_*_rev_first/_end` |
+
+- **Same method, mirrored.** The reverse ladder uses the same rungs (50 mV,
+  1 mV and 0.1 mV), the same `t_flip`, the same `trig v(clkn) rise=2`, the
+  same supply-normalized 0.5 threshold and the same `td=35n` window. The
+  window opens after the power-up resolution and after the first decision, so
+  neither can be timed (`sim/harness/tests/test_regeneration_reverse.py` pins
+  this against the fragment's own clock).
+- **The sequence is proved per point.** `dout_*_rev_first >= 0.9` (HIGH after
+  the first strobe) and `dout_*_rev_end <= 0.1` (LOW after the second) are
+  checks. A point where the mirrored instance never went HIGH has no
+  HIGH→LOW transition to time. That point **fails**: no delay is inferred.
+- **Direction deltas** come from the same transient at each point:
+  `dtd_od*_rev_ps` = reverse − forward, and `dtau_rev_ps` = τ_rev − τ.
+- **Not scored.** `td_od50_ns`, `tau_ps` and `td_od1_over_tau` keep their
+  names, expressions and meaning. Signoff's item-5 envelope
+  (`signoff/make_item5_envelope.py`), the ratified decision-time row and
+  [DR-0005](../../spec/decision-records/DR-0005-metastability-target.md)'s
+  metric read only those forward quantities. `klt_record.py` prints the
+  reverse columns in a separate "Supplemental … NOT SCORED" section and as
+  `supplemental_reverse_polarity` in the JSON record. Changing the scoring
+  scope would need its own decision record.
+
+**Records (measured direction coverage):**
+
+| record | DUT | grid | forward (scored) | reverse (supplemental) |
+|---|---|---|---|---|
+| [`20261009-194212777873-3617a0b`](records/20261009-194212777873-3617a0b.md) | `comparator-dr0001` **schematic** (`design/comparator.spice`, sha256 `0df618e73b1f0736`, the same netlist as `20260910-125206-4805118`) | 45/45, `mos` × 3 T × 3 V, klt sim batch fleet | `td_od50_ns` within target 45/45 | measured at 45/45, polarity proof passes at 45/45 |
+| *(none: blocker)* | `comparator-dr0001-layout` **extracted** | — | `20261002-202641-baeffe5` (pre-#158 deck) | **not measured**, see below |
+
+What the schematic record shows:
+
+- **HIGH→LOW is faster at every PVT point and every rung.** `dtd_od*_rev_ps`
+  runs from −105 ps (`ff_-40c_3.63v`) to −262 ps (`ss_125c_2.97v`). Both
+  directions bind at `ss_125c_2.97v`: 50 mV forward 1.237 ns vs reverse
+  0.975 ns; 0.1 mV forward 1.956 ns vs reverse 1.694 ns. The forward
+  (scored) direction is therefore the slower one.
+- **The asymmetry is in the fixed delay, not in regeneration.** At each point
+  the delta is the same at all three rungs to within 0.26 ps, and
+  `dtau_rev_ps` lies between −0.075 and +0.022 ps. τ_rev equals τ (worst 122.9 ps at
+  `ss_125c_2.97v`). On the schematic the reverse direction does not widen any
+  metastability statement computed from `tau_ps`.
+- **The added instances do not disturb the forward ladder.** Against
+  `20260910-125206-4805118`, which used the same DUT netlist and the pre-#158
+  deck, the forward delays agree within 5×10⁻⁶ relative at all 45 points and
+  `tau_ps` agrees within 5×10⁻⁵.
+- **Fleet note.** The v3.63 supply request was refused twice with
+  `batch_no_capacity` (Spot capacity). The identical staged request was then
+  resubmitted and completed (`klt-sim-7445eb6cdf17`). The record was ingested
+  with `--from-report`. Its source-bundle and linkage checks verify that the
+  three reports belong to the bundled requests.
+
+**Extracted (post-layout) coverage is a blocker, not a substitution**
+([#164](https://github.com/2AMLogic/gf180-comparator/issues/164); stale
+`pex_measure.py` pins: [#165](https://github.com/2AMLogic/gf180-comparator/issues/165)). No
+extracted reverse record exists. The schematic record above does **not**
+stand in for it, for two reasons:
+
+1. **No fleet path exists for an offset-referred extracted ladder.**
+   `mk_klt_request.py`/`klt_record.py` support the schematic binding only, and
+   the `dut_vos` probe leg is not implemented. A `klt sim` request cannot carry
+   a per-corner parameter (klayout-tools#2725). The only fleet route that
+   chains the probe into the ladder is `layout/pex/pex_measure.py`. Its bench
+   sha256 pins have been stale since #141, so it refuses to run. Running the
+   45-point extracted grid locally with `run_corners.py` is not allowed on the
+   shared dispatch workers.
+2. **The trip-point convention does not establish the 0.1 mV reverse rung on
+   the extracted DUT.** This was a single-point local check:
+   `python3 sim/tools/regen_reverse_control.py --dut comparator-dr0001-layout`
+   at `tt_27c_3.30v`, on the extracted netlist regenerated with the pinned
+   klt 0.6.0 (sha256 `8ffe4ec2…`, the same netlist as `20261002-202641-baeffe5`),
+   under host ngspice 42 against the pinned floor of 46, so it is scratch and
+   not evidence. The 50 mV and 1 mV mirrored instances decided HIGH then LOW
+   (0.811 ns and 1.129 ns reverse). The 0.1 mV instance, at +0.1 mV over the
+   probed trip point (−8.218 mV), decided **LOW** on the first strobe. It
+   therefore had no HIGH→LOW transition to time, and the point fails
+   (`tdr_c` out of interval, `dout_od01_rev_first` ≈ 0). The probe does not
+   show hysteresis: up-ramp and down-ramp trip points agree to 3.5 µV, inside
+   its ~30 µV quantisation. The first strobe after the DC operating point
+   appears to carry an effective offset of more than 0.1 mV relative to the
+   steady-state probed trip point. The forward ladder's `dout_od01_first`
+   check cannot detect this, because a LOW first decision is what that check
+   expects. Per the issue, this is disclosed rather than read as symmetry.
+
+Reproduce:
+
+```bash
+# schematic, 45-point grid on the batch fleet (never a local grid on a dispatch worker)
+KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py comparator-regeneration
+# single-point edge-semantics controls (local; positive must pass, suppressed
+# second reverse decision must fail) -- also step 2b of sim/selftest.sh
+python3 sim/tools/regen_reverse_control.py [--corner tt_27c_3.30v] [--dut <id>]
+```
 
 ### Two placeholder-specific caveats on that record
 
