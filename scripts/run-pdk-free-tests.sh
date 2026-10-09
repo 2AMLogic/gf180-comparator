@@ -12,7 +12,7 @@
 #                                              to one test_*.py / test-*.py
 #   scripts/run-pdk-free-tests.sh --list       list step ids and names
 #
-# TO ADD A STEP (e.g. #121): add one `step` line in the STEPS section below.
+# TO ADD A STEP: add one `step` line in the STEPS section below.
 # TO ADD A TEST FILE: drop test_*.py (or test-*.py) in a directory listed in
 # TEST_DIRS; it is discovered automatically. A test file anywhere else in the
 # repo fails the `discovery` step until its directory is added.
@@ -24,7 +24,7 @@ PY="${PYTHON:-python3}"
 # Directories whose test files are run one by one as scripts (each is a
 # stdlib unittest / self-checking script). sim/harness/tests is run through
 # `unittest discover` instead (see the `harness` step).
-TEST_DIRS=(design/tests signoff/tests manifests)
+TEST_DIRS=(design/tests signoff/tests manifests layout/tests)
 UNITTEST_DIRS=(sim/harness/tests)
 
 have_klt() {
@@ -84,7 +84,8 @@ step klt-pin     "Grader pin consistency check"                      0 "$PY sign
 step integrator  "Verify integrator manifest maturity consistency"   0 "$PY manifests/verify-integrator.py"
 step regrade     "Re-grade the manifest and verify the committed pins" 1 "$PY signoff/verify-report.py"
 step item5       "Item-5 corner-matrix wrapper freshness check"      0 "$PY signoff/make_item5_envelope.py --check"
-step unit-tests  "Unit tests: design/tests, signoff/tests, manifests" 0 'run_test_dirs'
+step routing-tbl "Layout README routing table freshness check"      0 "$PY layout/routing_table.py --check"
+step unit-tests  "Unit tests: design/tests, signoff/tests, manifests, layout/tests" 0 'run_test_dirs'
 # ---- END STEPS --------------------------------------------------------------
 
 if [ "${1:-}" = "--list" ]; then
