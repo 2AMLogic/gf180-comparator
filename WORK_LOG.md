@@ -4,6 +4,35 @@ Chronological record of merged pull requests and closed issues. Newest entries a
 
 ### 2026-10-09
 
+- **PR #144**: test: PDK-free coverage for klt_record.py and mk_klt_request.py (#142)
+- **PR #143**: sim: add td_od1_over_tau, deprecate mislabelled resolve_decades (#141)
+- **PR #140**: spec: propose DR-0006 average-power operating condition (proposed, not ratified)
+- **PR #139**: ci: run routing_table.py --check and add regression test (#121)
+- **PR #138**: spec: propose DR-0005 metastability target (proposed, not ratified)
+- **PR #137**: Pin repository-local netlisting configuration and recipe inputs
+- **PR #132**: docs: refresh README status and split target-spec evidence into a ledger
+- **PR #133**: Unify the PDK-free test entrypoint so npm test matches CI (#129)
+- **PR #131**: ci: enforce klayout-tools grader pin consistency (#128)
+- **PR #127**: Make item-5 envelope input validation survive python -O (#126)
+- **PR #122**: ci: PDK-free netlist source-pin check (#120)
+- **PR #119**: Verify derived signoff wrappers against their source records
+- **PR #118**: ci(signoff): run PDK-free harness unittest suite (#110)
+- **PR #117**: Keep unscored average power from passing T1 item 5 (scoring revision 2)
+- **Issue #142** (closed): Test the evidence-minting path: PDK-free tests for klt_record.py derive() and the local-grid refusal guard
+- **Issue #141** (closed): Correct the mislabelled resolve_decades metastability diagnostic (it is an e-fold ratio)
+- **Issue #121** (closed): CI: run layout/routing_table.py --check and add a regression test for it
+- **Issue #134** (closed): Draft the metastability target-spec decision and two-key ratification package
+- **Issue #124** (closed): Auditor guard decision: keep git clean -fd flagged
+- **Issue #136** (closed): Pin repository-local netlisting configuration and recipe inputs
+- **Issue #130** (closed): docs: refresh README status and split bloated target-spec evidence cells into a ledger
+- **Issue #129** (closed): Unify the PDK-free test entrypoint so npm test matches what CI runs
+- **Issue #128** (closed): CI: enforce that the klayout-tools grader pin matches across workflow, regenerate.sh and verify-report.py
+- **Issue #126** (closed): Make corner evidence input validation survive Python optimization
+- **Issue #120** (closed): CI: PDK-free netlist source-pin check so a stale design/comparator.spice fails CI (enables T1 item 1)
+- **Issue #111** (closed): Verify derived signoff wrappers against their source records
+- **Issue #110** (closed): Run existing PDK-free harness regressions in GitHub Actions
+- **Issue #108** (closed): Keep incomplete average-power coverage from passing T1 corner verification
+
 - **PR #115**: Qualify consumer decision-speed verdict at half-LSB overdrive (#109)
 - **PR #114**: signoff: cite klt pex report for T1 item 7 (#81)
 - **PR #113**: design: cascode the preamp input pair; DR-0004 kickback result (45/45 schematic corners)

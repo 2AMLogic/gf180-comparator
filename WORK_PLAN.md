@@ -14,20 +14,18 @@ _None._
 Issues the operator starred (`loom:operator-priority`); land these first.
 
 - **#3**: Gap-to-T1 tracker: gf180-comparator artifact-presence survey
-- **#81**: T1 item 7: produce a klt pex report from the committed post-layout records and cite it
 
 ## Ready
 
 Human-approved issues ready for implementation (`loom:issue`).
 
-- **#103**: signoff: declare ties[] in the klt erc supply spec now that the upstream blocker is closed (T1 item 11)
+- **#145**: CI: preserve started main Signoff verification during merge bursts
 
 ## In Progress
 
 Issues currently being built (`loom:building`).
 
-- **#81**: T1 item 7: produce a klt pex report from the committed post-layout records and cite it
-- **#102**: design: reduce comparator kickback to the ratified 5 mV target (sole blocker of T1 item 5)
+- **#125**: Define and measure the missing average-power operating condition for T1
 
 ## PRs Awaiting Review
 
@@ -46,11 +44,11 @@ _None._
 Issues carrying `loom:curated`.
 
 - **#3**: Gap-to-T1 tracker: gf180-comparator artifact-presence survey *(curated)*
-- **#102**: design: reduce comparator kickback to the ratified 5 mV target (sole blocker of T1 item 5) *(curated)*
+- **#125**: Define and measure the missing average-power operating condition for T1 *(curated)*
 
 ## Proposed (Architect / Hermit)
 
-_None._
+- **#135**: CI: enforce the append-only rule for sim/ evidence records *(architect)*
 
 ## Epics
 
@@ -61,12 +59,12 @@ _None._
 | Tier | Count |
 |------|-------|
 | Operator merge-risk holds | 0 |
-| Operator priority | 2 |
+| Operator priority | 1 |
 | Ready (`loom:issue`) | 1 |
-| In Progress (`loom:building`) | 2 |
+| In Progress (`loom:building`) | 1 |
 | PRs awaiting review | 0 |
 | Approved PRs awaiting merge | 0 |
 | Curated | 2 |
-| Architect / Hermit proposals | 0 |
+| Architect / Hermit proposals | 1 |
 | Active epics | 0 |
 <!-- guide:plan-body:end -->
