@@ -28,7 +28,11 @@ name: Signoff
 # claim honest: manifests/verify-integrator.py fails unless
 # manifests/integrator.json's maturity.rung equals the committed report's
 # tier (null or a supported T1-T4 ladder value) -- the structured manifest
-# can never advertise a tier the verdict of record does not support.
+# can never advertise a tier the verdict of record does not support. Issue
+# #161 extends it to the structural fields: published paths resolve to tracked
+# files, netlist path/top subckt/ordered ports agree with the active DUT
+# binding (sim/dut.json via sim/harness/dut.py), and top_cell/area agree with
+# the placement envelope's bbox within documented rounding tolerances.
 #
 # A klt-free `evidence` step (issue #135) enforces sim/ append-only evidence:
 # signoff/check_append_only_evidence.py fails if any committed protected sim
