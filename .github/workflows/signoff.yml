@@ -30,6 +30,10 @@ name: Signoff
 # tier (null or a supported T1-T4 ladder value) -- the structured manifest
 # can never advertise a tier the verdict of record does not support.
 #
+# A klt-free `evidence` step (issue #135) enforces sim/ append-only evidence:
+# signoff/check_append_only_evidence.py fails if any committed protected sim
+# artifact is modified, deleted, re-moded or moved (see sim/README.md).
+#
 # The job runs scripts/run-pdk-free-tests.sh (issue #129), the same script as
 # package.json's `npm test`: the sim/harness unittest suite (#110), the netlist
 # source-pin check (#120), and every other PDK-free test and --check verifier.
@@ -66,8 +70,39 @@ jobs:
   signoff:
     name: klt signoff --manifest (re-grade committed evidence)
     runs-on: ubuntu-latest
+    # Issue #135: the append-only sim/ evidence guard (`evidence` step of
+    # scripts/run-pdk-free-tests.sh) compares event-specific commits, never the
+    # checkout's HEAD. pull_request: merge-base(PR base, PR head) .. PR head
+    # (HEAD there is GitHub's synthetic merge commit). push: before .. after,
+    # the whole push including forced pushes. The SHAs travel ONLY as env
+    # values -- never `${{ }}`-interpolated into a run: script -- and the
+    # verifier validates them as full hex SHAs and fails (never skips) in CI
+    # when any is missing, all-zero, or unavailable.
+    env:
+      APPEND_ONLY_EVENT: ${{ github.event_name }}
+      APPEND_ONLY_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      APPEND_ONLY_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      APPEND_ONLY_PUSH_BEFORE: ${{ github.event.before }}
+      APPEND_ONLY_PUSH_AFTER: ${{ github.event.after }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          # Full history so merge bases resolve (issue #135).
+          fetch-depth: 0
+
+      # A forced push's `before` (or a fork PR's head) need not be reachable
+      # from any fetched ref; fetch each event commit explicitly. A failed
+      # fetch is not fatal here: the verifier then fails with a named
+      # diagnostic instead of skipping.
+      - name: Fetch the event commits for the append-only evidence check
+        run: |
+          for sha in "$APPEND_ONLY_PR_BASE_SHA" "$APPEND_ONLY_PR_HEAD_SHA" \
+                     "$APPEND_ONLY_PUSH_BEFORE" "$APPEND_ONLY_PUSH_AFTER"; do
+            [[ "$sha" =~ ^[0-9a-f]{40}$ ]] || continue
+            [[ "$sha" =~ ^0+$ ]] && continue
+            git cat-file -e "$sha^{commit}" 2>/dev/null && continue
+            git fetch --no-tags origin "$sha" || echo "::warning::could not fetch $sha"
+          done
 
       - uses: actions/setup-python@v7
         with:
@@ -86,7 +121,8 @@ jobs:
       # verifiers lives in scripts/run-pdk-free-tests.sh (also `npm test`).
       # Each step there is a collapsed ::group:: named as the old CI step was
       # (harness #110, netlist pins #120, grader pin #128, re-grade, item-5
-      # #108, wrapper/integrator regressions #111/#84), failures are
+      # #108, append-only evidence #135, wrapper/integrator regressions
+      # #111/#84), failures are
       # annotated with ::error::, and a summary lists every failed step. A new
       # test_*.py under a covered directory is picked up with no edit here.
       - name: Run PDK-free tests and verifiers (scripts/run-pdk-free-tests.sh)

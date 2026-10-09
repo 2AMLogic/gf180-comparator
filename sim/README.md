@@ -199,9 +199,67 @@ transcribed.
   `sim/` is not a result.
 - **PVT corners on every recorded result.** A single-corner run is a smoke
   test and writes no evidence.
-- **`sim/` is append-only.** Add records; never edit or delete one.
+- **`sim/` is append-only.** Add records; never edit or delete one. CI
+  enforces this — see [Append-only enforcement](#append-only-enforcement).
 - **A placeholder measurement is never a spec claim.** The provenance stamp
   is the mechanism, not the etiquette.
 - **Do not relax a check to make a result pass.** A check that is wrong gets
   a documented recalibration citing the record it was calibrated from — the
   convention every `min_spread_pct_by_axis` floor here already follows.
+
+## Append-only enforcement
+
+`signoff/check_append_only_evidence.py` (issue
+[#135](https://github.com/2AMLogic/gf180-comparator/issues/135)) is the
+`evidence` step of `scripts/run-pdk-free-tests.sh`, so `npm test` and the
+Signoff workflow run the same check. It compares two Git trees and fails,
+naming the original path, if any committed **protected** file is deleted,
+modified, changes Git mode or type, or is moved/renamed (a move is a deletion
+plus an addition; Git rename detection is never used). Adding files is always
+allowed, including a copy that keeps the original.
+
+Protected path families, matched generically so a new experiment directory is
+covered automatically:
+
+| Path | Contents |
+|------|----------|
+| `sim/<experiment>/records/**` | evidence records and JSON twins |
+| `sim/<experiment>/corners/**` | raw per-corner ngspice logs (incl. orphaned aborted-run logs) |
+| `sim/<experiment>/netlist-snapshots/**` | netlists exactly as simulated |
+| `sim/<experiment>/yield/**` | Monte-Carlo yield evidence |
+| `sim/corner-matrix/**/*.json` | item-5 corner-matrix revision envelopes |
+
+Not protected: testbenches, `sim/harness/` and other tooling, experiment
+`README.md` files, DUT and configuration sources, mutable `layout/` reports,
+and the signoff manifest/report — those keep their existing re-pin/re-grade
+contract in `signoff/README.md`.
+
+**Correcting evidence.** There is no allowlist or exception file. A wrong or
+superseded result is corrected by adding a NEW run (a fresh `<record-id>`) or a
+new revision (e.g. the `-r2` corner-matrix envelope next to the original), and
+updating whatever cites it (manifest, README tables) to point at the new path.
+The original stays byte-identical as the audit trail.
+
+**Baselines.** In CI (`GITHUB_ACTIONS` or `CI` set) the event decides and the
+check never skips:
+
+- `pull_request`: merge-base(PR base SHA, PR head SHA) → PR head SHA. The
+  checkout's synthetic merge commit is not used.
+- `push` to `main`: the event's `before` → `after`, covering every commit in
+  the push, forced pushes included.
+- Missing, malformed or unfetchable SHAs, an all-zero `before`, or any other
+  event fail with a diagnostic. The workflow passes the SHAs as `env:` values
+  and checks out with `fetch-depth: 0` plus an explicit fetch of each SHA.
+
+Locally:
+
+```
+python3 signoff/check_append_only_evidence.py                 # merge-base(origin/main, HEAD) .. HEAD
+python3 signoff/check_append_only_evidence.py --base origin/main --merge-base
+python3 signoff/check_append_only_evidence.py --base <rev> [--head <rev>]
+```
+
+With no `--base`, if `origin/main` is missing, equals `HEAD`, or shares no
+history with it, the check prints `SKIP (local-only)` and exits 0. A `--base`
+or `--head` that does not resolve fails (exit 2). The check compares committed
+trees, so commit your changes before running it.
