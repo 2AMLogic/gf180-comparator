@@ -2,8 +2,18 @@
 
 Chronological record of merged pull requests and closed issues. Newest entries appear first.
 
+### 2026-10-09
+
+- **PR #115**: Qualify consumer decision-speed verdict at half-LSB overdrive (#109)
+- **PR #114**: signoff: cite klt pex report for T1 item 7 (#81)
+- **PR #113**: design: cascode the preamp input pair; DR-0004 kickback result (45/45 schematic corners)
+- **Issue #109** (closed): Substantiate consumer decision timing at the consumer overdrive
+- **Issue #81** (closed): T1 item 7: produce a klt pex report from the committed post-layout records and cite it
+- **Issue #102** (closed): design: reduce comparator kickback to the ratified 5 mV target (sole blocker of T1 item 5)
+
 ### 2026-10-08
 
+- **PR #107**: signoff: declare ties[] in klt erc supply spec; item 11 grades met
 - **PR #105**: refactor(layout): consolidate duplicated extract constants and run_extract (#101)
 - **PR #100**: Preserve offset-probe simulator diagnostics in post-layout evidence
 - **PR #99**: fix(sim): prevent run collisions from overwriting evidence
@@ -14,6 +24,7 @@ Chronological record of merged pull requests and closed issues. Newest entries a
 - **PR #92**: feat(signoff): wrap characterization report in a generic evidence envelope for T1 item 8
 - **PR #87**: feat(signoff): cite klt yield report for offset MC as T1 item 6 (#82)
 - **Issue #101** (closed): Consolidate duplicated extract constants and run_extract across layout/run_*.py
+- **Issue #103** (closed): signoff: declare ties[] in the klt erc supply spec now that the upstream blocker is closed (T1 item 11)
 - **Issue #86** (closed): Preserve offset-probe simulator diagnostics in post-layout evidence
 - **Issue #85** (closed): Prevent simulation run collisions from overwriting append-only evidence
 - **Issue #91** (closed): signoff: cite corner-matrix evidence for T1 item 5 (full corner verification)
