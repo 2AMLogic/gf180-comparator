@@ -79,6 +79,15 @@ jobs:
       - name: Re-grade the manifest and verify the committed pins
         run: python3 signoff/verify-report.py
 
+      # Issue #108: the item-5 wrapper must keep incomplete average-power
+      # coverage from grading `met`. PDK-free; the grader case uses the
+      # pinned klt installed above (skipped by name if klt is absent, which
+      # it never is in this job). Also re-derives the committed envelope.
+      - name: Item-5 corner-matrix wrapper regressions
+        run: |
+          python3 signoff/make_item5_envelope.py --check
+          python3 signoff/tests/test_item5_envelope.py
+
       # Issue #84: the integrator view's maturity rung must mirror the
       # committed verdict of record. No klt needed -- two committed JSON
       # files. Fails on any mismatch (either direction) or a prose rung.

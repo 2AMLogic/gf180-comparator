@@ -140,8 +140,10 @@ PINNED_ARTIFACTS = {
     # Item 5: the klt-sim-shaped corner-matrix envelope wraps committed
     # records (signoff/make_item5_envelope.py; its --check also re-hashes the
     # four source records). Its provenance.input pins the DUT netlist.
+    # Cites scoring revision 2 (issue #108: average power recorded as
+    # incomplete coverage); the revision-1 file stays committed as history.
     "5": (
-        REPO_ROOT / "sim/corner-matrix/item5-corner-matrix-20260910-124917-4805118-20260910-125200-4805118-20260910-125206-4805118-20260910-125341-4805118.json",
+        REPO_ROOT / "sim/corner-matrix/item5-corner-matrix-20260910-124917-4805118-20260910-125200-4805118-20260910-125206-4805118-20260910-125341-4805118-r2.json",
         REPO_ROOT / "design" / "comparator.spice",
         ("provenance", "input", "content_hash"),
     ),
