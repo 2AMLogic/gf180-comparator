@@ -70,8 +70,10 @@ python3 design/tests/test_verify_netlist_pins.py  # its temp-fixture regressions
 
 After a successful netlist, `./design/netlist.sh` (write mode only) calls
 `python3 design/verify-netlist-pins.py --write`, which records in
-`comparator.sources.json` the sha256 of every schematic input and of the
-`comparator.spice` it just wrote. The input set is not a hand-kept list: it is
+`comparator.sources.json` the sha256 of every schematic input, of the
+repository-local generation inputs (`design/xschemrc` and `design/netlist.sh`,
+which contains the post-processing heredoc) in a separate `generation_inputs`
+map, and of the `comparator.spice` it just wrote. The input set is not a hand-kept list: it is
 re-derived on every run by walking the hierarchy from `comparator.sch` — each
 `C {x.sym}` instance whose symbol lives in `design/` contributes `x.sym` and
 its same-named `x.sch`, recursively. Today that is `comparator.sch` plus the
@@ -80,8 +82,10 @@ its same-named `x.sch`, recursively. Today that is `comparator.sch` plus the
 `proposed/`, are not inputs.
 
 `--check` fails if any input or the netlist changed since the pin file was
-written, if a sub-cell was added to or dropped from the hierarchy, or if the
-pin file is missing. The fix is always the same: re-run `./design/netlist.sh`
+written, if `xschemrc` or `netlist.sh` changed, if a sub-cell was added to or
+dropped from the hierarchy, or if the pin file is missing. A schema-1 pin file
+(no `generation_inputs`) fails with a migration message telling you to re-run
+`./design/netlist.sh`. The fix is always the same: re-run `./design/netlist.sh`
 and commit `comparator.spice` and `comparator.sources.json` together — never
 hand-edit the pin file.
 
@@ -89,8 +93,9 @@ hand-edit the pin file.
 edited a schematic input or the netlist without re-running the sch→spice step
 afterwards. It does **not** prove that `comparator.spice` is the correct xschem
 output for those schematics — the pin file is plain JSON, and the check never
-runs xschem. Not pinned at all: `xschemrc`, `netlist.sh`'s own
-post-processing, the PDK's device symbols, and the xschem version. Only
+runs xschem. Not pinned at all: `sim/run_corners.py --print-env`,
+`sim/harness/pdk.py` and `sim/toolchain.json` (PDK resolution), the PDK's
+installed device symbols, and the xschem version. Only
 `./design/netlist.sh --check` shows derivation; do not cite a pin-check pass
 for more than the narrow claim above.
 

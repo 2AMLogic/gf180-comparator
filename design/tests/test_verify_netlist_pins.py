@@ -41,7 +41,8 @@ def _sha(path: Path) -> str:
 
 def _committed_files() -> list[str]:
     pins = json.loads((REPO_ROOT / PINS.PIN_FILE).read_text())
-    return [PINS.PIN_FILE, *pins["sources"], *pins["netlist"]]
+    return [PINS.PIN_FILE, *pins["sources"], *pins["generation_inputs"],
+            *pins["netlist"]]
 
 
 class CommittedPins(unittest.TestCase):
@@ -119,6 +120,58 @@ class FixtureDrift(unittest.TestCase):
         self.assertEqual(len(problems), 1, problems)
         self.assertIn("design/comparator.spice: sha256", problems[0])
         self.assertEqual(self._cli("--check").returncode, 1)
+
+    def _assert_only_generation_drift(self, rel: str) -> None:
+        self._append(rel, "# edited\n")
+        for other in self.before:
+            if other != rel:
+                self.assertEqual(_sha(self.root / other), self.before[other])
+        problems = PINS.check_pins(self.root)
+        self.assertEqual(len(problems), 1, problems)
+        self.assertIn(f"{rel}: sha256", problems[0])
+        res = self._cli("--check")
+        self.assertEqual(res.returncode, 1)
+        self.assertIn(rel, res.stderr)
+        self.assertEqual(self._cli("--write").returncode, 0)
+        self.assertEqual(PINS.check_pins(self.root), [])
+
+    def test_stale_xschemrc_fails(self) -> None:
+        self._assert_only_generation_drift("design/xschemrc")
+
+    def test_stale_netlist_sh_fails(self) -> None:
+        self._assert_only_generation_drift("design/netlist.sh")
+
+    def test_schema1_pin_file_gives_migration_message(self) -> None:
+        pin = self.root / PINS.PIN_FILE
+        data = json.loads(pin.read_text())
+        data["schema"] = PINS.OLD_SCHEMA
+        del data["generation_inputs"]
+        pin.write_text(json.dumps(data, indent=2) + "\n")
+        problems = PINS.check_pins(self.root)
+        self.assertEqual(len(problems), 1, problems)
+        self.assertIn("schema 1", problems[0])
+        self.assertIn("re-run ./design/netlist.sh", problems[0])
+        self.assertEqual(self._cli("--check").returncode, 1)
+
+    def test_missing_generation_inputs_key_fails(self) -> None:
+        pin = self.root / PINS.PIN_FILE
+        data = json.loads(pin.read_text())
+        del data["generation_inputs"]
+        pin.write_text(json.dumps(data, indent=2) + "\n")
+        problems = PINS.check_pins(self.root)
+        self.assertEqual(len(problems), 1, problems)
+        self.assertIn("generation_inputs", problems[0])
+        self.assertIn("re-run ./design/netlist.sh", problems[0])
+
+    def test_obsolete_generation_pin_fails(self) -> None:
+        pin = self.root / PINS.PIN_FILE
+        data = json.loads(pin.read_text())
+        data["generation_inputs"]["design/old_recipe.sh"] = "0" * 64
+        pin.write_text(json.dumps(data, indent=2) + "\n")
+        problems = PINS.check_pins(self.root)
+        self.assertEqual(len(problems), 1, problems)
+        self.assertIn("design/old_recipe.sh", problems[0])
+        self.assertIn("re-run ./design/netlist.sh", problems[0])
 
     def test_missing_pin_file_fails(self) -> None:
         (self.root / PINS.PIN_FILE).unlink()

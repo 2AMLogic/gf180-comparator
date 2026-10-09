@@ -8,7 +8,8 @@
 #   ./design/netlist.sh --check  regenerate into a temp file and FAIL if it
 #                                differs from the committed netlist
 #
-# The pin file (sha256 of every schematic input + the netlist) is what CI's
+# The pin file (sha256 of every schematic input + design/xschemrc + this script
+# + the netlist) is what CI's
 # PDK-free design/verify-netlist-pins.py --check compares against; see that
 # script's docstring for what a pass does and does not prove.
 #
