@@ -52,7 +52,10 @@ name: Signoff
 #     klayout-tools#2025) which shipped after the 0.5.0 release -- the
 #     wheel's bundled copy is the older 10-item one, so grading without the
 #     vendored doc would disagree with the verdict of record on
-#     t1_item_count and the verifier fails it by name.
+#     t1_item_count and the verifier fails it by name. Its bytes are pinned
+#     by signoff/design-evidence-tiers.md.sha256 and checked by
+#     signoff/check_rulebook_pin.py (issue #168: the `rulebook-pin` step and
+#     check 0 of verify-report.py), so a prose-only edit fails too.
 # When a klayout-tools release carrying the 11-item rulebook ships, move
 # both pins forward and re-grade per signoff/README.md's refresh contract.
 

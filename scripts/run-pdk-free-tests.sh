@@ -81,7 +81,8 @@ step discovery   "Test-file discovery coverage"                      0 'check_di
 step harness     "Run harness regression tests (PDK-free)"           0 'run_unittest_dirs'
 step netlist-pin "Netlist source-pin check (PDK-free)"               0 "$PY design/verify-netlist-pins.py --check"
 step klt-pin     "Grader pin consistency check"                      0 "$PY signoff/check_klt_pin.py"
-step evidence    "Append-only sim evidence check (base comparison)"  0 "$PY signoff/check_append_only_evidence.py"
+step rulebook-pin "Vendored signoff rulebook byte-identity check"    0 "$PY signoff/check_rulebook_pin.py"
+step evidence   "Append-only sim evidence check (base comparison)"  0 "$PY signoff/check_append_only_evidence.py"
 step integrator  "Verify integrator manifest (maturity, paths, ports, area)" 0 "$PY manifests/verify-integrator.py"
 step regrade     "Re-grade the manifest and verify the committed pins" 1 "$PY signoff/verify-report.py"
 step item5       "Item-5 corner-matrix wrapper freshness check"      0 "$PY signoff/make_item5_envelope.py --check"
