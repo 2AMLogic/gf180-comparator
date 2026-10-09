@@ -530,7 +530,7 @@ write-up, including exactly what stands in for the not-computed
 ## The anti-rot gate (`verify-report.py`, what CI runs)
 
 Grading `met` once proves nothing about next month. The verifier re-runs the
-graded machine and cross-checks the committed record three ways on every
+graded machine and cross-checks the committed record four ways on every
 push and PR (`.github/workflows/signoff.yml`):
 
 1. **Fresh grade == committed report.** `klt signoff --manifest` runs again
@@ -553,7 +553,14 @@ push and PR (`.github/workflows/signoff.yml`):
    stays pinned by item 2's row. A manifest citing an artifact that has
    since changed fails rather than rotting — the acceptance criterion this
    whole directory exists for.
-3. **The vendored rulebook is what graded.** The fresh
+3. **Derived wrappers match their source records.** The verifier runs
+   `signoff/make_item5_envelope.py --check` and
+   `signoff/make_item8_envelope.py --check` (read-only, PDK-free). Each
+   rebuilds its envelope deterministically from the cited records
+   (item 5: the netlist plus four `sim/*/records`; item 8: the narrative
+   report) and fails on any difference, so an edited source record or a
+   hand-edited envelope fails even though the netlist pin is unchanged.
+4. **The vendored rulebook is what graded.** The fresh
    grade's `source_doc` must be `signoff/design-evidence-tiers.md`; a grade
    that ran against the wheel's bundled 10-item copy instead fails by name.
 
@@ -568,6 +575,25 @@ corresponding pin row to `verify-report.py`'s `PINNED_ARTIFACTS` in the
 same change (item 6's `klt yield` citation is the exception: it pins its
 samples document, handled by `verify_yield_pin()`); an unlisted citation fails the verifier by name rather than
 passing unverified.
+
+**Wrapper drift vs grade drift.** Read the failing line to see which kind
+you have:
+
+- `... wrapper drift: python3 signoff/make_itemN_envelope.py --check exited 1`
+  is *wrapper drift*: the committed envelope is not what the builder would
+  write from its current source records. Fix the cause (restore the edited
+  record/envelope, or deliberately produce the successor envelope with the
+  wrapper; item-5 `sim/` evidence is append-only, so a changed record gets a
+  new revision rather than an overwrite), then re-pin and re-grade.
+- `fresh grade ... differs from committed` or a pin mismatch is *grade
+  drift*: the envelopes are self-consistent but the manifest pin or committed
+  `signoff-report.json` is stale. Re-pin `block-manifest.json` and run
+  `./signoff/regenerate.sh`.
+
+Wrapper drift usually causes grade drift too, so fix the wrapper first. CI
+never regenerates anything; the author refreshes citations and grade together.
+The regressions live in `signoff/tests/test_verify_wrappers.py` (temporary
+fixtures only).
 
 ## Where this sits in the fleet
 

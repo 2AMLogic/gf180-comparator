@@ -99,6 +99,12 @@ jobs:
           python3 signoff/make_item5_envelope.py --check
           python3 signoff/tests/test_item5_envelope.py
 
+      # Issue #111: signoff/verify-report.py (the step above) now also runs
+      # both wrappers' --check; these temporary-fixture regressions prove
+      # source-record / envelope drift is reported. PDK-free, no klt needed.
+      - name: Wrapper freshness-check regressions
+        run: python3 signoff/tests/test_verify_wrappers.py
+
       # Issue #84: the integrator view's maturity rung must mirror the
       # committed verdict of record. No klt needed -- two committed JSON
       # files. Fails on any mismatch (either direction) or a prose rung.
