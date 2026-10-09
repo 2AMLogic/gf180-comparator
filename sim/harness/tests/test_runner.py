@@ -78,6 +78,20 @@ class RunPointWarningsTest(unittest.TestCase):
         self.assertEqual(result.missing, ["vos_mv"])
         self.assertTrue(result.warnings)
 
+    def test_overflowed_exponent_cannot_complete_point(self):
+        """1e999 parses as inf: the required measurement is rejected, not ok."""
+        result = self._run("m_vos_mv = 1e999\n")
+        self.assertEqual(result.status, "failed")
+        self.assertEqual(result.missing, ["vos_mv"])
+        self.assertNotIn("vos_mv", result.measurements)
+        self.assertTrue(any("NONFINITE_MEASUREMENT" in w and "vos_mv" in w for w in result.warnings))
+        self.assertIn("non-finite", result.message)
+
+    def test_negative_overflow_rejected_and_later_finite_value_wins_nothing_stale(self):
+        result = self._run("m_vos_mv = 6.9e-01\nm_vos_mv = -1e999\n")
+        self.assertEqual(result.status, "failed")
+        self.assertNotIn("vos_mv", result.measurements)
+
     def test_as_dict_includes_warnings_only_when_present(self):
         clean = self._run("m_vos_mv = 6.9043645202e-01\n")
         self.assertNotIn("warnings", clean.as_dict())
@@ -213,3 +227,16 @@ class OffsetProbeWarningsTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ParseMeasurementsFiniteTest(unittest.TestCase):
+    def test_finite_values_kept(self):
+        from harness.runner import parse_measurements
+        self.assertEqual(parse_measurements("m_a = 1.5e-3\nm_b = -2\n"), {"a": 1.5e-3, "b": -2.0})
+
+    def test_nonfinite_dropped_and_reported(self):
+        from harness.runner import parse_measurements
+        bad: list[str] = []
+        self.assertEqual(parse_measurements("m_a = 1e999\nm_b = 3\n", bad), {"b": 3.0})
+        self.assertEqual(bad, ["a"])
+

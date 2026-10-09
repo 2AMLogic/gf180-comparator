@@ -9,6 +9,7 @@ variant's metal stack -- this block has no capacitor array.
 
 from __future__ import annotations
 
+import math
 import re
 import shutil
 import subprocess
@@ -175,15 +176,28 @@ class PointResult:
         return record
 
 
-def parse_measurements(text: str) -> dict[str, float]:
+def parse_measurements(text: str, nonfinite: list[str] | None = None) -> dict[str, float]:
+    """Parse ``m_<name> = <number>`` lines into finite floats only.
+
+    A token such as ``1e999`` matches the number regex but overflows to inf;
+    undefined arithmetic cannot substantiate a measurement, so such a name is
+    never returned (it reads as missing). Pass a list as ``nonfinite`` to
+    collect the rejected names for diagnostics.
+    """
     found: dict[str, float] = {}
     for line in text.splitlines():
         match = _MEAS_RE.match(line)
         if match:
             try:
-                found[match.group(1)] = float(match.group(2))
+                value = float(match.group(2))
             except ValueError:  # pragma: no cover - regex already constrains this
                 continue
+            if not math.isfinite(value):
+                if nonfinite is not None and match.group(1) not in nonfinite:
+                    nonfinite.append(match.group(1))
+                found.pop(match.group(1), None)
+                continue
+            found[match.group(1)] = value
     return found
 
 
@@ -395,7 +409,8 @@ def run_point(
     elapsed = time.monotonic() - started
     log_path.write_text(output)
 
-    measurements = parse_measurements(output)
+    nonfinite: list[str] = []
+    measurements = parse_measurements(output, nonfinite)
     if probe_tb is not None:
         # Stamp the probed offset into the point's evidence (as a volt
         # quantity -- the same number the main deck's dut_vos param carries).
@@ -410,6 +425,8 @@ def run_point(
     # changing the point's status.
     error_lines = [line.strip() for line in output.splitlines() if _ERROR_RE.match(line)]
     warnings = probe_warnings + _diagnostic_warnings(output, returncode)
+    warnings += [f"NONFINITE_MEASUREMENT: m_{name} is inf/nan in ngspice output; rejected"
+                 for name in nonfinite]
 
     if missing:
         errors = "; ".join(_ERROR_RE.findall(output)[:3])
@@ -423,7 +440,12 @@ def run_point(
             seconds=elapsed,
             deck=deck_path.name,
             log=log_path.name,
-            message=first_error or errors or f"ngspice exit {returncode}, no measurements parsed",
+            message=(
+                first_error
+                or errors
+                or (f"non-finite measurement(s): {', '.join(nonfinite)}" if nonfinite else "")
+                or f"ngspice exit {returncode}, no measurements parsed"
+            ),
         )
 
     return PointResult(
