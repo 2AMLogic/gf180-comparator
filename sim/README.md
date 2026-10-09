@@ -34,11 +34,17 @@ Metastability and kickback are first-class rows here, not appendices, per
 > Two limits on what they mean. **The target-specification table in
 > [`README.md`](../README.md#target-specification-ratified-via-dr-0002)
 > is ratified** (DR-0002, via the two-key ceremony on PR #74 per the
-> operator ruling of 2026-10-02 on #3) — so a record that meets (or
-> misses) a row is *reference, not verdict* until that row's scoring pass
-> lands: the offset-σ row's has ([#24](https://github.com/2AMLogic/gf180-comparator/issues/24));
-> the other four rows' are tracked in [#75](https://github.com/2AMLogic/gf180-comparator/issues/75). And every
-> record is **schematic-level, with no parasitics**: post-layout extraction
+> operator ruling of 2026-10-02 on #3) — so a measurement is a
+> *verdict* only where a scoring pass has scored it against the ratified bound,
+> and the per-bench `checks` in each `tb.json` are measurement-sanity checks and
+> corner-sensitivity anchors, not those bounds. Scoring has landed for the
+> offset-σ row ([#24](https://github.com/2AMLogic/gf180-comparator/issues/24))
+> and for the other rows ([#75](https://github.com/2AMLogic/gf180-comparator/issues/75));
+> per-row verdicts are in the README Basis column and
+> [`spec/evidence-ledger.md`](../spec/evidence-ledger.md). Records older than
+> that scoring (and every `placeholder-v1` record) predate it and keep the
+> "reference, not verdict" wording they were written with. Every
+> *schematic* record is **without parasitics**: post-layout extraction
 > can only add capacitance at the preamplifier output (which lowers the
 > measured noise) and at the input (which raises the measured kickback), so
 > the noise numbers are conservative and the kickback numbers are *not*.
@@ -55,8 +61,12 @@ Metastability and kickback are first-class rows here, not appendices, per
 > the overdrive ladder was referred to; see the benches' `tb_vosprobe.spice`).
 > The two analog-partition benches (offset-MC, preamp-noise) are refused
 > against the flat extraction: a flat netlist has no analog/latch
-> partition. `./sim/characterize.sh postlayout` runs the whole campaign in
-> one command.
+> partition, so those two support the schematic binding only (and
+> `mk_klt_request.py` likewise supports only schematic DUTs for fleet
+> requests -- an extracted DUT needs the vosprobe leg, which the fleet path
+> does not have; see #164).
+> `./sim/characterize.sh postlayout` runs the whole campaign in one command
+> (local ngspice, so on a workstation, not a shared dispatch worker).
 >
 > The earlier `placeholder-v1` records are still in `records/` and still carry
 > their banner — `sim/` is append-only evidence, so nothing was rewritten. See
@@ -106,6 +116,29 @@ Every record ends with the exact command that regenerates it. It is always:
 ```bash
 python3 sim/run_corners.py <experiment-slug> -j 8
 ```
+
+That local command covers the four original benches (`comparator-offset-mc`,
+`comparator-preamp-noise`, `comparator-regeneration`, `comparator-kickback`) on
+a workstation that has the pinned PDK and ngspice. It does **not** apply to
+`comparator-offset-tran`, which is not wired into `run_corners.py` and is
+fleet-only (see below). Shared dispatch workers must not run multi-corner or
+Monte Carlo grids by hand: use the fleet path.
+
+**Fleet path** (needs `klt` on `PATH` and `KLT_SIM_BACKEND=batch`;
+`klt_record.py` refuses a local backend for a multi-unit grid):
+
+```bash
+KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py <bench> --label "<text>"
+```
+
+`mk_klt_request.py` (called by `klt_record.py`) builds the requests. Current
+limits, stated as they are in the tools: `comparator-preamp-noise` cannot be
+expressed for the fleet runner (its `klt` 0.5.0 has no `noise` analysis), so a
+noise is run locally via `run_corners.py` (a single nominal point on a shared dispatch worker; the full PVT grid only on a workstation with the pinned PDK); fleet requests support the
+schematic DUT binding only, so extracted (`comparator-dr0001-layout`) records
+use the local `postlayout` path, and fleet records omit some secondary
+quantities (each record lists which). `comparator-offset-tran` is defined but
+has no record yet (see its README).
 
 A re-run mints a **new** record; it never overwrites one already committed.
 `sim/` is an evidence trail, not a status page.
@@ -179,9 +212,9 @@ aborted run, not a record.
 Every record states, in its header, everything needed to judge or reproduce
 it:
 
-- the **claim** it substantiates — and, for any row whose scoring pass has
-  not yet landed (see [#75](https://github.com/2AMLogic/gf180-comparator/issues/75)), that a
-  row met or missed there is reference rather than verdict;
+- the **claim** it substantiates — and whether the row was scored against the
+  ratified bound (see [#75](https://github.com/2AMLogic/gf180-comparator/issues/75)) or is reference only
+  (older records keep the wording they were minted with);
 - the **DUT** — id, provenance (`placeholder` / `schematic` / `extracted`),
   path and sha256;
 - the **testbench** fragment and manifest sha256s;
