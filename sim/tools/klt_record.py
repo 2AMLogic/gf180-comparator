@@ -87,12 +87,88 @@ def collect(report: dict, vdd: float) -> tuple[dict, list]:
     return out, bad
 
 
+def _finite(v) -> bool:
+    return isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v)
+
+
+def expected_units(request: dict, vdd: float) -> dict[str, set[str]]:
+    """Saved request -> {corner_id: expected sample ids} (the requested grid).
+
+    Process x temperature from the request's `corners`, the supply from the
+    body netlist it was minted for, and the draws from `monte_carlo.n`
+    (sample ids `mc0`..`mc{n-1}`; a plain corner has the single id "")."""
+    n = (request.get("monte_carlo") or {}).get("n")
+    samples = {f"mc{i}" for i in range(n)} if isinstance(n, int) and n > 0 else {""}
+    c = request["corners"]
+    return {
+        f"{p['name']}_{float(t):g}c_{vdd:.2f}v": set(samples)
+        for p in c["process"]
+        for t in c["temperature_c"]
+    }
+
+
+def collect_checked(report: dict, request: dict, vdd: float, tag: str = "") -> tuple[dict, list, list]:
+    """report + its saved request -> (collected, bad statuses, coverage issues).
+
+    Unlike `collect`, nothing is overwritten or silently dropped. Every issue is
+    a string led by a named diagnostic code: DUPLICATE_UNIT, MISSING_UNIT,
+    UNEXPECTED_UNIT, FAILED_UNIT, MC_DECLARATION_MISMATCH, NONFINITE_INGREDIENT."""
+    pre = f"{tag}: " if tag else ""
+    issues: list[str] = []
+    want = expected_units(request, vdd)
+    declared = request.get("monte_carlo")
+    got_mc = (report.get("environment") or {}).get("monte_carlo")
+    if (declared is None) != (not got_mc):
+        issues.append(f"{pre}MC_DECLARATION_MISMATCH: request declares {declared!r}, report declares {got_mc!r}")
+    elif declared:
+        for k in ("n", "seed", "vary"):
+            if k in declared and got_mc.get(k) != declared[k]:
+                issues.append(f"{pre}MC_DECLARATION_MISMATCH: {k} requested {declared[k]!r}, report says {got_mc.get(k)!r}")
+    ingredients = [m["name"] for m in request.get("measurements", []) if "name" in m]
+    out: dict = {}
+    bad: list = []
+    seen: set = set()
+    failed: set = set()
+    for c in report["corners"]:
+        raw = c["corner_id"]
+        cid, sample = corner_id(raw, vdd)
+        if raw in seen:
+            issues.append(f"{pre}DUPLICATE_UNIT: {raw} appears more than once")
+            continue
+        seen.add(raw)
+        if cid not in want or sample not in want[cid]:
+            issues.append(f"{pre}UNEXPECTED_UNIT: {raw} is not in the requested grid")
+            continue
+        if c["status"] != "pass":
+            bad.append((raw, c["status"]))
+            failed.add((cid, sample))
+            issues.append(f"{pre}FAILED_UNIT: {raw} -> {c['status']}")
+            continue
+        vals = {m["name"]: m["value"] for m in c["measurements"] if m.get("value") is not None}
+        invalid = [name for name in ingredients if not _finite(vals.get(name))]
+        for name in invalid:
+            issues.append(f"{pre}NONFINITE_INGREDIENT: {raw} {name} = {vals.get(name)!r}")
+        if invalid:
+            failed.add((cid, sample))  # reported above; not also MISSING_UNIT
+            continue
+        out.setdefault(cid, {})[sample] = vals
+    for cid, smp in want.items():
+        for s in sorted(smp):
+            if (cid, s) not in failed and s not in out.get(cid, {}):
+                issues.append(f"{pre}MISSING_UNIT: {cid}{'/' + s if s else ''} has no result")
+    return out, bad, issues
+
+
 def derive(bench: str, tb, legs: dict[str, dict]) -> tuple[dict, list]:
     """-> ({corner_id: {derived name: value}}, problems)."""
     problems: list[str] = []
     for leg, (_, bad) in legs.items():
         problems += [f"leg {leg}: {cid} -> {st}" for cid, st in bad]
-    ids = sorted(set.intersection(*(set(v[0]) for v in legs.values())), key=lambda s: s)
+    every = set.union(*(set(v[0]) for v in legs.values())) if legs else set()
+    ids = sorted(set.intersection(*(set(v[0]) for v in legs.values())) if legs else set())
+    for leg, (c, _) in legs.items():
+        for cid in sorted(every - set(c)):
+            problems.append(f"MISSING_LEG_CORNER: leg {leg} has no result for {cid}")
     res: dict = {}
     if bench in ("comparator-kickback", "comparator-regeneration"):
         raw = legs["main"][0]
@@ -105,6 +181,9 @@ def derive(bench: str, tb, legs: dict[str, dict]) -> tuple[dict, list]:
     if bench == "comparator-preamp-noise":
         for cid in ids:
             n, a = legs["noise"][0][cid][""], legs["ac"][0][cid][""]
+            if not _finite(a.get("av_dc")) or a["av_dc"] == 0:
+                problems.append(f"ZERO_GAIN: {cid} av_dc = {a.get('av_dc')!r}")
+                continue
             res[cid] = {
                 "av_dc": a["av_dc"],
                 "onoise_uv": n["onoise_total"] * 1e6,
@@ -119,6 +198,10 @@ def derive(bench: str, tb, legs: dict[str, dict]) -> tuple[dict, list]:
     for cid in ids:
         smp = list(legs["main"][0][cid].values())
         ava = [(s["dv1"] - s["dv0"]) / 2e-3 for s in smp]
+        zero = [k for k, g in zip(legs["main"][0][cid], ava) if g == 0]
+        if zero:
+            problems += [f"ZERO_GAIN: {cid}/{k} gain = 0" for k in zero]
+            continue
         voa = [-s["dv0"] / g for s, g in zip(smp, ava)]
         sig = pstd(voa)
         res[cid] = {
@@ -192,15 +275,28 @@ def main() -> int:
         dispatch(work, list(names))
 
     reports = {n: json.loads((work / f"report-{n}.json").read_text()) for n in names}
+    requests = {n: json.loads((work / f"request-{n}.json").read_text()) for n in names}
     legs_c: dict = {leg: ({}, []) for leg in LEGS[a.bench]}
+    coverage: list[str] = []
+    expected = 0
     for n, (leg, v) in names.items():
-        ok, bad = collect(reports[n], v)
-        legs_c[leg][0].update(ok)
-        legs_c[leg][1].extend(bad)
+        ok, bad, issues = collect_checked(reports[n], requests[n], v, tag=n)
+        coverage += issues
+        expected += len(expected_units(requests[n], v)) if leg == LEGS[a.bench][0] else 0
+        for cid, smp in ok.items():
+            legs_c[leg][0].setdefault(cid, {}).update(smp)
+        # failed units are already named FAILED_UNIT in `coverage`
+    mcs = {json.dumps(r.get("monte_carlo"), sort_keys=True) for r in requests.values()}
+    if len(mcs) > 1:
+        coverage.append(f"MC_DECLARATION_MISMATCH: requests disagree on monte_carlo: {sorted(mcs)}")
     derived, problems = derive(a.bench, tb, legs_c)
+    problems = coverage + problems
+    complete = not coverage and not problems and len(derived) == expected
+    if not derived:
+        print("\n".join(["no scorable corner: nothing derived, no record written"] + problems[:60]), file=sys.stderr)
+        raise SystemExit(f"EMPTY_RESULT: {a.bench} produced no complete PVT point; refusing to publish a record")
 
     label, key, tgt, stretch, unit = SPEC[a.bench]
-    expected = 45
     vals = {cid: d[key] for cid, d in derived.items()}
     worst_cid = max(vals, key=vals.get)
     best_cid = min(vals, key=vals.get)
@@ -227,7 +323,7 @@ def main() -> int:
         f"- **Record ID**: {rid}",
         f"- **Experiment**: `sim/{a.bench}/` (klt sim requests, one per supply point: {', '.join(names)})",
         f"- **Topology label**: {a.label or dut.dut_id}",
-        f"- **Claim**: REFERENCE against the ratified {label} row (README.md#target-specification-ratified-via-dr-0002; target <= {tgt:g} {unit}, stretch <= {stretch:g} {unit}). Scored, not relaxed.",
+        f"- **Claim**: {'REFERENCE' if complete else 'NON-COMPLETE DIAGNOSTIC (NOT reference evidence; coverage incomplete, see INCOMPLETE / FAILED UNITS)'} against the ratified {label} row (README.md#target-specification-ratified-via-dr-0002; target <= {tgt:g} {unit}, stretch <= {stretch:g} {unit}). Scored, not relaxed.",
         f"- **DUT**: `{dut.dut_id}` -- **{dut.provenance}** -- `{dut.netlist.relative_to(REPO)}` (sha256 `{dut.netlist_sha256[:16]}`)",
         f"- **Testbench**: `sim/{a.bench}/testbench/{tb.netlist.name}` (sha256 `{tb.netlist_sha256[:16]}`), manifest sha256 `{tb.manifest_sha256[:16]}`",
         f"- **Commit**: `{sha}`" + (" -- **WORKING TREE DIRTY (design/sim sources uncommitted): not citable until re-minted from a clean commit**" if dirty else ""),
@@ -237,7 +333,7 @@ def main() -> int:
     if a.bench == "comparator-offset-mc":
         mc = next(iter(reports.values()))["environment"].get("monte_carlo", {})
         lines += [
-            f"- **Monte Carlo**: seed {mc.get('seed')}, n = {mc.get('n')} draws per PVT point, vary = {mc.get('vary')} (`.param sw_stat_mismatch=1` set by the fragment). sigma = population standard deviation of the per-draw input-referred offset `voa` (= -dv/gain, same draw), 3-sigma = 3 x sigma; stats are computed by `sim/tools/klt_record.py` from the raw per-draw values in `corners/{rid}/report-main-v*.json`.",
+            f"- **Monte Carlo**: seed {mc.get('seed')}, n = {mc.get('n')} draws requested per PVT point{'' if complete else ' (NOT achieved: see INCOMPLETE / FAILED UNITS; achieved draws per point in the n_samples column)'}, vary = {mc.get('vary')} (`.param sw_stat_mismatch=1` set by the fragment). sigma = population standard deviation of the per-draw input-referred offset `voa` (= -dv/gain, same draw), 3-sigma = 3 x sigma; stats are computed by `sim/tools/klt_record.py` from the raw per-draw values in `corners/{rid}/report-main-v*.json`.",
         ]
     if problems:
         lines += ["- **INCOMPLETE / FAILED UNITS**:"] + [f"  - {p}" for p in problems[:60]]
@@ -272,10 +368,14 @@ def main() -> int:
     (exp / "records" / f"{rid}.json").write_text(json.dumps({
         "record_id": rid, "bench": a.bench, "commit": sha, "dirty": dirty, "dut": dut.provenance_record(),
         "spec_row": {"label": label, "measure": key, "target_max": tgt, "stretch_max": stretch, "unit": unit},
+        "complete": complete, "outcome": "complete" if complete else "incomplete", "expected_points": expected,
         "within_target": n_t, "within_stretch": n_s, "points": len(vals), "problems": problems,
         "derived": derived,
     }, indent=1) + "\n")
     print(f"record {rid}: {len(derived)} points, {key} within target {n_t}/{len(vals)}, stretch {n_s}/{len(vals)}, worst {vals[worst_cid]:.6g} @ {worst_cid}")
+    if not complete:
+        print(f"INCOMPLETE: {len(problems)} coverage/validation problem(s); record is a non-complete diagnostic, not reference evidence", file=sys.stderr)
+        return 1
     return 0
 
 
