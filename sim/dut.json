@@ -55,6 +55,21 @@
         "A flat extraction defines only the whole-comparator subckt -- the two analog-partition benches (comparator-offset-mc, comparator-preamp-noise) are refused against this entry with a message naming the schematic binding.",
         "First-order lumped RC (one series R + one ground C per net, star-distributed across terminals, plus vertical-overlap coupling caps): no per-segment distributed RC ladders, no lateral coupling except on --critical-net nets (none named here). Per-net values are in the committed extract report."
       ]
+    },
+    "comparator-dr0004-cascode-exp": {
+      "netlist": "dut/experiment_comparator_dr0004_cascode.spice",
+      "id": "comparator-dr0004-cascode-exp",
+      "provenance": "schematic",
+      "description": "EXPERIMENT, NOT RATIFIED: the DR-0001 comparator with the preamp input-pair cascode proposed by spec/decision-records/DR-0004-preamp-input-cascode-kickback.md (MCP/MCN nfet_03v3 L=0.5u W=20u, divider-biased vcas = 0.6*vdd via XRCT/XRCB, gate-cap decoupler XMCC). Its xschem source is design/proposed/dr0004-cascode/comparator_dut_analog.sch. Carried beside, not in, design/comparator.spice so the ratified netlist -- which the signoff LVS (item 4) and item-5 corner-matrix envelopes pin by sha256 -- is untouched until DR-0004 is ratified and the layout/LVS/PEX follow-up (#112) re-pins it.",
+      "params": {
+        "dut_ib": 1e-05,
+        "dut_vcm": 1.65
+      },
+      "notes": [
+        "Select with `--dut comparator-dr0004-cascode-exp` (run_corners.py, sim/tools/klt_record.py, sim/tools/mk_klt_request.py). Never the 'active' entry.",
+        "sha256 79dcc79fb6a876bc46ab258af5eae3f2d24b3e41281df2c23d81897ddf34ed24: byte-identical to the design/comparator.spice the issue-#102 cascode records were minted against. Those records (committed before this binding existed) stamp dut id `comparator-dr0001` and path `design/comparator.spice` with this sha256; the sha256 is what ties them to this file -- see sim/dut/README.md.",
+        "Params are identical to the comparator-dr0001 entry by design: the experiment changes topology only."
+      ]
     }
   }
 }

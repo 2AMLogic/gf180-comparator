@@ -1,0 +1,391 @@
+{
+  "record_id": "20261008-235224548630-7e61c52",
+  "context": {
+    "record_id": "20261008-235224548630-7e61c52",
+    "commit": "7e61c52",
+    "dirty": false,
+    "dirty_paths": [],
+    "pdk": {
+      "path": "/home/ubuntu/.volare/gf180mcuD",
+      "variant": "gf180mcuD",
+      "open_pdks_version": "c6d73a35f524070e85faff4a6a9eef49553ebc2b",
+      "discovered_via": "search_root:~/.volare"
+    },
+    "toolchain": {
+      "pins": {
+        "open_pdks": "c6d73a35f524070e85faff4a6a9eef49553ebc2b",
+        "ngspice_min_major": 46,
+        "python_min": "3.9",
+        "xschem_tag": "3.4.7"
+      },
+      "observed": {
+        "open_pdks": "c6d73a35f524070e85faff4a6a9eef49553ebc2b",
+        "ngspice": "ngspice-42 : Circuit level simulation program",
+        "python": "3.12.3",
+        "platform": "Linux-6.17.0-1019-aws-x86_64-with-glibc2.39"
+      },
+      "drift": [
+        "ngspice: pinned floor 46, installed major 42"
+      ]
+    },
+    "dut_id": "comparator-dr0001",
+    "dut_provenance": "schematic",
+    "dut_netlist": "design/comparator.spice",
+    "dut_netlist_sha256": "79dcc79fb6a876bc46ab258af5eae3f2d24b3e41281df2c23d81897ddf34ed24",
+    "dut_params": {
+      "dut_ib": 1e-05,
+      "dut_vcm": 1.65
+    }
+  },
+  "testbench": {
+    "name": "comparator-preamp-noise",
+    "description": "Input-referred noise of the comparator front end over PVT via ngspice .noise, reported as total integrated OUTPUT noise divided by the measured DC gain, split into a full band (1 Hz .. 1 GHz) and a >1 kHz band so the flicker content is visible rather than buried.",
+    "claim": "REFERENCE, NOT VERDICT. sim/dut.json binds design/comparator.spice (id comparator-dr0001, provenance schematic -- topology per spec/decision-records/DR-0001-comparator-topology.md). This bench measures README.md#target-specification's Input-referred-noise row (<= 1.0 mV rms differential, <= 0.6 mV stretch), and, with sim/comparator-regeneration/'s tau, the noise floor half of the metastability story -- but that row is still DRAFT -- no decision record ratifies it -- so a measured pass or miss here is same-PDK/same-design context for the eventual ratification, not a pass/fail claim against a ratified spec.",
+    "experiment": "comparator-preamp-noise",
+    "directory": "testbench",
+    "netlist": "tb_preamp_noise.spice",
+    "netlist_sha256": "0aeaf85d9364b3e687f2f91c772c0f31d0dca1b7b46f9f768a8e7cfad8d98aa9",
+    "manifest_sha256": "b29a8e00359ca60c9df3b65b459ff8c4445a391649f17067c13467e56d05bc78",
+    "nominal_supply_v": 3.3,
+    "supply_tolerance": 0.1
+  },
+  "checks": {
+    "av_dc": {
+      "min": 1.0,
+      "min_spread_pct_by_axis": {
+        "process": 18.0,
+        "temperature": 24.0
+      },
+      "description": "DC differential gain of the front end, and this bench's second corner-sensitivity anchor. The floor of 1.0 asserts the stage is a gain stage at every corner -- a front end with gain below unity would make every input-referred number here larger than the output-referred one and the divide-by-gain step actively misleading. It is NOT a design bound on gain. The per-axis floors are what make `--sabotage-corners` fail: gain is (transconductance x load resistance) and both move strongly with corner and temperature. Floors calibrated from the full 45-point mos grid measured in this experiment's first committed record (named in this experiment's README.md), with ~45 % margin below the observed weakest slice, following the sibling repo's calibrate-from-a-cited-clean-tree-record convention. Observed weakest slices there: process 32.57 %, temperature 44.55 %. The supply axis is unfloored: the front end is biased by a forced current, so its gain barely moves with the rail."
+    },
+    "vn_in_uv": {
+      "min": 0.1,
+      "description": "THE HEADLINE NUMBER, and the one README.md's noise row is stated against: total integrated output noise (1 Hz .. 1 GHz) DIVIDED BY THE MEASURED DC GAIN. The floor only catches a degenerate analysis (a `.noise` that returned nothing, or a gain so large the division collapses the result); the SPEC bound is deliberately not encoded while a placeholder is bound. Read the units caution in the testbench header: ngspice's own inoise_total is recorded separately as inoise_band_uv precisely so the two referrals can be compared rather than conflated."
+    },
+    "inoise_band_uv": {
+      "min": 0.1,
+      "description": "ngspice's OWN input referral over the same band, recorded alongside the divide-by-gain number rather than instead of it -- AND THE TWO ARE NOT EXPECTED TO AGREE. ngspice refers each frequency bin through the AC transfer function at THAT frequency, so every bin above the front end's bandwidth is divided by a rolled-off gain and inflates the total; the quoted number divides the whole integrated output noise by the DC gain instead. On this record ngspice's figure runs several times larger for exactly that reason. Both are kept in the table so the discrepancy is a visible, explained property of the two referrals rather than an unexplained factor somebody later rediscovers -- which is the failure mode the sibling repo's 200x units error actually was."
+    },
+    "flicker_frac_pct": {
+      "min": 0.0,
+      "max": 100.0,
+      "description": "Fraction of the total noise POWER contributed below 1 kHz, i.e. the flicker content. Bounded only to the range a fraction can legally take -- outside it means the two noise integrals came back inconsistent. Its VALUE is what a reader uses to rescale the flicker term for a different fnoicor setting (the PDK default, fnoicor = 0, is what this record was taken at), and it is why the two-band split exists at all: sub-kHz noise drifts slowly enough to behave as an offset rather than as per-decision noise."
+    },
+    "enbw_mhz": {
+      "min": 0.001,
+      "description": "Equivalent noise bandwidth implied by (total integrated noise / white density). Lets a reader re-derive the headline number by hand as density x sqrt(ENBW) instead of taking the integral on trust. Floor only -- a zero or negative ENBW means the spectrum sample used as the white reference landed somewhere it should not have."
+    },
+    "vbias_anchor_mv": {
+      "min": 100.0,
+      "max": 3000.0,
+      "description": "The same V_th-proxy anchor as sim/comparator-offset-mc/, measured on the DUT's ibias contract pin. Recorded here without per-axis floors because av_dc above already carries them for this bench; keeping the same anchor in both records makes the two directly comparable point by point."
+    }
+  },
+  "points": [
+    {
+      "corner": "tt",
+      "corner_sections": [
+        "typical",
+        "res_typical",
+        "bjt_typical",
+        "diode_typical",
+        "moscap_typical",
+        "mimcap_typical"
+      ],
+      "temp_c": 27.0,
+      "vdd": 3.3,
+      "corner_id": "tt_27c_3.30v",
+      "status": "ok",
+      "measurements": {
+        "av_dc": 18.493554794,
+        "vn_in_uv": 99.462469874,
+        "vn_in_hf_uv": 99.210926349,
+        "onoise_uv": 1839.4146366,
+        "onoise_hf_uv": 1834.7627026,
+        "inoise_band_uv": 414.68391002,
+        "flicker_frac_pct": 0.50516630996,
+        "white_nv_rthz": 259.46351059,
+        "enbw_mhz": 50.258172899,
+        "vbias_anchor_mv": 1001.3196457
+      },
+      "seconds": 0.102,
+      "deck": "tt_27c_3.30v.spice",
+      "log": "tt_27c_3.30v.log"
+    }
+  ],
+  "summary": {
+    "av_dc": {
+      "min": 18.493554794,
+      "max": 18.493554794,
+      "mean": 18.493554794,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": [
+        "min_spread_pct_by_axis[process] >= 18 % \u2014 SKIPPED, this grid does not sweep that axis",
+        "min_spread_pct_by_axis[temperature] >= 24 % \u2014 SKIPPED, this grid does not sweep that axis"
+      ]
+    },
+    "vn_in_uv": {
+      "min": 99.462469874,
+      "max": 99.462469874,
+      "mean": 99.462469874,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "vn_in_hf_uv": {
+      "min": 99.210926349,
+      "max": 99.210926349,
+      "mean": 99.210926349,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "onoise_uv": {
+      "min": 1839.4146366,
+      "max": 1839.4146366,
+      "mean": 1839.4146366,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "onoise_hf_uv": {
+      "min": 1834.7627026,
+      "max": 1834.7627026,
+      "mean": 1834.7627026,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "inoise_band_uv": {
+      "min": 414.68391002,
+      "max": 414.68391002,
+      "mean": 414.68391002,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "flicker_frac_pct": {
+      "min": 0.50516630996,
+      "max": 0.50516630996,
+      "mean": 0.50516630996,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "white_nv_rthz": {
+      "min": 259.46351059,
+      "max": 259.46351059,
+      "mean": 259.46351059,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "enbw_mhz": {
+      "min": 50.258172899,
+      "max": 50.258172899,
+      "mean": 50.258172899,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "vbias_anchor_mv": {
+      "min": 1001.3196457,
+      "max": 1001.3196457,
+      "mean": 1001.3196457,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    }
+  }
+}
