@@ -4,6 +4,20 @@ Chronological record of merged pull requests and closed issues. Newest entries a
 
 ### 2026-10-09
 
+- **PR #180**: test(harness): cover summarize() bound and per-axis branches (#176)
+- **PR #179**: test(harness): cover testbench load/validation and PDK discovery (#172)
+- **PR #178**: test(harness): cover toolchain drift gate (#171)
+- **PR #173**: Reject invalid numeric inputs in offset yield sample adaptation
+- **PR #175**: feat(sim): whole-comparator transient MC offset bench + load-R hand budget (fleet run pending) (#157)
+- **PR #174**: Enforce byte identity of the pinned signoff rulebook (#168)
+- **PR #170**: Measure kickback peaks on both comparator input nodes (#160)
+- **PR #167**: Validate integrator paths, ordered ports, top subckt and area against committed artifacts
+- **Issue #176** (closed): Test summarize() bound and per-axis sensitivity branches in sim/harness/report.py
+- **Issue #172** (closed): Test testbench manifest validation and PDK discovery precedence in the sim harness
+- **Issue #171** (closed): Test the toolchain drift gate (sim/harness/toolchain.py check and CLI enforcement)
+- **Issue #169** (closed): Reject invalid numeric inputs in offset yield sample adaptation
+- **Issue #168** (closed): Enforce byte identity of the pinned signoff rulebook
+- **Issue #161** (closed): Validate integrator paths, ordered ports and area against committed artifacts
 - **PR #162**: Assert reference False on not-citable records; check all staged testbench files vs clean commit (#156)
 - **PR #159**: fix(sim): reject non-finite local measurements and fleet-derived results
 - **PR #155**: fix(sim): bind replayed fleet evidence to its originating source bundle
