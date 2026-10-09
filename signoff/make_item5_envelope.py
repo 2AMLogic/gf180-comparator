@@ -60,6 +60,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -158,17 +159,121 @@ def load_records() -> tuple[dict, list]:
     return recs, sources
 
 
-def build_envelope_from(recs: dict, sources: list) -> dict:
-    ctxs = {b: r["context"] for b, r in recs.items()}
-    nl_sha = {c["dut_netlist_sha256"] for c in ctxs.values()}
-    assert len(nl_sha) == 1, f"records disagree on DUT netlist: {nl_sha}"
-    assert nl_sha.pop() == _sha(REPO_ROOT / NETLIST).split(":")[1], "design netlist changed since records"
-    ids = {b: [p["corner_id"] for p in r["points"]] for b, r in recs.items()}
-    corner_ids = ids["comparator-offset-mc"]
-    assert all(v == corner_ids for v in ids.values()) and len(corner_ids) == 45
-    for r in recs.values():
-        assert all(p["status"] == "ok" for p in r["points"])
+class SourceValidationError(ValueError):
+    """The cited records are not a valid, current, complete 45-corner set.
 
+    Raised (never ``assert``: assertions vanish under ``python -O`` /
+    ``PYTHONOPTIMIZE``) before any envelope is built, so no evidence file can
+    be created or modified from invalid input.
+    """
+
+
+#: The committed PVT matrix (sim/harness/corners.py: DEFAULT_TEMPERATURES_C,
+#: nominal 3.3 V +/-10 %, processes tt/ff/ss/fs/sf; sim/README.md id
+#: convention ``<process>_<temp>c_<supply>v``), in committed record order.
+MATRIX_PROCESSES = ("tt", "ff", "ss", "fs", "sf")
+MATRIX_TEMPS_C = (-40.0, 27.0, 125.0)
+MATRIX_VDDS = (2.97, 3.30, 3.63)
+EXPECTED_POINTS = [
+    (f"{p}_{t:g}c_{v:.2f}v", p, t, v)
+    for p in MATRIX_PROCESSES for t in MATRIX_TEMPS_C for v in MATRIX_VDDS
+]
+EXPECTED_CORNER_IDS = [cid for cid, *_ in EXPECTED_POINTS]
+EXPECTED_COORDS = {cid: (p, t, v) for cid, p, t, v in EXPECTED_POINTS}
+
+#: Per-bench measurement fields the wrapper consumes (see ``_value``).
+CONSUMED_FIELDS = {
+    "comparator-offset-mc": ("vos_3sig_mv",),
+    "comparator-preamp-noise": ("vn_in_uv",),
+    "comparator-regeneration": ("td_od50_ns", "i_static_ua"),
+    "comparator-kickback": ("kick_1k_peak_mv",),
+}
+
+
+def _is_number(x) -> bool:
+    return isinstance(x, (int, float)) and not isinstance(x, bool)
+
+
+def _finite(x) -> bool:
+    return _is_number(x) and math.isfinite(x)
+
+
+def validate_sources(recs: dict) -> None:
+    """Raise SourceValidationError (listing every problem) on any defect."""
+    errs: list[str] = []
+    want_benches = [b for b, _ in RECORDS]
+    if sorted(recs) != sorted(want_benches):
+        raise SourceValidationError(f"benches {sorted(recs)} != expected {sorted(want_benches)}")
+
+    # DUT provenance: all records agree, and agree with the current netlist.
+    current = _sha(REPO_ROOT / NETLIST).split(":")[1]
+    hashes = {}
+    for b in want_benches:
+        ctx = recs[b].get("context") if isinstance(recs[b], dict) else None
+        h = ctx.get("dut_netlist_sha256") if isinstance(ctx, dict) else None
+        hashes[b] = h
+        if not isinstance(h, str):
+            errs.append(f"{b}: context.dut_netlist_sha256 missing or not a string")
+        elif h != current:
+            errs.append(
+                f"{b}: context.dut_netlist_sha256 {h} != current {NETLIST} sha256 {current} "
+                "(stale record or netlist changed since records)"
+            )
+    if len({h for h in hashes.values() if isinstance(h, str)}) > 1:
+        errs.append(f"records disagree on DUT netlist: {hashes}")
+
+    for b in want_benches:
+        pts = recs[b].get("points") if isinstance(recs[b], dict) else None
+        if not isinstance(pts, list):
+            errs.append(f"{b}: 'points' missing or not a list")
+            continue
+        ids = [p.get("corner_id") if isinstance(p, dict) else None for p in pts]
+        seen, dups = set(), set()
+        for i in ids:
+            (dups if i in seen else seen).add(i)
+        if dups:
+            errs.append(f"{b}: duplicate corner_id(s): {sorted(map(str, dups))}")
+        missing = [c for c in EXPECTED_CORNER_IDS if c not in seen]
+        extra = sorted(str(c) for c in seen if c not in EXPECTED_COORDS)
+        if missing:
+            errs.append(f"{b}: omitted corner(s) vs committed matrix: {missing}")
+        if extra:
+            errs.append(f"{b}: unexpected corner_id(s) outside committed matrix: {extra}")
+        if len(pts) != len(EXPECTED_CORNER_IDS):
+            errs.append(f"{b}: {len(pts)} points, expected {len(EXPECTED_CORNER_IDS)}")
+        if not (missing or extra or dups) and ids != EXPECTED_CORNER_IDS:
+            errs.append(f"{b}: corner order differs from committed matrix order")
+        for p in pts:
+            if not isinstance(p, dict):
+                errs.append(f"{b}: point is not an object: {p!r}")
+                continue
+            cid = p.get("corner_id")
+            if p.get("status") != "ok":
+                errs.append(f"{b}/{cid}: status {p.get('status')!r} != 'ok'")
+            if cid in EXPECTED_COORDS:
+                ep, et, ev = EXPECTED_COORDS[cid]
+                got = (p.get("corner"), p.get("temp_c"), p.get("vdd"))
+                for field, g, e in zip(("corner", "temp_c", "vdd"), got, (ep, et, ev)):
+                    if g != e or (field != "corner" and not _finite(g)):
+                        errs.append(f"{b}/{cid}: field {field} = {g!r}, expected {e!r}")
+            m = p.get("measurements")
+            if not isinstance(m, dict):
+                errs.append(f"{b}/{cid}: 'measurements' missing or not an object")
+                continue
+            for f in CONSUMED_FIELDS[b]:
+                if f not in m:
+                    errs.append(f"{b}/{cid}: measurement {f} missing")
+                elif not _finite(m[f]):
+                    errs.append(f"{b}/{cid}: measurement {f} = {m[f]!r} is not a finite number")
+    if errs:
+        raise SourceValidationError(
+            "invalid source records (no envelope built or written):\n  - " + "\n  - ".join(errs)
+        )
+
+
+def build_envelope_from(recs: dict, sources: list) -> dict:
+    validate_sources(recs)
+    corner_ids = list(EXPECTED_CORNER_IDS)
     by_corner = {b: {p["corner_id"]: p for p in r["points"]} for b, r in recs.items()}
     corners = []
     checked, skipped = [], []
@@ -341,7 +446,12 @@ def envelope_text() -> str:
 def main(argv: list[str] | None = None) -> int:
     argv = sys.argv[1:] if argv is None else argv
     out = output_path()
-    text = envelope_text()
+    try:
+        text = envelope_text()
+    except SourceValidationError as e:
+        # Raised before any write: invalid input never creates/modifies evidence.
+        print(f"FATAL: {e}", file=sys.stderr)
+        return 1
     rel = out.relative_to(REPO_ROOT)
     if "--check" in argv:
         if not out.is_file():
