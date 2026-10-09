@@ -16,10 +16,35 @@ Twin-bench definition: same `tb.json` + `tb_*.spice` + `records/` layout as
 the other four benches, same `setseed 20260909` + `reset` draw convention
 (seed common to every PVT point, so movement across the grid is a PVT effect).
 
+## Status: defined, NOT yet measured (fleet could not run the grid)
+
+**No record exists yet.** The `records` directory has not been created and no number from
+this bench is cited anywhere. Three fleet submissions were made on
+2026-10-09 (klt client 0.7.0+g86740f86d44f); none produced a result, and per
+the host rules none was replaced by a local grid:
+
+| attempt | outcome |
+|---|---|
+| 1, 2 | `batch_no_capacity`: "no capacity in any of the 30 pools after 3 attempt(s)". The requests then had no `batch.capacity_wait_s`; `sim/tools/mk_klt_request.py` now sets it (1800 s). |
+| 3 (job `klt-sim-8fc6a625dac7`, m7i.4xlarge Spot) | Launched, then hit the fleet's hard 3600 s job limit (exit 124) after about 64 of 1800 units, with an empty `report.json`, so every unit came back as `batch_job_timeout` and `klt_record.py` refused to publish (`EMPTY_RESULT`). The fleet runner (klt 0.5.0) ran about 450 s per unit per worker against about 5 s for the same unit locally. |
+
+The throughput and timeout gaps are tool-side, tracked at
+[2AMLogic/klayout-tools#2970](https://github.com/2AMLogic/klayout-tools/issues/2970)
+(per-unit transient runtime blow-up on the batch runner; data point from this
+run added) and
+[#2833](https://github.com/2AMLogic/klayout-tools/issues/2833) (a 3600 s
+whole-job timeout discards every result). The bench itself was smoke-checked
+with a single local unit (`tt`, 27 C, one draw, `klt sim --backend local`):
+every `.meas` ingredient came back finite, the output stepped cleanly 0 -> 1
+(`dn_start` ~ 1e-9, `dn_end` ~ 1.0) and the trip landed mid-staircase. That
+was a debug probe, not evidence, and no number from it is cited.
+
+Once the fleet can run it, the invocation below mints the record unchanged.
+
 ## Cold-start invocation
 
 Fleet only. A transient Monte Carlo is a grid (here 9 PVT points x 200
-draws = 1800 transients, ~4 s each) and must not run on a dispatch worker:
+draws = 1800 transients, ~5 s each locally) and must not run on a dispatch worker:
 
 ```bash
 KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py comparator-offset-tran \

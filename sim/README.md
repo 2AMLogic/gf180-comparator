@@ -13,6 +13,13 @@ Four experiments, one per first-class row of
 | [`comparator-regeneration/`](comparator-regeneration/) | Decision time vs. overdrive, **metastability** | transient overdrive ladder, τ extracted from it |
 | [`comparator-kickback/`](comparator-kickback/) | **Kickback** | 1 kΩ source impedance *and* a floating high-Z input |
 
+A fifth, additive bench backs the same Offset σ row from the other side:
+[`comparator-offset-tran/`](comparator-offset-tran/) is a whole-comparator
+transient Monte Carlo (preamp + StrongARM latch + SR latch) with a derived hand
+budget for the unmodelled `ppolyf_u_1k` load-pair mismatch. It covers the two
+terms `comparator-offset-mc/` cannot see (issue #157). It is fleet-only (`sim/tools/klt_record.py`) and
+**has no record yet**; see its README for the failed fleet attempts.
+
 Metastability and kickback are first-class rows here, not appendices, per
 [`CLAUDE.md`](../CLAUDE.md).
 
