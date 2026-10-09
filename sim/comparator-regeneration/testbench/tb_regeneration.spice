@@ -105,8 +105,42 @@ Eanc anc cm sc 0 -0.5
 ibc  vdd ibnc dc {dut_ib}
 Xc   apc anc clk ibnc doutc doutbc vdd 0 comparator_dut
 
+* ---- REVERSE-POLARITY MIRROR LADDER (issue #158) ----------------------
+* Instances RA/RB/RC are A/B/C with the stimulus sign MIRRORED: POSITIVE for
+* the first strobe, NEGATIVE for the second, so the timed second decision
+* actively pulls DOWN an output the first strobe established HIGH. Same
+* rungs, same dut_vos centring (so for an extracted DUT each rung is a true
+* dv_* overdrive BELOW the probed trip point), same clock, same t_flip, same
+* supply-normalized 0.5 threshold. The manifest times them with
+* `targ ... fall=1 td=35n` -- the same second-strobe window as A/B/C, so
+* neither the power-up resolution nor the first (positive) decision can be
+* picked up. Supplemental characterization only: nothing scored reads them
+* (spec/decision-records/DR-0005-metastability-target.md is unchanged).
+* They share the main `vdd` rail (ideal source), so instance A's separately
+* integrated supply charge is unaffected.
+vsra sra 0 pwl(0 {dut_vos+dv_big} {t_flip} {dut_vos+dv_big} {t_flip+1n} {dut_vos-dv_big})
+Eapra apra cm sra 0 0.5
+Eanra anra cm sra 0 -0.5
+ibra vdd ibnra dc {dut_ib}
+Xra  apra anra clk ibnra doutra doutbra vdd 0 comparator_dut
+
+vsrb srb 0 pwl(0 {dut_vos+dv_mid} {t_flip} {dut_vos+dv_mid} {t_flip+1n} {dut_vos-dv_mid})
+Eaprb aprb cm srb 0 0.5
+Eanrb anrb cm srb 0 -0.5
+ibrb vdd ibnrb dc {dut_ib}
+Xrb  aprb anrb clk ibnrb doutrb doutbrb vdd 0 comparator_dut
+
+vsrc src 0 pwl(0 {dut_vos+dv_tiny} {t_flip} {dut_vos+dv_tiny} {t_flip+1n} {dut_vos-dv_tiny})
+Eaprc aprc cm src 0 0.5
+Eanrc anrc cm src 0 -0.5
+ibrc vdd ibnrc dc {dut_ib}
+Xrc  aprc anrc clk ibnrc doutrc doutbrc vdd 0 comparator_dut
+
 * ---- supply-normalized probes ----------------------------------------
 Bclkn clkn 0 v = 'v(clk)/v(vdd)'
 Bdan  dan  0 v = 'v(douta)/v(vdda)'
 Bdbn  dbn  0 v = 'v(doutb)/v(vdd)'
 Bdcn  dcn  0 v = 'v(doutc)/v(vdd)'
+Bdran dran 0 v = 'v(doutra)/v(vdd)'
+Bdrbn drbn 0 v = 'v(doutrb)/v(vdd)'
+Bdrcn drcn 0 v = 'v(doutrc)/v(vdd)'
