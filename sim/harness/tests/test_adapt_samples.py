@@ -1,4 +1,4 @@
-"""PDK-free regressions for sim/comparator-offset-mc/yield/adapt_samples.py
+"""PDK-free regressions for sim/comparator-offset-mc/yield/adapt_samples_r2.py
 (issue #169): invalid numeric inputs are refused before any output is made."""
 import importlib.util
 import json
@@ -9,7 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 _spec = importlib.util.spec_from_file_location(
-    "adapt_samples", ROOT / "sim/comparator-offset-mc/yield/adapt_samples.py")
+    "adapt_samples", ROOT / "sim/comparator-offset-mc/yield/adapt_samples_r2.py")
 adapt = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(adapt)
 
