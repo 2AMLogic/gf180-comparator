@@ -42,6 +42,15 @@ PDK, xschem, or ngspice):
     check-2 drift comparison covers any rulebook change that alters the
     rendered item table.)
 
+5.  Run both deterministic derived-evidence wrappers' ``--check`` commands
+    (``signoff/make_item5_envelope.py`` and ``signoff/make_item8_envelope.py``,
+    issue #111). Each rebuilds its envelope from the cited source records and
+    fails if the committed envelope differs, so an edited source record, a
+    hand-edited envelope value, or a changed narrative report is caught even
+    when the design netlist pin (check 3) is unchanged. Nothing is
+    regenerated: drift is reported and the author refreshes the citations and
+    the grade together (signoff/README.md, "Wrapper drift vs grade drift").
+
 Run from anywhere inside the repository:
 
     python3 signoff/verify-report.py
@@ -223,6 +232,44 @@ def fail(problems: list[str]) -> None:
     for line in problems:
         print(f"FAIL: {line}", file=sys.stderr)
     sys.exit(f"{len(problems)} signoff verification problem(s) -- see above")
+
+
+#: Derived-evidence wrappers whose ``--check`` is part of the freshness
+#: contract (issue #111): (item, script path relative to the repo root).
+WRAPPER_CHECKS = (
+    ("5", "signoff/make_item5_envelope.py"),
+    ("8", "signoff/make_item8_envelope.py"),
+)
+
+
+def verify_wrappers(root: Path = REPO_ROOT) -> list[str]:
+    """Check 5: run each wrapper's ``--check`` (read-only, PDK-free) and turn
+    a non-zero exit into a clearly attributed problem. ``root`` lets tests
+    point at a temporary copy of the tree; committed evidence is never
+    written."""
+    problems: list[str] = []
+    for item, rel in WRAPPER_CHECKS:
+        script = root / rel
+        if not script.is_file():
+            problems.append(f"item {item} wrapper {rel} is missing")
+            continue
+        proc = subprocess.run(
+            [sys.executable, str(script), "--check"],
+            capture_output=True,
+            text=True,
+            cwd=root,
+        )
+        if proc.returncode != 0:
+            detail = " | ".join(
+                line.strip() for line in (proc.stderr + proc.stdout).splitlines() if line.strip()
+            ) or "no output"
+            problems.append(
+                f"item {item} wrapper drift: `python3 {rel} --check` exited "
+                f"{proc.returncode}: {detail} -- the committed envelope no "
+                "longer matches its source records; refresh per "
+                "signoff/README.md (wrapper drift vs grade drift)"
+            )
+    return problems
 
 
 def fresh_signoff(manifest: Path) -> dict:
@@ -457,9 +504,10 @@ def main() -> None:
     manifest = json.loads(MANIFEST.read_text())
     committed = json.loads(COMMITTED_REPORT.read_text())
 
+    problems: list[str] = verify_wrappers()
+
     fresh = fresh_signoff(MANIFEST)
 
-    problems: list[str] = []
     problems += grade_drift(fresh, committed)
     problems += verify_pins(manifest)
     problems += verify_vendored_doc(committed, fresh)
@@ -469,6 +517,7 @@ def main() -> None:
     t1_met = fresh["t1_met_count"]
     t1_total = fresh["t1_item_count"]
     tier = fresh["tier"] or f"below T1 ({t1_met}/{t1_total} T1 items met)"
+    print("OK: item-5 and item-8 wrapper --check commands match their source records")
     print("OK: fresh klt signoff grade == committed signoff/signoff-report.json")
     print("OK: every pinned citation's content_hash matches the current artifact bytes")
     print("OK: graded under the vendored 11-item rulebook (signoff/design-evidence-tiers.md)")
