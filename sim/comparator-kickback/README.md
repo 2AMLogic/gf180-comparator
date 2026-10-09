@@ -34,6 +34,36 @@ Every instance's decision is checked (`dout_*_end`), because a comparator
 whose own kickback pushed its input past the decision point would fail in a
 way the displacement numbers alone cannot show.
 
+### Both input nodes (issue #160)
+
+README's kickback row is stated at "the input nodes", but until #160 the
+row-facing `kick_1k_peak_mv` came from the **positive** 1 kΩ node alone
+(probe `ad` = `v(apa)-v(asp)`). The bench now also probes the **negative**
+node against its own source (`adn` = `v(ana)-v(asn)`, same 1 kΩ / 100 fF
+loading, same 30 ns-45 ns decision window, same operating point) and reports:
+
+| measurement | meaning |
+|---|---|
+| `kick_1k_pnode_peak_mv` | positive-node peak (the pre-#160 definition of `kick_1k_peak_mv`) |
+| `kick_1k_nnode_peak_mv` | negative-node peak |
+| `kick_1k_peak_mv` | **row-facing: the maximum of the two** |
+| `kick_1k_nnode_pos_mv` / `kick_1k_nnode_neg_mv` | negative-node extrema |
+
+Layout asymmetry means equal peaks on both nodes cannot be assumed. The 5 mV
+target and 2 mV stretch are unchanged; a worse aggregate is a recorded miss,
+not a relaxed bound. Records minted before #160 (every record listed below)
+carry the positive node only: they are **partial node coverage**, are left
+byte-for-byte as committed, and new records state their coverage in the
+`Input-node coverage` line and the `input_node_coverage` JSON field.
+
+**Evidence status (honest ledger).** Bench, scoring and regression tests
+(`sim/harness/tests/test_klt_record.py`, `KickbackBothNodes`) landed in #160.
+The new schematic 45-corner record is **PENDING**: the batch fleet refused
+the submit (`batch_no_capacity`, no capacity in any of the 30 pools) for the
+3.30 V and 3.63 V legs, and a partial grid is not published. Extracted-DUT
+evidence is a further follow-up (coordinate with #112). Mint with
+`KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py comparator-kickback`.
+
 ### Beating the `meas` resolution floor
 
 ngspice's `meas` returns roughly six significant digits, so differencing two
