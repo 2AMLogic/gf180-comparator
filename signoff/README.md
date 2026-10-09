@@ -99,8 +99,8 @@ by `./signoff/regenerate.sh`):
 - **met — item 2 (Layout), item 3 (DRC clean), item 4 (LVS clean), item 6
   (Monte Carlo; offset row only — see the item 5/6 section), item 8
   (Characterization report; generic envelope — see the item-8 section)**
-- **unmet, reason `check_failed` — item 5** (cited; the cited corner matrix honestly fails the ratified kickback bound — see the item-5 section)
-- **unmet, reason `no_evidence` — items 1, 7, 9, 10**
+- **unmet, reason `check_failed` — items 5, 7** (item 5 cited; the cited corner matrix honestly fails the ratified kickback bound — see the item-5 section. Item 7 cited; the `klt pex` report honestly fails the ratified decision-time target at 7 of 675 delta rows — see the item-7 section)
+- **unmet, reason `no_evidence` — items 1, 9, 10**
 - **unmet, reason `supply_spec_incomplete` — item 11** (the 0.6.0 grader
   reads the cited ERC + LVS evidence; the ERC run declares no `ties[]` —
   klayout-tools#2169 — see the item-11 section)
