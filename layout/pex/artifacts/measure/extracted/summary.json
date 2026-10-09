@@ -1,0 +1,23 @@
+{
+  "dut_netlist_sha256": "a7ca3c00ea4db8a2b00cad69f2edc2d9320738499049cfa9c7faec517b7b5f45",
+  "klt_sim_client": {
+    "git_commit": "c622e8addb362491664d44ba4d717f354ca88bbd",
+    "git_tag": "v0.6.0",
+    "is_release": true,
+    "version": "0.6.0"
+  },
+  "klt_sim_reports": [
+    "ladder-ff.report.json",
+    "ladder-fs.report.json",
+    "ladder-sf.report.json",
+    "ladder-ss.report.json",
+    "ladder-tt.report.json",
+    "probe.report.json"
+  ],
+  "ladder_centre": "probed dut_vos",
+  "runners": [
+    "{\"client_klt_version\": null, \"instance_type\": \"c7i.8xlarge\", \"lifecycle\": \"spot\", \"provider\": \"aws-batch-fleet\", \"runner_klt_version\": null, \"state\": \"done\"}",
+    "{\"client_klt_version\": null, \"instance_type\": \"m7i.4xlarge\", \"lifecycle\": \"spot\", \"provider\": \"aws-batch-fleet\", \"runner_klt_version\": null, \"state\": \"done\"}"
+  ],
+  "side": "extracted"
+}
