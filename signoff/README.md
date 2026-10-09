@@ -174,6 +174,22 @@ would flip the grade on a claim it does not show, so the row stays
 `no_evidence`. Tool gap filed:
 [klayout-tools#2844](https://github.com/2AMLogic/klayout-tools/issues/2844).
 
+**PDK-free source pins (issue
+[#120](https://github.com/2AMLogic/gf180-comparator/issues/120)) — what they
+do and do not show.** CI now runs `python3 design/verify-netlist-pins.py
+--check` (step "Netlist source-pin check (PDK-free)" in
+`.github/workflows/signoff.yml`). It re-hashes the schematic hierarchy
+(`design/comparator.sch` + the in-repo sub-cell `.sch`/`.sym` files) and
+`design/comparator.spice` against `design/comparator.sources.json`, which
+`./design/netlist.sh` writes after each successful netlist, and fails on any
+mismatch or a missing pin file. That proves the sch→spice step was re-run
+after the last edit to either side. It does **not** prove the netlist is the
+correct xschem output (the pin file is plain JSON and the check never runs
+xschem; `xschemrc`, `netlist.sh`'s post-processing, PDK symbols and the xschem
+version are not pinned). It is not an envelope, and this change does not cite
+it: whether it is enough for item 1 is a separate DR-0003 policy call, so the
+row above is unchanged. Details: `design/README.md`, "Source pins".
+
 ### met — item 4 (LVS clean): `layout/lvs/comparator.lvs.json`
 
 **Cited and graded `met` as of

@@ -31,7 +31,8 @@ name: Signoff
 # can never advertise a tier the verdict of record does not support.
 #
 # The job also runs the PDK-free sim/harness unittest suite (issue #110),
-# the same command as package.json's `npm test`.
+# the same command as package.json's `npm test`, and the PDK-free netlist
+# source-pin check (issue #120, design/verify-netlist-pins.py --check).
 #
 # Both pins below are load-bearing and MUST stay in sync with
 # signoff/regenerate.sh and signoff/README.md ("The two pins"):
@@ -77,6 +78,19 @@ jobs:
       # A failing test exits non-zero and fails the job.
       - name: Run harness regression tests (PDK-free)
         run: python3 -m unittest discover -s sim/harness/tests -v
+
+      # Issue #120: PDK-free, xschem-free source pins for the netlist. Fails if
+      # any schematic input (design/comparator.sch + in-repo sub-cell .sch/.sym)
+      # or design/comparator.spice changed since ./design/netlist.sh last wrote
+      # design/comparator.sources.json, or if the pin file is missing. Proves
+      # the sch->spice step was re-run after the last edit -- NOT that the
+      # netlist is the correct xschem output (./design/netlist.sh --check,
+      # which needs xschem + PDK, is the only check of that). Then the
+      # verifier's own temp-fixture regressions.
+      - name: Netlist source-pin check (PDK-free)
+        run: |
+          python3 design/verify-netlist-pins.py --check
+          python3 design/tests/test_verify_netlist_pins.py
 
       # Keep this pin in sync with signoff/regenerate.sh's KLT_VERSION. The
       # released registry wheel carries the git-tag identity regenerate.sh
