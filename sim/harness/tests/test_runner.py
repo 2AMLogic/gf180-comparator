@@ -159,6 +159,57 @@ class OffsetProbeWarningsTest(unittest.TestCase):
         self.assertEqual(result.status, "failed")
         self.assertTrue(result.log.endswith("vosprobe.log"))
 
+    # -- timeout diagnostics (#148) ---------------------------------------
+
+    def _read(self, name):
+        return (self.workdir / name).read_text()
+
+    def test_probe_timeout_keeps_partial_output_and_diagnostic(self):
+        exc = subprocess.TimeoutExpired(
+            "ngspice", 1800, output="PROBE_OUT_SENTINEL\n", stderr="PROBE_ERR_SENTINEL\n")
+        result, ncalls = self._run(exc)
+        self.assertEqual(ncalls, 1)
+        self.assertEqual(result.status, "failed")
+        self.assertTrue(result.log.endswith("vosprobe.log"))
+        log = self._read(result.log)
+        self.assertIn("PROBE_OUT_SENTINEL", log)
+        self.assertIn("PROBE_ERR_SENTINEL", log)
+        self.assertTrue(log.rstrip().endswith("TIMEOUT after 1800s"))
+        self.assertIn("offset probe timed out after 1800s", result.message)
+        self.assertTrue(any(w.startswith("offset probe (") and "TIMEOUT after 1800s" in w
+                            for w in result.warnings))
+
+    def test_main_timeout_keeps_output_and_probe_warning(self):
+        exc = subprocess.TimeoutExpired(
+            "ngspice", 600, output=b"MAIN_OUT_SENTINEL\n", stderr=b"MAIN_ERR_SENTINEL\n")
+        result, ncalls = self._run(_fake_completed("m_dut_vos = 1e-3\n", 1), exc)
+        self.assertEqual(ncalls, 2)
+        self.assertEqual(result.status, "error")
+        log = self._read(result.log)
+        self.assertIn("MAIN_OUT_SENTINEL", log)
+        self.assertIn("MAIN_ERR_SENTINEL", log)
+        self.assertTrue(log.rstrip().endswith("TIMEOUT after 600s"))
+        self.assertFalse(result.log.endswith("vosprobe.log"))
+        self.assertTrue(any(w.startswith("offset probe") and "exited 1" in w
+                            for w in result.warnings))
+        self.assertTrue(any("main deck" in w and "TIMEOUT after 600s" in w
+                            for w in result.warnings))
+        record = result.as_dict()
+        self.assertEqual(record["warnings"], result.warnings)
+        self.assertEqual(record["status"], "error")
+
+    def test_timeout_output_types_do_not_raise(self):
+        for out, err in ((b"\xff\xfebytes", b""), ("text", "text"), (None, None)):
+            with self.subTest(out=out, err=err):
+                exc = subprocess.TimeoutExpired("ngspice", 1800, output=out, stderr=err)
+                result, _ = self._run(exc)
+                self.assertEqual(result.status, "failed")
+                self.assertIn("TIMEOUT after 1800s", self._read(result.log))
+                exc = subprocess.TimeoutExpired("ngspice", 600, output=out, stderr=err)
+                result, _ = self._run(_fake_completed("m_dut_vos = 1e-3\n"), exc)
+                self.assertEqual(result.status, "error")
+                self.assertIn("TIMEOUT after 600s", self._read(result.log))
+
 
 if __name__ == "__main__":
     unittest.main()
