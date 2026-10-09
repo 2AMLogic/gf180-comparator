@@ -14,7 +14,7 @@ only adds files beside them.
 
 | file | what it is |
 |---|---|
-| `adapt_samples.py` | reads the record + its 45 committed logs, writes the sample-set document. Refuses unless every point has `n_samples` draws and the re-computed mean/sigma reproduce the record's `mean_vos_uv` / `sig_vos_mv` to 1e-6 (they do, at all 45 points). |
+| `adapt_samples.py` | reads the record + its 45 committed logs, writes the sample-set document. Refuses unless every point has `n_samples` draws and the re-computed mean/sigma reproduce the record's `mean_vos_uv` / `sig_vos_mv` to 1e-6 (they do, at all 45 points). Also refuses non-finite draws or record statistics, non-positive-integer `n_samples`, and non-finite computed results; nothing is written unless all checks pass, and output is strict JSON. Regressions: `sim/harness/tests/test_adapt_samples.py`. |
 | `samples-20260910-124917-4805118.json` | the `klt yield` sample-set document: 45 measurements (`vos_v@<corner>`, volts), 200 draws each, each with a deterministic negative control. **This file's sha256 is the item-6 manifest pin.** |
 | `spec-limits-target.json` | per-draw limits `-15 mV <= Vos <= +15 mV` (the ratified target) |
 | `spec-limits-stretch.json` | the same at `+/-8 mV` (the ratified stretch) |
