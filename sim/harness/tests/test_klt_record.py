@@ -983,3 +983,62 @@ class MainCoverageGate(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DerivedValidation(unittest.TestCase):
+    """#154: derived outputs are validated like the raw ingredients."""
+
+    def _kick(self, raw_by_cid, measure):
+        tb = types.SimpleNamespace(measure=measure)
+        legs = {"main": ({cid: {"": v} for cid, v in raw_by_cid.items()}, [])}
+        return kr.derive("comparator-kickback", tb, legs)
+
+    def test_finite_inputs_unchanged(self):
+        res, problems = self._kick({"c": {"a": 2.0, "b": 4.0}}, {"r": "a / b", "s": "sqrt(b)"})
+        self.assertEqual(problems, [])
+        self.assertEqual(res, {"c": {"r": 0.5, "s": 2.0}})
+
+    def test_overflow_in_scaling_is_nonfinite_derived(self):
+        leg = ({"c": {"": {"onoise_total": 1e305, "inoise_total": 1.0, "av_dc": 10.0}}}, [])
+        res, problems = kr.derive("comparator-preamp-noise", None, {"noise": leg, "ac": leg})
+        self.assertEqual(res, {})
+        self.assertTrue(any(p.startswith("NONFINITE_DERIVED: c onoise_uv") for p in problems), problems)
+        self.assertTrue(any("vn_in_uv" in p for p in problems))
+
+    def test_overflow_exception_named_with_corner_and_measurement(self):
+        res, problems = self._kick({"c": {"a": 1e308}}, {"big": "a ** 2"})
+        self.assertEqual(res, {})
+        self.assertEqual(len(problems), 1)
+        self.assertTrue(problems[0].startswith("DERIVE_ERROR: c big: OverflowError"), problems)
+
+    def test_arithmetic_errors_do_not_hide_other_corners(self):
+        res, problems = self._kick(
+            {"bad1": {"a": 1.0, "b": 0.0}, "good": {"a": 1.0, "b": 2.0}, "bad2": {"a": -4.0, "b": 1.0}},
+            {"ratio": "a / b", "root": "sqrt(a)"},
+        )
+        self.assertEqual(sorted(res), ["good"])
+        text = "\n".join(problems)
+        self.assertIn("DERIVE_ERROR: bad1 ratio: ZeroDivisionError", text)
+        self.assertIn("DERIVE_ERROR: bad2 root: ValueError", text)
+
+    def test_all_outputs_of_a_bad_corner_are_reported(self):
+        _, problems = self._kick({"c": {"a": 1.0, "b": 0.0}}, {"x": "a / b", "y": "1 / b"})
+        self.assertEqual(len(problems), 2)
+
+    def test_offset_mc_overflow_and_zero_mean_gain(self):
+        smp = {"mc0": {"dv0": 1e306, "dv1": -1e306}, "mc1": {"dv0": 0.0, "dv1": 1.0}}
+        res, problems = kr.derive("comparator-offset-mc", None, {"main": ({"c": smp}, [])})
+        self.assertEqual(res, {})
+        self.assertTrue(problems and all(p.startswith(("NONFINITE_DERIVED: c", "DERIVE_ERROR: c")) for p in problems))
+        # gains +g and -g: finite draws but mean gain is exactly 0
+        smp = {"mc0": {"dv0": 0.0, "dv1": 1.0}, "mc1": {"dv0": 0.0, "dv1": -1.0}}
+        res, problems = kr.derive("comparator-offset-mc", None, {"main": ({"c": smp}, [])})
+        self.assertEqual(res, {})
+        self.assertTrue(any(p.startswith("DERIVE_ERROR: c av_sigma_pct: ZeroDivisionError") for p in problems))
+
+    def test_bad_corner_cannot_be_complete(self):
+        # main() requires `not problems and len(derived) == expected`
+        res, problems = self._kick({"c": {"a": 1.0, "b": 0.0}}, {"x": "a / b"})
+        self.assertTrue(problems or len(res) < 1)
+        self.assertEqual(len(res), 0)
+

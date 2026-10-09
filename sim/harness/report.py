@@ -21,6 +21,7 @@ typical) fails instead of quietly reporting a "valid" typical-only matrix.
 from __future__ import annotations
 
 import json
+import math
 import statistics
 import subprocess
 from dataclasses import dataclass, field
@@ -126,13 +127,42 @@ def swept_axes(results: list[PointResult]) -> set[str]:
     return axes
 
 
+def _strict_json_safe(obj, path: str, omitted: list[str]):
+    """Copy of ``obj`` with non-finite floats replaced by None (explicit
+    missing); each replaced location is appended to ``omitted``."""
+    if isinstance(obj, float) and not math.isfinite(obj):
+        omitted.append(path)
+        return None
+    if isinstance(obj, dict):
+        return {k: _strict_json_safe(v, f"{path}.{k}", omitted) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_strict_json_safe(v, f"{path}[{i}]", omitted) for i, v in enumerate(obj)]
+    return obj
+
+
+def _is_finite(value) -> bool:
+    return (
+        isinstance(value, (int, float))
+        and not isinstance(value, bool)
+        and math.isfinite(value)
+    )
+
+
 def summarize(tb: Testbench, results: list[PointResult]) -> dict[str, MeasurementSummary]:
     ok = [r for r in results if r.status == "ok"]
     swept = swept_axes(results)
     summaries: dict[str, MeasurementSummary] = {}
     for name in tb.measure:
         values = {r.point.corner_id: r.measurements[name] for r in ok if name in r.measurements}
+        # Non-finite values never enter the statistics (NaN would also make
+        # every bound comparison silently False): they are failures.
+        bad = sorted(k for k, v in values.items() if not _is_finite(v))
+        values = {k: v for k, v in values.items() if k not in bad}
         summary = MeasurementSummary(name=name, values=values)
+        if bad:
+            summary.failures.append(
+                f"NONFINITE_MEASUREMENT: {name} is not finite at {', '.join(f'`{k}`' for k in bad)}"
+            )
         if values:
             summary.minimum = min(values.values())
             summary.maximum = max(values.values())
@@ -146,7 +176,7 @@ def summarize(tb: Testbench, results: list[PointResult]) -> dict[str, Measuremen
     for name, spec in tb.checks.items():
         summary = summaries[name]
         if not summary.values:
-            summary.failures.append("no completed points produced this measurement")
+            summary.failures.append("no completed points produced a finite value for this measurement")
             continue
         if "min" in spec and summary.minimum < spec["min"]:
             summary.failures.append(
@@ -660,8 +690,8 @@ def write_record(
         + tb.netlist.read_text()
     )
 
-    _write_new(json_path,
-        json.dumps(
+    nonfinite_paths: list[str] = []
+    doc = (
             {
                 "record_id": rid,
                 "context": context,
@@ -670,12 +700,12 @@ def write_record(
                 "points": [r.as_dict() for r in results],
                 "summary": {
                     name: {
-                        "min": s.minimum,
-                        "max": s.maximum,
-                        "mean": s.mean,
+                        "min": s.minimum if s.values else None,
+                        "max": s.maximum if s.values else None,
+                        "mean": s.mean if s.values else None,
                         "at_min": s.at_min,
                         "at_max": s.at_max,
-                        "spread_pct": s.spread,
+                        "spread_pct": s.spread if s.values else None,
                         "per_axis": {
                             a: {"weakest": ax.weakest, "strongest": ax.strongest,
                                 "varies": ax.varies}
@@ -685,11 +715,16 @@ def write_record(
                         "skipped_checks": s.skipped,
                     }
                     for name, s in summaries.items()
-                    if s.values
+                    if s.values or s.failures
                 },
-            },
-            indent=2,
-        )
+            }
+    )
+    doc = _strict_json_safe(doc, "$", nonfinite_paths)
+    if nonfinite_paths:
+        doc["nonfinite_omitted"] = nonfinite_paths
+    _write_new(json_path,
+        # strict JSON: never write NaN/Infinity tokens
+        json.dumps(doc, indent=2, allow_nan=False)
         + "\n"
     )
     return record_path

@@ -197,8 +197,39 @@ def collect_checked(report: dict, request: dict, vdd: float, tag: str = "") -> t
     return out, bad, issues
 
 
+ARITH_ERRORS = (ArithmeticError, ValueError)  # ZeroDivision/Overflow are ArithmeticError
+
+
+def _eval_outputs(cid: str, thunks: dict, problems: list) -> dict | None:
+    """Evaluate each derived output of one corner/unit `cid`.
+
+    Returns {name: value}, or None if any output raised an arithmetic error
+    or came out non-finite (a named DERIVE_ERROR / NONFINITE_DERIVED problem
+    per output is appended; every output is still tried so no diagnostic is
+    lost). A corner with a bad output yields no result: it cannot count
+    towards complete reference evidence."""
+    out: dict = {}
+    ok = True
+    for name, thunk in thunks.items():
+        try:
+            v = thunk()
+        except ARITH_ERRORS as e:
+            problems.append(f"DERIVE_ERROR: {cid} {name}: {type(e).__name__}: {e}")
+            ok = False
+            continue
+        if not _finite(v):
+            problems.append(f"NONFINITE_DERIVED: {cid} {name} = {v!r}")
+            ok = False
+            continue
+        out[name] = v
+    return out if ok else None
+
+
 def derive(bench: str, tb, legs: dict[str, dict]) -> tuple[dict, list]:
-    """-> ({corner_id: {derived name: value}}, problems)."""
+    """-> ({corner_id: {derived name: value}}, problems).
+
+    Derived outputs are validated like the raw ingredients: an arithmetic
+    failure or a non-finite result drops that corner with a named problem."""
     problems: list[str] = []
     for leg, (_, bad) in legs.items():
         problems += [f"leg {leg}: {cid} -> {st}" for cid, st in bad]
@@ -212,9 +243,13 @@ def derive(bench: str, tb, legs: dict[str, dict]) -> tuple[dict, list]:
         raw = legs["main"][0]
         for cid in ids:
             env = dict(MATH, **raw[cid][""])
-            res[cid] = {}
-            for name, expr in tb.measure.items():
-                res[cid][name] = eval(expr.replace("^", "**"), {"__builtins__": {}}, env)
+            thunks = {
+                name: (lambda expr=expr: eval(expr.replace("^", "**"), {"__builtins__": {}}, env))
+                for name, expr in tb.measure.items()
+            }
+            d = _eval_outputs(cid, thunks, problems)
+            if d is not None:
+                res[cid] = d
         return res, problems
     if bench == "comparator-preamp-noise":
         for cid in ids:
@@ -222,12 +257,14 @@ def derive(bench: str, tb, legs: dict[str, dict]) -> tuple[dict, list]:
             if not _finite(a.get("av_dc")) or a["av_dc"] == 0:
                 problems.append(f"ZERO_GAIN: {cid} av_dc = {a.get('av_dc')!r}")
                 continue
-            res[cid] = {
-                "av_dc": a["av_dc"],
-                "onoise_uv": n["onoise_total"] * 1e6,
-                "vn_in_uv": n["onoise_total"] / a["av_dc"] * 1e6,
-                "inoise_band_uv": n["inoise_total"] * 1e6,
-            }
+            d = _eval_outputs(cid, {
+                "av_dc": lambda: a["av_dc"],
+                "onoise_uv": lambda: n["onoise_total"] * 1e6,
+                "vn_in_uv": lambda: n["onoise_total"] / a["av_dc"] * 1e6,
+                "inoise_band_uv": lambda: n["inoise_total"] * 1e6,
+            }, problems)
+            if d is not None:
+                res[cid] = d
         return res, problems
     # offset-mc: population statistics over the draws. Per draw, gain from the
     # 0 mV and +2 mV points of one dc sweep (same draw), voa = -dv0/gain --
@@ -235,21 +272,33 @@ def derive(bench: str, tb, legs: dict[str, dict]) -> tuple[dict, list]:
     pstd = statistics.pstdev
     for cid in ids:
         smp = list(legs["main"][0][cid].values())
-        ava = [(s["dv1"] - s["dv0"]) / 2e-3 for s in smp]
-        zero = [k for k, g in zip(legs["main"][0][cid], ava) if g == 0]
-        if zero:
-            problems += [f"ZERO_GAIN: {cid}/{k} gain = 0" for k in zero]
+        try:
+            ava = [(s["dv1"] - s["dv0"]) / 2e-3 for s in smp]
+            if not all(_finite(g) for g in ava):
+                problems.append(f"NONFINITE_DERIVED: {cid} per-draw gain")
+                continue
+            zero = [k for k, g in zip(legs["main"][0][cid], ava) if g == 0]
+            if zero:
+                problems += [f"ZERO_GAIN: {cid}/{k} gain = 0" for k in zero]
+                continue
+            voa = [-s["dv0"] / g for s, g in zip(smp, ava)]
+            sig = pstd(voa)
+            if not all(_finite(v) for v in voa):
+                problems.append(f"NONFINITE_DERIVED: {cid} per-draw voa")
+                continue
+        except ARITH_ERRORS as e:
+            problems.append(f"DERIVE_ERROR: {cid} per-draw gain/voa: {type(e).__name__}: {e}")
             continue
-        voa = [-s["dv0"] / g for s, g in zip(smp, ava)]
-        sig = pstd(voa)
-        res[cid] = {
-            "n_samples": len(smp),
-            "sig_vos_mv": sig * 1e3,
-            "vos_3sig_mv": 3 * sig * 1e3,
-            "mean_vos_uv": statistics.fmean(voa) * 1e6,
-            "av_mean": statistics.fmean(ava),
-            "av_sigma_pct": pstd(ava) / statistics.fmean(ava) * 100,
-        }
+        d = _eval_outputs(cid, {
+            "n_samples": lambda: len(smp),
+            "sig_vos_mv": lambda: sig * 1e3,
+            "vos_3sig_mv": lambda: 3 * sig * 1e3,
+            "mean_vos_uv": lambda: statistics.fmean(voa) * 1e6,
+            "av_mean": lambda: statistics.fmean(ava),
+            "av_sigma_pct": lambda: pstd(ava) / statistics.fmean(ava) * 100,
+        }, problems)
+        if d is not None:
+            res[cid] = d
     return res, problems
 
 
@@ -732,7 +781,7 @@ def main() -> int:
         "reference": reference,
         "within_target": n_t, "within_stretch": n_s, "points": len(vals), "problems": problems,
         "derived": derived,
-    }, indent=1) + "\n")
+    }, indent=1, allow_nan=False) + "\n")  # strict JSON: no NaN/Infinity tokens
     print(f"record {rid}: {len(derived)} points, {key} within target {n_t}/{len(vals)}, stretch {n_s}/{len(vals)}, worst {vals[worst_cid]:.6g} @ {worst_cid}"
           + ("" if citable else " -- NOT CITABLE: " + "; ".join(noncite)))
     if drift:
