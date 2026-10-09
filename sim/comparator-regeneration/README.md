@@ -146,6 +146,22 @@ over the same 45-point grid. What it shows:
   schematic record cited above, and its Reproduce block regenerates the
   extracted binding first (`python3 layout/run_extract_sim.py`).
 
+### Consumer half-LSB use of the 1 mV rung (issue #109)
+
+`spec/consumers.md` compares the delay at the consumer's half-LSB overdrive
+(1.61 mV) to the 15.625 ns stretch-rate phase budget. No separate 1.61 mV
+rung exists or was added: delay is monotone non-increasing in overdrive, so
+the existing **1 mV** rung bounds it from above, per corner. Worst `td_od1_ns`
+over the 45 corners: 1.673 ns schematic (`20260910-125206-4805118`), 2.716 ns
+extracted (`20261002-202641-baeffe5`), both at `ss_125c_2.97v`. These are
+offset-referred to the trip point (extracted ladder centred on `dut_vos`);
+they are not a total-error guarantee. To re-derive the numbers, read the
+`td_od1_ns` column of those two records (no new simulation). If a direct
+~1.61 mV rung is ever wanted, add a fourth instance with `dv_cons=1.61m` to
+`tb_regeneration.spice`, matching `td_d`/`dout_*` measures in `tb.json`, and
+run it through `klt sim` (batch backend) to mint a new record; do not edit the
+existing ones.
+
 ### Two placeholder-specific caveats on that record
 
 - `e_dec_fj` **carries no check and is not a figure.** The placeholder's
