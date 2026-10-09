@@ -192,6 +192,13 @@ class DeriveOffsetTran(unittest.TestCase):
             self.assertEqual(res, {}, code)  # the whole PVT point is dropped
             self.assertTrue(any(p.startswith(code) for p in problems), (code, problems))
 
+    def test_nonfinite_ingredient_is_named_problem_not_a_crash(self):
+        nan = self._draw(10, 0.0)
+        nan["t_trip"] = float("nan")
+        res, problems = self._derive([self._draw(10, 0.0), nan])
+        self.assertEqual(res, {})
+        self.assertTrue(any(p.startswith("NONFINITE_INGREDIENT") for p in problems), problems)
+
     def test_committed_measure_names_and_scored_key(self):
         res, _ = self._derive([self._draw(30, 0.0), self._draw(31, 0.0)])
         self.assertEqual(set(res[self.CID]), set(self.tb.measure))
