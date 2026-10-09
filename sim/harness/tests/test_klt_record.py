@@ -262,5 +262,212 @@ class MkKltRequest(unittest.TestCase):
             self._mk("comparator-preamp-noise")
 
 
+def _req(procs=("tt", "ss"), temps=(27.0, 125.0), mc=None, meas=("dv0", "dv1")):
+    r = {"corners": {"process": [{"name": p} for p in procs], "temperature_c": list(temps)},
+         "measurements": [{"name": m} for m in meas]}
+    if mc:
+        r["monte_carlo"] = mc
+    return r
+
+
+MC2 = {"n": 2, "seed": 5, "vary": "mismatch"}
+
+
+def _full_mc_report(req, vdd=3.3, mc=MC2, vals=None):
+    vals = vals or {"dv0": 1e-3, "dv1": 21e-3}
+    units = [(f"{p['name']}/{t:g}C/mc{i}", "pass", dict(vals))
+             for p in req["corners"]["process"] for t in req["corners"]["temperature_c"]
+             for i in range(mc["n"])]
+    rep = _report(*units)
+    rep["environment"] = {"monte_carlo": dict(mc)}
+    return rep
+
+
+class CoverageValidation(unittest.TestCase):
+    def _check(self, rep, req=None, vdd=3.3):
+        return kr.collect_checked(rep, req or _req(mc=MC2), vdd)
+
+    def _codes(self, issues):
+        return sorted({i.split(": ")[0].split()[-1] if ": " in i else i for i in issues})
+
+    def test_complete_campaign_clean(self):
+        req = _req(mc=MC2)
+        out, bad, issues = self._check(_full_mc_report(req), req)
+        self.assertEqual((bad, issues), ([], []))
+        self.assertEqual(len(out), 4)
+        self.assertEqual(sorted(out["tt_27c_3.30v"]), ["mc0", "mc1"])
+
+    def test_complete_campaign_numerics_preserved(self):
+        req = _req(procs=("tt",), temps=(27.0,), mc=MC2)
+        rep = _report(("tt/27C/mc0", "pass", {"dv0": -1e-3, "dv1": 19e-3}),
+                      ("tt/27C/mc1", "pass", {"dv0": 1e-3, "dv1": 21e-3}))
+        rep["environment"] = {"monte_carlo": MC2}
+        out, _, issues = kr.collect_checked(rep, req, 3.3)
+        self.assertEqual(issues, [])
+        res, problems = kr.derive("comparator-offset-mc", None, {"main": (out, [])})
+        self.assertEqual(problems, [])
+        self.assertAlmostEqual(res["tt_27c_3.30v"]["sig_vos_mv"], 0.1, places=9)
+        self.assertEqual(res["tt_27c_3.30v"]["n_samples"], 2)
+
+    def test_duplicate_rejected_not_overwritten(self):
+        req = _req(procs=("tt",), temps=(27.0,), mc=MC2)
+        rep = _report(("tt/27C/mc0", "pass", {"dv0": 1.0, "dv1": 2.0}),
+                      ("tt/27C/mc0", "pass", {"dv0": 9.0, "dv1": 9.0}),
+                      ("tt/27C/mc1", "pass", {"dv0": 1.0, "dv1": 2.0}))
+        rep["environment"] = {"monte_carlo": MC2}
+        out, _, issues = self._check(rep, req)
+        self.assertTrue(any(i.startswith("DUPLICATE_UNIT") and "tt/27C/mc0" in i for i in issues))
+        self.assertEqual(out["tt_27c_3.30v"]["mc0"]["dv0"], 1.0)  # first kept
+
+    def test_missing_mc_draw_named(self):
+        req = _req(procs=("tt",), temps=(27.0,), mc=MC2)
+        rep = _report(("tt/27C/mc0", "pass", {"dv0": 1.0, "dv1": 2.0}))
+        rep["environment"] = {"monte_carlo": MC2}
+        _, _, issues = self._check(rep, req)
+        self.assertEqual(issues, ["MISSING_UNIT: tt_27c_3.30v/mc1 has no result"])
+
+    def test_missing_corner_named(self):
+        req = _req(mc=None)
+        rep = _report(*[(f"{p}/{t:g}C", "pass", {"dv0": 1.0, "dv1": 2.0})
+                        for p, t in (("tt", 27), ("tt", 125), ("ss", 27))])
+        _, _, issues = self._check(rep, req)
+        self.assertEqual(issues, ["MISSING_UNIT: ss_125c_3.30v has no result"])
+
+    def test_unexpected_corner_and_sample(self):
+        req = _req(procs=("tt",), temps=(27.0,), mc=MC2)
+        rep = _report(("tt/27C/mc0", "pass", {"dv0": 1.0, "dv1": 2.0}),
+                      ("tt/27C/mc1", "pass", {"dv0": 1.0, "dv1": 2.0}),
+                      ("tt/27C/mc2", "pass", {"dv0": 1.0, "dv1": 2.0}),
+                      ("fs/85C/mc0", "pass", {"dv0": 1.0, "dv1": 2.0}))
+        rep["environment"] = {"monte_carlo": MC2}
+        _, _, issues = self._check(rep, req)
+        self.assertEqual(sorted(i.split(" ")[1] for i in issues), ["fs/85C/mc0", "tt/27C/mc2"])
+        self.assertTrue(all(i.startswith("UNEXPECTED_UNIT") for i in issues))
+
+    def test_inconsistent_mc_declaration(self):
+        req = _req(procs=("tt",), temps=(27.0,), mc=MC2)
+        rep = _full_mc_report(req, mc=MC2)
+        rep["environment"]["monte_carlo"] = {"n": 2, "seed": 6, "vary": "mismatch"}
+        _, _, issues = self._check(rep, req)
+        self.assertEqual(len(issues), 1)
+        self.assertTrue(issues[0].startswith("MC_DECLARATION_MISMATCH: seed"))
+        rep["environment"] = {}
+        _, _, issues = self._check(rep, req)
+        self.assertTrue(issues[0].startswith("MC_DECLARATION_MISMATCH"))
+
+    def test_nonfinite_ingredient_named_and_excluded(self):
+        req = _req(procs=("tt",), temps=(27.0,), mc=None)
+        for bad in (float("nan"), float("inf"), None):
+            rep = _report(("tt/27C", "pass", {"dv0": bad, "dv1": 2.0}))
+            out, _, issues = self._check(rep, req)
+            self.assertEqual(len(issues), 1, issues)
+            self.assertTrue(issues[0].startswith("NONFINITE_INGREDIENT: tt/27C dv0"))
+            self.assertEqual(out, {})
+
+    def test_failed_unit_is_failed_not_missing(self):
+        req = _req(procs=("tt",), temps=(27.0,), mc=None)
+        _, bad, issues = self._check(_report(("tt/27C", "error", {})), req)
+        self.assertEqual(bad, [("tt/27C", "error")])
+        self.assertEqual(issues, ["FAILED_UNIT: tt/27C -> error"])
+
+    def test_zero_gain_named_by_unit(self):
+        smp = {"mc0": {"dv0": 1.0, "dv1": 1.0}, "mc1": {"dv0": 1.0, "dv1": 3.0}}
+        res, problems = kr.derive("comparator-offset-mc", None, {"main": ({"c": smp}, [])})
+        self.assertEqual(res, {})
+        self.assertEqual(problems, ["ZERO_GAIN: c/mc0 gain = 0"])
+
+    def test_zero_av_dc_noise(self):
+        leg = ({"c": {"": {"onoise_total": 1.0, "inoise_total": 1.0, "av_dc": 0.0}}}, [])
+        res, problems = kr.derive("comparator-preamp-noise", None, {"noise": leg, "ac": leg})
+        self.assertEqual(res, {})
+        self.assertTrue(problems[0].startswith("ZERO_GAIN: c"))
+
+    def test_missing_ac_noise_leg_corner_reported(self):
+        n = {"": {"onoise_total": 1e-3, "inoise_total": 1e-5, "av_dc": 10.0}}
+        res, problems = kr.derive("comparator-preamp-noise", None,
+                                  {"noise": ({"a": n, "b": n}, []), "ac": ({"a": n}, [])})
+        self.assertEqual(sorted(res), ["a"])
+        self.assertEqual(problems, ["MISSING_LEG_CORNER: leg ac has no result for b"])
+
+    def test_expected_units_from_request(self):
+        u = kr.expected_units(_req(mc=MC2), 2.97)
+        self.assertEqual(len(u), 4)
+        self.assertEqual(u["ss_125c_2.97v"], {"mc0", "mc1"})
+        self.assertEqual(kr.expected_units(_req(), 3.3)["tt_27c_3.30v"], {""})
+
+
+class MainCoverageGate(unittest.TestCase):
+    """End-to-end ingestion of a --from-report dir (no klt, no ngspice)."""
+
+    BENCH = "comparator-offset-mc"
+
+    def _run(self, drop=0, empty=False, dup=False):
+        tb = htb.load(SIM / self.BENCH)
+        vdds = kr.hc.supply_points(tb.nominal_supply_v, tb.supply_tolerance)
+        procs = [c.name for c in kr.hc.resolve_corners(list(tb.corners))]
+        temps = [float(t) for t in tb.temperatures_c]
+        mc = {"n": 3, "seed": 1, "vary": "mismatch"}
+        with tempfile.TemporaryDirectory() as td:
+            work = Path(td)
+            (work / "design.ngspice").write_text("*\n")
+            for v in vdds:
+                req = _req(procs=procs, temps=temps, mc=mc)
+                rep = _full_mc_report(req, v, mc, {"dv0": 1e-3, "dv1": 21e-3})
+                if empty:
+                    rep["corners"] = []
+                if drop:
+                    rep["corners"] = rep["corners"][:-drop]
+                if dup:
+                    rep["corners"].append(dict(rep["corners"][0]))
+                (work / f"body-v{v:.2f}.spice").write_text("*\n")
+                (work / f"request-main-v{v:.2f}.json").write_text(json.dumps(req))
+                (work / f"report-main-v{v:.2f}.json").write_text(json.dumps(rep))
+            argv = ["klt_record.py", self.BENCH, "--from-report", str(work)]
+            written = []
+            err = io.StringIO()
+            with mock.patch.object(sys, "argv", argv), \
+                    mock.patch.object(kr, "REPO", Path(td)), \
+                    mock.patch.object(kr, "SIM", Path(td) / "sim"), \
+                    mock.patch.object(kr, "git_state", return_value=("abc1234", False)), \
+                    mock.patch.object(kr.subprocess, "check_output", return_value="klt 0\n"), \
+                    mock.patch.object(kr.hdut, "load", return_value=types.SimpleNamespace(
+                        netlist=work / "design.ngspice", dut_id="x", provenance="p",
+                        netlist_sha256="0" * 64, provenance_record=lambda: {})), \
+                    mock.patch.object(htb, "load", return_value=tb), \
+                    redirect_stdout(io.StringIO()), mock.patch.object(sys, "stderr", err):
+                (Path(td) / "sim" / self.BENCH).mkdir(parents=True)
+                try:
+                    rc = kr.main()
+                except SystemExit as e:
+                    rc = e.code
+                recs = list((Path(td) / "sim" / self.BENCH / "records").glob("*.json"))
+                rec = json.loads(recs[0].read_text()) if recs else None
+        return rc, rec, err.getvalue()
+
+    def test_complete(self):
+        rc, rec, _ = self._run()
+        self.assertEqual(rc, 0)
+        self.assertTrue(rec["complete"])
+        self.assertEqual(rec["points"], rec["expected_points"])
+
+    def test_partial_inspectable_but_nonzero_and_flagged(self):
+        rc, rec, _ = self._run(drop=1)
+        self.assertEqual(rc, 1)
+        self.assertFalse(rec["complete"])
+        self.assertEqual(rec["outcome"], "incomplete")
+        self.assertTrue(any(p.startswith("main-v3.63: MISSING_UNIT") for p in rec["problems"]))
+
+    def test_duplicate_makes_incomplete(self):
+        rc, rec, _ = self._run(dup=True)
+        self.assertEqual(rc, 1)
+        self.assertTrue(any("DUPLICATE_UNIT" in p for p in rec["problems"]))
+
+    def test_empty_fails_cleanly(self):
+        rc, rec, err = self._run(empty=True)
+        self.assertIsInstance(rc, str)
+        self.assertIn("EMPTY_RESULT", rc)
+        self.assertIsNone(rec)
+
+
 if __name__ == "__main__":
     unittest.main()
