@@ -244,6 +244,151 @@ class GenerationContract(_FixtureCase):
         self.assertFalse(self.mod.predecessor_path().exists())
 
 
+class InvalidSourceRefusal(unittest.TestCase):
+    """Issue #126: validation is explicit, so it holds under ``python -O``.
+
+    Each case mutates a temporary copy of the records, runs the copied
+    wrapper as a subprocess (so REPO_ROOT is the temp tree) in ordinary and
+    optimized modes, and requires exit 1, the offending bench/corner/field in
+    stderr, and that no envelope file exists afterwards.
+    """
+
+    MODES = (
+        ("plain", [], {}),
+        ("-O", ["-O"], {}),
+        ("-OO", ["-OO"], {}),
+        ("PYTHONOPTIMIZE=1", [], {"PYTHONOPTIMIZE": "1"}),
+    )
+    OFF = "comparator-offset-mc"
+    NOISE = "comparator-preamp-noise"
+    REGEN = "comparator-regeneration"
+    KICK = "comparator-kickback"
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        make_fixture(self.root, kickback_mv=None)
+        (self.root / "signoff").mkdir()
+        shutil.copyfile(SCRIPT, self.root / "signoff" / "make_item5_envelope.py")
+        self.wrapper = load_wrapper(self.root)
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def rec_path(self, bench: str) -> Path:
+        rid = dict(self.wrapper.RECORDS)[bench]
+        return self.root / "sim" / bench / "records" / f"{rid}.json"
+
+    def mutate(self, bench: str, fn) -> None:
+        p = self.rec_path(bench)
+        rec = json.loads(p.read_text())
+        fn(rec)
+        p.write_text(json.dumps(rec, indent=2) + "\n")
+
+    def run_wrapper(self, mode_args, extra_env, *argv):
+        env = {k: v for k, v in os.environ.items() if k != "PYTHONOPTIMIZE"}
+        env.update(extra_env)
+        return subprocess.run(
+            [sys.executable, *mode_args, str(self.root / "signoff" / "make_item5_envelope.py"), *argv],
+            capture_output=True, text=True, cwd=self.root, env=env,
+        )
+
+    def assert_refused(self, *needles: str) -> None:
+        out = self.wrapper.output_path()
+        for label, mode_args, extra in self.MODES:
+            for argv in ((), ("--check",)):
+                with self.subTest(mode=label, argv=argv):
+                    proc = self.run_wrapper(mode_args, extra, *argv)
+                    self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+                    self.assertNotIn("Traceback", proc.stderr)
+                    for n in needles:
+                        self.assertIn(n, proc.stderr)
+                    self.assertFalse(out.exists(), "invalid input must not write evidence")
+
+    def test_valid_fixture_accepted_in_every_mode(self) -> None:
+        for label, mode_args, extra in self.MODES:
+            with self.subTest(mode=label):
+                proc = self.run_wrapper(mode_args, extra)
+                self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+                self.wrapper.output_path().unlink()
+
+    def test_valid_envelope_byte_identical_to_committed(self) -> None:
+        proc = self.run_wrapper(["-O"], {})
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertEqual(
+            self.wrapper.output_path().read_bytes(),
+            load_wrapper(REPO_ROOT).output_path().read_bytes(),
+        )
+
+    def test_stale_hash_in_one_record(self) -> None:
+        self.mutate(self.NOISE, lambda r: r["context"].update(dut_netlist_sha256="0" * 64))
+        self.assert_refused(self.NOISE, "dut_netlist_sha256")
+
+    def test_all_records_stale_vs_current_netlist(self) -> None:
+        for b, _ in self.wrapper.RECORDS:
+            self.mutate(b, lambda r: r["context"].update(dut_netlist_sha256="1" * 64))
+        self.assert_refused("current", "design/comparator.spice")
+
+    def test_netlist_changed_since_records(self) -> None:
+        nl = self.root / self.wrapper.NETLIST
+        nl.write_text(nl.read_text() + "* edited\n")
+        self.assert_refused("dut_netlist_sha256", "stale")
+
+    def test_failed_point_status(self) -> None:
+        self.mutate(self.REGEN, lambda r: r["points"][7].update(status="error"))
+        cid = json.loads(self.rec_path(self.REGEN).read_text())["points"][7]["corner_id"]
+        self.assert_refused(f"{self.REGEN}/{cid}", "status")
+
+    def test_omitted_corner(self) -> None:
+        self.mutate(self.KICK, lambda r: r["points"].pop(10))
+        self.assert_refused(self.KICK, "omitted corner")
+
+    def test_duplicate_corner_keeps_count_at_45(self) -> None:
+        def dup(r):
+            r["points"][5] = dict(r["points"][4])
+        self.mutate(self.OFF, dup)
+        self.assert_refused(self.OFF, "duplicate corner_id", "omitted corner")
+
+    def test_corner_outside_committed_matrix(self) -> None:
+        self.mutate(self.OFF, lambda r: r["points"][0].update(corner_id="tt_85c_3.30v"))
+        self.assert_refused(self.OFF, "tt_85c_3.30v")
+
+    def test_inconsistent_pvt_coordinate(self) -> None:
+        self.mutate(self.NOISE, lambda r: r["points"][3].update(vdd=3.0))
+        self.assert_refused(self.NOISE, "field vdd")
+
+    def test_inconsistent_temperature_and_process(self) -> None:
+        self.mutate(self.KICK, lambda r: r["points"][0].update(temp_c=27.0, corner="ff"))
+        self.assert_refused(self.KICK, "field temp_c", "field corner")
+
+    def test_corner_order_disagreement(self) -> None:
+        self.mutate(self.REGEN, lambda r: r["points"].reverse())
+        self.assert_refused(self.REGEN, "order")
+
+    def test_non_finite_measurement(self) -> None:
+        # json.dumps writes a bare NaN token, which json.loads accepts.
+        self.mutate(self.KICK, lambda r: r["points"][9]["measurements"].update(kick_1k_peak_mv=float("nan")))
+        self.assertIn("NaN", self.rec_path(self.KICK).read_text())
+        self.assert_refused(self.KICK, "kick_1k_peak_mv", "finite")
+
+    def test_infinite_and_missing_measurement(self) -> None:
+        def f(r):
+            r["points"][2]["measurements"]["i_static_ua"] = float("inf")
+            del r["points"][3]["measurements"]["td_od50_ns"]
+        self.mutate(self.REGEN, f)
+        self.assert_refused("i_static_ua", "td_od50_ns")
+
+    def test_existing_envelope_not_modified_on_invalid_input(self) -> None:
+        out = self.wrapper.output_path()
+        self.assertEqual(self.run_wrapper([], {}).returncode, 0)
+        before = out.read_bytes()
+        self.mutate(self.NOISE, lambda r: r["points"][0].update(status="error"))
+        for label, mode_args, extra in self.MODES:
+            with self.subTest(mode=label):
+                self.assertEqual(self.run_wrapper(mode_args, extra).returncode, 1)
+                self.assertEqual(out.read_bytes(), before)
+
+
 class HistoricalEvidenceUnchanged(unittest.TestCase):
     def test_r1_envelope_bytes(self) -> None:
         r1 = load_wrapper(REPO_ROOT).predecessor_path()
