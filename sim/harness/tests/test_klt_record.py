@@ -1014,6 +1014,67 @@ class MainCoverageGate(unittest.TestCase):
         self.assertIsNone(rec)
 
 
+class KickbackBothNodes(unittest.TestCase):
+    """#160: the row-facing kickback peak covers BOTH 1 kohm input nodes."""
+
+    RAW = {"ad_pos": 4e-3, "ad_neg": -3e-3, "adn_pos": 2e-3, "adn_neg": -2e-3}
+
+    def _derive(self, raw):
+        tb = htb.load(SIM / "comparator-kickback")
+        names = set()
+        for expr in tb.measure.values():
+            names |= {t for t in __import__("re").findall(r"[A-Za-z_]\w*", expr) if t not in kr.MATH}
+        full = {n: 2.0 + i for i, n in enumerate(sorted(names))}
+        full.update(raw)
+        return kr.derive("comparator-kickback", tb, {"main": ({"c": {"": full}}, [])})
+
+    def test_aggregate_is_max_of_both_nodes(self):
+        res, problems = self._derive(self.RAW)
+        self.assertEqual(problems, [])
+        d = res["c"]
+        self.assertAlmostEqual(d["kick_1k_pnode_peak_mv"], 4.0)
+        self.assertAlmostEqual(d["kick_1k_nnode_peak_mv"], 2.0)
+        self.assertAlmostEqual(d["kick_1k_peak_mv"], 4.0)
+
+    def test_negative_node_larger_sets_the_aggregate(self):
+        raw = dict(self.RAW, adn_pos=1e-3, adn_neg=-7e-3)  # negative node worse than positive
+        res, problems = self._derive(raw)
+        self.assertEqual(problems, [])
+        d = res["c"]
+        self.assertAlmostEqual(d["kick_1k_nnode_peak_mv"], 7.0)
+        self.assertGreater(d["kick_1k_nnode_peak_mv"], d["kick_1k_pnode_peak_mv"])
+        self.assertAlmostEqual(d["kick_1k_peak_mv"], 7.0)  # cannot ignore the negative node
+        self.assertEqual(kr.node_coverage(res), "both")
+        self.assertIn("1/1 corners", kr.node_coverage_line(res))
+
+    def test_positive_node_value_unchanged_vs_historical_definition(self):
+        res, _ = self._derive(self.RAW)
+        d = res["c"]
+        self.assertAlmostEqual(d["kick_1k_pnode_peak_mv"], max(abs(self.RAW["ad_pos"]), abs(self.RAW["ad_neg"])) * 1e3)
+
+    def test_negative_node_ingredients_are_requested_and_validated(self):
+        tb = htb.load(SIM / "comparator-kickback")
+        cards = "\n".join(tb.analyses)
+        self.assertIn("meas tran adn_pos max v(adn)", cards)
+        self.assertIn("meas tran adn_neg min v(adn)", cards)
+        self.assertIn("v(ana)-v(asn)", tb.netlist.read_text())
+        # missing / non-finite node measurement fails validation (no record cell)
+        req = _req(meas=("ad_pos", "ad_neg", "adn_pos", "adn_neg"))
+        for bad in (None, float("nan"), float("inf")):
+            vals = {"ad_pos": 1e-3, "ad_neg": -1e-3, "adn_pos": 1e-3, "adn_neg": bad}
+            rep = {"corners": [{"corner_id": "tt/27C", "status": "pass",
+                                "measurements": [{"name": k, "value": v} for k, v in vals.items()]}]}
+            req1 = dict(req, corners={"process": [{"name": "tt"}], "temperature_c": [27.0]})
+            out, _bad, issues = kr.collect_checked(rep, req1, 3.3)
+            self.assertEqual(out, {}, bad)
+            self.assertTrue(any("adn_neg" in i for i in issues), (bad, issues))
+
+    def test_legacy_positive_only_record_is_partial(self):
+        legacy = {"c": {"kick_1k_peak_mv": 7.6, "kick_1k_pos_mv": 7.6}}
+        self.assertEqual(kr.node_coverage(legacy), "positive-only")
+        self.assertIn("PARTIAL", kr.node_coverage_line(legacy))
+
+
 if __name__ == "__main__":
     unittest.main()
 

@@ -302,6 +302,28 @@ def derive(bench: str, tb, legs: dict[str, dict]) -> tuple[dict, list]:
     return res, problems
 
 
+def node_coverage(derived: dict) -> str:
+    """Kickback records: 'both' when every corner carries both input nodes' peaks.
+
+    Records minted before issue #160 derived `kick_1k_peak_mv` from the
+    positive node only; they have no `kick_1k_nnode_peak_mv` and are partial
+    node coverage ('positive-only'). Anything in between is 'partial'."""
+    has = [("kick_1k_nnode_peak_mv" in d and "kick_1k_pnode_peak_mv" in d) for d in derived.values()]
+    if has and all(has):
+        return "both"
+    return "partial" if any(has) else "positive-only"
+
+
+def node_coverage_line(derived: dict) -> str:
+    cov = node_coverage(derived)
+    if cov != "both":
+        return ("`positive-only` -- PARTIAL node coverage: `kick_1k_peak_mv` here covers the positive "
+                "input node alone; the negative node was not measured.")
+    n_neg = sum(d["kick_1k_nnode_peak_mv"] > d["kick_1k_pnode_peak_mv"] for d in derived.values())
+    return (f"`both` -- `kick_1k_peak_mv` is the maximum of the positive-node (`kick_1k_pnode_peak_mv`) and "
+            f"negative-node (`kick_1k_nnode_peak_mv`) peaks; the negative node sets it at {n_neg}/{len(derived)} corners.")
+
+
 def power_uw(bench: str, cid: str, d: dict) -> float | None:
     if bench != "comparator-regeneration":
         return None
@@ -756,6 +778,7 @@ def main() -> int:
     if a.bench == "comparator-kickback":
         bad_end = [cid for cid, dd in derived.items() if min(dd["dout_1k_end"], dd["dout_float_small_end"], dd["dout_float_big_end"]) < 0.9]
         lines.append(f"- **Decision correctness while kicked** (`dout_*_end` >= 0.9): failing corners: {bad_end or 'none'}.")
+        lines.append(f"- **Input-node coverage** (issue #160): {node_coverage_line(derived)}")
     sel = d.get("selector")
     lines += [
         "- **Not computed by this executor** (single-analysis `klt sim` requests): "
@@ -790,6 +813,7 @@ def main() -> int:
         "reference": reference,
         "within_target": n_t, "within_stretch": n_s, "points": len(vals), "problems": problems,
         "derived": derived,
+        **({"input_node_coverage": node_coverage(derived)} if a.bench == "comparator-kickback" else {}),
     }, indent=1, allow_nan=False) + "\n")  # strict JSON: no NaN/Infinity tokens
     print(f"record {rid}: {len(derived)} points, {key} within target {n_t}/{len(vals)}, stretch {n_s}/{len(vals)}, worst {vals[worst_cid]:.6g} @ {worst_cid}"
           + ("" if citable else " -- NOT CITABLE: " + "; ".join(noncite)))

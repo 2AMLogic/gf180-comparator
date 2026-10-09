@@ -17,6 +17,8 @@
     "tran 5p 60n",
     "meas tran ad_pos max v(ad) from=30n to=45n",
     "meas tran ad_neg min v(ad) from=30n to=45n",
+    "meas tran adn_pos max v(adn) from=30n to=45n",
+    "meas tran adn_neg min v(adn) from=30n to=45n",
     "meas tran ap0 find v(apa) at=29n",
     "meas tran apmax max v(apa) from=30n to=45n",
     "meas tran apmin min v(apa) from=30n to=45n",
@@ -35,7 +37,11 @@
     "meas tran dc_end find v(dcn) at=55n"
   ],
   "measure": {
-    "kick_1k_peak_mv": "max(abs(ad_pos),abs(ad_neg))*1e3",
+    "kick_1k_peak_mv": "max(abs(ad_pos),abs(ad_neg),abs(adn_pos),abs(adn_neg))*1e3",
+    "kick_1k_pnode_peak_mv": "max(abs(ad_pos),abs(ad_neg))*1e3",
+    "kick_1k_nnode_peak_mv": "max(abs(adn_pos),abs(adn_neg))*1e3",
+    "kick_1k_nnode_pos_mv": "adn_pos*1e3",
+    "kick_1k_nnode_neg_mv": "adn_neg*1e3",
     "kick_1k_pos_mv": "ad_pos*1e3",
     "kick_1k_neg_mv": "ad_neg*1e3",
     "kick_1k_raw_mv": "max(abs(apmax-ap0),abs(ap0-apmin))*1e3",
@@ -57,7 +63,17 @@
         "process": 4.0,
         "temperature": 0.7
       },
-      "description": "THE ROW-FACING NUMBER AND THIS BENCH'S CORNER-SENSITIVITY ANCHOR: peak disturbance of an input node, relative to its own driving source, during one decision, with a 1 kohm series source impedance and 100 fF of node capacitance -- the exact condition README.md's kickback row states. The bounds here are a sanity envelope only (a true zero would mean the probe is not connected; half a rail would mean the input pair is being driven, not disturbed); the SPEC bound is deliberately not encoded while README.md's target-specification table stays DRAFT. The per-axis floors make `--sabotage-corners` fail: the peak is set by the input devices' C_gd/C_gs and by the front end's bandwidth, and both move with process and temperature. RECALIBRATED for DR-0001 (issue #12): the process floor below was originally calibrated against the placeholder DUT's first committed record (process 34.76 % observed) and did not transfer -- the real input pair's C_gd/bandwidth combination moves less across the mos process axis at this sizing than the placeholder's explicit c_fb stand-in did, though still comfortably corner-sensitive. Floors recalibrated AGAIN for the post-layout DUT (issue #23), same calibrate-from-a-cited-record convention: the schematic grid's observed weakest slices (process 15.34 %, temperature 2.46 %) and the post-layout extracted grid's (process 7.86 %, temperature 1.27 %, record 20261002-204202-baeffe5 -- the extracted DUT's peak is less process/temperature-sensitive because the corner-independent routing parasitics now dominate the injected charge). Current floors sit ~45-50 % below the WEAKER of the two records' observed weakest slices (process 7.86 -> 4.0, temperature 1.27 -> 0.7); any positive floor still fails a `--sabotage-corners` run (0 % spread) by construction. Observed weakest slices there: process 15.34 %, temperature 2.461 %, supply 30.1 %. The temperature and supply floors are unchanged -- both cleared their placeholder-calibrated floors on the real schematic with margin to spare. Temperature is genuinely the weak axis here and its floor is set accordingly -- it is still more than an order of magnitude above the ~0 % a runner stuck on one temperature would produce. This is the one bench whose anchor DOES carry a supply floor, because the kicked charge scales with the rail the regeneration nodes swing between."
+      "description": "THE ROW-FACING NUMBER AND THIS BENCH'S CORNER-SENSITIVITY ANCHOR: peak disturbance of an input node, relative to its own driving source, during one decision, with a 1 kohm series source impedance and 100 fF of node capacitance -- the exact condition README.md's kickback row states. The bounds here are a sanity envelope only (a true zero would mean the probe is not connected; half a rail would mean the input pair is being driven, not disturbed); the SPEC bound is deliberately not encoded while README.md's target-specification table stays DRAFT. The per-axis floors make `--sabotage-corners` fail: the peak is set by the input devices' C_gd/C_gs and by the front end's bandwidth, and both move with process and temperature. RECALIBRATED for DR-0001 (issue #12): the process floor below was originally calibrated against the placeholder DUT's first committed record (process 34.76 % observed) and did not transfer -- the real input pair's C_gd/bandwidth combination moves less across the mos process axis at this sizing than the placeholder's explicit c_fb stand-in did, though still comfortably corner-sensitive. Floors recalibrated AGAIN for the post-layout DUT (issue #23), same calibrate-from-a-cited-record convention: the schematic grid's observed weakest slices (process 15.34 %, temperature 2.46 %) and the post-layout extracted grid's (process 7.86 %, temperature 1.27 %, record 20261002-204202-baeffe5 -- the extracted DUT's peak is less process/temperature-sensitive because the corner-independent routing parasitics now dominate the injected charge). Current floors sit ~45-50 % below the WEAKER of the two records' observed weakest slices (process 7.86 -> 4.0, temperature 1.27 -> 0.7); any positive floor still fails a `--sabotage-corners` run (0 % spread) by construction. Observed weakest slices there: process 15.34 %, temperature 2.461 %, supply 30.1 %. The temperature and supply floors are unchanged -- both cleared their placeholder-calibrated floors on the real schematic with margin to spare. Temperature is genuinely the weak axis here and its floor is set accordingly -- it is still more than an order of magnitude above the ~0 % a runner stuck on one temperature would produce. This is the one bench whose anchor DOES carry a supply floor, because the kicked charge scales with the rail the regeneration nodes swing between. NODE COVERAGE (issue #160): from the records that carry kick_1k_nnode_peak_mv onward this is the MAXIMUM over BOTH input nodes (kick_1k_pnode_peak_mv, kick_1k_nnode_peak_mv); earlier records carry the positive node only and are partial node coverage. The per-axis floors above were calibrated on the positive-node-only value and are unchanged."
+    },
+    "kick_1k_pnode_peak_mv": {
+      "min": 0.0001,
+      "max": 500.0,
+      "description": "Issue #160: the POSITIVE input node's peak disturbance alone (probe ad, node apa vs its source asp) -- exactly what kick_1k_peak_mv reported before the negative node was probed, kept under its own name so new records stay comparable with the older positive-node-only ones. Sanity envelope only; no spec bound is encoded here."
+    },
+    "kick_1k_nnode_peak_mv": {
+      "min": 0.0001,
+      "max": 500.0,
+      "description": "Issue #160: the NEGATIVE input node's peak disturbance (probe adn, node ana vs its source asn), same 1 kohm / 100 fF loading and 30n-45n decision window as the positive node. A true zero would mean the probe is not connected. Sanity envelope only; no spec bound is encoded here."
     },
     "kick_sigdep_nv": {
       "min": 0.0,
