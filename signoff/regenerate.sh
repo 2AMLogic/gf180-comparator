@@ -26,8 +26,9 @@
 # distribution pin and the vendored doc forward together, then re-grade.
 set -euo pipefail
 
-# Keep in sync with the signoff job's pip install in
-# .github/workflows/signoff.yml.
+# Single source of the grader pin. Keep in sync with the signoff job's pip
+# install in .github/workflows/signoff.yml; signoff/check_klt_pin.py (run in
+# CI) fails on drift.
 KLT_VERSION="0.6.0"
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
