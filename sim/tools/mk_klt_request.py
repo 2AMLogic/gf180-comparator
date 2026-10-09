@@ -16,6 +16,8 @@ One `klt sim` request carries ONE analysis, so a bench becomes one or more
     comparator-regeneration leg `main`  (tran + .meas cards)
     comparator-preamp-noise leg `noise` (noise 1 Hz..1 GHz), leg `ac` (gain)
     comparator-offset-mc    leg `main`  (monte_carlo, one dc sweep per draw)
+    comparator-offset-tran  leg `main`  (monte_carlo, one clocked staircase
+                            transient per draw; issue #157)
 
 Derived quantities (`tb.json` "measure") are computed from the raw per-leg
 values by `sim/tools/klt_record.py`; the `.meas` cards / expressions below
@@ -70,6 +72,11 @@ NGSPICE_INIT = ["set measureprec=12", "set numdgt=12"]
 
 OFFSET_MC_SEED = 20260909
 OFFSET_MC_N = 200
+#: Seconds `klt sim --backend batch` keeps re-launching after a
+#: `batch_no_capacity` refusal (request.batch.capacity_wait_s).
+BATCH_CAPACITY_WAIT_S = 1800
+#: Benches whose requests carry a `monte_carlo` block.
+MC_BENCHES = ("comparator-offset-mc", "comparator-offset-tran")
 
 #: The source bundle written beside the requests (issue #151).
 BUNDLE_NAME = "source-bundle.json"
@@ -226,6 +233,14 @@ def legs_for(bench: str, tb, mc_n: int) -> dict[str, dict]:
             "nominal point with sim/run_corners.py instead (see sim/tools/README note "
             "in the DR); file/track the tool gap at 2AMLogic/klayout-tools."
         )
+    if bench == "comparator-offset-tran":
+        # Whole-comparator transient Monte Carlo: ONE staircase transient per
+        # draw; the `.meas` cards in tb.json are the raw ingredients, and
+        # klt_record.py derives the trip point / same-draw preamp offset.
+        kind, args = tb.analyses[0].split(None, 1)
+        return {"main": {"analysis": {"kind": kind, "args": args},
+                         "measurements": tran_meas_cards(tb),
+                         "monte_carlo": {"n": mc_n, "seed": OFFSET_MC_SEED, "vary": "mismatch"}}}
     if bench == "comparator-offset-mc":
         # Two operating points at vcmd = 0 (the bench's offset point `voa`):
         # vd = 0 and vd = 2 mV, from one `dc` sweep of one draw (same-draw
@@ -325,7 +340,10 @@ def main() -> int:
                 "corners": {"process": process, "temperature_c": temps},
                 # The fleet image's klt can lag the submitting client; run anyway
                 # and let the record state the runner/client versions it saw.
-                "batch": {"runner_version_check": "warn"},
+                # A Spot capacity refusal is retried with the client's own
+                # backoff for up to BATCH_CAPACITY_WAIT_S instead of being
+                # terminal on the first refusal (issue #157; klt #2721).
+                "batch": {"runner_version_check": "warn", "capacity_wait_s": BATCH_CAPACITY_WAIT_S},
                 "analysis": spec["analysis"],
                 "measurements": spec["measurements"],
                 "options": {
@@ -349,7 +367,7 @@ def main() -> int:
     write_bundle(out, a.bench, tb, dut, binding, a.dut, staged, commit, dirty_paths, checked, {
         "corners": [c.name for c in corner_list], "temperatures_c": temps,
         "supply_tolerance": tol, "supply_v": vdds,
-        "mc_n": a.mc_n if a.bench == "comparator-offset-mc" else None,
+        "mc_n": a.mc_n if a.bench in MC_BENCHES else None,
     }, requests)
     print(f"wrote {out}/{BUNDLE_NAME} (commit {commit[:7]}"
           + (f", DIRTY: {', '.join(dirty_paths)})" if dirty_paths else ", clean)"))

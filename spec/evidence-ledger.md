@@ -13,6 +13,20 @@ Target: ≤ 15 mV, 3σ (input-referred, post-calibration-free) — Stretch: ≤ 
 
 Monte Carlo via gf180mcu's `sw_stat_mismatch`-based local-mismatch models (per-instance statistical mismatch, confirmed real and present on this PDK — not just global-process corners — by `gf180-sar-adc`'s [`sim/comparator-offset-mc/`](https://github.com/2AMLogic/gf180-sar-adc/tree/main/sim/comparator-offset-mc): `setseed <n>` then N = 150 draws per PVT point via a `dowhile` reset loop); the bound matches the sg13g2-comparator/sky130-comparator twin set so the three PDKs' eventual measured results are directly comparable, not because it was independently re-derived per PDK. `gf180-sar-adc`'s own *embedded* comparator (40/1 µm input-pair sizing, not a target this repo inherits) measured ≈ 3.84 mV 3σ offset at `tt`/27 °C, N = 150 — same-PDK context that this target is achievable at *some* sizing, nothing more. **Verdict — meets target and stretch at every corner** (scored against the ratified bound per [DR-0002](decision-records/DR-0002-target-spec-ratification.md), scoring pass tracked as [#24](https://github.com/2AMLogic/gf180-comparator/issues/24); static preamp + StrongARM latch per [DR-0001](decision-records/DR-0001-comparator-topology.md)): [`sim/comparator-offset-mc/records/20260910-124917-4805118.md`](../sim/comparator-offset-mc/records/20260910-124917-4805118.md) reports nominal 3σ = 2.80063 mV at `tt_27c_3.30v`, and 2.796–2.807 mV 3σ at every one of the 45 corners of the PVT grid — best case `fs_-40c_2.97v` at 2.79617 mV, worst case `sf_125c_3.30v` at 2.80688 mV, corner-invariant to within 0.4% — so every corner clears the ≤ 15 mV target and the ≤ 8 mV stretch. Method per this repo's evidence rules: N = 200 mismatch-only draws per corner (`sw_stat_mismatch` models, global process swept by the corner axis), `setseed 20260909` held common across all corners (common random numbers), 1-sigma of input-referred offset reported alongside the 3-sigma value, statistical precision 1/√(2N) = 5.0 % at N = 200, run counts/seed/derivation committed in the record; the campaign's negative control is `sim/selftest.sh`'s `--sabotage-corners` loop.
 
+**Scope of the number above (issue #157).** The DC-sweep bench measures the analog
+partition only, so 2.80 mV 3σ is the preamplifier's offset and a **lower bound** on
+total input-referred offset. It excludes the StrongARM decision stage, which has no DC
+operating point, and the `ppolyf_u_1k` load-pair mismatch (the PDK hard-sets `mis_r = 0`).
+The additive bench that closes both,
+[`sim/comparator-offset-tran/`](../sim/comparator-offset-tran/README.md), has been
+**defined but not yet measured**. It is a whole-comparator transient Monte Carlo with
+N = 200, `setseed 20260909`, on tt/ss/ff × −40/27/125 °C at 3.3 V, with a paired
+same-draw latch term. It also adds a derived load-R hand budget: σ(ΔR/R)_pair = 0.19 %
+from the foundry's `ppolyf_u` `par_r = 0.021 µm`, with a 3× conservative variant scored.
+Its fleet runs have not produced a record so far (2AMLogic/klayout-tools#2970, #2833). No
+total-offset number is claimed until one does. The ratified bound and the verdict above
+are unchanged.
+
 ## Input-referred noise
 
 Target: ≤ 1.0 mV rms, differential — Stretch: ≤ 0.6 mV rms, differential

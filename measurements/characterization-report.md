@@ -113,6 +113,25 @@ operating point — referred to the input it is divided by the measured ≈18×
 gain); load-resistor mismatch (this PDK does not model it at all — the
 `sig_rpair_uv = 0` control documents the null); and any layout-induced
 systematic offset (schematic-level record, `provenance: schematic`).
+So the 2.80 mV 3σ above is the **preamp-only** offset and a lower bound on
+the comparator's total input-referred offset, not the total.
+
+**Closing those two terms (issue #157): bench defined, not yet measured.**
+[`sim/comparator-offset-tran/`](../sim/comparator-offset-tran/README.md)
+clocks the *whole* comparator through a 64-level, ±5.04 mV input staircase,
+one decision per level, N = 200 mismatch draws per PVT point (`setseed
+20260909`, the same seed as the DC bench), on a reduced tt/ss/ff × −40/27/125 °C
+grid at 3.3 V. It measures the trip point and, on the same draw, the
+DC-equivalent preamp offset, so the latch contribution is a paired
+measurement. It adds a **derived, not simulated** budget for the
+`ppolyf_u_1k` load pair: σ(ΔR/R)_pair = A_R/√(WL) = 0.021 µm/√(1 × 120 µm²)
+= 0.19 %. A_R comes from the foundry's commented-out `par_r` for the sibling
+`ppolyf_u` device in `sm141064.ngspice`, and the scored variant triples it as
+a conservative assumption. The budget is input-referred through the bench's
+measured I_D·R/A_v. **No number is reported yet:** the batch fleet could not
+run the grid (capacity refusals, then a 3600 s job timeout that discarded all
+results; tool gaps tracked at 2AMLogic/klayout-tools#2970 and #2833). Until a
+record lands, the latch and load-R terms stay unmeasured, as stated above.
 
 ### Input-referred noise — preamplifier `.noise`
 

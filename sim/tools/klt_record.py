@@ -83,6 +83,7 @@ LEGS = {
     "comparator-regeneration": ["main"],
     "comparator-preamp-noise": ["noise", "ac"],
     "comparator-offset-mc": ["main"],
+    "comparator-offset-tran": ["main"],
 }
 
 #: Ratified TARGET / STRETCH bounds (README.md table, DR-0002). Read-only.
@@ -92,6 +93,12 @@ SPEC = {
     "comparator-regeneration": ("Decision time @ 50 mV", "td_od50_ns", 1.5, 0.8, "ns"),
     "comparator-preamp-noise": ("Input-referred noise", "vn_in_uv", 1000.0, 600.0, "uV rms"),
     "comparator-offset-mc": ("Offset 3-sigma", "vos_3sig_mv", 15.0, 8.0, "mV"),
+    # Scored on the CONSERVATIVE derived total (simulated whole-comparator
+    # sigma + hand-budgeted load-R term at the conservative coefficient), so
+    # the verdict is the pessimistic one; the cited-coefficient total and the
+    # purely simulated value are reported alongside it (issue #157).
+    "comparator-offset-tran": ("Offset 3-sigma (whole-comparator, incl. derived load-R budget)",
+                               "vos_3sig_total_cons_mv", 15.0, 8.0, "mV"),
 }
 POWER_TARGET_UW = 1000.0  # <= 1 mW static, README.md supply/power row
 
@@ -224,6 +231,86 @@ def _eval_outputs(cid: str, thunks: dict, problems: list) -> dict | None:
         out[name] = v
     return out if ok else None
 
+#: Raw per-draw `.meas` ingredients of comparator-offset-tran (tb.json `analyses`).
+TRAN_INGREDIENTS = ("t_trip", "dn_start", "dn_end", "dd_start", "dd_end", "ap_start")
+
+
+def derive_offset_tran(tb, raw: dict, ids: list[str], problems: list[str]) -> dict:
+    """Whole-comparator transient-MC statistics per PVT point (issue #157).
+
+    Per draw (all quantities from ONE Monte-Carlo draw):
+      cycle c   = floor((t_trip - t0)/T)           the clock period whose decision flipped
+      level k   = c - lead                          index into the staircase
+      V_trip    = v0 + k*step - step/2              midpoint of the one-step bracket
+      A_v       = (dd_end - dd_start)/(v_end - v0)  preamp gain, end-of-reset samples
+      V_os_pre  = v_end - dd_end/A_v                DC-equivalent preamp offset (same draw)
+      V_lat     = V_trip - V_os_pre                 decision-stage contribution
+    Population statistics over the draws are then fed to tb.json's `measure`
+    expressions. The staircase quantises V_trip by a uniform +-step/2, so
+    its variance step^2/12 is subtracted in quadrature (`q2`); the raw sigma
+    is reported too. Any out-of-range or malformed draw is a named problem
+    and its whole PVT point is dropped (never silently clipped)."""
+    P = tb.params
+    t0, period, high = P["stair_t0_ns"] * 1e-9, P["stair_period_ns"] * 1e-9, P["stair_clk_high_ns"] * 1e-9
+    v0, step = P["stair_v0_mv"] * 1e-3, P["stair_step_mv"] * 1e-3
+    levels, lead = int(P["stair_levels"]), int(P["stair_lead_cycles"])
+    v_end = v0 + (levels - 1) * step
+    pstd = statistics.pstdev
+    res: dict = {}
+    for cid in ids:
+        vdd = float(cid.rsplit("_", 1)[1].rstrip("v"))
+        trips, pres, lats, avs, vdrops = [], [], [], [], []
+        bad = []
+        for key, s in raw[cid].items():
+            # collect_checked already drops non-finite ingredients; re-checked
+            # here so a hand-built `raw` can never reach math.floor(nan).
+            if not all(_finite(s.get(n)) for n in TRAN_INGREDIENTS):
+                bad.append(f"NONFINITE_INGREDIENT: {cid}/{key} "
+                           + ", ".join(f"{n}={s.get(n)!r}" for n in TRAN_INGREDIENTS))
+                continue
+            c = math.floor((s["t_trip"] - t0) / period)
+            phase = (s["t_trip"] - t0) - c * period
+            k = c - lead
+            gain = (s["dd_end"] - s["dd_start"]) / (v_end - v0)
+            err = None
+            if s["dn_start"] > 0.1 or s["dn_end"] < 0.9:
+                err = f"BAD_ENDPOINT_DECISION: {cid}/{key} dn_start={s['dn_start']:.3g} dn_end={s['dn_end']:.3g}"
+            elif not 1 <= k <= levels - 1:
+                err = f"TRIP_OUT_OF_RANGE: {cid}/{key} flipped in cycle {c} (level {k}) outside 1..{levels - 1}"
+            elif phase > high + 1e-9:
+                err = f"LATE_FLIP: {cid}/{key} output crossed {phase * 1e9:.2f} ns after the clock rise"
+            elif gain <= 0:
+                err = f"ZERO_GAIN: {cid}/{key} preamp gain = {gain!r}"
+            if err:
+                bad.append(err)
+                continue
+            trip = v0 + k * step - step / 2
+            pre = v_end - s["dd_end"] / gain
+            trips.append(trip)
+            pres.append(pre)
+            lats.append(trip - pre)
+            avs.append(gain)
+            vdrops.append((vdd - s["ap_start"]) / gain)
+        if bad:
+            problems += bad
+            continue
+        env = dict(MATH, **P)
+        env.update({
+            "n": len(trips), "q2": step * step / 12,
+            "s_trip": pstd(trips), "m_trip": statistics.fmean(trips),
+            "s_pre": pstd(pres), "m_pre": statistics.fmean(pres),
+            "s_lat": pstd(lats), "m_lat": statistics.fmean(lats),
+            "m_av": statistics.fmean(avs),
+            "vdrop_over_av": statistics.fmean(vdrops),
+        })
+        d = _eval_outputs(cid, {
+            name: (lambda expr=expr: eval(expr.replace("^", "**"), {"__builtins__": {}}, env))
+            for name, expr in tb.measure.items()
+        }, problems)
+        if d is not None:
+            res[cid] = d
+    return res
+
 
 def derive(bench: str, tb, legs: dict[str, dict]) -> tuple[dict, list]:
     """-> ({corner_id: {derived name: value}}, problems).
@@ -266,6 +353,8 @@ def derive(bench: str, tb, legs: dict[str, dict]) -> tuple[dict, list]:
             if d is not None:
                 res[cid] = d
         return res, problems
+    if bench == "comparator-offset-tran":
+        return derive_offset_tran(tb, legs["main"][0], ids, problems), problems
     # offset-mc: population statistics over the draws. Per draw, gain from the
     # 0 mV and +2 mV points of one dc sweep (same draw), voa = -dv0/gain --
     # the bench's `voa` at vcmd = 0.
@@ -752,9 +841,15 @@ def main() -> int:
         f"- **Ingested**: at commit `{ingest_sha}` by `sim/tools/klt_record.py`; report-to-request linkage verified (netlist sha256" + (", include closure" if not link_notes else "") + ", measurements)",
         f"- **Source drift since generation** (today's checkout vs this record's sources; the record cites the generation-time sources): {', '.join(drift) if drift else 'none'}",
         f"- **Executor**: `klt sim` ({klt_version()}), backend `{os.environ.get('KLT_SIM_BACKEND', '?')}`; remote/batch descriptor(s): `{json.dumps(rem)}`; ngspice engine_version(s) reported: {ng}",
-        f"- **Corner matrix**: {len(derived)} of {expected} PVT points with every leg passing (process tt/ff/ss/fs/sf x -40/27/125 C x 2.97/3.30/3.63 V)",
+        f"- **Corner matrix**: {len(derived)} of {expected} PVT points with every leg passing (process {'/'.join(dict.fromkeys(p['name'] for r in requests.values() for p in r['corners']['process']))} x {'/'.join(f'{t:g}' for t in dict.fromkeys(t for r in requests.values() for t in r['corners']['temperature_c']))} C x {'/'.join(f'{v:.2f}' for v in vdds)} V)",
     ]
     lines += [f"  - linkage note: {n}" for n in link_notes]
+    if a.bench == "comparator-offset-tran":
+        mc = next(iter(reports.values()))["environment"].get("monte_carlo", {})
+        lines += [
+            f"- **Monte Carlo**: seed {mc.get('seed')}, n = {mc.get('n')} draws requested per PVT point{'' if complete else ' (NOT achieved: see INCOMPLETE / FAILED UNITS; achieved draws per point in the n_samples column)'}, vary = {mc.get('vary')} (`.param sw_stat_mismatch=1` set by the fragment); the seed is the one `sim/comparator-offset-mc/` uses, common to every PVT point. One clocked staircase transient per draw; `sigma` = population standard deviation over the draws of the per-draw trip point, with the staircase's uniform quantisation variance (step^2/12) subtracted in quadrature (`sig_vos_tran_raw_mv` is the uncorrected value); stats are computed by `sim/tools/klt_record.py` from the raw `.meas` values in `corners/{rid}/report-main-v*.json`.",
+            "- **Derived, NOT simulated**: `sig_rload_mv`, `sig_rload_cons_mv`, `sig_vos_total_mv`, `vos_3sig_total_mv`, `vos_3sig_total_cons_mv`. The PDK models no `ppolyf_u_1k` mismatch (`mis_r` absent/zero), so the load-pair term is a hand budget: sigma(dR/R) = A_R/sqrt(W*L) (pair difference; A_R from the foundry's commented-out `ppolyf_u` mismatch coefficient in the PDK model file, see the bench README), input-referred as (I_D*R / A_v) * sigma(dR/R), where I_D*R / A_v is the measured per-corner load drop over the measured same-draw gain (`vdrop_over_av_mv`), added in quadrature to the simulated sigma. The `_cons` quantities use a 3x larger A_R. The scored column is the conservative total.",
+        ]
     if a.bench == "comparator-offset-mc":
         mc = next(iter(reports.values()))["environment"].get("monte_carlo", {})
         lines += [
@@ -785,6 +880,7 @@ def main() -> int:
         + {
             "comparator-preamp-noise": "`vn_in_hf_uv`, `onoise_hf_uv`, `flicker_frac_pct`, `white_nv_rthz`, `enbw_mhz`, `vbias_anchor_mv` (they need a second `.noise` plot / the `.op` in the same run). `vn_in_uv` is the row-facing quantity.",
             "comparator-offset-mc": "`sig_dvos_dn_uv`/`sig_dvos_up_uv` (the +-50 mV CM-step points), `mean_dvos_*`, `mean_vos_sem`, `vbias_anchor_mv` and the in-run `sig_rpair_uv` null control: the 0.5.0 fleet runner cannot express the nested `vcmd` sweep as `.meas` cards, so only the vcmd = 0 offset point (`voa`) is measured.",
+            "comparator-offset-tran": "the +-50 mV common-mode dependence (`sig_dvos_*`), the in-run `sig_rpair_uv` null control (it stays in the DC bench's record) and per-draw `vbias_anchor_mv`; the fleet runner's `.meas` cards give the trip time and the end-of-reset preamp samples, and everything else is derived from them.",
             "comparator-kickback": "nothing (all `.meas` ingredients are requested; `.meas` precision is the executor's `measureprec=12`).",
             "comparator-regeneration": "nothing.",
         }[a.bench],
