@@ -21,6 +21,8 @@ directory for exactly that reason).
 | `signoff-report.json` | the committed output of the grading run — the graded T1 item table, per item `met`/`unmet` + machine-readable `reason` |
 | `design-evidence-tiers.md` | the vendored, verbatim copy of the **11-item** T1 rulebook the report is graded under (see "The two pins" below) |
 | `verify-report.py` | the anti-rot verifier CI runs on every push and PR (see below) |
+| `design-evidence-tiers.md.sha256` | the machine-readable sha256 pin of the vendored rulebook (`sha256sum` format); the single expected value `check_rulebook_pin.py` enforces |
+| `check_rulebook_pin.py` | the shared rulebook byte-identity check run by `regenerate.sh`, `verify-report.py` and the PDK-free test entrypoint (`tests/test_check_rulebook_pin.py` covers it) |
 | `regenerate.sh` | re-grades the manifest with the pinned grader distribution and rewrites the committed report |
 | `make_item5_envelope.py` | wraps the four committed corner records into the `klt sim`-shaped item-5 corner-matrix envelope under `sim/corner-matrix/` (`--check` detects drift); see the item-5 section |
 | `tests/test_item5_envelope.py` | PDK-free regressions for the item-5 wrapper: all-measured-targets-pass fixture must still grade item 5 `unmet` (`partial_coverage`) under the pinned `klt`; append-only identity; historical bytes (`python3 signoff/tests/test_item5_envelope.py`, run in CI) |
@@ -58,8 +60,7 @@ Grading this report reproducibly depends on two pinned things, and
    CI ever grades with whatever `klt` happens to be on PATH. CI installs the
    same pin (`.github/workflows/signoff.yml`); keep the two pins in sync.
 2. **The rulebook: `design-evidence-tiers.md`, vendored at klayout-tools
-   commit `31a3e3c4` (sha256
-   `c7a1e7e10627fae396007e0ff951734f37d95028b8f49f2e21e802e9f552f318`).**
+   commit `31a3e3c4` (sha256 pinned in `design-evidence-tiers.md.sha256`).**
    The checklist grew its **eleventh item** — *Power delivery (structural)*
    — on 2026-09-17 (klayout-tools
    [#2025](https://github.com/2AMLogic/klayout-tools/issues/2025)), *after*
@@ -69,11 +70,30 @@ Grading this report reproducibly depends on two pinned things, and
    `partition_boundary` paragraph and `degenerate_well_assertion`), so the
    vendored copy and `--tiers-doc` stay until a deliberate re-vendor. Every grade here — regenerate, verifier,
    CI — passes `--tiers-doc signoff/design-evidence-tiers.md`; the file is a
-   verbatim copy of that commit's `docs/design-evidence-tiers.md` (its
-   sha256 above is the human-facing identity pin — the pinned wheel predates
-   klayout-tools#2191, so it cannot itself hash the governing doc into the
-   report). Re-vendoring the doc (dropping `--tiers-doc`) is a separate,
-   deliberate step: it changes `source_doc` and the verifier's expectations.
+   verbatim copy of that commit's `docs/design-evidence-tiers.md`. Its
+   byte identity is machine-enforced (issue
+   [#168](https://github.com/2AMLogic/gf180-comparator/issues/168)):
+   `design-evidence-tiers.md.sha256` (`sha256sum` format) is the **only**
+   place the expected hash lives, and `check_rulebook_pin.py` is the one
+   shared check — `regenerate.sh` runs it before installing or grading,
+   `verify-report.py` runs it before anything else (check 0), and
+   `scripts/run-pdk-free-tests.sh` runs it as the `rulebook-pin` step. The
+   grade-drift comparison only sees the rendered item table, so without
+   this a prose-only rulebook edit that leaves item ids, counts, statuses
+   and reasons unchanged would pass; with it, it fails as a named
+   `rulebook hash mismatch`. A missing rulebook or pin file fails too —
+   nothing falls back to the wheel's bundled copy. Where a report carries
+   `source_doc_content_hash`, the verifier also requires it to equal the pin.
+
+   **Re-vendoring the rulebook** is deliberate and lands as one change:
+   (1) copy the new verbatim `docs/design-evidence-tiers.md` in and review
+   its diff; (2) refresh the pin with
+   `sha256sum signoff/design-evidence-tiers.md > signoff/design-evidence-tiers.md.sha256`;
+   (3) re-grade with `./signoff/regenerate.sh`; (4) run
+   `python3 signoff/verify-report.py` (the grade-drift checks still apply);
+   (5) commit rulebook, pin and report together. Dropping `--tiers-doc` in
+   favour of the wheel's bundled copy is a further separate step: it changes
+   `source_doc` and the verifier's expectations.
 
 ## How to re-run the grading
 
@@ -580,6 +600,9 @@ push and PR (`.github/workflows/signoff.yml`):
 4. **The vendored rulebook is what graded.** The fresh
    grade's `source_doc` must be `signoff/design-evidence-tiers.md`; a grade
    that ran against the wheel's bundled 10-item copy instead fails by name.
+   Before any of the above, the rulebook's bytes must match
+   `design-evidence-tiers.md.sha256` (`check_rulebook_pin.py`, see "The two
+   pins"), so a prose-only rulebook edit cannot pass.
 
 **Refresh contract.** Any change to a cited evidence envelope or to the
 cited artifacts means: re-run the producing flow (e.g.

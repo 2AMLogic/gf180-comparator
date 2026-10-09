@@ -35,12 +35,18 @@ PDK, xschem, or ngspice):
     falls back to the 10-item checklist the released klt 0.5.0 bundles (item
     11 shipped after that release, klayout-tools#2025), which disagrees with
     the verdict of record on ``t1_item_count`` -- this check names that
-    failure mode explicitly. (The pinned wheel predates the
-    ``source_doc_content_hash`` field -- klayout-tools#2191 -- so it cannot
-    hash the governing doc into the report; the vendored copy's own sha256 is
-    recorded in signoff/README.md as the human-facing pin instead, and the
-    check-2 drift comparison covers any rulebook change that alters the
-    rendered item table.)
+    failure mode explicitly. Where a report carries
+    ``source_doc_content_hash`` (klayout-tools#2191), it must equal the
+    rulebook pin below.
+
+0.  Before anything else (and before klt is even looked up), the vendored
+    rulebook's bytes must match the committed sha256 pin in
+    ``signoff/design-evidence-tiers.md.sha256`` -- the single shared check
+    in ``signoff/check_rulebook_pin.py`` that ``signoff/regenerate.sh`` also
+    runs (issue #168). The check-2 drift comparison only sees the rendered
+    item table (ids, titles, statuses, reasons), so a prose-only rulebook
+    edit would otherwise pass; a missing rulebook or pin fails clearly and
+    nothing falls back to the grader's bundled copy.
 
 5.  Run both deterministic derived-evidence wrappers' ``--check`` commands
     (``signoff/make_item5_envelope.py`` and ``signoff/make_item8_envelope.py``,
@@ -72,6 +78,7 @@ this verifier by name rather than passing unverified.
 from __future__ import annotations
 
 import hashlib
+import importlib.util
 import json
 import shutil
 import subprocess
@@ -82,7 +89,14 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parent.parent
 MANIFEST = REPO_ROOT / "signoff" / "block-manifest.json"
 COMMITTED_REPORT = REPO_ROOT / "signoff" / "signoff-report.json"
-TIERS_DOC = REPO_ROOT / "signoff" / "design-evidence-tiers.md"
+
+# The single shared rulebook identity check (check 0, issue #168); the
+# expected hash lives only in its pin file, never here.
+_pin_spec = importlib.util.spec_from_file_location(
+    "check_rulebook_pin", Path(__file__).resolve().parent / "check_rulebook_pin.py"
+)
+RULEBOOK_PIN = importlib.util.module_from_spec(_pin_spec)
+_pin_spec.loader.exec_module(RULEBOOK_PIN)
 
 # Per-citation pin re-verification (check 3). Keyed by T1 item id:
 #   (evidence envelope the manifest entry cites,
@@ -198,10 +212,9 @@ BLOCK_LEVEL_FIELDS = (
     "source_doc",
 )
 # The doc path the grader records for a run against the vendored rulebook
-# (relative, as regenerate.sh passes it). The pinned wheel predates
-# klayout-tools#2191, so source_doc_content_hash does not exist in this
-# wheel's report schema -- the source_doc naming plus the t1_item_count
-# drift comparison are the machine checks.
+# (relative, as regenerate.sh passes it). Byte identity of that doc is
+# check 0 (check_rulebook_pin.py); a report's source_doc_content_hash, when
+# present, is cross-checked against the same pin in verify_vendored_doc().
 VENDORED_DOC_PATH = "signoff/design-evidence-tiers.md"
 ITEM_FIELDS = ("tier", "id", "title", "status", "reason")
 
@@ -342,7 +355,7 @@ def grade_drift(fresh: dict, committed: dict) -> list[str]:
     return problems
 
 
-def verify_vendored_doc(committed: dict, fresh: dict) -> list[str]:
+def verify_vendored_doc(committed: dict, fresh: dict, root: Path = REPO_ROOT) -> list[str]:
     """Check 4: both the committed report and the fresh grade must have been
     rendered from the vendored 11-item rulebook -- their ``source_doc`` must
     name VENDORED_DOC_PATH, not the wheel's own bundled copy
@@ -365,7 +378,24 @@ def verify_vendored_doc(committed: dict, fresh: dict) -> list[str]:
             "the older 10-item checklist and disagrees with the verdict of "
             "record on t1_item_count)"
         )
+    pin = RULEBOOK_PIN.pinned_hash(root)
+    for label, report in (("committed report", committed), ("fresh grade", fresh)):
+        recorded = report.get("source_doc_content_hash")
+        if recorded is None or pin is None:
+            continue
+        if str(recorded).removeprefix("sha256:") != pin:
+            problems.append(
+                f"rulebook hash mismatch: {label} records source_doc_content_hash "
+                f"{recorded!r} but {RULEBOOK_PIN.PIN_FILE} pins sha256:{pin} -- "
+                "re-grade with ./signoff/regenerate.sh after a deliberate "
+                "re-vendor so the verdict of record names the pinned rulebook"
+            )
     return problems
+
+
+def verify_rulebook_pin(root: Path = REPO_ROOT) -> list[str]:
+    """Check 0: the vendored rulebook's bytes match the committed pin."""
+    return RULEBOOK_PIN.check(root)
 
 
 def _recorded_hash(envelope: dict, field: tuple[str, ...]) -> str:
@@ -496,11 +526,11 @@ def main() -> None:
             "record) -- generate it with ./signoff/regenerate.sh and commit "
             "it alongside the manifest"
         )
-    if not TIERS_DOC.is_file():
-        sys.exit(
-            "missing signoff/design-evidence-tiers.md (the vendored 11-item "
-            "rulebook the report is graded under)"
-        )
+    # Check 0 first: never grade (or even look for klt) under an unpinned
+    # rulebook, and never fall back to the grader's bundled copy.
+    rulebook_problems = verify_rulebook_pin()
+    if rulebook_problems:
+        fail(rulebook_problems)
     manifest = json.loads(MANIFEST.read_text())
     committed = json.loads(COMMITTED_REPORT.read_text())
 
@@ -517,6 +547,10 @@ def main() -> None:
     t1_met = fresh["t1_met_count"]
     t1_total = fresh["t1_item_count"]
     tier = fresh["tier"] or f"below T1 ({t1_met}/{t1_total} T1 items met)"
+    print(
+        f"OK: {VENDORED_DOC_PATH} is byte-identical to its pin in "
+        f"{RULEBOOK_PIN.PIN_FILE}"
+    )
     print("OK: item-5 and item-8 wrapper --check commands match their source records")
     print("OK: fresh klt signoff grade == committed signoff/signoff-report.json")
     print("OK: every pinned citation's content_hash matches the current artifact bytes")
