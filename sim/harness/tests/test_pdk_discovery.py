@@ -124,10 +124,13 @@ class FindPdkTests(unittest.TestCase):
         with self.assertRaises(pdk_mod.PdkNotFound) as cm:
             pdk_mod.find_pdk()
         msg = str(cm.exception)
-        for r in ("r1", "r2", "r3"):
-            self.assertIn(str(self.tmp / r / "gf180mcuD"), msg)
-        self.assertLess(msg.index("r1"), msg.index("r2"))
-        self.assertLess(msg.index("r2"), msg.index("r3"))
+        # Compare full path strings: bare 'r1'/'r2' could collide with the
+        # random TemporaryDirectory name and break the ordering check.
+        paths = [str(self.tmp / r / "gf180mcuD") for r in ("r1", "r2", "r3")]
+        for p in paths:
+            self.assertIn(p, msg)
+        idx = [msg.index(p) for p in paths]
+        self.assertEqual(idx, sorted(idx))
 
     # -- variant selection ------------------------------------------------
     def test_variant_precedence(self):

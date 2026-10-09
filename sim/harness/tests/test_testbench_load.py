@@ -149,7 +149,7 @@ class NetlistValidationTests(_Base):
         self.load_manifest()  # must not raise
 
     def test_similar_directive_not_flagged(self):
-        # '.endc' is forbidden but '.ends' / '.endif' style prefixes are not
+        # '.endc' is forbidden but the similar-prefixed '.ends' is not
         (self.dir / "frag.spice").write_text(".subckt a b\n.ends\n")
         self.load_manifest()
 
