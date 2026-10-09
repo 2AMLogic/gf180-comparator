@@ -28,13 +28,30 @@ are the raw ingredients.
 binding) or loads a binding json by path -- e.g. `--dut
 comparator-dr0004-cascode-exp` for the proposed DR-0004 cascode experiment
 netlist, which deliberately is NOT design/comparator.spice.
+
+Source bundle (issue #151). Alongside the requests, OUTDIR receives a
+versioned `source-bundle.json` and a `sources/` tree: byte copies of the
+selected DUT netlist, the bench's whole `testbench/` directory (fragment,
+`tb.json` manifest with the `measure` expressions, any probe fragment) and
+the selected DUT binding entry. The body netlists `.include` those STAGED
+copies (relative paths), so what the fleet simulates is exactly what the
+bundle hashes, and carry a `* source-sha256 <hex> <path>` comment per staged
+file, so the body's own sha256 (which a fleet report quotes) binds the
+included sources' CONTENT, not just their file names. The bundle names the originating commit, the dirty state of
+every source the run depends on, the selected DUT and its parameters, and
+the sha256 of every staged file. `klt_record.py` mints records from this
+bundle -- never from whatever the checkout holds at ingest time.
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import shutil
+import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -53,6 +70,133 @@ NGSPICE_INIT = ["set measureprec=12", "set numdgt=12"]
 
 OFFSET_MC_SEED = 20260909
 OFFSET_MC_N = 200
+
+#: The source bundle written beside the requests (issue #151).
+BUNDLE_NAME = "source-bundle.json"
+BUNDLE_SCHEMA = "gf180-comparator/klt-source-bundle"
+BUNDLE_VERSION = 2  # v2: body netlists declare the staged sources' sha256
+SOURCES_DIR = "sources"
+#: Body-netlist comment line binding one staged source's bytes (issue #151):
+#: `* source-sha256 <hex> <path relative to OUTDIR>`. Every file under
+#: sources/ gets one, so the body's own hash -- the one a fleet report quotes
+#: as environment.netlist_sha256 -- changes with any staged source's content,
+#: not only with its file name.
+SOURCE_SHA_PREFIX = "* source-sha256 "
+
+
+def sha256_bytes(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def sha256_file(path: Path) -> str:
+    return sha256_bytes(Path(path).read_bytes())
+
+
+def canonical_sha256(obj) -> str:
+    """sha256 of a JSON value in a key-order/whitespace independent form."""
+    return sha256_bytes(json.dumps(obj, sort_keys=True, separators=(",", ":")).encode())
+
+
+def repo_rel(path: Path, repo: Path = REPO) -> str | None:
+    """Repo-relative posix path, or None for a file outside the repository."""
+    try:
+        return Path(path).resolve().relative_to(Path(repo).resolve()).as_posix()
+    except ValueError:
+        return None
+
+
+def binding_entry(dut_arg: str | None) -> tuple[Path, str | None, dict]:
+    """The DUT binding `--dut` selects, as written in its config file.
+
+    -> (config path, selected key or None for a single-binding file, entry).
+    Mirrors harness.dut.load's selection rule; the raw entry (not the parsed
+    Dut) is what the bundle hashes, so a params edit is visible."""
+    if dut_arg and Path(dut_arg).is_file():
+        config, select = Path(dut_arg).resolve(), None
+    else:
+        config, select = hdut.DUT_CONFIG, dut_arg
+    doc = json.loads(config.read_text())
+    if "duts" in doc:
+        key = select or doc.get("active")
+        return config, key, doc["duts"][key]
+    return config, None, doc
+
+
+def source_paths(bench: str, binding_config: Path, dut_netlist: Path) -> list[str]:
+    """Every source a `bench` run depends on, for the dirty check.
+
+    The selected experiment's `testbench/` (NOT the whole `sim/<bench>/`:
+    its `records/`, `corners/` and `netlist-snapshots/` are generated
+    evidence output), the DUT binding config and netlist, plus the design
+    and the request/ingest tooling. A source outside the repository is
+    returned as an absolute path; git cannot vouch for it."""
+    paths = ["design", "sim/tools", "sim/harness", f"sim/{bench}/testbench"]
+    for p in (binding_config, dut_netlist):
+        rel = repo_rel(p)
+        paths.append(rel if rel is not None else str(Path(p).resolve()))
+    return list(dict.fromkeys(paths))
+
+
+def git_state(paths: list[str], repo: Path = REPO) -> tuple[str, list[str]]:
+    """-> (HEAD commit, dirty source paths) for the sources a run depends on.
+
+    Dirty means modified, staged, untracked, or not tracked at all (a
+    gitignored or out-of-repo source has no committed identity)."""
+    def git(*args: str) -> str:
+        return subprocess.check_output(["git", "-C", str(repo), *args], text=True)
+
+    sha = git("rev-parse", "HEAD").strip()
+    inside = [p for p in paths if not Path(p).is_absolute()]
+    dirty = [f"{p} (outside the repository)" for p in paths if Path(p).is_absolute()]
+    if inside:
+        status = git("status", "--porcelain", "--untracked-files=all", "--", *inside)
+        dirty += [line[3:] for line in status.splitlines() if line.strip()]
+    for p in inside:
+        if (Path(repo) / p).is_file() and not git("ls-files", "--", p).strip():
+            if not any(d == p for d in dirty):
+                dirty.append(f"{p} (not tracked)")
+    return sha, dirty
+
+
+def stage_sources(out: Path, tb, dut, binding: tuple[Path, str | None, dict], selector: str | None) -> dict:
+    """Copy the DUT, testbench and binding into OUTDIR/sources/ -> paths."""
+    src = out / SOURCES_DIR
+    if src.exists():
+        shutil.rmtree(src)  # our own generated subtree; never stale sources
+    (src / "dut").mkdir(parents=True)
+    (src / "testbench").mkdir()
+    staged_dut = src / "dut" / dut.netlist.name
+    staged_dut.write_bytes(dut.netlist.read_bytes())
+    for f in sorted(tb.directory.iterdir()):
+        if f.is_file():
+            (src / "testbench" / f.name).write_bytes(f.read_bytes())
+    config, key, entry = binding
+    (src / "dut-binding.json").write_text(json.dumps({
+        "config": repo_rel(config) or str(config), "selector": selector,
+        "key": key, "entry": entry,
+    }, indent=2, sort_keys=True) + "\n")
+    return {
+        "dut": f"{SOURCES_DIR}/dut/{dut.netlist.name}",
+        "testbench_dir": f"{SOURCES_DIR}/testbench",
+        "testbench_netlist": f"{SOURCES_DIR}/testbench/{tb.netlist.name}",
+        "binding": f"{SOURCES_DIR}/dut-binding.json",
+    }
+
+
+def source_sha_lines(out: Path) -> list[str]:
+    """One SOURCE_SHA_PREFIX comment per staged file under OUTDIR/sources/."""
+    return [f"{SOURCE_SHA_PREFIX}{sha256_file(p)} {p.relative_to(out).as_posix()}"
+            for p in sorted((out / SOURCES_DIR).rglob("*")) if p.is_file()]
+
+
+def declared_source_shas(body_text: str) -> dict[str, str]:
+    """Body netlist text -> {staged path: sha256} from its source-sha256 lines."""
+    got: dict[str, str] = {}
+    for line in body_text.splitlines():
+        if line.startswith(SOURCE_SHA_PREFIX):
+            h, _, rel = line[len(SOURCE_SHA_PREFIX):].partition(" ")
+            got[rel] = h
+    return got
 
 
 def tran_meas_cards(tb) -> list[dict]:
@@ -118,6 +262,11 @@ def main() -> int:
                          "(dut_vos probe leg is not implemented)")
     out = Path(a.outdir).resolve()
     out.mkdir(parents=True, exist_ok=True)
+    binding = binding_entry(a.dut)
+    checked = source_paths(a.bench, binding[0], dut.netlist)
+    commit, dirty_paths = git_state(checked)
+    staged = stage_sources(out, tb, dut, binding, a.dut)
+    source_shas = source_sha_lines(out)
 
     corner_list = hc.resolve_corners(a.corners or list(tb.corners))
     tol = tb.supply_tolerance if a.supply_tolerance is None else a.supply_tolerance
@@ -128,6 +277,9 @@ def main() -> int:
       return [
         f"* {tb.name} -- GENERATED by sim/tools/mk_klt_request.py, do not edit",
         f"* dut={dut.dut_id} ({dut.provenance}) sha256={dut.netlist_sha256[:16]}",
+        # Content binding of every staged source (issue #151): the `.include`
+        # lines below name files, these lines name their bytes.
+        *source_shas,
         f".param vdd_nom={tb.nominal_supply_v!r}",
         f".param vdd_val={vdd!r}",
         ".param temp_c=27.0",
@@ -144,11 +296,15 @@ def main() -> int:
         # off-host runner does not expand the harness's absolute PDK path.
         '.include "design.ngspice"',
         *(f".options {o}" for o in tb.options),
-        f'.include "{dut.netlist}"',
-        f'.include "{tb.netlist}"',
+        # The STAGED copies (issue #151), relative like design.ngspice: the
+        # bytes simulated are the bytes the source bundle hashes, not a
+        # checkout path that can change before the record is minted.
+        f'.include "{staged["dut"]}"',
+        f'.include "{staged["testbench_netlist"]}"',
         "",
     ]
     (out / "design.ngspice").write_text(Path(pdk.design_include).read_text())
+    requests: dict[str, dict] = {}
 
     # One request (and one body netlist with `.param vdd_val=<V>` baked in)
     # PER SUPPLY POINT. A `corners.supply_v` sweep cannot be used: it works by
@@ -181,9 +337,75 @@ def main() -> int:
             if "monte_carlo" in spec:
                 req["monte_carlo"] = spec["monte_carlo"]
             (out / f"request-{leg}-{vtag}.json").write_text(json.dumps(req, indent=2) + "\n")
+            requests[f"{leg}-{vtag}"] = {
+                "leg": leg, "vdd": vdd,
+                "request": f"request-{leg}-{vtag}.json",
+                "request_sha256": sha256_file(out / f"request-{leg}-{vtag}.json"),
+                "netlist": f"body-{vtag}.spice",
+                "netlist_sha256": sha256_file(out / f"body-{vtag}.spice"),
+            }
             n = len(corner_list) * len(temps) * (a.mc_n if "monte_carlo" in spec else 1)
             print(f"wrote {out}/request-{leg}-{vtag}.json ({n} units)")
+    write_bundle(out, a.bench, tb, dut, binding, a.dut, staged, commit, dirty_paths, checked, {
+        "corners": [c.name for c in corner_list], "temperatures_c": temps,
+        "supply_tolerance": tol, "supply_v": vdds,
+        "mc_n": a.mc_n if a.bench == "comparator-offset-mc" else None,
+    }, requests)
+    print(f"wrote {out}/{BUNDLE_NAME} (commit {commit[:7]}"
+          + (f", DIRTY: {', '.join(dirty_paths)})" if dirty_paths else ", clean)"))
     return 0
+
+
+def write_bundle(out: Path, bench: str, tb, dut, binding, selector, staged: dict,
+                 commit: str, dirty_paths: list[str], checked: list[str],
+                 parameters: dict, requests: dict) -> dict:
+    """Write OUTDIR/source-bundle.json: the source identity of this request set.
+
+    `staged` maps every generated input (requests, bodies, the PDK include
+    copy, every file under sources/) to its sha256; ingestion re-hashes them
+    and refuses on any difference before it publishes anything."""
+    config, key, entry = binding
+    files = sorted(
+        {out / "design.ngspice"}
+        | {out / r["request"] for r in requests.values()}
+        | {out / r["netlist"] for r in requests.values()}
+        | {p for p in (out / SOURCES_DIR).rglob("*") if p.is_file()}
+    )
+    bundle = {
+        "schema": BUNDLE_SCHEMA,
+        "version": BUNDLE_VERSION,
+        "generator": "sim/tools/mk_klt_request.py",
+        "generated_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "bench": bench,
+        "origin": {"commit": commit, "dirty": bool(dirty_paths),
+                   "dirty_paths": dirty_paths, "checked_paths": checked},
+        "dut": {
+            "selector": selector,
+            "key": key,
+            "dut_id": dut.dut_id,
+            "provenance": dut.provenance,
+            "netlist": repo_rel(dut.netlist) or str(dut.netlist),
+            "netlist_sha256": dut.netlist_sha256,
+            "params": dict(sorted(dut.params.items())),
+            "binding_config": repo_rel(config) or str(config),
+            "binding_entry_sha256": canonical_sha256(entry),
+            "staged_netlist": staged["dut"],
+            "staged_binding": staged["binding"],
+        },
+        "testbench": {
+            "experiment": bench,
+            "dir": repo_rel(tb.directory) or str(tb.directory),
+            "netlist": tb.netlist.name,
+            "netlist_sha256": tb.netlist_sha256,
+            "manifest_sha256": tb.manifest_sha256,
+            "staged_dir": staged["testbench_dir"],
+        },
+        "parameters": parameters,
+        "requests": requests,
+        "staged": {p.relative_to(out).as_posix(): sha256_file(p) for p in files},
+    }
+    (out / BUNDLE_NAME).write_text(json.dumps(bundle, indent=1) + "\n")
+    return bundle
 
 
 if __name__ == "__main__":
