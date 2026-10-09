@@ -358,6 +358,7 @@ class MkKltRequest(unittest.TestCase):
         self.assertEqual(req["corners"]["temperature_c"], [-40.0, 27.0, 125.0])
         self.assertEqual(len(req["measurements"]), len(tb.analyses) - 1)
         self.assertTrue(all(m["spice"].startswith(".meas tran ") for m in req["measurements"]))
+        self.assertEqual(req["batch"]["capacity_wait_s"], mk.BATCH_CAPACITY_WAIT_S)
 
     def test_noise_bench_refused(self):
         with self.assertRaises(SystemExit):

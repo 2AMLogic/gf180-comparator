@@ -72,6 +72,9 @@ NGSPICE_INIT = ["set measureprec=12", "set numdgt=12"]
 
 OFFSET_MC_SEED = 20260909
 OFFSET_MC_N = 200
+#: Seconds `klt sim --backend batch` keeps re-launching after a
+#: `batch_no_capacity` refusal (request.batch.capacity_wait_s).
+BATCH_CAPACITY_WAIT_S = 1800
 #: Benches whose requests carry a `monte_carlo` block.
 MC_BENCHES = ("comparator-offset-mc", "comparator-offset-tran")
 
@@ -337,7 +340,10 @@ def main() -> int:
                 "corners": {"process": process, "temperature_c": temps},
                 # The fleet image's klt can lag the submitting client; run anyway
                 # and let the record state the runner/client versions it saw.
-                "batch": {"runner_version_check": "warn"},
+                # A Spot capacity refusal is retried with the client's own
+                # backoff for up to BATCH_CAPACITY_WAIT_S instead of being
+                # terminal on the first refusal (issue #157; klt #2721).
+                "batch": {"runner_version_check": "warn", "capacity_wait_s": BATCH_CAPACITY_WAIT_S},
                 "analysis": spec["analysis"],
                 "measurements": spec["measurements"],
                 "options": {
