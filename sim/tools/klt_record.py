@@ -490,9 +490,18 @@ def verify_origin_commit(b: dict) -> list[str]:
         return []
     d, t = b["dut"], b["testbench"]
     unverified = []
-    for path, want in ((d["netlist"], d["netlist_sha256"]),
-                       (f"{t['dir']}/{t['netlist']}", t["netlist_sha256"]),
-                       (f"{t['dir']}/{htb.MANIFEST_NAME}", t["manifest_sha256"])):
+    checks = {d["netlist"]: d["netlist_sha256"],
+              f"{t['dir']}/{t['netlist']}": t["netlist_sha256"],
+              f"{t['dir']}/{htb.MANIFEST_NAME}": t["manifest_sha256"]}
+    # stage_sources copies EVERY file in the testbench dir (e.g. the
+    # tb_vosprobe.spice offset-probe fragments), and the bundle hashes each.
+    # They are not .included by the body netlist, but a clean-commit claim
+    # covers the whole staged testbench, so check them against the commit too.
+    stdir = t["staged_dir"].rstrip("/") + "/"
+    for rel, h in sorted((b.get("staged") or {}).items()):
+        if rel.startswith(stdir):
+            checks.setdefault(f"{t['dir']}/{rel[len(stdir):]}", h)
+    for path, want in checks.items():
         data = git_blob(o["commit"], path)
         got = None if data is None else mk.sha256_bytes(data)
         if got is None:
