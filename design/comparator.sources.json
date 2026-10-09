@@ -1,8 +1,8 @@
 {
-  "schema": "gf180-comparator/netlist-sources/1",
+  "schema": "gf180-comparator/netlist-sources/2",
   "generator": "design/netlist.sh",
   "verifier": "design/verify-netlist-pins.py --check",
-  "limit": "Proves only that the listed sources and the netlist are unchanged since ./design/netlist.sh last wrote this file; it does NOT prove the netlist is the correct xschem output (that is ./design/netlist.sh --check, which needs xschem + PDK).",
+  "limit": "Proves only that the listed sources, generation inputs (design/xschemrc, design/netlist.sh) and the netlist are unchanged since ./design/netlist.sh last wrote this file; it does NOT prove the netlist is the correct xschem output (that is ./design/netlist.sh --check, which needs xschem + PDK).",
   "top": "design/comparator.sch",
   "sources": {
     "design/comparator.sch": "f608dd00db086df99e2e54013fd7715f93c891f68ea5206d1e37743764daa6f2",
@@ -12,6 +12,10 @@
     "design/comparator_dut_analog.sym": "d0e3594c1b0044dcde15d597c206e220f3c74ab5c2fce34602836f9f8f2e17a7",
     "design/comparator_dut_latch.sch": "e6dba702c638e38af50726d4ce64cd7048f40fbd2634c93e65f6bf38b588990e",
     "design/comparator_dut_latch.sym": "69765f7c3a842d3573640a8c20117ad61a3aea89ff61f0a87fd463bd01640503"
+  },
+  "generation_inputs": {
+    "design/xschemrc": "eded4cbaf0d466ab70ae931ea5e6935eb8f4c06a60fe44725d1cf50a81dbe18b",
+    "design/netlist.sh": "1edba7eb32a4d2e59eb45bb7b5e6bfe98e1e087b83e287d65d5ef13ff2b950e5"
   },
   "netlist": {
     "design/comparator.spice": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a"
