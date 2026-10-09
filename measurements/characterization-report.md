@@ -172,8 +172,11 @@ re-run changing any of these is not bit-comparable. Mismatch is off —
 regeneration time and offset are separable effects, budgeted separately.
 
 **Metastability is a first-class row here, per `CLAUDE.md`.** The same record
-carries the latch time constant `tau_ps` and `resolve_decades` at **every**
-PVT point (τ = 38.39–122.93 ps; 13.61–15.17 decades of resolution), so any
+carries the latch time constant `tau_ps` and `td_od1_over_tau` at **every**
+PVT point (τ = 38.39–122.93 ps; `td_od1_over_tau` = 13.61–15.17 e-folds of
+full clock-to-output delay over τ — recorded under its deprecated alias
+`resolve_decades`, which despite the name is an e-fold ratio, not decades;
+a report-only diagnostic per DR-0005), so any
 metastability statement this repo makes is computed from a measured
 worst-corner time constant rather than asserted from a typical-corner delay.
 

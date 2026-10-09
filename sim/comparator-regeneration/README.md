@@ -32,10 +32,15 @@ tau = (t(0.1 mV) - t(1 mV)) / ln(10)
 ```
 
 τ is extracted from the two small rungs because both sit inside the
-logarithmic region. `resolve_decades = t(1 mV)/τ` is reported alongside it:
-it is the exponent that any `exp(-t/τ)` metastability probability is taken
-to, so it is the number that decides whether a metastability claim means
-anything at this corner.
+logarithmic region. `td_od1_over_tau = t(1 mV)/τ` is reported alongside it:
+the **e-folds of full clock-to-output delay over τ** (natural-log units, not
+decades — divide by ln(10) ≈ 2.303 for decades). It is a report-only
+diagnostic (DR-0005), not the number of e-folds of regeneration available in
+a decision phase: `t(1 mV)` includes the fixed, non-regenerative delay `t0`,
+so the ratio overstates the regenerative lever arm. Records written before
+issue #141 carry the same quantity under the misleading name
+`resolve_decades`; `tb.json` keeps that key as a deprecated alias (identical
+expression) for one release so old and new records stay comparable.
 
 Two design decisions make the measurement robust:
 
