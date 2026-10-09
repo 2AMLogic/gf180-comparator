@@ -4,6 +4,20 @@ Chronological record of merged pull requests and closed issues. Newest entries a
 
 ### 2026-10-09
 
+- **PR #162**: Assert reference False on not-citable records; check all staged testbench files vs clean commit (#156)
+- **PR #159**: fix(sim): reject non-finite local measurements and fleet-derived results
+- **PR #155**: fix(sim): bind replayed fleet evidence to its originating source bundle
+- **PR #153**: Validate exact fleet PVT and MC coverage before reference scoring (#152)
+- **PR #150**: ci: enforce append-only sim/ evidence with a base-comparison guard
+- **PR #149**: Preserve partial simulator logs and probe warnings on timeout
+- **PR #147**: ci: preserve started main Signoff runs (#145)
+- **Issue #156** (closed): Test the complete-but-not-citable reference gate; widen clean-commit cross-check to all staged testbench files
+- **Issue #154** (closed): Reject non-finite local measurements and fleet-derived results
+- **Issue #151** (closed): Bind replayed fleet evidence to the originating DUT and testbench sources
+- **Issue #152** (closed): Validate exact fleet PVT and Monte Carlo coverage before reference scoring
+- **Issue #135** (closed): CI: enforce the append-only rule for sim/ evidence records
+- **Issue #148** (closed): Preserve partial simulator logs and probe warnings on timeout
+- **Issue #145** (closed): CI: preserve started main Signoff verification during merge bursts
 - **PR #144**: test: PDK-free coverage for klt_record.py and mk_klt_request.py (#142)
 - **PR #143**: sim: add td_od1_over_tau, deprecate mislabelled resolve_decades (#141)
 - **PR #140**: spec: propose DR-0006 average-power operating condition (proposed, not ratified)
