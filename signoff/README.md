@@ -23,6 +23,7 @@ directory for exactly that reason).
 | `verify-report.py` | the anti-rot verifier CI runs on every push and PR (see below) |
 | `regenerate.sh` | re-grades the manifest with the pinned grader distribution and rewrites the committed report |
 | `make_item5_envelope.py` | wraps the four committed corner records into the `klt sim`-shaped item-5 corner-matrix envelope under `sim/corner-matrix/` (`--check` detects drift); see the item-5 section |
+| `tests/test_item5_envelope.py` | PDK-free regressions for the item-5 wrapper: all-measured-targets-pass fixture must still grade item 5 `unmet` (`partial_coverage`) under the pinned `klt`; append-only identity; historical bytes (`python3 signoff/tests/test_item5_envelope.py`, run in CI) |
 | `make_item8_envelope.py` | writes the item-8 generic evidence envelope from the characterization report (`--check` detects drift); see the item-8 section |
 
 ## Block kind: `analog`
@@ -100,7 +101,7 @@ by `./signoff/regenerate.sh`):
   (Power delivery, structural; see the item-11 section), item 6
   (Monte Carlo; offset row only — see the item 5/6 section), item 8
   (Characterization report; generic envelope — see the item-8 section)**
-- **unmet, reason `check_failed` — items 5, 7** (item 5 cited; the cited corner matrix honestly fails the ratified kickback bound — see the item-5 section. Item 7 cited; the `klt pex` report honestly fails the ratified decision-time target at 7 of 675 delta rows — see the item-7 section)
+- **unmet, reason `check_failed` — items 5, 7** (item 5 cited; the cited corner matrix honestly fails the ratified kickback bound, and also records the average-power row as incomplete coverage (clock rate TBD), so it would grade `partial_coverage`, not `met`, even with kickback closed — see the item-5 section. Item 7 cited; the `klt pex` report honestly fails the ratified decision-time target at 7 of 675 delta rows — see the item-7 section)
 - **unmet, reason `no_evidence` — items 1, 9, 10**
 
 `no_evidence` means exactly what it says mechanically: the manifest names no
@@ -244,35 +245,91 @@ extension.
 
 ### unmet — item 5 (PVT corners vs a ratified spec): cited, `check_failed`
 
-**Cited as of [#91](https://github.com/2AMLogic/gf180-comparator/issues/91);
+**Cited as of [#91](https://github.com/2AMLogic/gf180-comparator/issues/91),
+scoring revision 2 as of [#108](https://github.com/2AMLogic/gf180-comparator/issues/108);
 graded `unmet`, reason `check_failed` — the evidence is read and it fails.**
 Item 5 accepts only a `klt sim` envelope (`measurements` + `corner_count`;
 generic and every other kind render `wrong_kind`). The committed corner
 records are this repo's harness format, so
 `signoff/make_item5_envelope.py` **wraps them without re-simulating**:
-`sim/corner-matrix/item5-corner-matrix-<four record ids>.json`, the 45-point
+`sim/corner-matrix/item5-corner-matrix-<four record ids>-r2.json`, the 45-point
 PVT grid of the four records DR-0002 ratified
 (`20260910-{124917,125200,125206,125341}-4805118`), every value copied
 verbatim, each source record pinned by sha256 in `source_records`. The
 envelope's `wrapper` field states plainly that it is **not** `klt sim` output
 (an off-host `klt sim` re-run was not needed; none was launched).
 
-**`status` is derived, never asserted**: `pass` only if every corner meets
-every ratified *target* bound (DR-0002), else `fail`. Result: `fail`,
-1/45 corners passing. Per row (`spec_rows`): offset 3-sigma 45/45 within
-target and stretch; noise 45/45 and 45/45; decision time 45/45 target, 29/45
-stretch (worst `ss_125c_2.97v`, 1.237 ns); **kickback 1/45 within target
-(only `ss_-40c_2.97v`), 0/45 within stretch, worst 10.01 mV at
-`sf_-40c_3.63v`**; supply/power 45/45 and 45/45 (derived as
-`i_static_ua` x corner `vdd`, so its min/max, 84-105 uW, is the exact product,
-tighter than the report's loose 82-108 uW range). These match the
-characterization report's scoring. No bound is relaxed; item 5 turns `met`
-only when kickback closes through a follow-on decision record or a design
-change and a new record set is wrapped. The manifest pin is the DUT netlist
-(`provenance.input`, role `netlist`, `design/comparator.spice`), which
-`verify-report.py` re-hashes; `python3 signoff/make_item5_envelope.py --check`
-re-derives the envelope from the four records and fails on drift. The file is
-append-only: a new record set mints a new file (the old one stays).
+**Numerical compliance and coverage are separate, and both are required.**
+The envelope's `eligibility` block carries `numerical` (`pass` only if every
+corner meets every *measured* ratified *target* bound, DR-0002), `coverage`
+(`complete` only if every ratified spec row is actually scored), and
+`eligible` (both). The ratified supply/power row is **average** power, one
+decision per clock edge, at a stated clock rate — and that rate is still TBD
+(root `README.md` target-spec table). So the row cannot be scored, and the
+wrapper says so instead of standing static power in for it:
+
+- `spec_rows[]` entry `supply_avg_power_uw` keeps the ratified 1000 uW
+  target / 500 uW stretch, `coverage: "incomplete"`,
+  `coverage_reason: "average_power_clock_rate_tbd"`, `clock_rate: null`, and
+  `corners_within_target`/`corners_within_stretch` `null` (unknown, not a
+  fake 0). No clock rate is chosen here; that is a spec change needing a
+  decision record (`spec/README.md`).
+- Static power is kept per corner as `static_power_uw` = `i_static_ua` x
+  corner `vdd`, marked `partial_of: "supply_avg_power_uw"`, and summarised
+  under that row's `partial_evidence` (45/45 within target and stretch,
+  84-105 uW, the exact product, tighter than the report's loose 82-108 uW
+  range). It is scored against the same 1 mW bound because static power is a
+  lower bound on average power: a static value over the bound would be a real
+  failure, but a static pass does **not** score the average-power row.
+  (`e_dec_fj` is recorded by the regeneration bench but deliberately carries
+  no check there, so it is not combined into anything.)
+- The envelope's `coverage` block (the `klayout_tools.coverage` v1 shape the
+  pinned grader validates) lists every measured (corner, row) pair as
+  `checked` and the average-power row at all 45 corners as `skipped`.
+
+**`status` is derived, never asserted**, with the grader's own common rollup
+rule (failure precedes coverage): `fail` if any measured target misses; else
+`pass_partial` while any ratified row is unscored; `pass` only when both
+hold. `pass_partial` is the `sim` kind's partial token in the pinned
+`klayout-tools==0.6.0` grader, which grades it `unmet` with reason
+**`partial_coverage`** — distinct from `check_failed`, so incomplete coverage
+is never presented as a measured limit violation. Per-corner `status` follows
+the same rule (`fail` / `pass_partial`). Consequence: **closing the kickback
+miss alone cannot turn item 5 `met`** while average power is unscored — it
+moves the item from `check_failed` to `partial_coverage`.
+`signoff/tests/test_item5_envelope.py` pins exactly that with a synthetic
+all-measured-targets-pass fixture graded by the pinned `klt`.
+
+Result today: `status: fail`, 0/45 corners passing unconditionally, 1/45
+`pass_partial`, 44/45 `fail`. Per row (`spec_rows`): offset 3-sigma 45/45
+within target and stretch; noise 45/45 and 45/45; decision time 45/45 target,
+29/45 stretch (worst `ss_125c_2.97v`, 1.237 ns); **kickback 1/45 within
+target (only `ss_-40c_2.97v`), 0/45 within stretch, worst 10.01 mV at
+`sf_-40c_3.63v`**; average power incomplete (static partial evidence as
+above). These match the characterization report's scoring. No bound is
+relaxed; item 5 turns `met` only when kickback closes (a follow-on decision
+record or design change, re-wrapped from a new record set) **and** the
+average-power row is scored (a decision record stating the clock rate, plus
+a measured per-decision energy the bench actually checks). The manifest pin is
+the DUT netlist (`provenance.input`, role `netlist`, `design/comparator.spice`),
+which `verify-report.py` re-hashes; `python3 signoff/make_item5_envelope.py
+--check` re-derives the envelope from the four records and fails on drift.
+
+**Append-only identity.** The file name is the four record ids plus
+`-r<SCORING_REVISION>`: a new record set *or* a new scoring revision mints a
+new file, and an existing file with different content is never overwritten.
+Revision 1 (`item5-corner-matrix-<four record ids>.json`, no suffix, #91)
+stays committed byte-for-byte as historical evidence — it scored
+`i_static_ua` x `vdd` as if it were the average-power row
+(`supply_power_uw`, "avg static"). It was written by the script as of commit
+`1cdd5cb`; the current script does not regenerate it. Refresh after a
+scoring change: bump `SCORING_REVISION`, run
+`python3 signoff/make_item5_envelope.py`, repoint the item-5 `file` in
+`block-manifest.json` and the item-5 `PINNED_ARTIFACTS` path in
+`verify-report.py` (the manifest `content_hash` stays the netlist pin, never
+the envelope's own hash), run `./signoff/regenerate.sh`, then
+`python3 signoff/verify-report.py` and
+`python3 signoff/tests/test_item5_envelope.py`.
 
 Disclosure: schematic-provenance records only (no post-layout), and the
 item-6 citation does not substitute for this one. A native `klt sim`
@@ -503,7 +560,8 @@ push and PR (`.github/workflows/signoff.yml`):
 **Refresh contract.** Any change to a cited evidence envelope or to the
 cited artifacts means: re-run the producing flow (e.g.
 `layout/run_drc.py`/`layout/run_lvs.py` per `layout/README.md`;
-`signoff/make_item8_envelope.py` for the item-8 wrap), re-pin the
+`signoff/make_item8_envelope.py` for the item-8 wrap;
+`signoff/make_item5_envelope.py` for item 5, see its section), re-pin the
 hash in `block-manifest.json`, run `./signoff/regenerate.sh`, commit the
 fresh report — in one change. A *new* citation means adding the
 corresponding pin row to `verify-report.py`'s `PINNED_ARTIFACTS` in the
