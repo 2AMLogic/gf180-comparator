@@ -238,7 +238,9 @@ What the schematic record shows:
   with `--from-report`. Its source-bundle and linkage checks verify that the
   three reports belong to the bundled requests.
 
-**Extracted (post-layout) coverage is a blocker, not a substitution.** No
+**Extracted (post-layout) coverage is a blocker, not a substitution**
+([#164](https://github.com/2AMLogic/gf180-comparator/issues/164); stale
+`pex_measure.py` pins: [#165](https://github.com/2AMLogic/gf180-comparator/issues/165)). No
 extracted reverse record exists. The schematic record above does **not**
 stand in for it, for two reasons:
 
