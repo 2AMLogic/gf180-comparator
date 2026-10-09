@@ -19,13 +19,15 @@ Issues the operator starred (`loom:operator-priority`); land these first.
 
 Human-approved issues ready for implementation (`loom:issue`).
 
-- **#145**: CI: preserve started main Signoff verification during merge bursts
+_None._
 
 ## In Progress
 
 Issues currently being built (`loom:building`).
 
 - **#125**: Define and measure the missing average-power operating condition for T1
+- **#157**: Measure total comparator offset: transient Monte Carlo covering the latch, plus a hand budget for load-resistor mismatch
+- **#158**: Characterize reverse-polarity comparator delay across PVT
 
 ## PRs Awaiting Review
 
@@ -45,10 +47,12 @@ Issues carrying `loom:curated`.
 
 - **#3**: Gap-to-T1 tracker: gf180-comparator artifact-presence survey *(curated)*
 - **#125**: Define and measure the missing average-power operating condition for T1 *(curated)*
+- **#158**: Characterize reverse-polarity comparator delay across PVT *(curated)*
 
 ## Proposed (Architect / Hermit)
 
-- **#135**: CI: enforce the append-only rule for sim/ evidence records *(architect)*
+- **#160**: Measure kickback peaks on both comparator input nodes *(architect)*
+- **#161**: Validate integrator paths, ordered ports and area against committed artifacts *(architect)*
 
 ## Epics
 
@@ -60,11 +64,11 @@ _None._
 |------|-------|
 | Operator merge-risk holds | 0 |
 | Operator priority | 1 |
-| Ready (`loom:issue`) | 1 |
-| In Progress (`loom:building`) | 1 |
+| Ready (`loom:issue`) | 0 |
+| In Progress (`loom:building`) | 3 |
 | PRs awaiting review | 0 |
 | Approved PRs awaiting merge | 0 |
-| Curated | 2 |
-| Architect / Hermit proposals | 1 |
+| Curated | 3 |
+| Architect / Hermit proposals | 2 |
 | Active epics | 0 |
 <!-- guide:plan-body:end -->
