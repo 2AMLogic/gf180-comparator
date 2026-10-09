@@ -1,0 +1,102 @@
+{
+  "netlist": "body-v3.30.spice",
+  "engine": "ngspice",
+  "models": {
+    "pdk": "gf180mcuD",
+    "lib": "libs.tech/ngspice/sm141064.ngspice"
+  },
+  "corners": {
+    "process": [
+      {
+        "name": "tt",
+        "sections": [
+          "typical",
+          "res_typical",
+          "bjt_typical",
+          "diode_typical",
+          "moscap_typical",
+          "mimcap_typical"
+        ]
+      },
+      {
+        "name": "ff",
+        "sections": [
+          "ff",
+          "res_ff",
+          "bjt_ff",
+          "diode_ff",
+          "moscap_ff",
+          "mimcap_ff"
+        ]
+      },
+      {
+        "name": "ss",
+        "sections": [
+          "ss",
+          "res_ss",
+          "bjt_ss",
+          "diode_ss",
+          "moscap_ss",
+          "mimcap_ss"
+        ]
+      },
+      {
+        "name": "fs",
+        "sections": [
+          "fs",
+          "res_typical",
+          "bjt_typical",
+          "diode_typical",
+          "moscap_typical",
+          "mimcap_typical"
+        ]
+      },
+      {
+        "name": "sf",
+        "sections": [
+          "sf",
+          "res_typical",
+          "bjt_typical",
+          "diode_typical",
+          "moscap_typical",
+          "mimcap_typical"
+        ]
+      }
+    ],
+    "temperature_c": [
+      -40.0,
+      27.0,
+      125.0
+    ]
+  },
+  "batch": {
+    "runner_version_check": "warn"
+  },
+  "analysis": {
+    "kind": "dc",
+    "args": "vd 0 2m 2m"
+  },
+  "measurements": [
+    {
+      "name": "dv0",
+      "spice": ".meas dc dv0 find v(dd) at=0"
+    },
+    {
+      "name": "dv1",
+      "spice": ".meas dc dv1 find v(dd) at=2m"
+    }
+  ],
+  "options": {
+    "timeout_s": 3000,
+    "keep_artifacts": true,
+    "ngspice_init": [
+      "set measureprec=12",
+      "set numdgt=12"
+    ]
+  },
+  "monte_carlo": {
+    "n": 200,
+    "seed": 20260909,
+    "vary": "mismatch"
+  }
+}

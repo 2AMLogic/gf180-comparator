@@ -96,14 +96,12 @@ errors.
 Today the machine grades this block (see `signoff-report.json`, regenerated
 by `./signoff/regenerate.sh`):
 
-- **met — item 2 (Layout), item 3 (DRC clean), item 4 (LVS clean), item 6
+- **met — item 2 (Layout), item 3 (DRC clean), item 4 (LVS clean), item 11
+  (Power delivery, structural; see the item-11 section), item 6
   (Monte Carlo; offset row only — see the item 5/6 section), item 8
   (Characterization report; generic envelope — see the item-8 section)**
 - **unmet, reason `check_failed` — items 5, 7** (item 5 cited; the cited corner matrix honestly fails the ratified kickback bound — see the item-5 section. Item 7 cited; the `klt pex` report honestly fails the ratified decision-time target at 7 of 675 delta rows — see the item-7 section)
 - **unmet, reason `no_evidence` — items 1, 9, 10**
-- **unmet, reason `supply_spec_incomplete` — item 11** (the 0.6.0 grader
-  reads the cited ERC + LVS evidence; the ERC run declares no `ties[]` —
-  klayout-tools#2169 — see the item-11 section)
 
 `no_evidence` means exactly what it says mechanically: the manifest names no
 citation for that item. It is **not** an assertion that the underlying work
@@ -410,7 +408,7 @@ evidence); it does not run the harness tests (`sim/harness/tests`) or
 leg is only partly met and unevidenced; the row stays `no_evidence`. Adding
 those CI steps is the path to a citable claim. Tool gap: klayout-tools#2844.
 
-### unmet — item 11 (Power delivery, structural): first supply evidence cited; the grader cannot read it yet
+### met — item 11 (Power delivery, structural): ties[] declared (#103)
 
 The 11-item rulebook renders the row (that is why the rulebook is pinned at
 the vendored 11-item revision). Issue
@@ -422,6 +420,24 @@ compound analog entry the rulebook's item 11 names: the ERC supply report
 `erc_status: "clean"`, zero findings, one electrical island per declared
 supply, `provenance.input.content_hash` pinning the same committed GDS
 items 2/3 cite).
+
+**Update (#103): `ties[]` is now declared and the row grades `met`.** The
+upstream blocker (klayout-tools#2169, `ties[]` collapsing a routed design to
+one island) is closed, as are the follow-ups for implant-free streams (#2234),
+native-substrate ties (#2255) and well-side selectors (#2339, #2540). The
+spec declares two ties and the re-run at the released `klayout-tools==0.6.0`
+wheel reports `erc_status: "clean"`, zero findings (no false
+`erc.supply_short`), one island per supply, and `erc.missing_tie` *checked*
+for both: `nwell_vdd` (Nwell 21/0, Nplus-narrowed Comp taps, to `vdd`) and
+`substrate_vss` (no pwell is drawn, so `well_layer: null` with asserted
+`well_boxes` covering the die outside the Nwell footprint; Pplus-narrowed
+Comp taps, to `vss`). The substrate tie is graded under
+`erc_coverage.checked_by_well_assertion`: its which-region half is the
+spec author's assertion, not a derived result; the tie is non-degenerate and
+no row is skipped or inapplicable. Because 0.6.0 rejects unknown top-level
+spec keys, the spec's old `_comment` moved to
+`layout/erc-supply-spec.notes.md`. The manifest pin is unchanged (it is the
+GDS hash, which this change did not touch). The history below is superseded.
 
 **Update (#90): the pin moved to `klayout-tools==0.6.0`, which recognizes
 item 11.** Item 11's manifest entry is now the compound list the grader

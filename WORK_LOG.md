@@ -4,6 +4,7 @@ Chronological record of merged pull requests and closed issues. Newest entries a
 
 ### 2026-10-08
 
+- **PR #105**: refactor(layout): consolidate duplicated extract constants and run_extract (#101)
 - **PR #100**: Preserve offset-probe simulator diagnostics in post-layout evidence
 - **PR #99**: fix(sim): prevent run collisions from overwriting evidence
 - **PR #98**: feat(signoff): cite derived corner-matrix envelope for T1 item 5 (#91)
@@ -12,6 +13,7 @@ Chronological record of merged pull requests and closed issues. Newest entries a
 - **PR #93**: fix(manifests): mirror integrator maturity rung with the graded signoff tier
 - **PR #92**: feat(signoff): wrap characterization report in a generic evidence envelope for T1 item 8
 - **PR #87**: feat(signoff): cite klt yield report for offset MC as T1 item 6 (#82)
+- **Issue #101** (closed): Consolidate duplicated extract constants and run_extract across layout/run_*.py
 - **Issue #86** (closed): Preserve offset-probe simulator diagnostics in post-layout evidence
 - **Issue #85** (closed): Prevent simulation run collisions from overwriting append-only evidence
 - **Issue #91** (closed): signoff: cite corner-matrix evidence for T1 item 5 (full corner verification)

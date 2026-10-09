@@ -14,20 +14,20 @@ _None._
 Issues the operator starred (`loom:operator-priority`); land these first.
 
 - **#3**: Gap-to-T1 tracker: gf180-comparator artifact-presence survey
+- **#81**: T1 item 7: produce a klt pex report from the committed post-layout records and cite it
 
 ## Ready
 
 Human-approved issues ready for implementation (`loom:issue`).
 
-- **#101**: Consolidate duplicated extract constants and run_extract across layout/run_*.py
-- **#102**: design: reduce comparator kickback to the ratified 5 mV target (sole blocker of T1 item 5)
 - **#103**: signoff: declare ties[] in the klt erc supply spec now that the upstream blocker is closed (T1 item 11)
 
 ## In Progress
 
 Issues currently being built (`loom:building`).
 
-_None._
+- **#81**: T1 item 7: produce a klt pex report from the committed post-layout records and cite it
+- **#102**: design: reduce comparator kickback to the ratified 5 mV target (sole blocker of T1 item 5)
 
 ## PRs Awaiting Review
 
@@ -46,6 +46,7 @@ _None._
 Issues carrying `loom:curated`.
 
 - **#3**: Gap-to-T1 tracker: gf180-comparator artifact-presence survey *(curated)*
+- **#102**: design: reduce comparator kickback to the ratified 5 mV target (sole blocker of T1 item 5) *(curated)*
 
 ## Proposed (Architect / Hermit)
 
@@ -60,12 +61,12 @@ _None._
 | Tier | Count |
 |------|-------|
 | Operator merge-risk holds | 0 |
-| Operator priority | 1 |
-| Ready (`loom:issue`) | 3 |
-| In Progress (`loom:building`) | 0 |
+| Operator priority | 2 |
+| Ready (`loom:issue`) | 1 |
+| In Progress (`loom:building`) | 2 |
 | PRs awaiting review | 0 |
 | Approved PRs awaiting merge | 0 |
-| Curated | 1 |
+| Curated | 2 |
 | Architect / Hermit proposals | 0 |
 | Active epics | 0 |
 <!-- guide:plan-body:end -->

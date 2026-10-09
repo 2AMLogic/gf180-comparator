@@ -813,24 +813,24 @@
       "erc.floating_gate:[\"gate7\"]",
       "erc.floating_gate:[\"gate8\"]",
       "erc.floating_gate:[\"gate9\"]",
+      "erc.missing_tie:[\"nwell_vdd\"]",
+      "erc.missing_tie:[\"substrate_vss\"]",
       "erc.net_connectivity:[\"vdd\"]",
       "erc.net_connectivity:[\"vss\"]"
     ],
     "skipped": [],
-    "inapplicable": [
-      {
-        "id": "erc.missing_tie:[]",
-        "reason": "no_ties_declared"
-      }
-    ],
+    "inapplicable": [],
     "unknown": [],
     "nothing_checked": false,
     "nothing_checked_reasons": [],
-    "checked_by_assertion": []
+    "checked_by_assertion": [],
+    "checked_by_well_assertion": [
+      "erc.missing_tie:[\"substrate_vss\"]"
+    ]
   },
   "ties_disclosure": null,
   "provenance": {
-    "klt_version": "0.5.0+gb15edf5e3a2e",
+    "klt_version": "0.6.0",
     "klayout_version": "0.30.12",
     "pdk": null,
     "deck": {
@@ -843,7 +843,7 @@
       "role": "layout"
     },
     "spec": {
-      "content_hash": "sha256:383d1191efdde70375c5c62e5d7e23707a40d7c73210c3e1bfc5442ff5714f0c"
+      "content_hash": "sha256:8457c84db33d410771d7341239c9d5b76fa20831a3351610dd5429f7c7bdeb86"
     },
     "devices": [
       {

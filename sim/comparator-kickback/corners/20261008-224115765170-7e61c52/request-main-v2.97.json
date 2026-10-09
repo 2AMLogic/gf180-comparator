@@ -1,0 +1,161 @@
+{
+  "netlist": "body-v2.97.spice",
+  "engine": "ngspice",
+  "models": {
+    "pdk": "gf180mcuD",
+    "lib": "libs.tech/ngspice/sm141064.ngspice"
+  },
+  "corners": {
+    "process": [
+      {
+        "name": "tt",
+        "sections": [
+          "typical",
+          "res_typical",
+          "bjt_typical",
+          "diode_typical",
+          "moscap_typical",
+          "mimcap_typical"
+        ]
+      },
+      {
+        "name": "ff",
+        "sections": [
+          "ff",
+          "res_ff",
+          "bjt_ff",
+          "diode_ff",
+          "moscap_ff",
+          "mimcap_ff"
+        ]
+      },
+      {
+        "name": "ss",
+        "sections": [
+          "ss",
+          "res_ss",
+          "bjt_ss",
+          "diode_ss",
+          "moscap_ss",
+          "mimcap_ss"
+        ]
+      },
+      {
+        "name": "fs",
+        "sections": [
+          "fs",
+          "res_typical",
+          "bjt_typical",
+          "diode_typical",
+          "moscap_typical",
+          "mimcap_typical"
+        ]
+      },
+      {
+        "name": "sf",
+        "sections": [
+          "sf",
+          "res_typical",
+          "bjt_typical",
+          "diode_typical",
+          "moscap_typical",
+          "mimcap_typical"
+        ]
+      }
+    ],
+    "temperature_c": [
+      -40.0,
+      27.0,
+      125.0
+    ]
+  },
+  "batch": {
+    "runner_version_check": "warn"
+  },
+  "analysis": {
+    "kind": "tran",
+    "args": "5p 60n"
+  },
+  "measurements": [
+    {
+      "name": "ad_pos",
+      "spice": ".meas tran ad_pos max v(ad) from=30n to=45n"
+    },
+    {
+      "name": "ad_neg",
+      "spice": ".meas tran ad_neg min v(ad) from=30n to=45n"
+    },
+    {
+      "name": "ap0",
+      "spice": ".meas tran ap0 find v(apa) at=29n"
+    },
+    {
+      "name": "apmax",
+      "spice": ".meas tran apmax max v(apa) from=30n to=45n"
+    },
+    {
+      "name": "apmin",
+      "spice": ".meas tran apmin min v(apa) from=30n to=45n"
+    },
+    {
+      "name": "bd0",
+      "spice": ".meas tran bd0 find v(bd) at=29n"
+    },
+    {
+      "name": "bd1",
+      "spice": ".meas tran bd1 find v(bd) at=55n"
+    },
+    {
+      "name": "cd0",
+      "spice": ".meas tran cd0 find v(cd) at=29n"
+    },
+    {
+      "name": "cd1",
+      "spice": ".meas tran cd1 find v(cd) at=55n"
+    },
+    {
+      "name": "bc0",
+      "spice": ".meas tran bc0 find v(bc) at=29n"
+    },
+    {
+      "name": "bc1",
+      "spice": ".meas tran bc1 find v(bc) at=55n"
+    },
+    {
+      "name": "bp0",
+      "spice": ".meas tran bp0 find v(bpp) at=29n"
+    },
+    {
+      "name": "bn0",
+      "spice": ".meas tran bn0 find v(bpn) at=29n"
+    },
+    {
+      "name": "bp1",
+      "spice": ".meas tran bp1 find v(bpp) at=55n"
+    },
+    {
+      "name": "bn1",
+      "spice": ".meas tran bn1 find v(bpn) at=55n"
+    },
+    {
+      "name": "da_end",
+      "spice": ".meas tran da_end find v(dan) at=55n"
+    },
+    {
+      "name": "db_end",
+      "spice": ".meas tran db_end find v(dbn) at=55n"
+    },
+    {
+      "name": "dc_end",
+      "spice": ".meas tran dc_end find v(dcn) at=55n"
+    }
+  ],
+  "options": {
+    "timeout_s": 3000,
+    "keep_artifacts": true,
+    "ngspice_init": [
+      "set measureprec=12",
+      "set numdgt=12"
+    ]
+  }
+}
