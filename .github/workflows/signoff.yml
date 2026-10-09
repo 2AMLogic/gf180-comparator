@@ -56,9 +56,11 @@ on:
 permissions:
   contents: read
 
+# Policy: a started verification on main must finish (a cancelled run leaves
+# the commit without a verdict); superseded PR runs may be cancelled.
 concurrency:
   group: signoff-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   signoff:
