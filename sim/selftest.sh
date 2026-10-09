@@ -18,9 +18,11 @@
 #
 #   1. environment/toolchain/DUT-contract check
 #   2. every bench runs at the nominal point         (must PASS)
+#   2b. regeneration reverse-polarity ladder: positive control PASSES, the
+#       control with the second reverse decision suppressed FAILS (#158)
 #   3. the anchored benches run sabotaged            (must FAIL)
 #
-# Exit 0 only if all three hold.
+# Exit 0 only if all of them hold.
 
 set -uo pipefail
 
@@ -55,6 +57,17 @@ for campaign in comparator-offset-mc comparator-preamp-noise \
   fi
 done
 rm -f /tmp/loom-selftest-$$.log
+
+note "2b. reverse-polarity ladder controls (issue #158): positive must PASS, suppressed second decision must FAIL"
+# One nominal PVT point, two scratch decks; nothing is written under sim/.
+if python3 "${SIM_DIR}/tools/regen_reverse_control.py" \
+     >/tmp/loom-revctl-$$.log 2>&1; then
+  ok "reverse-polarity controls (comparator-regeneration)"
+else
+  tail -30 /tmp/loom-revctl-$$.log
+  bad "reverse-polarity controls (comparator-regeneration)"
+fi
+rm -f /tmp/loom-revctl-$$.log
 
 note "3. NEGATIVE CONTROL: sabotaged corners must FAIL the process-sensitivity checks"
 # run_corners.py returns 0 from a sabotage run when the run correctly FAILED
