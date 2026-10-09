@@ -201,12 +201,38 @@ def _diagnostic_warnings(output: str, returncode: int, prefix: str = "") -> list
     return warnings
 
 
+def _text(value) -> str:
+    """Normalize captured subprocess output (bytes, str or None) to text."""
+    if value is None:
+        return ""
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    return str(value)
+
+
+def _timeout_log(exc: subprocess.TimeoutExpired, limit_s: int) -> str:
+    """Partial output retained by a timeout, then an explicit marker.
+
+    Order is chronological: whatever the simulator printed before it was
+    killed (stdout, then stderr), followed by the TIMEOUT marker last.
+    """
+    out, err = _text(exc.stdout), _text(exc.stderr)
+    parts = []
+    if out:
+        parts.append(out if out.endswith("\n") else out + "\n")
+    if err:
+        parts.append(err if err.endswith("\n") else err + "\n")
+    parts.append(f"TIMEOUT after {limit_s}s\n")
+    return "".join(parts)
+
+
 @dataclass
 class ProbeOutcome:
     """Structured result of the offset probe."""
     vos: float | None = None          # None: no dut_vos (missing or timeout)
     returncode: int | None = None     # None on timeout
     timed_out: bool = False
+    timeout_s: int | None = None      # actual probe time limit when timed out
     warnings: list[str] = field(default_factory=list)
 
 
@@ -243,9 +269,16 @@ def _run_offset_probe(
             check=False,
         )
         output = proc.stdout + "\n" + proc.stderr
-    except subprocess.TimeoutExpired:
-        log_path.write_text(f"TIMEOUT after {probe_timeout_s}s\n")
-        return ProbeOutcome(timed_out=True)
+    except subprocess.TimeoutExpired as exc:
+        log_path.write_text(_timeout_log(exc, probe_timeout_s))
+        prefix = f"offset probe ({log_path.name}): "
+        partial = _text(exc.stdout) + "\n" + _text(exc.stderr)
+        return ProbeOutcome(
+            timed_out=True,
+            timeout_s=probe_timeout_s,
+            warnings=[f"{prefix}TIMEOUT after {probe_timeout_s}s"]
+            + _diagnostic_warnings(partial, 0, prefix),
+        )
     log_path.write_text(output)
     measurements = parse_measurements(output)
     vos = measurements.get("dut_vos")
@@ -306,13 +339,17 @@ def run_point(
                                   timeout_s, num_threads)
         probe_warnings = probe.warnings
         if probe.vos is None:
+            timeout_note = (
+                f"offset probe timed out after {probe.timeout_s}s "
+                f"({point.corner_id}.vosprobe.log); " if probe.timed_out else ""
+            )
             return PointResult(
                 point=point,
                 status="failed",
                 deck=deck_path.name,
                 log=f"{point.corner_id}.vosprobe.log",
                 warnings=probe_warnings,
-                message=(
+                message=timeout_note + (
                     "offset probe produced no dut_vos measurement -- the "
                     "overdrive ladder cannot be referred (offset outside the "
                     "probe's ramp range, or the probe deck failed)"
@@ -339,12 +376,17 @@ def run_point(
         returncode = proc.returncode
     except FileNotFoundError as exc:
         raise NgspiceMissing(str(exc)) from exc
-    except subprocess.TimeoutExpired:
+    except subprocess.TimeoutExpired as exc:
         elapsed = time.monotonic() - started
-        log_path.write_text(f"TIMEOUT after {timeout_s}s\n")
+        log_path.write_text(_timeout_log(exc, timeout_s))
+        prefix = f"main deck ({log_path.name}): "
+        partial = _text(exc.stdout) + "\n" + _text(exc.stderr)
         return PointResult(
             point=point,
             status="error",
+            warnings=probe_warnings
+            + [f"{prefix}TIMEOUT after {timeout_s}s"]
+            + _diagnostic_warnings(partial, 0, prefix),
             seconds=elapsed,
             deck=deck_path.name,
             log=log_path.name,
