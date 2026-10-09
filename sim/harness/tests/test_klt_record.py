@@ -636,6 +636,35 @@ class ReplayIngest(unittest.TestCase):
             self.assertTrue(str(rc).startswith("STAGED_SOURCE_MISSING"), rc)
             self.assertIsNone(rec)
 
+    def test_clean_claim_contradicted_for_staged_probe_fragment_refused(self):
+        """Every staged testbench file (not just the .included fragment and
+        tb.json) is checked against the claimed clean commit."""
+        probe = "tb_vosprobe.spice"
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work = _generate(td)
+            _write_reports(work)
+            b = _bundle(work)
+            self.assertIn(f"{b['testbench']['staged_dir']}/{probe}", b["staged"])
+
+            def other(commit, path):
+                data = _committed_blob(commit, path)
+                return data + b"* differs at origin\n" if path.endswith(probe) else data
+            rc, rec, _ = _ingest(td, work, blob=other)
+            self.assertTrue(str(rc).startswith("SOURCE_COMMIT_MISMATCH"), rc)
+            self.assertIsNone(rec)
+
+    def test_probe_fragment_unreadable_at_commit_noncitable_not_refused(self):
+        probe = "tb_vosprobe.spice"
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work = _generate(td)
+            _write_reports(work)
+            rc, rec, _ = _ingest(td, work, blob=lambda c, p: None if p.endswith(probe) else _committed_blob(c, p))
+            self.assertEqual(rc, 0)
+            self.assertFalse(rec["citable"])
+            self.assertFalse(rec["reference"])
+
     def test_bundle_identity_edit_refused(self):
         with tempfile.TemporaryDirectory() as td:
             td = Path(td)
@@ -671,7 +700,9 @@ class ReplayIngest(unittest.TestCase):
                 _write_reports(work)
                 rc, rec, out = _ingest(td, work, **kw)
                 self.assertEqual(rc, 0)
+                self.assertTrue(rec["complete"])  # complete grid: only citability fails
                 self.assertFalse(rec["citable"])
+                self.assertFalse(rec["reference"])
                 self.assertIn("NOT CITABLE", out)
         with tempfile.TemporaryDirectory() as td:
             td = Path(td)
@@ -680,7 +711,9 @@ class ReplayIngest(unittest.TestCase):
             rc, rec, _ = _ingest(td, work)
             self.assertEqual(rc, 0)
             self.assertTrue(rec["dirty"])
+            self.assertTrue(rec["complete"])
             self.assertFalse(rec["citable"])
+            self.assertFalse(rec["reference"])
             md = (td / "evidence" / BENCH / "records" / f"{rec['record_id']}.md").read_text()
             self.assertIn("NOT CITABLE", md)
             self.assertIn(f"sim/{BENCH}/testbench/tb.json", md)
