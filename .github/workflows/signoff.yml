@@ -92,6 +92,14 @@ jobs:
           python3 design/verify-netlist-pins.py --check
           python3 design/tests/test_verify_netlist_pins.py
 
+      # Issue #128: the klayout-tools pin must match across regenerate.sh
+      # (KLT_VERSION, the single source), the install step below, and
+      # verify-report.py / README prose. PDK-free, no klt needed.
+      - name: Grader pin consistency check
+        run: |
+          python3 signoff/check_klt_pin.py
+          python3 signoff/tests/test_check_klt_pin.py
+
       # Keep this pin in sync with signoff/regenerate.sh's KLT_VERSION. The
       # released registry wheel carries the git-tag identity regenerate.sh
       # asserts; same-version snapshots can grade differently.
