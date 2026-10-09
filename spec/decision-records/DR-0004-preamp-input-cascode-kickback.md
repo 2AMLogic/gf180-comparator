@@ -35,6 +35,27 @@ Add an nfet cascode between each input-pair drain and its poly load
 decoupler (`XMCC`). Nothing else in DR-0001 changes: input pair, tail,
 loads, latch and bias are untouched.
 
+**Where the proposed circuit lives.** The cascode is kept out of the ratified
+design files until this record is ratified. `design/comparator.spice` and
+`design/comparator_dut_analog.sch` stay at the DR-0001 content (sha256
+`0df618e7…`), which the signoff LVS (item 4) and item-5 corner-matrix
+envelopes pin. The proposal is carried in two other places:
+
+- **Netlist**: `sim/dut/experiment_comparator_dr0004_cascode.spice`, sha256
+  `79dcc79fb6a876bc46ab258af5eae3f2d24b3e41281df2c23d81897ddf34ed24`. It is
+  bound as the non-active `sim/dut.json` entry `comparator-dr0004-cascode-exp`,
+  so a run selects it with `--dut comparator-dr0004-cascode-exp`.
+- **Schematic**: `design/proposed/dr0004-cascode/comparator_dut_analog.sch`.
+
+The cascoded records below were minted while the cascode sat in
+`design/comparator.spice` on the issue branch. Each record therefore stamps
+DUT id `comparator-dr0001` and path `design/comparator.spice`, but its sha256
+is `79dcc79fb6a876bc`. That is the experiment netlist's sha256 (the noise
+record's DUT section is the same netlist plus a trailing newline), and every
+record's netlist snapshot holds the circuit as simulated. The records are
+not rewritten, because `sim/` is append-only. `sim/dut/README.md` ("Experiment
+and control netlists") is the correction of record.
+
 **This record proposes, it does not ratify.** The measured result (below)
 meets the kickback target and stretch at 45/45 schematic corners, but the
 schematic is not what T1 item 5 is graded on post-layout, and the topology
@@ -153,18 +174,31 @@ needed even with the cascode. The prediction is falsifiable by the follow-up
   20 µ × 20 µ decoupler and two cascode devices of layout area; a fixed-ratio
   bias that is not process-tracking; one more node (`vcas`) to wire and
   decouple in layout.
-- **Invalidated**: `layout/` (GDS, LVS reference, PEX), DRC/LVS/PEX evidence and
-  the post-layout `sim/` records were produced for the un-cascoded netlist, and
-  T1 items 2–4, 6, 8 pins are stale against `design/comparator.spice` once this
-  record is accepted. Re-generation (`layout/gen_comparator.py`), DRC, LVS,
-  extraction and the post-layout campaign are follow-ups (not done in #102).
+- **Invalidated on ratification, not before**: `layout/` (GDS, LVS reference,
+  PEX), the DRC/LVS/PEX evidence and the post-layout `sim/` records were all
+  produced for the un-cascoded netlist. Before ratification nothing goes stale,
+  because `design/comparator.spice` is unchanged and the signoff manifest still
+  grades the same bytes. Ratifying this record means three things:
+  - promoting the proposed cell into `design/` and regenerating
+    `design/comparator.spice` with `design/netlist.sh`;
+  - re-running layout generation (`layout/gen_comparator.py`), DRC, LVS,
+    extraction and the post-layout campaign (#112);
+  - re-pinning the T1 item 2–6 and 8 envelopes per `signoff/README.md`'s
+    refresh contract.
+
+  None of this was done in #102.
 - **Not run**: 44 of 45 noise corners (tool gap, above); the 45-corner
   post-layout kickback.
-- `design/comparator.spice` was edited consistently with the `.sch` edits; the
-  committed netlist has the same circuit but a different line-wrapping from this
-  host's xschem, so `design/netlist.sh --check` reports it stale — as it does for
-  the pre-change netlist on this host (a pre-existing xschem-version formatting
-  difference; the committed netlist was not regenerated, to keep its sha256 pin).
+- The experiment netlist was written by hand to match the proposed `.sch`. It
+  was not netlisted by `design/netlist.sh`, which only reads `design/`'s
+  ratified cells. This host's xschem also wraps long lines differently from
+  the pinned xschem, so `netlist.sh --check` reports even the unchanged
+  ratified netlist stale here. That formatting difference already existed
+  before this record. The ratified `design/comparator.spice` was not touched,
+  so its sha256 pin (`0df618e7…`) holds. An earlier revision of this PR edited
+  `design/comparator.spice` in place, which changed its sha256 to `79dcc79f…`
+  and broke the item-4 and item-5 pins. That revision also wrongly claimed the
+  pin was kept.
 - Cross-pollination: the same isolation applies to the SAR ADC's embedded
   comparator; filed on that repo, not edited here.
 

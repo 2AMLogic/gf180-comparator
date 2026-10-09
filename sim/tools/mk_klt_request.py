@@ -22,7 +22,12 @@ values by `sim/tools/klt_record.py`; the `.meas` cards / expressions below
 are the raw ingredients.
 
     python3 sim/tools/mk_klt_request.py BENCH OUTDIR [--corners ...]
-        [--temps ...] [--supply-tolerance F] [--mc-n N]
+        [--temps ...] [--supply-tolerance F] [--mc-n N] [--dut ID|BINDING.json]
+
+`--dut` selects a `sim/dut.json` entry by id (default: the `active`, ratified
+binding) or loads a binding json by path -- e.g. `--dut
+comparator-dr0004-cascode-exp` for the proposed DR-0004 cascode experiment
+netlist, which deliberately is NOT design/comparator.spice.
 """
 
 from __future__ import annotations

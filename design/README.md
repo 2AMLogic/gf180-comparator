@@ -18,12 +18,10 @@ design/
 The topology, every device size, and the measured-record row each size is
 derived from are in
 [`spec/decision-records/DR-0001-comparator-topology.md`](../spec/decision-records/DR-0001-comparator-topology.md).
-The preamp input pair carries a cascode (`MCP`/`MCN`, divider-biased `vcas`,
-decoupler `MCC`) per the proposed
-[`DR-0004`](../spec/decision-records/DR-0004-preamp-input-cascode-kickback.md);
-`comparator.spice` was updated to match the `.sch` edits by hand because this
-host's xschem wraps long lines differently (see DR-0004 Consequences).
-
+A proposed (not ratified) preamp cascode lives in
+[`proposed/dr0004-cascode/`](proposed/dr0004-cascode/) per
+[`DR-0004`](../spec/decision-records/DR-0004-preamp-input-cascode-kickback.md).
+It does not feed `comparator.spice`.
 The pin names and **pin order** the three subcircuits must present are the
 contract in [`sim/dut/README.md`](../sim/dut/README.md); `sim/harness/dut.py`
 checks them textually at load time and refuses a mismatch.

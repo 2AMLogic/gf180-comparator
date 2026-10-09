@@ -2,6 +2,7 @@
 """Dispatch a bench's `klt sim` legs and mint an append-only evidence record.
 
     python3 sim/tools/klt_record.py BENCH [--work DIR] [--from-report DIR]
+        [--dut ID|BINDING.json] [--label TEXT]
 
 1. (unless --from-report) generates the requests with mk_klt_request.py and
    submits every leg with `klt sim`. The grid goes to the Spot fleet through
@@ -264,7 +265,7 @@ def main() -> int:
             "comparator-kickback": "nothing (all `.meas` ingredients are requested; `.meas` precision is the executor's `measureprec=12`).",
             "comparator-regeneration": "nothing.",
         }[a.bench],
-        f"- **Reproduce**: `KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py {a.bench}`",
+        f"- **Reproduce**: `KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py {a.bench}" + (f" --dut {a.dut}" if a.dut else "") + "`",
         "",
     ]
     (exp / "records" / f"{rid}.md").write_text("\n".join(lines))
