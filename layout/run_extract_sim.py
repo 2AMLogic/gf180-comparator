@@ -38,6 +38,11 @@ WHAT THIS SCRIPT DOES
       m=1`), so the resistor stays corner-aware (`res_typical`/`res_ff`/
       `res_ss` sections) exactly as the schematic netlist's own resistors
       are, instead of freezing the nominal extraction-time value.
+      klayout-tools 0.7.0 writes the same device as a subckt call already
+      (`X... a b sub ppolyf_u_1k r=<value> L= W=`) whose L/W spellings the
+      PDK subckt does not accept; that form is rewritten to the identical
+      PDK call (issue #81). A `ppolyf_u_1k` card left in neither form fails
+      the script rather than reaching ngspice unadapted.
 
    b. INTERFACE WRAPPER. The extraction's flat top cell is `COMPARATOR`
       (uppercase, the GDS cell name). The harness's DUT interface contract
@@ -120,6 +125,11 @@ _MOS_RE = re.compile(rf"^(M\S+)\s+(.*?\s+)({'|'.join(MOS_CLASS_TO_SUBCKT)})(\s+L
 _RES_RE = re.compile(
     rf"^(R\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+\S+\s+{RES_CLASS}\s+L=(\S+)\s+W=(\S+)\s*$"
 )
+#: klayout-tools >= 0.7.0's spelling of the same device: already a subckt
+#: call naming the PDK primitive, but with `r=`/`L=`/`W=` parameters.
+_RES_X_RE = re.compile(
+    rf"^(X\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+{RES_CLASS}\s+r=\S+\s+L=(\S+)\s+W=(\S+)\s*$"
+)
 
 
 def _check_report(report: dict) -> None:
@@ -140,7 +150,7 @@ def _check_report(report: dict) -> None:
         )
 
 
-def _extracted_top_pins() -> list[str]:
+def _extracted_top_pins(raw_netlist: str = RAW_NETLIST) -> list[str]:
     """The pin list of the raw extraction's top cell, in ITS declared order.
 
     `klt extract --pins` fixes WHICH nets become pins, not their ORDER on
@@ -151,25 +161,28 @@ def _extracted_top_pins() -> list[str]:
     (outputs parked mid-rail, static current 10 uA instead of 28 uA).
     """
     pattern = re.compile(rf"^\.SUBCKT\s+{TOP}\s+(.+)$", re.IGNORECASE)
-    with open(RAW_NETLIST) as f:
+    with open(raw_netlist) as f:
         for raw in f:
             m = pattern.match(raw.strip())
             if m:
                 return m.group(1).split()
     sys.exit(
-        f"{RAW_NETLIST}: no `.SUBCKT {TOP} ...` line found -- the extraction "
+        f"{raw_netlist}: no `.SUBCKT {TOP} ...` line found -- the extraction "
         f"did not produce the expected top cell"
     )
 
 
-def _adapt_netlist() -> int:
+def _adapt_netlist(raw_netlist: str = RAW_NETLIST, dut_netlist: str = DUT_NETLIST) -> int:
     """Rewrite device cards onto PDK primitives and append the wrapper.
 
     Returns the number of rewritten device cards (printed for the record).
+    The paths default to this script's own scratch files; `layout/pex/
+    pex_measure.py` (issue #81) passes the netlist `klt pex` extracted
+    instead, so both post-layout flows share one adaptation.
     """
     rewritten = 0
     out: list[str] = []
-    for raw in open(RAW_NETLIST).read().splitlines():
+    for raw in open(raw_netlist).read().splitlines():
         line = raw
         m = _MOS_RE.match(line)
         if m:
@@ -181,7 +194,7 @@ def _adapt_netlist() -> int:
             rewritten += 1
             out.append(line)
             continue
-        m = _RES_RE.match(line)
+        m = _RES_RE.match(line) or _RES_X_RE.match(line)
         if m:
             name, a, b, sub, length, width = m.groups()
             line = (
@@ -191,12 +204,20 @@ def _adapt_netlist() -> int:
             rewritten += 1
             out.append(line)
             continue
+        if not line.lstrip().startswith("*") and re.search(
+            rf"\s{RES_CLASS}\s", line
+        ):
+            sys.exit(
+                f"{raw_netlist}: unrecognised {RES_CLASS} card {line.strip()!r} "
+                "-- the extraction's resistor spelling changed; extend the "
+                "rewrite rather than simulate it unadapted"
+            )
         out.append(line)
 
-    top_pins = _extracted_top_pins()
+    top_pins = _extracted_top_pins(raw_netlist)
     if sorted(p.lower() for p in top_pins) != sorted(INTERFACE_PINS):
         sys.exit(
-            f"{RAW_NETLIST}: top cell {TOP} pins {top_pins} are not the "
+            f"{raw_netlist}: top cell {TOP} pins {top_pins} are not the "
             f"interface pin set {list(INTERFACE_PINS)} -- the --pins argument "
             "did not reach the extraction"
         )
@@ -213,19 +234,19 @@ def _adapt_netlist() -> int:
         f"Xlayout_dut {' '.join(top_pins)} {TOP}\n"
         ".ends\n"
     )
-    with open(DUT_NETLIST, "w") as f:
+    with open(dut_netlist, "w") as f:
         f.write("\n".join(out) + "\n")
         f.write(wrapper)
     return rewritten
 
 
 
-def _check_interface_contract() -> None:
+def _check_interface_contract(dut_netlist: str = DUT_NETLIST) -> None:
     """The same textual pin-order check sim/harness/dut.py applies at load
     time, restated here so a broken adaptation fails at generation time,
     not at the first simulated point."""
     declared: dict[str, tuple[str, ...]] = {}
-    for raw in open(DUT_NETLIST).read().splitlines():
+    for raw in open(dut_netlist).read().splitlines():
         line = raw.strip()
         if not line.lower().startswith(".subckt"):
             continue
@@ -237,7 +258,7 @@ def _check_interface_contract() -> None:
     got = declared.get("comparator_dut")
     if got != INTERFACE_PINS:
         sys.exit(
-            f"{DUT_NETLIST}: .subckt comparator_dut pin order is "
+            f"{dut_netlist}: .subckt comparator_dut pin order is "
             f"{' '.join(got or ('<missing>',))}, contract requires "
             f"{' '.join(INTERFACE_PINS)} (sim/dut/README.md 'Interface contract')"
         )

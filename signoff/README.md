@@ -100,8 +100,8 @@ by `./signoff/regenerate.sh`):
   (Power delivery, structural; see the item-11 section), item 6
   (Monte Carlo; offset row only — see the item 5/6 section), item 8
   (Characterization report; generic envelope — see the item-8 section)**
-- **unmet, reason `check_failed` — item 5** (cited; the cited corner matrix honestly fails the ratified kickback bound — see the item-5 section)
-- **unmet, reason `no_evidence` — items 1, 7, 9, 10**
+- **unmet, reason `check_failed` — items 5, 7** (item 5 cited; the cited corner matrix honestly fails the ratified kickback bound — see the item-5 section. Item 7 cited; the `klt pex` report honestly fails the ratified decision-time target at 7 of 675 delta rows — see the item-7 section)
+- **unmet, reason `no_evidence` — items 1, 9, 10**
 
 `no_evidence` means exactly what it says mechanically: the manifest names no
 citation for that item. It is **not** an assertion that the underlying work
@@ -280,13 +280,68 @@ re-run of the grid (batch fleet) would replace the wrapper; the harness's
 bench decks are not `klt sim` requests, so that is a re-expression, not a
 re-run, and is not done here.
 
-### unmet — item 7 (Post-layout verification): not started
+### unmet — item 7 (Post-layout verification): `check_failed`, 7 of 675 delta rows miss the decision-time target
 
-Post-layout re-simulation against the extracted netlist is issue
-[#23](https://github.com/2AMLogic/gf180-comparator/issues/23) (blocked on
-item 4's chain). Item 7 rejects every evidence kind except a `klt pex`
-report for an analog block — a clean DRC, LVS, or pre-layout sim renders
-`wrong_kind` — so there is nothing to cite until that work exists.
+**Evidence cited and graded as of
+[#81](https://github.com/2AMLogic/gf180-comparator/issues/81); the item is
+`unmet / check_failed`, no longer `no_evidence`.** Item 7 accepts only a
+`klt pex` report (any other kind renders `wrong_kind`), so the citation is
+[`layout/pex/comparator.pex.json`](../layout/pex/comparator.pex.json): the
+per-corner, per-spec-row schematic-vs-extracted delta over the same 45-point
+PVT grid as the regeneration bench (5 process x 3 temperature x 3 supply),
+15 spec rows each, 675 delta rows. Regenerate with
+`python3 layout/pex/run_pex.py`. The manifest pin is the report's
+`provenance.input.content_hash` (the `layout/comparator.gds` stream, same
+convention as items 2/3/11), which `verify-report.py` re-checks.
+
+**Result, not relaxed:** 668 rows pass, 7 FAIL, 0 error. All 7 are
+`td_od50_ns` (decision time at 50 mV overdrive) above DR-0002's ratified
+<= 1.5 ns target, post-layout, at slow/hot/low-supply points: `tt_125c_2.97v`
+(1.59 ns), `ss_27c_2.97v` (1.70), `ss_125c_2.97v` (2.03), `ss_125c_3.30v`
+(1.74), `ss_125c_3.63v` (1.55), `fs_125c_2.97v` (1.55), `sf_125c_2.97v`
+(1.65), against 0.95-1.24 ns on the schematic leg (about +60 to +69 %). The
+spec is not touched; the item turns `met` only through a layout/design change
+or a new decision record, tracked on the parent tracker.
+
+How it was produced:
+
+* `klt pex` is `klayout-tools==0.7.0` (`uvx --isolated`, never the host
+  `klt`): the first release with `--measure-command`, which this flow needs
+  because the extracted leg is a two-stage measurement (offset probe, then an
+  overdrive ladder centred on the probed trip point, as in #23) that a plain
+  `klt sim` testbench set cannot express. The repo's *grading* pin stays
+  `0.6.0` and grades this 0.7.0-written report without trouble.
+* `layout/pex/pex_measure.py` re-expresses the committed regeneration bench
+  as `klt sim` requests (exact-match, hash-pinned rewrites; see its
+  docstring) and every PVT grid goes to the batch fleet; nothing was run as a
+  local ngspice grid. The fleet runner is older than 0.7.0, so the requests
+  are submitted by a `klt` 0.6.0 client. Each side's requests, reports and a
+  `summary.json` are committed under `layout/pex/artifacts/measure/`; the
+  generated decks are scratch (git-ignored).
+* The existing `sim/` records were not touched or re-run; this is a new,
+  separate post-layout measurement (not a re-use of the 45-corner campaign
+  record, which is not in `klt pex` shape).
+
+Disclosures (the report's own `extraction.model` limits, stated, not hidden):
+
+* **Capacitance:** net-to-ground from each net's own area/perimeter, plus
+  net-to-net only for *vertical-overlap* coupling.
+* **Lateral coupling:** modelled only for nets named `--critical-net`; none
+  were named, so same-layer sidewall coupling and fringe shielding are
+  **not modelled**.
+* **Resistance:** a single lumped series R per net as a star across the net's
+  device terminals; **no distributed RC** (`--distributed-rc` not used).
+* **Frequency:** quasi-static, one frequency-independent R and C per net; no
+  skin effect or transmission-line behaviour.
+* The report carries `model_mismatch` (the schematic reference is
+  hierarchical, the extraction is flat) and the DUT is measured through the
+  harness's flat-DUT wrapper (`layout/run_extract_sim.py` adaptation onto PDK
+  primitives). `body_bias` is `biased` (no unbiased device bodies).
+* The schematic leg's ladder is centred at 0 V and the extracted leg's at its
+  probed trip point (the harness's `dut_vos` convention); the offset itself
+  is its own `dut_vos_v` delta row.
+* Mismatch is off (deterministic corners); this is not a Monte-Carlo
+  post-layout claim.
 
 ### met — item 8 (Characterization report): generic envelope around the narrative report
 

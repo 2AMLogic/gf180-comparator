@@ -1,0 +1,96 @@
+{
+  "netlist": "ladder-ss.spice",
+  "models": {
+    "pdk": "gf180mcuD",
+    "lib": "libs.tech/ngspice/sm141064.ngspice"
+  },
+  "corners": {
+    "process": [
+      {
+        "name": "ss",
+        "sections": [
+          "ss",
+          "res_ss",
+          "bjt_ss",
+          "diode_ss",
+          "moscap_ss",
+          "mimcap_ss"
+        ]
+      }
+    ],
+    "supply_v": {
+      "vsup": [
+        2.97,
+        3.3,
+        3.63
+      ],
+      "vsupa": [
+        2.97,
+        3.3,
+        3.63
+      ]
+    },
+    "temperature_c": [
+      -40.0,
+      27.0,
+      125.0
+    ]
+  },
+  "analysis": {
+    "kind": "tran",
+    "args": "5p 60n"
+  },
+  "measurements": [
+    {
+      "name": "vsup_v",
+      "spice": ".meas tran vsup_v find v(vdd) at=25n"
+    },
+    {
+      "name": "td_a",
+      "spice": ".meas tran td_a trig v(clkn) val=0.5 rise=2 targ v(dan) val=0.5 rise=1 td=35n"
+    },
+    {
+      "name": "td_b",
+      "spice": ".meas tran td_b trig v(clkn) val=0.5 rise=2 targ v(dbn) val=0.5 rise=1 td=35n"
+    },
+    {
+      "name": "td_c",
+      "spice": ".meas tran td_c trig v(clkn) val=0.5 rise=2 targ v(dcn) val=0.5 rise=1 td=35n"
+    },
+    {
+      "name": "da_first",
+      "spice": ".meas tran da_first find v(dan) at=18n"
+    },
+    {
+      "name": "db_first",
+      "spice": ".meas tran db_first find v(dbn) at=18n"
+    },
+    {
+      "name": "dc_first",
+      "spice": ".meas tran dc_first find v(dcn) at=18n"
+    },
+    {
+      "name": "da_end",
+      "spice": ".meas tran da_end find v(dan) at=55n"
+    },
+    {
+      "name": "db_end",
+      "spice": ".meas tran db_end find v(dbn) at=55n"
+    },
+    {
+      "name": "dc_end",
+      "spice": ".meas tran dc_end find v(dcn) at=55n"
+    },
+    {
+      "name": "i_stat",
+      "spice": ".meas tran i_stat avg i(vsupa) from=25n to=29n"
+    },
+    {
+      "name": "q_dec",
+      "spice": ".meas tran q_dec integ i(vsupa) from=39.9n to=48n"
+    }
+  ],
+  "options": {
+    "timeout_s": 900
+  }
+}

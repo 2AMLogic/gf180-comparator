@@ -145,6 +145,14 @@ PINNED_ARTIFACTS = {
         REPO_ROOT / "design" / "comparator.spice",
         ("provenance", "input", "content_hash"),
     ),
+    # Item 7 (issue #81) cites the `klt pex` report. `klt pex` drives its own
+    # extraction of the committed GDS, so its ``provenance.input`` pins the
+    # layout stream exactly like items 2/3/11 (layout/pex/run_pex.py).
+    "7": (
+        REPO_ROOT / "layout" / "pex" / "comparator.pex.json",
+        REPO_ROOT / "layout" / "comparator.gds",
+        ("provenance", "input", "content_hash"),
+    ),
     "8": (
         REPO_ROOT / "measurements" / "characterization-report.item8.json",
         REPO_ROOT / "measurements" / "characterization-report.md",
