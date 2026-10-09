@@ -117,6 +117,88 @@ class DeriveOffsetMc(unittest.TestCase):
         self.assertEqual(sorted(res), ["a", "b"])
 
 
+class DeriveOffsetTran(unittest.TestCase):
+    """Whole-comparator transient-MC derivation (issue #157)."""
+
+    CID = "tt_27c_3.30v"
+    A = 20.0       # synthetic preamp gain
+    VDROP = 1.2    # synthetic load drop, V
+
+    def setUp(self):
+        self.tb = htb.load(SIM / "comparator-offset-tran")
+        P = self.tb.params
+        self.t0, self.T = P["stair_t0_ns"] * 1e-9, P["stair_period_ns"] * 1e-9
+        self.step = P["stair_step_mv"] * 1e-3
+        self.v0 = P["stair_v0_mv"] * 1e-3
+
+    def _draw(self, k, pre, phase_ns=1.0, cycle=None, dn_end=1.0):
+        """One draw whose first 1-decision is staircase level k, preamp offset `pre`."""
+        c = (k + int(self.tb.params["stair_lead_cycles"])) if cycle is None else cycle
+        ve = -self.v0
+        return {
+            "t_trip": self.t0 + c * self.T + phase_ns * 1e-9,
+            "dn_start": 0.0, "dn_end": dn_end,
+            "dd_start": self.A * (self.v0 - pre), "dd_end": self.A * (ve - pre),
+            "ap_start": 3.3 - self.VDROP,
+        }
+
+    def _derive(self, draws):
+        smp = {f"mc{i}": d for i, d in enumerate(draws)}
+        return kr.derive("comparator-offset-tran", self.tb, {"main": ({self.CID: smp}, [])})
+
+    def test_trip_midpoint_preamp_offset_and_latch_difference(self):
+        # level k=32 -> V = -5.04 + 0.16*32 = 0.08 mV; trip estimate = V - step/2 = 0.00 mV.
+        # preamp offset 0.3 mV -> latch contribution = 0.0 - 0.3 = -0.3 mV.
+        res, problems = self._derive([self._draw(32, 0.3e-3), self._draw(32, 0.3e-3)])
+        self.assertEqual(problems, [])
+        d = res[self.CID]
+        self.assertAlmostEqual(d["mean_vos_tran_uv"], 0.0, places=6)
+        self.assertAlmostEqual(d["mean_vos_pre_uv"], 300.0, places=6)
+        self.assertAlmostEqual(d["mean_latch_uv"], -300.0, places=6)
+        self.assertAlmostEqual(d["av_mean"], self.A, places=9)
+        self.assertEqual(d["n_samples"], 2)
+
+    def test_quantisation_variance_removed_in_quadrature(self):
+        # Two adjacent levels: raw population sigma = step/2; the correction
+        # subtracts step^2/12 from sigma^2.
+        res, _ = self._derive([self._draw(30, 0.0), self._draw(31, 0.0)])
+        d = res[self.CID]
+        raw = self.step / 2
+        self.assertAlmostEqual(d["sig_vos_tran_raw_mv"], raw * 1e3, places=9)
+        want = math.sqrt(raw ** 2 - self.step ** 2 / 12) * 1e3
+        self.assertAlmostEqual(d["sig_vos_tran_mv"], want, places=9)
+        self.assertAlmostEqual(d["vos_3sig_tran_mv"], 3 * want, places=9)
+
+    def test_rload_budget_scales_with_measured_drop_over_gain_and_adds_in_quadrature(self):
+        res, _ = self._derive([self._draw(30, 0.0), self._draw(31, 0.0)])
+        d = res[self.CID]
+        P = self.tb.params
+        rel = P["rmis_a_r_um"] / math.sqrt(P["rmis_w_um"] * P["rmis_l_um"])  # pair sigma(dR/R)
+        self.assertAlmostEqual(d["vdrop_over_av_mv"], self.VDROP / self.A * 1e3, places=9)
+        self.assertAlmostEqual(d["sig_rload_mv"], self.VDROP / self.A * rel * 1e3, places=9)
+        self.assertAlmostEqual(d["sig_rload_cons_mv"], d["sig_rload_mv"] * P["rmis_conservative_factor"], places=9)
+        self.assertAlmostEqual(d["sig_vos_total_mv"], math.hypot(d["sig_vos_tran_mv"], d["sig_rload_mv"]), places=9)
+        self.assertAlmostEqual(
+            d["vos_3sig_total_cons_mv"], 3 * math.hypot(d["sig_vos_tran_mv"], d["sig_rload_cons_mv"]), places=9)
+        self.assertGreater(d["vos_3sig_total_cons_mv"], d["vos_3sig_total_mv"])
+
+    def test_malformed_draws_are_named_problems_not_data(self):
+        for draw, code in (
+            (self._draw(0, 0.0), "TRIP_OUT_OF_RANGE"),                  # flipped at the lowest level
+            (self._draw(10, 0.0, phase_ns=20.0), "LATE_FLIP"),          # crossed after the high phase
+            (self._draw(10, 0.0, dn_end=0.2), "BAD_ENDPOINT_DECISION"),  # never settled high
+        ):
+            res, problems = self._derive([self._draw(10, 0.0), draw])
+            self.assertEqual(res, {}, code)  # the whole PVT point is dropped
+            self.assertTrue(any(p.startswith(code) for p in problems), (code, problems))
+
+    def test_committed_measure_names_and_scored_key(self):
+        res, _ = self._derive([self._draw(30, 0.0), self._draw(31, 0.0)])
+        self.assertEqual(set(res[self.CID]), set(self.tb.measure))
+        self.assertIn(kr.SPEC["comparator-offset-tran"][1], self.tb.measure)
+        self.assertEqual(kr.SPEC["comparator-offset-tran"][2:4], (15.0, 8.0))  # ratified bounds untouched
+
+
 class DeriveOtherBenches(unittest.TestCase):
     def test_noise_referral(self):
         legs = {"noise": ({"c": {"": {"onoise_total": 2e-3, "inoise_total": 5e-6}}}, []),
@@ -256,6 +338,19 @@ class MkKltRequest(unittest.TestCase):
             self.assertEqual(req["analysis"], {"kind": kind, "args": args})
             self.assertEqual(len(req["measurements"]), len(tb.analyses) - 1)
             self.assertTrue(all(m["spice"].startswith(".meas tran ") for m in req["measurements"]))
+
+    def test_offset_tran_is_tran_monte_carlo_on_the_reduced_grid(self):
+        tb = htb.load(SIM / "comparator-offset-tran")
+        rc, reqs, bodies = self._mk("comparator-offset-tran", "--mc-n", "5")
+        self.assertEqual(rc, 0)
+        self.assertEqual(sorted(reqs), ["request-main-v3.30.json"])  # nominal supply only
+        req = reqs["request-main-v3.30.json"]
+        self.assertEqual(req["monte_carlo"], {"n": 5, "seed": mk.OFFSET_MC_SEED, "vary": "mismatch"})
+        self.assertEqual(req["analysis"]["kind"], "tran")
+        self.assertEqual([c["name"] for c in req["corners"]["process"]], ["tt", "ss", "ff"])
+        self.assertEqual(req["corners"]["temperature_c"], [-40.0, 27.0, 125.0])
+        self.assertEqual(len(req["measurements"]), len(tb.analyses) - 1)
+        self.assertTrue(all(m["spice"].startswith(".meas tran ") for m in req["measurements"]))
 
     def test_noise_bench_refused(self):
         with self.assertRaises(SystemExit):
