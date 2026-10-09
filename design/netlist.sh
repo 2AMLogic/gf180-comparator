@@ -3,9 +3,14 @@
 # design/netlist.sh -- THE one documented command that regenerates
 # design/comparator.spice from design/comparator.sch.
 #
-#   ./design/netlist.sh          regenerate design/comparator.spice
+#   ./design/netlist.sh          regenerate design/comparator.spice and
+#                                re-pin design/comparator.sources.json
 #   ./design/netlist.sh --check  regenerate into a temp file and FAIL if it
 #                                differs from the committed netlist
+#
+# The pin file (sha256 of every schematic input + the netlist) is what CI's
+# PDK-free design/verify-netlist-pins.py --check compares against; see that
+# script's docstring for what a pass does and does not prove.
 #
 # Why a script rather than a bare `xschem -n`:
 #
@@ -145,4 +150,9 @@ if [ "${MODE}" = "--check" ]; then
 else
   cp "${CLEAN}" "${OUT}"
   echo "wrote ${OUT#"${REPO_ROOT}"/}"
+  # Issue #120: pin the schematic inputs and the netlist just written, so the
+  # PDK-free CI step (design/verify-netlist-pins.py --check) fails if either
+  # side is edited later without re-running this script. Written only here,
+  # after a successful netlist + contract self-check.
+  python3 "${DESIGN_DIR}/verify-netlist-pins.py" --write
 fi
