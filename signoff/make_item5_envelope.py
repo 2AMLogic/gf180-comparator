@@ -67,6 +67,15 @@ result is always carried as a separate diagnostic. The scored whole-comparator
 value is the record's ``vos_3sig_total_cons_mv``: simulated mismatch (latch
 included) plus a DERIVED, hand-budgeted load-resistor term the PDK does not
 model; both parts are disclosed per corner and in the row.
+
+Revision 4 (issue #204) scores the kickback row on the both-node schematic
+record (``sim/comparator-kickback/records/20261010-022609774981-bf851ec``,
+klt-record format, ``input_node_coverage`` = ``both``) -- but ONLY when
+``validate_kickback_both`` finds 45 points, citable, current schematic DUT,
+unchanged 5 / 2 mV bounds, coverage ``both`` and finite values. Otherwise the
+row falls back to the positive-node-only record, disclosed as partial node
+coverage (``KICKBACK_FALLBACK_REASON``) in the row, per corner and in
+``kickback_source``. Bounds are untouched; verdict counts are unchanged.
 """
 
 from __future__ import annotations
@@ -84,10 +93,13 @@ NETLIST = "design/comparator.spice"
 #: the successor envelope gets a new identity instead of colliding with the
 #: append-only guard in main(). Revision 2 = issue #108 (coverage split out). Revision 3 = issue #200
 #: (offset scored on the full-grid whole-comparator record when valid).
-SCORING_REVISION = 3
+#: Revision 4 = issue #204 (kickback scored on the both-node klt-record when valid).
+SCORING_REVISION = 4
 
 # (bench, record id) -- the four records DR-0002 ratified and the
-# characterization report scores.
+# characterization report scores. The kickback entry is the positive-node-only
+# record: revisions 1-3 scored on it, and revision 4 keeps it as the validated
+# FALLBACK (``KICKBACK_FALLBACK_DISCLOSURE``) when the both-node record is bad.
 RECORDS = [
     ("comparator-offset-mc", "20260910-124917-4805118"),
     ("comparator-preamp-noise", "20260910-125200-4805118"),
@@ -106,13 +118,24 @@ OFFSET_TRAN_SCORED = "vos_3sig_total_cons_mv"
 OFFSET_TRAN_SKIP_REASON = "offset_whole_comparator_not_substantiated"
 OFFSET_ROW = "offset_3sigma_mv"
 
+#: The both-node schematic kickback record revision 4 scores the kickback row
+#: on (issue #204). Validated by ``validate_kickback_both`` and never raises:
+#: an invalid or absent record degrades the row to the positive-node-only
+#: record with an explicit partial-node-coverage disclosure.
+KICKBACK_BENCH = "comparator-kickback"
+KICKBACK_BOTH_RECORD_ID = "20261010-022609774981-bf851ec"
+KICKBACK_FIELD = "kick_1k_peak_mv"
+KICKBACK_COVERAGE = "both"
+KICKBACK_FALLBACK_REASON = "kickback_partial_node_coverage"
+KICKBACK_ROW = "kickback_1k_peak_mv"
+
 # Measured, fully-scored ratified rows (DR-0002 Decision table; README.md
 # target-spec table). (name, label, bench, unit, target max, stretch max)
 ROWS = [
     (OFFSET_ROW, "Offset sigma (3-sigma input-referred)", OFFSET_TRAN_BENCH, "mV", 15.0, 8.0),
     ("input_noise_uv_rms", "Input-referred noise", "comparator-preamp-noise", "uV", 1000.0, 600.0),
     ("decision_time_od50_ns", "Decision time (50 mV overdrive)", "comparator-regeneration", "ns", 1.5, 0.8),
-    ("kickback_1k_peak_mv", "Kickback into 1 kOhm", "comparator-kickback", "mV", 5.0, 2.0),
+    (KICKBACK_ROW, "Kickback into 1 kOhm", "comparator-kickback", "mV", 5.0, 2.0),
 ]
 
 # The ratified supply/power row: average power at a stated clock rate (TBD).
@@ -164,7 +187,8 @@ def work_id(domain: str, *parts) -> str:
 
 
 def _tag() -> str:
-    return "-".join([rid for _, rid in RECORDS] + [OFFSET_TRAN_RECORD_ID])
+    ids = [KICKBACK_BOTH_RECORD_ID if b == KICKBACK_BENCH else rid for b, rid in RECORDS]
+    return "-".join(ids + [OFFSET_TRAN_RECORD_ID])
 
 
 def _four_tag() -> str:
@@ -181,8 +205,13 @@ def predecessor_path() -> Path:
 
 
 def supersedes_path() -> Path:
-    """The revision-2 (issue #108) envelope this one supersedes."""
-    return REPO_ROOT / "sim" / "corner-matrix" / f"item5-corner-matrix-{_four_tag()}-r2.json"
+    """The revision-3 (issue #200) envelope this one supersedes."""
+    return REPO_ROOT / "sim" / "corner-matrix" / f"item5-corner-matrix-{_four_tag()}-{OFFSET_TRAN_RECORD_ID}-r3.json"
+
+
+#: Key under which the both-node kickback record rides in ``recs`` (its bench
+#: name is already taken by the positive-node fallback record).
+KICKBACK_BOTH_KEY = "comparator-kickback-both"
 
 
 def load_records() -> tuple[dict, list]:
@@ -198,6 +227,14 @@ def load_records() -> tuple[dict, list]:
     if tp.is_file():
         recs[OFFSET_TRAN_BENCH] = json.loads(tp.read_text())
         sources.append({"path": tp.relative_to(REPO_ROOT).as_posix(), "content_hash": _sha(tp)})
+    # Likewise the both-node kickback record (issue #204).
+    kp = REPO_ROOT / "sim" / KICKBACK_BENCH / "records" / f"{KICKBACK_BOTH_RECORD_ID}.json"
+    if kp.is_file():
+        try:
+            recs[KICKBACK_BOTH_KEY] = json.loads(kp.read_text())
+        except ValueError as e:  # unparseable: disclosed by the validator, never raised
+            recs[KICKBACK_BOTH_KEY] = f"unparseable JSON: {e}"
+        sources.append({"path": kp.relative_to(REPO_ROOT).as_posix(), "content_hash": _sha(kp)})
     return recs, sources
 
 
@@ -244,7 +281,8 @@ def validate_sources(recs: dict) -> None:
     """Raise SourceValidationError (listing every problem) on any defect."""
     errs: list[str] = []
     want_benches = [b for b, _ in RECORDS]
-    recs = {b: r for b, r in recs.items() if b != OFFSET_TRAN_BENCH}  # validated by validate_offset_tran
+    # The whole-comparator and both-node records are validated separately.
+    recs = {b: r for b, r in recs.items() if b not in (OFFSET_TRAN_BENCH, KICKBACK_BOTH_KEY)}
     if sorted(recs) != sorted(want_benches):
         raise SourceValidationError(f"benches {sorted(recs)} != expected {sorted(want_benches)}")
 
@@ -391,6 +429,83 @@ def select_offset_source(recs: dict) -> tuple[bool, list[str]]:
     return not problems, problems
 
 
+def validate_kickback_both(rec) -> list[str]:
+    """Problems that stop ``rec`` backing a both-node kickback claim.
+
+    Empty list = the klt-record format, 45 committed PVT points, citable
+    reference record on a clean tree, DUT = the current netlist, ratified
+    5 / 2 mV bounds untouched, ``input_node_coverage`` = ``both`` and a finite
+    ``kick_1k_peak_mv`` at every corner. Never raises."""
+    if not isinstance(rec, dict):
+        return [f"{KICKBACK_BENCH}: both-node record is not an object ({rec!r})"]
+    errs: list[str] = []
+    if rec.get("bench") != KICKBACK_BENCH:
+        errs.append(f"bench {rec.get('bench')!r} != {KICKBACK_BENCH!r}")
+    if rec.get("complete") is not True or rec.get("outcome") != "complete":
+        errs.append(f"record is not complete (complete={rec.get('complete')!r}, outcome={rec.get('outcome')!r})")
+    if rec.get("problems"):
+        errs.append(f"record lists {len(rec['problems'])} named problem(s): {list(rec['problems'])[:3]}")
+    if rec.get("expected_points") != len(EXPECTED_CORNER_IDS):
+        errs.append(f"expected_points {rec.get('expected_points')!r} != {len(EXPECTED_CORNER_IDS)}")
+    if rec.get("citable") is not True or rec.get("reference") is not True or rec.get("not_citable_reasons"):
+        errs.append(
+            f"source provenance not valid (citable={rec.get('citable')!r}, reference={rec.get('reference')!r}, "
+            f"not_citable_reasons={rec.get('not_citable_reasons')!r})"
+        )
+    if rec.get("dirty") is not False:
+        errs.append(f"record was minted from a dirty tree (dirty={rec.get('dirty')!r})")
+    dut = rec.get("dut")
+    current = _sha(REPO_ROOT / NETLIST).split(":")[1]
+    if not (isinstance(dut, dict) and dut.get("dut_netlist_sha256") == current):
+        errs.append(f"dut_netlist_sha256 != current {NETLIST} sha256 {current}")
+    row = rec.get("spec_row")
+    if not (isinstance(row, dict) and row.get("measure") == KICKBACK_FIELD
+            and row.get("target_max") == 5.0 and row.get("stretch_max") == 2.0):
+        errs.append("spec_row does not score kick_1k_peak_mv against the unchanged 5 / 2 mV bounds")
+    if rec.get("input_node_coverage") != KICKBACK_COVERAGE:
+        errs.append(f"input_node_coverage {rec.get('input_node_coverage')!r} != {KICKBACK_COVERAGE!r}")
+    derived = rec.get("derived")
+    if not isinstance(derived, dict):
+        return errs + ["'derived' missing or not an object"]
+    missing = [c for c in EXPECTED_CORNER_IDS if c not in derived]
+    extra = sorted(str(c) for c in derived if c not in EXPECTED_COORDS)
+    if missing:
+        errs.append(f"omitted corner(s) vs committed matrix: {missing}")
+    if extra:
+        errs.append(f"unexpected corner_id(s) outside committed matrix: {extra}")
+    for cid in EXPECTED_CORNER_IDS:
+        d = derived.get(cid)
+        if not isinstance(d, dict):
+            if cid in derived:
+                errs.append(f"{cid}: derived entry is not an object")
+            continue
+        if KICKBACK_FIELD not in d:
+            errs.append(f"{cid}: measurement {KICKBACK_FIELD} missing")
+        elif not _finite(d[KICKBACK_FIELD]):
+            errs.append(f"{cid}: measurement {KICKBACK_FIELD} = {d[KICKBACK_FIELD]!r} is not a finite number")
+    return errs
+
+
+def select_kickback_source(recs: dict) -> tuple[bool, list[str]]:
+    """-> (use the both-node record?, why not)."""
+    if KICKBACK_BOTH_KEY not in recs:
+        return False, [f"no {KICKBACK_BENCH} record {KICKBACK_BOTH_RECORD_ID} is committed"]
+    problems = validate_kickback_both(recs[KICKBACK_BOTH_KEY])
+    return not problems, problems
+
+
+def _kickback_disclosure(use_both: bool, problems: list[str]) -> dict:
+    if use_both:
+        return {"input_node_coverage": KICKBACK_COVERAGE, "record_id": KICKBACK_BOTH_RECORD_ID}
+    return {
+        "input_node_coverage": "positive_node_only",
+        "record_id": dict(RECORDS)[KICKBACK_BENCH],
+        "partial_node_coverage": True,
+        "fallback_reason": KICKBACK_FALLBACK_REASON,
+        "both_node_problems": problems,
+    }
+
+
 def _offset_disclosure(use_whole: bool, by_corner: dict, cid: str) -> dict:
     """Per-corner disclosure on the offset measurement: what is simulated and
     what is a derived hand budget (whole-comparator), or that the value is
@@ -467,11 +582,20 @@ def _offset_row(row: dict, use_whole: bool, problems: list[str], by_corner: dict
 def build_envelope_from(recs: dict, sources: list) -> dict:
     validate_sources(recs)
     use_whole, whole_problems = select_offset_source(recs)
+    use_both, kick_problems = select_kickback_source(recs)
     offset_bench = OFFSET_TRAN_BENCH if use_whole else "comparator-offset-mc"
     rows = [(n, lab, offset_bench if n == OFFSET_ROW else b, u, t, st) for n, lab, b, u, t, st in ROWS]
     measured = [(n, b, u, t, st) for n, _l, b, u, t, st in rows] + [MEASURED[-1]]
     corner_ids = list(EXPECTED_CORNER_IDS)
-    by_corner = {b: {p["corner_id"]: p for p in r["points"]} for b, r in recs.items() if b != OFFSET_TRAN_BENCH}
+    by_corner = {
+        b: {p["corner_id"]: p for p in r["points"]}
+        for b, r in recs.items() if b not in (OFFSET_TRAN_BENCH, KICKBACK_BOTH_KEY)
+    }
+    if use_both:
+        kdrv = recs[KICKBACK_BOTH_KEY]["derived"]
+        by_corner[KICKBACK_BENCH] = {
+            cid: {**by_corner[KICKBACK_BENCH][cid], "measurements": kdrv[cid]} for cid in corner_ids
+        }
     if use_whole:
         drv = recs[OFFSET_TRAN_BENCH]["derived"]
         by_corner[OFFSET_TRAN_BENCH] = {
@@ -494,6 +618,8 @@ def build_envelope_from(recs: dict, sources: list) -> dict:
             }
             if name == OFFSET_ROW:
                 entry.update(_offset_disclosure(use_whole, by_corner, cid))
+            if name == KICKBACK_ROW:
+                entry.update(_kickback_disclosure(use_both, kick_problems))
             if name == STATIC_POWER:
                 entry["partial_of"] = AVG_POWER_ROW
             meas.append(entry)
@@ -547,6 +673,10 @@ def build_envelope_from(recs: dict, sources: list) -> dict:
         }
         if name == OFFSET_ROW:
             row = _offset_row(row, use_whole, whole_problems, by_corner)
+        if name == KICKBACK_ROW:
+            row.update(_kickback_disclosure(use_both, kick_problems))
+            if not use_both:
+                row["label"] += " -- POSITIVE-NODE-ONLY evidence (partial node coverage)"
         spec_rows.append(row)
     vals, wc_id, wc, n_t, n_s = _row_stats(STATIC_POWER)
     spec_rows.append({
@@ -621,6 +751,7 @@ def build_envelope_from(recs: dict, sources: list) -> dict:
         "failed": failed,
         "errored": 0,
         "scoring_revision": SCORING_REVISION,
+        "kickback_source": _kickback_disclosure(use_both, kick_problems),
         "supersedes": supersedes_path().relative_to(REPO_ROOT).as_posix(),
         "wrapper": (
             "NOT a `klt sim` run. Hand-wrapped by signoff/make_item5_envelope.py "

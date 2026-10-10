@@ -390,6 +390,22 @@ cover an omitted corner, missing draws, a saturation/incomplete record,
 non-finite derivation, dirty/uncitable provenance, stale DUT, a relaxed bound
 and a missing record. The r2 file stays committed unchanged.
 
+**Revision 4 (issue #204): the kickback row is scored on the both-node
+record.** `item5-corner-matrix-<offset-mc id>-<noise id>-<regen id>-<kickback id>-<offset-tran id>-r4.json`
+scores `kickback_1k_peak_mv` on
+`sim/comparator-kickback/records/20261010-022609774981-bf851ec` (klt-record
+format, `input_node_coverage` = `both`) instead of the positive-node-only
+`20260910-125341-4805118`. The record is used **only** if
+`validate_kickback_both` passes (45 points, complete, citable + reference,
+clean tree, DUT netlist hash = current, unchanged 5 / 2 mV bounds, coverage
+`both`, finite `kick_1k_peak_mv` everywhere); otherwise the row falls back to
+the older record and says so (`partial_node_coverage`, reason
+`kickback_partial_node_coverage`, problems listed). Values shift by at most
+2.22 uV (worst `sf_-40c_3.63v`: 10.00758 -> 10.00980 mV); verdicts are
+unchanged: 1/45 within target, 0/45 within stretch. Bounds untouched; the
+r1/r2/r3 files stay committed unchanged. Extracted-DUT both-node evidence is
+out of scope (#112).
+
 **Append-only identity.** The file name is the four record ids plus
 `-r<SCORING_REVISION>`: a new record set *or* a new scoring revision mints a
 new file, and an existing file with different content is never overwritten.
