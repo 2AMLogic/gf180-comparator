@@ -1,6 +1,6 @@
 {
   "_comment": [
-    "THE DEVICE-UNDER-TEST BINDING. All four experiments instantiate the",
+    "THE DEVICE-UNDER-TEST BINDING. All the benches instantiate the",
     "subcircuits this file names -- a live, swappable pointer, not a fixed",
     "record of one netlist. The 'active' entry is what a run with no --dut",
     "flag binds; any entry in 'duts' is selectable by id via",
@@ -20,7 +20,7 @@
     "              bench, and their netlist is regenerated scratch -- see",
     "              layout/run_extract_sim.py, issue #23)",
     "  params      operating-point parameters the harness emits as .param, so",
-    "              all four benches bias the DUT identically without each",
+    "              all benches bias the DUT identically without each",
     "              re-stating the numbers"
   ],
   "active": "comparator-dr0001",

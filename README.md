@@ -11,7 +11,7 @@ The design is a static differential preamplifier into a StrongARM latch
 [DR-0001](spec/decision-records/DR-0001-comparator-topology.md)), bound into
 `sim/dut.json` as `comparator-dr0001` (`provenance: schematic`) with a
 parasitic-extracted layout entry alongside. [`layout/`](layout/) holds the
-GDS plus DRC, LVS, ERC and post-layout extraction evidence; the four benches
+GDS plus DRC, LVS, ERC and post-layout extraction evidence; the four corner-grid benches
 under [`sim/`](sim/) have schematic records, and the regeneration
 (decision-time) and kickback benches also have post-layout (extracted-DUT)
 records; the
@@ -55,20 +55,35 @@ publishes what this block takes and exposes (consumer requirement rows:
 ## Verification harness
 
 Every row of the table below has a testbench, a committed PVT corner matrix,
-and a one-command way to reproduce it — see [`sim/`](sim/).
+and a documented way to reproduce it — see [`sim/`](sim/). `sim/` holds six
+bench directories: four corner-grid benches (offset-mc, preamp-noise,
+regeneration, kickback) that `characterize.sh` runs, the fleet-only
+`comparator-offset-tran` (whole-comparator offset evidence), and the
+supplemental, unscored `comparator-offset-cm-window` (no record yet).
 
 ```bash
 python3 sim/run_corners.py --check-env   # PDK, pinned toolchain, DUT contract
-./sim/characterize.sh smoke              # every bench, nominal point, seconds
-./sim/characterize.sh characterize       # the full 45-point PVT campaign
+./sim/characterize.sh smoke              # the four corner-grid benches, nominal point, seconds
+./sim/characterize.sh characterize       # their full 45-point PVT campaign
 ./sim/selftest.sh                        # the harness's own acceptance test
 ```
+
+`characterize.sh` does **not** run `comparator-offset-tran`: it is not wired
+into `run_corners.py` and is fleet-only. To reproduce its record (the
+whole-comparator total-offset evidence), submit it to the Spot batch fleet:
+
+```bash
+KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py comparator-offset-tran --label "<text>"
+```
+
+Details and limits: [`sim/README.md`](sim/README.md#reproducing-one-record).
+Do not hand-launch the grid on a shared worker.
 
 **`sim/dut.json` now binds the real schematic** (`design/comparator.spice`,
 `id: comparator-dr0001`, `provenance: schematic`) — see
 [`spec/decision-records/DR-0001-comparator-topology.md`](spec/decision-records/DR-0001-comparator-topology.md)
 for the topology decision and [`sim/dut/README.md`](sim/dut/README.md) for
-the binding contract. The four benches' new records carry no placeholder
+the binding contract. The four corner-grid benches' new records carry no placeholder
 banner; the earlier placeholder-DUT records remain committed (`sim/` is
 append-only evidence) but are superseded as the current reference.
 
