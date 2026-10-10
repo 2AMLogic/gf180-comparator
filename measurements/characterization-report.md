@@ -8,22 +8,33 @@
   with isolation inverters and a NOR SR output latch, biased at `dut_ib = 10 µA`
   (20 µA preamp tail) and `dut_vcm = 1.65 V` (mid-rail, a standalone choice —
   no CDAC or driving circuit to inherit a common mode from).
-- **Simulation context** (identical in all four cited records): gf180mcuD @
-  open_pdks `c6d73a35f524070e85faff4a6a9eef49553ebc2b`, ngspice-46 /
-  Python 3.14.7, evidence committed at `4805118`, 45-point full-factorial PVT
-  grid (process `tt/ff/ss/fs/sf` × −40/27/125 °C × 2.97/3.30/3.63 V) per
-  campaign.
+- **Simulation context** (per record, not shared): the four original
+  schematic records (offset-MC `20260910-124917-4805118`, preamp-noise
+  `20260910-125200-4805118`, regeneration `20260910-125206-4805118`, kickback
+  `20260910-125341-4805118`) were run locally with gf180mcuD @ open_pdks
+  `c6d73a35f524070e85faff4a6a9eef49553ebc2b`, ngspice-46 / Python 3.14.7,
+  at commit `4805118`, on the 45-point full-factorial PVT grid (process
+  `tt/ff/ss/fs/sf` × −40/27/125 °C × 2.97/3.30/3.63 V). The later records
+  cited below differ: the whole-comparator offset records
+  (`20261010-013540611508-4a4df37`, `20261010-021500046481-d84e59d`) and the
+  both-node kickback record (`20261010-022609774981-bf851ec`) were produced
+  by `klt sim` (client 0.7.0, fleet runner klt 0.5.0, ngspice 46, backend
+  `batch`, AWS Spot fleet) at their own recorded commits, and the extracted
+  (post-layout) records (`20261002-202641-baeffe5`, `20261002-211343-6346fad`)
+  were produced locally by the extracted-DUT path at their own commits. Each
+  cited record's own header is the authority for its toolchain, commit and
+  job ids.
 - **Scored against**: the target-specification table as **ratified by
   [DR-0002](../spec/decision-records/DR-0002-target-spec-ratification.md)** —
-  the act being that record's PR (#27) being approved and merged on 2026-09-19
-  (the operator's PR approval *is* the ratification act, per
-  [2AMLogic/2am#357](https://github.com/2AMLogic/2am/issues/357)). DR-0002's
-  Decision table is the authoritative ratified source here. Residual
-  pre-ratification wording that still reads "proposed"/"DRAFT" in
-  [`README.md`](../README.md)'s target-spec heading and `spec/README.md`'s
-  status paragraph is a documentation-sync gap flagged on #25 and #24 and
-  handled separately; it does not unmerge DR-0002, and this report follows
-  DR-0002's own Consequences rule: the two rows with gaps are reported **as
+  the act being the two-key re-ratification on the record's PR
+  [#74](https://github.com/2AMLogic/gf180-comparator/pull/74) (non-author EE
+  key + market `RATIFY-KEY` reviews and the merge as the record), per the
+  operator ruling of 2026-10-02 on
+  [issue #3](https://github.com/2AMLogic/gf180-comparator/issues/3), which
+  ruled that the original 2026-09-19 flip on PR #27's merge was **not** the
+  ratification act (see [`README.md`](../README.md)'s "Ratification status").
+  DR-0002's Decision table is the authoritative ratified source here. This
+  report follows DR-0002's own Consequences rule: the two rows with gaps are reported **as
   misses against a ratified bar, not as "still DRAFT, not a verdict."**
 
 ## What this report is, and what `sim/characterize.sh` does (reproducibility)
@@ -48,6 +59,16 @@ split of labor is:
   ./sim/selftest.sh                        # harness acceptance test
   ```
 
+  That local command surface covers the four original benches on a
+  workstation with the pinned PDK. It is **not** to be used for multi-corner or
+  Monte Carlo grids on a shared dispatch worker, and it does not cover
+  `comparator-offset-tran` (fleet-only). The fleet campaigns are reproduced
+  with `KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py <bench>` (see
+  [`sim/README.md`](../sim/README.md)); fleet requests support the schematic
+  DUT only, so extracted records use the local post-layout path, and noise
+  has no fleet expression (single nominal point on a shared worker, full grid
+  on a workstation).
+
 - **This file is a separate, hand-written narrative** that scores those
   committed records against the now-ratified table. Every number below cites
   the specific record file it comes from (append-only evidence with raw
@@ -65,17 +86,19 @@ split of labor is:
   host, agreeing well inside the precision the record commits to; both
   figures sit far inside the ratified bounds).
 
-## Scored summary — five ratified rows, four cited records
+## Scored summary — five ratified rows
 
 | Ratified row (DR-0002) | Target | Stretch | Measured (nominal `tt_27c_3.30v`) | Measured (45-point grid) | Scored verdict |
 |---|---|---|---|---|---|
-| Offset sigma | ≤ 15 mV 3σ | ≤ 8 mV 3σ | 3σ = 2.80063 mV | 2.79617–2.80688 mV 3σ | **meets target and stretch at every corner** |
+| Offset sigma | ≤ 15 mV 3σ | ≤ 8 mV 3σ | whole comparator + conservative load-R budget: 3σ ≈ 3.15 mV (`tt_27c_3.30v`, 9-point record); preamp-only DC bench 2.80063 mV | whole comparator (schematic, scored): 2.994–3.795 mV 3σ, binding `ff_125c_3.63v` (`20261010-021500046481-d84e59d`); preamp-only DC bench 2.796–2.807 mV (diagnostic) | **meets target and stretch at 45/45 corners** (schematic, one seed, N = 200 per point) |
 | Input-referred noise | ≤ 1.0 mV rms | ≤ 0.6 mV rms | 91.25 µV rms | 66.82–128.83 µV rms | **meets target and stretch at every corner** |
-| Decision time (50 mV overdrive) | ≤ 1.5 ns | ≤ 0.8 ns | 0.708 ns | 0.464–1.237 ns | **meets target at 45/45; misses stretch at 16/45** (worst 1.237 ns at `ss_125c_2.97v`) |
-| Kickback into 1 kΩ | ≤ 5 mV | ≤ 2 mV | 7.60 mV | 4.53–10.01 mV | **misses target at 44/45, stretch at 45/45** (only `ss_-40c_2.97v` clears the target) |
-| Supply / power | ≤ 1 mW avg | ≤ 500 µW avg | 28.4 µA ≈ 94 µW | 27.7–29.7 µA ≈ 82–108 µW | **meets target and stretch at every corner** |
+| Decision time (50 mV overdrive) | ≤ 1.5 ns | ≤ 0.8 ns | schematic 0.708 ns; extracted 1.158 ns | schematic 0.464–1.237 ns; extracted 1.553–2.034 ns at the 7 failing corners (`20260910-125206-4805118`, `20261002-202641-baeffe5`) | **schematic: meets target 45/45, misses stretch 16/45** (worst 1.237 ns at `ss_125c_2.97v`); **extracted: misses target at 7/45, stretch at 44/45** (worst 2.034 ns at `ss_125c_2.97v`) |
+| Kickback into 1 kΩ | ≤ 5 mV | ≤ 2 mV | schematic 7.60 mV (positive node); extracted 10.03 mV | schematic 4.53–10.01 mV positive node (`20260910-125341-4805118`); both-node schematic aggregate sets at the positive node 45/45 (`20261010-022609774981-bf851ec`); extracted 8.49–14.58 mV (`20261002-211343-6346fad`, positive node only) | **schematic: misses target 44/45 (both-node record: 1/45 within target), stretch 45/45; extracted: misses target 45/45, stretch 45/45** |
+| Supply / power | ≤ 1 mW avg, one decision per clock edge at a stated clock rate (TBD) | ≤ 500 µW avg | static current 28.4 µA ≈ 94 µW (diagnostic) | static current 27.7–29.7 µA ≈ 82–108 µW (diagnostic) | **average power UNSCORED** — no clock rate is ratified (TBD, pending [#125](https://github.com/2AMLogic/gf180-comparator/issues/125)); static power is a diagnostic only and is not a pass |
 
-Three rows clear both bounds everywhere. Two rows carry real, known gaps —
+Two rows (offset, noise) clear both bounds at every corner of their
+schematic evidence. Two rows carry real, known gaps, and the power row is not
+scored at all —
 addressed head-on under [Known gaps](#known-gaps-scored-as-misses-not-dropped)
 below rather than absorbed.
 
@@ -105,15 +128,16 @@ that the draw really was preserved between the two points.
 `tt_27c_3.30v` corner; the grid moves 3σ only 2.79617–2.80688 mV —
 corner-invariant to within 0.4 %, a direct consequence of the offset being
 dominated by the input pair's mismatch physics rather than by the bias point.
-Scored against the ratified row: **meets the ≤ 15 mV target and the ≤ 8 mV
-stretch at every corner, by more than a factor of two on the stretch.**
+Scored on this preamp-only record alone: meets both bounds at every corner;
+the row's scored verdict, however, rests on the whole-comparator total below.
 
 **Scope of this DC record.** It excludes the decision stage's own offset
 (the latch has no DC operating point) and load-resistor mismatch (this PDK
 does not model it at all; the `sig_rpair_uv = 0` control documents the null).
 So the 2.80 mV 3σ above is the **preamp-only** offset, a lower bound on the
-total. Both terms are now measured or budgeted by the whole-comparator bench
-below. Layout-induced systematic offset is not in either record (both are
+total; it is retained as the historical/diagnostic figure. The scored offset
+is the whole-comparator evidence in the next subsection (full 45-point grid,
+2.994–3.795 mV 3σ), where both missing terms are measured or budgeted. Layout-induced systematic offset is not in either record (both are
 schematic, `provenance: schematic`).
 
 **Total offset: latch measured, load-R derived (issue #157).** Cited evidence:
@@ -239,20 +263,33 @@ a report-only diagnostic per DR-0005), so any
 metastability statement this repo makes is computed from a measured
 worst-corner time constant rather than asserted from a typical-corner delay.
 
-**Result.** 0.708 ns at nominal; grid 0.464–1.237 ns across all 45 corners.
+**Result (schematic).** 0.708 ns at nominal; grid 0.464–1.237 ns across all 45 corners.
 Scored against the ratified row: **meets the ≤ 1.5 ns target at 45/45
-corners; misses the ≤ 0.8 ns stretch at 16/45** — see
+corners; misses the ≤ 0.8 ns stretch at 16/45**.
+
+**Result (extracted, post-layout).** The extracted-DUT record
+[`20261002-202641-baeffe5`](../sim/comparator-regeneration/records/20261002-202641-baeffe5.md)
+reports 1.158 ns at nominal (+63.6 % over schematic) and 2.034 ns worst case at
+`ss_125c_2.97v`: **misses the ≤ 1.5 ns target at 7/45 corners
+(1.553–2.034 ns) and the ≤ 0.8 ns stretch at 44/45**, a recorded miss accepted
+as known at ratification. Schematic and extracted verdicts are distinct
+evidence and are not merged. See
 [Known gaps](#known-gaps-scored-as-misses-not-dropped).
 
-**Supply / power rides the same record.** The static supply current
-(`i_static_ua`, measured in the same 45-point run) is 28.4 µA at nominal —
-≈ 94 µW at 3.3 V — and 27.7–29.7 µA (≈ 82–108 µW at 2.97–3.63 V) across the
-grid. Scored against the ratified supply/power row: **meets the ≤ 1 mW
-target and the ≤ 500 µW stretch at every corner.** The switching-energy
-column (`e_dec_fj`) is recorded but deliberately carries **no** check in this
-record — the residue of the charge integral is dominated by numerical
-artefact, and the record refuses to invent a floor that would pass for the
-wrong reason.
+**Supply / power: static current is diagnostic; average power is unscored.**
+The same record carries the static supply current (`i_static_ua`, 45 points):
+28.4 µA at nominal (≈ 94 µW at 3.3 V) and 27.7–29.7 µA (≈ 82–108 µW at
+2.97–3.63 V) across the grid. These are **diagnostic values only**. The
+ratified row's bound is an *average* power at one decision per clock edge at a
+stated clock rate, and that clock rate is still TBD (choosing one needs a
+decision record; tracked on
+[#125](https://github.com/2AMLogic/gf180-comparator/issues/125)). Static
+current times supply is not that quantity, so **no pass or fail verdict is
+issued for the supply/power row**; no rate is invented here. The
+switching-energy column (`e_dec_fj`) is recorded but deliberately carries
+**no** check in this record — the residue of the charge integral is dominated
+by numerical artefact, and the record refuses to invent a floor that would
+pass for the wrong reason.
 
 ### Kickback — decision-edge disturbance into the input
 
@@ -281,9 +318,19 @@ path is the **input pair's own C_gd** (`XMIP`/`XMIN` of
 the placeholder DUT's invented `c_fb` stand-in the earlier placeholder-era
 records used.
 
-**Result.** 7.60 mV peak at nominal (`tt_27c_3.30v`); grid 4.53–10.01 mV.
+**Result (schematic).** 7.60 mV peak at nominal (`tt_27c_3.30v`), positive input node only; grid 4.53–10.01 mV.
 Scored against the ratified row: **misses the ≤ 5 mV target at 44/45 corners
-and the ≤ 2 mV stretch at 45/45** — see
+and the ≤ 2 mV stretch at 45/45**. The later both-node schematic record
+[`20261010-022609774981-bf851ec`](../sim/comparator-kickback/records/20261010-022609774981-bf851ec.md)
+(fleet) scores the row-facing peak as the maximum of both nodes: the positive
+node sets it at 45/45 corners (negative node 4.24–9.91 mV vs positive
+4.53–10.01 mV), 1/45 within target, 0/45 within stretch. Which source feeds
+item-5 scoring is a separate decision (#204) and is not changed here.
+
+**Result (extracted, post-layout).**
+[`20261002-211343-6346fad`](../sim/comparator-kickback/records/20261002-211343-6346fad.md)
+reports 10.03 mV at nominal (+32 % over schematic) and 8.49–14.58 mV across the
+grid (positive node only; extracted both-node evidence is pending): **misses the target at 45/45 and the stretch at 45/45.** See
 [Known gaps](#known-gaps-scored-as-misses-not-dropped). Supply is the
 strongest single axis (the peak moves 30–61 % along it): the injected
 charge — and with it the peak in mV — scales with the rail, growing
@@ -291,7 +338,8 @@ toward the high-supply corners.
 
 ## Known gaps (scored as misses, not dropped)
 
-Two ratified rows are missed at some or all corners. DR-0002 ratified both
+Two ratified rows are missed at some or all corners (shown for schematic and
+extracted evidence in the summary table); the power row is unscored, not missed. DR-0002 ratified both
 bounds **unchanged** — ratifying a bound is agreeing what to measure against,
 not asserting the design meets it — and presented the accept-vs-revise
 tradeoff for each; the PR's approval as drafted enacted "accept the gap,
@@ -316,10 +364,10 @@ require: as misses against a ratified bar.
    `ss_-40c_2.97v` clears it, at 4.528 mV. Stretch (≤ 2 mV): missed at
    45/45 — the best-case corner still exceeds the stretch bound by more than
    2×. DR-0002's Consequences additionally record the direction of travel:
-   post-layout extraction can only **add** capacitance at the input, so the
-   schematic-level miss here is expected to widen, not close, in the layout
-   pass — the noise numbers are the conservative ones (parasitics lower
-   measured noise), and the kickback numbers are *not*.
+   post-layout extraction adds capacitance at the input, and the extracted
+   record bears that out: 8.49–14.58 mV, worse than the schematic's
+   4.53–10.01 mV at every corner. The extracted-decision-time miss (7/45
+   against the target) is likewise recorded above.
 
 A future sizing change (DR-0002's Option B) would go through a follow-on
 decision record revising the affected row's bound or the input pair's `C_gd`
@@ -340,10 +388,14 @@ value item-5 scoring uses, and the preamp-only record above remains the item-6 y
 
 ## What this report does not claim
 
-- Every number above is **schematic-level, `provenance: schematic`, no
-  parasitics**. Layout, DRC/LVS and post-layout re-simulation are not done;
-  the direction each row moves post-layout is recorded (noise improves,
-  kickback worsens), not the magnitude.
+- Most numbers above are **schematic-level (`provenance: schematic`, no
+  parasitics)**; the extracted decision-time and kickback figures are labelled
+  as such and come from their own records. Noise, offset and the whole-comparator
+  trip-point have no extracted-DUT record, and extracted kickback covers the
+  positive node only. No post-layout signoff beyond what the ledger records is
+  claimed.
+- **Average power is not scored** (clock rate TBD, #125); static power is
+  diagnostic.
 - No number here was produced outside `sim/`'s append-only evidence trail —
   an unverifiable figure in a narrative document is worth nothing in this
   repo, which is why every table cell above traces to a committed record.

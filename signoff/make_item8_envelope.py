@@ -52,12 +52,14 @@ ENVELOPE = REPO_ROOT / "measurements" / "characterization-report.item8.json"
 
 SUMMARY = (
     "T1 item 8: aggregated narrative characterization report, scored against "
-    "the ratified DR-0002 target-spec table, every verdict citing its "
-    "committed sim/ evidence record. The pass asserts the record's "
-    "existence, currency and evidence chain -- not all-rows-met: the report "
-    "itself scores two rows as misses against the ratified bar "
-    "(decision-time stretch at ss_125c_2.97v; kickback target and stretch), "
-    "and those misses stand as recorded, not absorbed."
+    "the DR-0002 target-spec table (ratified by the two-key PR #74), every "
+    "verdict citing its committed sim/ evidence record. The pass asserts the "
+    "record's existence, currency and evidence chain -- not all-rows-met: "
+    "offset (whole comparator, 45/45) and noise meet both bounds; decision "
+    "time misses the stretch at 16/45 schematic corners and, extracted, the "
+    "target at 7/45; kickback misses target and stretch (schematic and "
+    "extracted); average power is UNSCORED (clock rate TBD, #125; static "
+    "power is diagnostic only). Misses stand as recorded, not absorbed."
 )
 
 # Repo-relative, exactly as the manifest cites it (the grader resolves
