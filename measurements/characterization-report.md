@@ -108,30 +108,48 @@ dominated by the input pair's mismatch physics rather than by the bias point.
 Scored against the ratified row: **meets the ≤ 15 mV target and the ≤ 8 mV
 stretch at every corner, by more than a factor of two on the stretch.**
 
-**What the record does not claim.** The decision stage's own offset (no DC
-operating point — referred to the input it is divided by the measured ≈18×
-gain); load-resistor mismatch (this PDK does not model it at all — the
-`sig_rpair_uv = 0` control documents the null); and any layout-induced
-systematic offset (schematic-level record, `provenance: schematic`).
-So the 2.80 mV 3σ above is the **preamp-only** offset and a lower bound on
-the comparator's total input-referred offset, not the total.
+**Scope of this DC record.** It excludes the decision stage's own offset
+(the latch has no DC operating point) and load-resistor mismatch (this PDK
+does not model it at all; the `sig_rpair_uv = 0` control documents the null).
+So the 2.80 mV 3σ above is the **preamp-only** offset, a lower bound on the
+total. Both terms are now measured or budgeted by the whole-comparator bench
+below. Layout-induced systematic offset is not in either record (both are
+schematic, `provenance: schematic`).
 
-**Closing those two terms (issue #157): bench defined, not yet measured.**
-[`sim/comparator-offset-tran/`](../sim/comparator-offset-tran/README.md)
-clocks the *whole* comparator through a 64-level, ±5.04 mV input staircase,
-one decision per level, N = 200 mismatch draws per PVT point (`setseed
-20260909`, the same seed as the DC bench), on a reduced tt/ss/ff × −40/27/125 °C
-grid at 3.3 V. It measures the trip point and, on the same draw, the
-DC-equivalent preamp offset, so the latch contribution is a paired
-measurement. It adds a **derived, not simulated** budget for the
-`ppolyf_u_1k` load pair: σ(ΔR/R)_pair = A_R/√(WL) = 0.021 µm/√(1 × 120 µm²)
+**Total offset: latch measured, load-R derived (issue #157).** Cited evidence:
+[`sim/comparator-offset-tran/records/20261010-013540611508-4a4df37.md`](../sim/comparator-offset-tran/records/20261010-013540611508-4a4df37.md)
+(fleet job `klt-sim-816fb60826f4`). Reproduce with
+`KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py comparator-offset-tran`.
+
+*Method.* [`sim/comparator-offset-tran/`](../sim/comparator-offset-tran/README.md)
+clocks the *whole* comparator through a 64-level, ±5.04 mV input staircase
+(0.16 mV steps), one decision per level. It uses N = 200 mismatch draws per
+PVT point with seed 20260909, the same seed as the DC bench, on a **reduced**
+grid: tt/ss/ff × −40/27/125 °C at 3.3 V. The per-draw trip point is the
+midpoint of the one-step bracket. The staircase's quantisation variance,
+step²/12, is subtracted in quadrature (σ_q = 0.046 mV). On the same draw it also
+measures the DC-equivalent preamp offset, so the latch contribution is a
+paired measurement. The **derived, not simulated** budget for the
+`ppolyf_u_1k` load pair is σ(ΔR/R)_pair = A_R/√(WL) = 0.021 µm/√(1 × 120 µm²)
 = 0.19 %. A_R comes from the foundry's commented-out `par_r` for the sibling
 `ppolyf_u` device in `sm141064.ngspice`, and the scored variant triples it as
-a conservative assumption. The budget is input-referred through the bench's
-measured I_D·R/A_v. **No number is reported yet:** the batch fleet could not
-run the grid (capacity refusals, then a 3600 s job timeout that discarded all
-results; tool gaps tracked at 2AMLogic/klayout-tools#2970 and #2833). Until a
-record lands, the latch and load-R terms stay unmeasured, as stated above.
+a conservative assumption. The budget is input-referred through the measured
+per-corner I_D·R/A_v and added in quadrature.
+
+*Result.* At `tt_27c_3.30v`:
+
+- Whole-comparator σ is 0.966 mV (3σ 2.897 mV), against the DC bench's 0.934 mV.
+- **The decision stage (latch) contributes a paired 1σ of 0.333 mV.**
+- The load-R term is 0.136 mV 1σ, or 0.409 mV with the conservative A_R.
+- The scored total, with the conservative load-R term, is **3.146 mV 3σ**.
+
+Across the 9 points:
+
+- The simulated whole-comparator 3σ spans 2.897–3.439 mV.
+- The latch 1σ spans 0.203–0.608 mV. It is largest at `ff_125c`, where the preamp gain is lowest (11.5×), so the gain divides the latch's own offset least.
+- The scored total spans 3.146–**3.725 mV** (worst `ff_125c_3.30v`).
+
+Scored against the ratified row, the total **meets the ≤ 15 mV target and the ≤ 8 mV stretch at 9/9 points.** The ratified bound is unchanged.
 
 ### Input-referred noise — preamplifier `.noise`
 
