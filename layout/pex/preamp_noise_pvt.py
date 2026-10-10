@@ -398,8 +398,11 @@ def write_request_set(out: Path, nominal: bool, legs=LEGS) -> dict:
             requests[tag] = {"leg": leg, "vdd": vdd, "request": f"request-{tag}.json",
                              "request_sha256": sha256_file(out / f"request-{tag}.json"),
                              "netlist": body, "netlist_sha256": sha256_file(out / body)}
-    commit, dirty = git_state(["design", "layout/pex", "sim/dut.json", "sim/harness",
-                               "sim/comparator-preamp-noise/testbench"])
+    # Sources only: never the output tree itself (it is being written).
+    commit, dirty = git_state(["design", "layout/pex/preamp_noise_pvt.py",
+                               "layout/pex/preamp_noise_probe.py",
+                               "layout/pex/artifacts/preamp-noise", "sim/dut.json",
+                               "sim/harness", "sim/comparator-preamp-noise/testbench"])
     files = sorted({out / "design.ngspice"} | {out / r["request"] for r in requests.values()}
                    | {out / r["netlist"] for r in requests.values()}
                    | {p for p in src.rglob("*") if p.is_file()})
@@ -748,6 +751,11 @@ def nominal_comparison(bundle: dict, reports: dict) -> dict:
     return out
 
 
+def _bare(issue: str) -> str:
+    prefix = "UNSUPPORTED_EXECUTOR_CAPABILITY: "
+    return issue[len(prefix):] if issue.startswith(prefix) else issue
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -792,7 +800,7 @@ def main() -> int:
         print(json.dumps(summary, indent=1, sort_keys=True))
         if args.backend == "batch" and not summary["supported"]:
             issues = [i for v in summary["executor"].values() for i in v["issues"]]
-            raise Refusal("UNSUPPORTED_EXECUTOR_CAPABILITY", "; ".join(issues))
+            raise Refusal("UNSUPPORTED_EXECUTOR_CAPABILITY", "; ".join(map(_bare, issues)))
         return 0
 
     if args.cmd == "campaign":
@@ -800,7 +808,7 @@ def main() -> int:
         gap = check_executor(probe)
         if gap:
             # Stop BEFORE anything is staged or submitted; no local grid.
-            raise Refusal("UNSUPPORTED_EXECUTOR_CAPABILITY", "; ".join(gap))
+            raise Refusal("UNSUPPORTED_EXECUTOR_CAPABILITY", "; ".join(map(_bare, gap)))
         if os.environ.get("KLT_SIM_BACKEND") != "batch":
             raise Refusal("LOCAL_GRID_REFUSED", "KLT_SIM_BACKEND is not 'batch'; the 45-point "
                           "grid is never run on a shared dispatch worker")
