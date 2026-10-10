@@ -140,9 +140,21 @@ missing points). Across the grid: absolute systematic offset 1.75 .. 21.38 mV
 total-offset verdict). Provenance caveats: the source bundle is marked dirty
 only because the campaign inputs were untracked when run; the fleet runner is
 klt 0.5.0 vs client 0.7.0 (`runner_compatibility: mismatch`, as for every batch
-record here). The 45 raw Monte Carlo reports (`report-mc-*.json`, 28 MB) and
-`out*/` artifacts are not committed; fleet job ids are in each
-`campaign-<point>.json`.
+record here). The 45 raw Monte Carlo reports are committed losslessly as
+`campaign/20261010/report-mc.tar.gz` (1.2 MB; `out*/` scratch artifacts are
+not committed; fleet job ids are in each `campaign-<point>.json`). Replay
+(PDK-free, on a scratch copy so the committed evidence stays untouched):
+
+```
+S=$(mktemp -d); cp -r campaign/20261010/. "$S"; tar xzf "$S/report-mc.tar.gz" -C "$S"
+for p in <point> ...; do python3 -I ../tools/extracted_tran_feasibility.py evaluate "$S" --point "$p" --campaign; done
+python3 -I ../tools/extracted_tran_feasibility.py summary "$S"
+```
+
+`evaluate` checks the report's netlist sha256 against the submitted body,
+draw coverage and the population gates, then re-derives every statistic; the
+output matches the committed `campaign-<point>.json` (verified for
+`tt_27c_3.30v` and `ff_125c_3.63v`).
 
 The tool, PDK-free tests and fleet reproduction recipe below were delivered
 first (#236). This is an additive, experimental extension:
