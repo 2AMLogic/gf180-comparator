@@ -1004,6 +1004,13 @@ def cmd_budget_run(args) -> int:
     outdir = Path(args.outdir).resolve()
     outdir.mkdir(parents=True, exist_ok=True)
     man = budget_manifest(text, plan, points, nets)
+    return run_stage(outdir, man, plan, points, args.backend, args.jobs, BUDGET_ISSUE)
+
+
+def run_stage(outdir: Path, man: dict, plan: list[dict], points, backend: str, jobs: int,
+              issue: int) -> int:
+    """Write (or check, append-only) stage.json, submit every request of the
+    plan, write run-log.json."""
     mpath = outdir / "stage.json"
     if mpath.exists():
         # append-only: a stage directory is never re-planned; resuming is fine
@@ -1018,11 +1025,11 @@ def cmd_budget_run(args) -> int:
         mpath.write_text(json.dumps(man, indent=2, sort_keys=True) + "\n")
     client = pm._klt_identity()
     started = datetime.now(timezone.utc).isoformat(timespec="seconds")
-    with concurrent.futures.ThreadPoolExecutor(max_workers=args.jobs) as pool:
-        logs = list(pool.map(lambda x: run_budget_variant(x, outdir, args.backend, points), plan))
+    with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as pool:
+        logs = list(pool.map(lambda x: run_budget_variant(x, outdir, backend, points), plan))
     failed = [(l["id"], t) for l in logs for t, j in l["jobs"].items() if not j.get("ok")]
     (outdir / "run-log.json").write_text(json.dumps({
-        "issue": BUDGET_ISSUE, "backend": args.backend, "klt_sim_client": client,
+        "issue": issue, "backend": backend, "klt_sim_client": client,
         "started_utc": started,
         "finished_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "variants": [l["id"] for l in logs], "failed_jobs": failed,
@@ -1076,17 +1083,12 @@ def _plan_from_manifest(man: dict, text: str) -> list[dict]:
     return budget_variants(text, fr, man["nets"])
 
 
-def budget_analyze(outdir: Path) -> dict:
-    man = json.loads((outdir / "stage.json").read_text())
-    text = load_extracted()
-    points = [parse_corner_id(c) for c in man["points"]]
-    nets = man["nets"]
-    plan = {x["id"]: x for x in _plan_from_manifest(man, text)}
+def stage_controls(res: dict, points) -> tuple[dict, bool]:
+    """`ctrl` / `sch` rerun vs the cited report at every stage point. The
+    study is valid only if every control decision time reproduces within
+    CONTROL_TOL_NS."""
     cited = {(r["corner_id"], r["spec_row"]): r
              for r in json.loads(CITED_REPORT.read_text())["delta"]}
-    res = {vid: _budget_values(outdir / vid, points) for vid in plan if (outdir / vid).is_dir()}
-    missing = [(vid, pid(p)) for vid in plan for p in points if p not in res.get(vid, {})]
-
     controls = {}
     for pt in points:
         cid = pid(pt)
@@ -1101,6 +1103,19 @@ def budget_analyze(outdir: Path) -> dict:
         controls[f"ctrl@{cid}"]["cited_dut_vos_v"] = want_vos
         controls[f"ctrl@{cid}"]["rerun_dut_vos_v"] = res.get("ctrl", {}).get(pt, {}).get("dut_vos_v")
     valid = bool(controls) and all(c["reproduces"] for c in controls.values())
+    return controls, valid
+
+
+def budget_analyze(outdir: Path) -> dict:
+    man = json.loads((outdir / "stage.json").read_text())
+    text = load_extracted()
+    points = [parse_corner_id(c) for c in man["points"]]
+    nets = man["nets"]
+    plan = {x["id"]: x for x in _plan_from_manifest(man, text)}
+    res = {vid: _budget_values(outdir / vid, points) for vid in plan if (outdir / vid).is_dir()}
+    missing = [(vid, pid(p)) for vid in plan for p in points if p not in res.get(vid, {})]
+
+    controls, valid = stage_controls(res, points)
 
     rows = []
     for vid, x in plan.items():
@@ -1265,6 +1280,22 @@ def cmd_budget_verify(args) -> int:
         man, budget_manifest(text, plan, points, man["nets"]))
     for d in drift:
         print(f"NOTE provenance drift (not an error): {d}")
+    errors += verify_stage_reports(outdir, plan, points)
+    committed = outdir / "budget.json"
+    if not committed.exists():
+        errors.append("budget.json missing")
+    elif json.loads(committed.read_text()) != json.loads(json.dumps(budget_analyze(outdir))):
+        errors.append("budget.json is not what `budget-analyze` derives from the reports")
+    for e in errors:
+        print(f"FAIL {e}")
+    print(f"budget-verify: {len(errors)} error(s)")
+    return 1 if errors else 0
+
+
+def verify_stage_reports(outdir: Path, plan: list[dict], points) -> list[str]:
+    """Every probe / ladder report of the plan ran the deck regenerated here
+    from the committed inputs, from the request generated here."""
+    errors = []
     for v in plan:
         vdir = outdir / v["id"]
         if not vdir.is_dir():
@@ -1297,14 +1328,481 @@ def cmd_budget_verify(args) -> int:
             if json.loads((vdir / f"{tag}.request.json").read_text()) != \
                     budget_ladder_request(tag, pt):
                 errors.append(f"{v['id']}/{tag}: request differs from the generated one")
-    committed = outdir / "budget.json"
+    return errors
+
+
+# --------------------------------------------------------------------------- #
+# Combined finite ground-C x series-R budget (issue #264)
+# --------------------------------------------------------------------------- #
+#
+# #243 found no finite four-net ground-C budget that clears ss_125c_2.97v and
+# said another lever must be combined with it. #264 scales, jointly, ALL
+# extracted ground-C cards (`C<net> <net> vsubs`, every net incl. rails) by
+# f_c and ALL series-R leg cards (`R<net>_t<k> <net>__t<k> <net>`) by f_r,
+# both finite and in (0, 1]. Coupling C, device geometry and the vsubs DC tie
+# are left byte-for-byte alone. Each variant is centred on its OWN probed trip
+# point. Interaction is MEASURED per cell, never summed from single-lever
+# shares. DIAGNOSTIC ONLY: a passing cell is not PVT closure, not proof a
+# layout can realize it, and scores no spec row; T1 item 7 is unchanged.
+
+COMBO_ISSUE = 264
+COMBO_C_FRACTIONS = (0.75, 0.5, 0.25)
+COMBO_R_FRACTIONS = (1.0, 0.5)
+
+#: Declared fleet request budget (issue #264 curator section). A stage's
+#: planned request count must fit its kind's cap, and the sum of every stage
+#: planned under one artifact directory must fit the hard total cap.
+COMBO_STAGE_CAPS = {"grid": 23, "refine": 12, "seven": 29}
+COMBO_TOTAL_CAP = 64
+#: A refinement stage adds at most this many cells, along ONE axis.
+COMBO_REFINE_MAX_CELLS = 4
+
+
+def validate_positive_fraction(f, what: str = "retained") -> float:
+    """A combined-study factor: a finite real number in (0, 1]. Zero is
+    refused (positive retained C and R is a requirement of #264), as are
+    negative, >1, NaN, inf, bool and non-numbers."""
+    if isinstance(f, bool) or not isinstance(f, (int, float)):
+        raise ValueError(f"{what} factor must be a real number, got {f!r}")
+    f = float(f)
+    if not (f == f) or f in (float("inf"), float("-inf")) or f <= 0.0 or f > 1.0:
+        raise ValueError(f"{what} factor must be finite and within (0, 1], got {f!r}")
+    return f
+
+
+def scale_r(text: str, nets, factor) -> str:
+    """Multiply every series-R leg card of each net in `nets` by `factor`;
+    touch nothing else (the `Rvsubs_dctie` tie is not a leg card). factor ==
+    1.0 returns `text` unchanged (the same object)."""
+    factor = validate_positive_fraction(factor, "series-R")
+    nets = set(nets)
+    if not nets:
+        raise ValueError("no nets to scale")
+    unknown = sorted(nets - set(parse(text)["legs"]))
+    if unknown:
+        raise ValueError(f"nets with no series-R leg card: {unknown}")
+    if factor == 1.0:
+        return text
+    out = []
+    for line in text.splitlines():
+        m = _LEG_RE.match(line)
+        if m and m["net"] in nets:
+            n, k = m["net"], m["k"]
+            line = f"R{n}_t{k} {n}__t{k} {n} {si(m['val']) * factor:.12g}"
+        out.append(line)
+    return "\n".join(out) + ("\n" if text.endswith("\n") else "")
+
+
+def scale_cg_r(text: str, fc, fr) -> str:
+    """Every ground-C card scaled by fc and every series-R leg by fr (both in
+    (0, 1]). The two edits touch disjoint cards, so the order is immaterial
+    (unit-tested)."""
+    fc = validate_positive_fraction(fc, "ground-C")
+    fr = validate_positive_fraction(fr, "series-R")
+    p = parse(text)
+    return scale_r(scale_cg(text, set(p["cg"]), fc), set(p["legs"]), fr)
+
+
+def combo_id(fc, fr) -> str:
+    return (f"cgr-{round(validate_positive_fraction(fc, 'ground-C') * 1000):04d}"
+            f"-{round(validate_positive_fraction(fr, 'series-R') * 1000):04d}")
+
+
+def retained_r_ohm(text: str, nets=None) -> dict[str, float]:
+    """Actual per-net series-R leg sum (ohm) present in a variant netlist."""
+    legs = parse(text)["legs"]
+    return {n: sum(v for _, v in legs.get(n, [])) for n in (nets or sorted(legs))}
+
+
+def combo_cells(c_fractions=COMBO_C_FRACTIONS, r_fractions=COMBO_R_FRACTIONS) -> list:
+    return [(c, r) for r in r_fractions for c in c_fractions]
+
+
+def combo_variants(text: str, cells) -> list[dict]:
+    """ctrl (== (1.0, 1.0), byte-identical), one variant per (f_c, f_r)
+    cell, and the schematic control. Invalid factors, duplicate cells or ids,
+    an empty grid and the (1.0, 1.0) cell are refused."""
+    cl = [(validate_positive_fraction(c, "ground-C"), validate_positive_fraction(r, "series-R"))
+          for c, r in cells]
+    if not cl:
+        raise ValueError("empty cell grid")
+    if len(set(cl)) != len(cl):
+        raise ValueError(f"duplicate cells: {cells}")
+    if (1.0, 1.0) in cl:
+        raise ValueError("(1.0, 1.0) is the unchanged control `ctrl`; do not list it")
+    ids = [combo_id(c, r) for c, r in cl]
+    if len(set(ids)) != len(ids):
+        raise ValueError(f"cells collide at the id's thousandths resolution: {ids}")
+    v = [{"id": "ctrl", "side": "extracted", "centre": "probed", "group": "control",
+          "fraction_c": 1.0, "fraction_r": 1.0, "dut": text,
+          "removes": "nothing (cited extracted DUT)"}]
+    for (c, r), vid in zip(cl, ids):
+        v.append({"id": vid, "side": "extracted", "centre": "probed", "group": "scaled",
+                  "fraction_c": c, "fraction_r": r, "dut": scale_cg_r(text, c, r),
+                  "removes": f"all ground C x {c:g}, all series R x {r:g}"})
+    v.append({"id": "sch", "side": "schematic", "centre": "zero", "group": "control",
+              "fraction_c": None, "fraction_r": None, "dut": SCHEMATIC_DUT.read_text(),
+              "removes": "schematic leg as cited (ladder at 0 V)"})
+    return v
+
+
+def count_requests(plan: list[dict], points) -> int:
+    """`klt sim` requests a stage submits: one probe per (T, V) group for a
+    probed variant, one ladder per point for every variant."""
+    groups = len(tv_groups(points))
+    return sum((groups if v["centre"] == "probed" else 0) + len(points) for v in plan)
+
+
+def one_axis(cells) -> bool:
+    """True if the cells vary along one axis only (all share f_r, or all f_c)."""
+    return len({r for _, r in cells}) <= 1 or len({c for c, _ in cells}) <= 1
+
+
+def combo_manifest(text: str, plan: list[dict], points, kind: str,
+                   controls_from: str | None = None) -> dict:
+    p = parse(text)
+    cg_nets, leg_nets = sorted(p["cg"]), sorted(p["legs"])
+    man = {
+        "issue": COMBO_ISSUE,
+        "generated_by": "layout/pex/parasitic_attribution.py combo-run",
+        "scope": ("diagnostic only: every extracted ground-C card x f_c and every series-R leg "
+                  "card x f_r, f_c and f_r in (0, 1]; coupling C, device geometry and the vsubs "
+                  "tie fixed; each variant centred on its own probed trip point; no spec row "
+                  "scored, T1 item 7 unchanged"),
+        "kind": kind,
+        "controls_from": controls_from,
+        "cg_nets": cg_nets, "leg_nets": leg_nets,
+        "points": [pid(x) for x in points],
+        "requests_planned": count_requests(plan, points),
+        "source_sha256": {
+            "extracted_dut": sha(text),
+            "schematic_dut": file_sha(SCHEMATIC_DUT),
+            "cited_report": file_sha(CITED_REPORT),
+            "attribution_json_229": file_sha(
+                HERE / "artifacts" / "parasitic-attribution" / "20261010-120720-230574b"
+                / "attribution.json"),
+            "ground_c_budget_243_readme": file_sha(
+                HERE / "artifacts" / "ground-c-budget" / "20261010-154019-b9fff0f" / "README.md"),
+            "tb_json_consumed_fields": TB_JSON_CONSUMED_SHA256,
+            "pex_measure_py": file_sha(HERE / "pex_measure.py"),
+            "parasitic_attribution_py": file_sha(Path(__file__).resolve()),
+        },
+        "variants": [],
+    }
+    for x in plan:
+        e = {"id": x["id"], "side": x["side"], "centre": x["centre"],
+             "fraction_c": x["fraction_c"], "fraction_r": x["fraction_r"],
+             "dut_sha256": sha(x["dut"]), "probe_deck_sha256": sha(probe_deck(x["dut"]))}
+        if x["side"] == "extracted":
+            cf, rr = retained_ff(x["dut"], cg_nets), retained_r_ohm(x["dut"], leg_nets)
+            e.update({"retained_ground_c_ff": cf, "retained_series_r_ohm": rr,
+                      "total_ground_c_ff": sum(cf.values()),
+                      "total_series_r_ohm": sum(rr.values())})
+        man["variants"].append(e)
+    return man
+
+
+def _combo_plan_from_manifest(man: dict, text: str) -> list[dict]:
+    cells = [(x["fraction_c"], x["fraction_r"]) for x in man["variants"]
+             if x["id"] not in ("ctrl", "sch")]
+    plan = combo_variants(text, cells)
+    have = {x["id"] for x in man["variants"]}
+    return [v for v in plan if v["id"] in have]
+
+
+def _combo_args(args) -> list:
+    if args.cells:
+        cells = []
+        for tok in args.cells.split(","):
+            c, _, r = tok.partition(":")
+            try:
+                cells.append((float(c), float(r)))
+            except ValueError:
+                sys.exit(f"--cells entry {tok!r} is not f_c:f_r")
+        return cells
+    return combo_cells()
+
+
+def combo_stage_plan(text: str, cells, kind: str, controls_from: str | None):
+    """The variant plan of one stage kind, with the stage-kind rules:
+    grid / seven rerun both controls; a refinement adds at most
+    COMBO_REFINE_MAX_CELLS cells along one axis and takes its controls from
+    an earlier stage (`controls_from`)."""
+    plan = combo_variants(text, cells)
+    if kind == "refine":
+        if not controls_from:
+            raise ValueError("a refine stage needs --controls-from <earlier stage dir>")
+        if len(cells) > COMBO_REFINE_MAX_CELLS or not one_axis(cells):
+            raise ValueError(f"a refine stage adds at most {COMBO_REFINE_MAX_CELLS} cells "
+                             "along one axis")
+        plan = [v for v in plan if v["group"] == "scaled"]
+    elif controls_from:
+        raise ValueError("--controls-from is only for a refine stage")
+    if kind == "seven" and len(cells) != 1:
+        raise ValueError("the seven-corner check runs exactly one candidate cell")
+    return plan
+
+
+def check_request_budget(outdir: Path, kind: str, planned: int) -> None:
+    """Refuse a stage over its kind's cap, or one that would push the sum of
+    planned requests of every stage in the artifact directory over the hard
+    total cap."""
+    if planned > COMBO_STAGE_CAPS[kind]:
+        raise ValueError(f"{kind} stage plans {planned} requests > cap {COMBO_STAGE_CAPS[kind]}")
+    others = 0
+    for st in sorted(outdir.parent.glob("*/stage.json")):
+        if st.parent.resolve() == outdir.resolve():
+            continue
+        others += json.loads(st.read_text()).get("requests_planned", 0)
+    if others + planned > COMBO_TOTAL_CAP:
+        raise ValueError(f"{others} requests already planned in {outdir.parent} + {planned} "
+                         f"> total cap {COMBO_TOTAL_CAP}")
+
+
+def _combo_points(kind: str):
+    return budget_points("seven" if kind == "seven" else "two")
+
+
+def cmd_combo_plan(args) -> int:
+    text = load_extracted()
+    points = _combo_points(args.kind)
+    plan = combo_stage_plan(text, _combo_args(args), args.kind, args.controls_from)
+    print(f"kind={args.kind} points: " + ", ".join(pid(p) for p in points))
+    print(f"requests planned: {count_requests(plan, points)} "
+          f"(stage cap {COMBO_STAGE_CAPS[args.kind]}, total cap {COMBO_TOTAL_CAP})")
+    for x in plan:
+        if x["side"] != "extracted":
+            print(f"{x['id']:<15} schematic")
+            continue
+        c = sum(retained_ff(x["dut"], sorted(parse(text)["cg"])).values())
+        r = sum(retained_r_ohm(x["dut"]).values())
+        print(f"{x['id']:<15} f_c={x['fraction_c']:g} f_r={x['fraction_r']:g} "
+              f"total ground C {c:.2f} fF, total leg R {r:.1f} ohm")
+    return 0
+
+
+def cmd_combo_run(args) -> int:
+    check_bench()
+    text = load_extracted()
+    points = _combo_points(args.kind)
+    outdir = Path(args.outdir).resolve()
+    try:
+        plan = combo_stage_plan(text, _combo_args(args), args.kind, args.controls_from)
+        planned = count_requests(plan, points)
+        check_request_budget(outdir, args.kind, planned)
+    except ValueError as e:
+        sys.exit(str(e))
+    if args.backend == "local" and planned != 1:
+        sys.exit("--backend local is a single-request debug probe only")
+    outdir.mkdir(parents=True, exist_ok=True)
+    man = combo_manifest(text, plan, points, args.kind, args.controls_from)
+    return run_stage(outdir, man, plan, points, args.backend, args.jobs, COMBO_ISSUE)
+
+
+def _ok(x) -> bool:
+    return bool(x and x.get("td_od50_ns") is not None and x["meets_1p5ns"])
+
+
+def combo_analyze(outdir: Path) -> dict:
+    man = json.loads((outdir / "stage.json").read_text())
+    text = load_extracted()
+    points = [parse_corner_id(c) for c in man["points"]]
+    cids = [pid(p) for p in points]
+    plan = {x["id"]: x for x in _combo_plan_from_manifest(man, text)}
+    mvar = {x["id"]: x for x in man["variants"]}
+    res = {vid: _budget_values(outdir / vid, points) for vid in plan if (outdir / vid).is_dir()}
+    missing = [(vid, pid(p)) for vid in plan for p in points if p not in res.get(vid, {})]
+    ctrl_src = None
+    if man.get("controls_from"):
+        cdir = (outdir / man["controls_from"]).resolve()
+        ctrl_src = {"dir": man["controls_from"],
+                    "stage_json_sha256": file_sha(cdir / "stage.json")}
+        for vid in ("ctrl", "sch"):
+            res[vid] = _budget_values(cdir / vid, points)
+            missing += [(f"{man['controls_from']}/{vid}", pid(p)) for p in points
+                        if p not in res[vid]]
+    controls, valid = stage_controls(res, points)
+
+    rows = []
+    for vid, x in plan.items():
+        if vid == "sch":
+            continue
+        m = mvar[vid]
+        row = {"id": vid, "fraction_c": x["fraction_c"], "fraction_r": x["fraction_r"],
+               "total_ground_c_ff": m["total_ground_c_ff"],
+               "total_series_r_ohm": m["total_series_r_ohm"],
+               "probe_deck_sha256": m["probe_deck_sha256"], "corners": {}}
+        for pt in points:
+            r, c = res.get(vid, {}).get(pt), res.get("ctrl", {}).get(pt)
+            if not r or r["td_od50_ns"] is None:
+                row["corners"][pid(pt)] = {"td_od50_ns": None, "unresolved_count": None,
+                                           "missing": not r,
+                                           "job_ids": (r or {}).get("job_ids")}
+                continue
+            row["corners"][pid(pt)] = {
+                "td_od50_ns": r["td_od50_ns"], "td_od1_ns": r["td_od1_ns"],
+                "td_od01_ns": r["td_od01_ns"], "tau_ps": r["tau_ps"],
+                "dout_od50_end": r["dout_od50_end"],
+                "unresolved_count": sum(r[k] is None for k in
+                                        ("td_od50_ns", "td_od1_ns", "td_od01_ns")),
+                "dut_vos_v": r["dut_vos_v"],
+                "dut_vos_shift_v": (None if not c or None in (r["dut_vos_v"], c["dut_vos_v"])
+                                    else r["dut_vos_v"] - c["dut_vos_v"]),
+                "margin_to_1p5ns_ns": pm.SPEC_TD_OD50_NS_MAX - r["td_od50_ns"],
+                "meets_1p5ns": r["td_od50_ns"] <= pm.SPEC_TD_OD50_NS_MAX,
+                "job_ids": r["job_ids"], "probe_job_ids": r["probe_job_ids"],
+                "ladder_netlist_sha256": r["ladder_netlist_sha256"]}
+        rows.append(row)
+    rows.sort(key=lambda r: (-r["fraction_r"], -r["fraction_c"]))
+
+    # Outcome: only TESTED cells are evidence. No interpolation, no
+    # monotonicity assumption, no extrapolation to untested cells.
+    scaled = [r for r in rows if r["id"] != "ctrl"]
+    cands = [r for r in scaled if all(_ok(r["corners"].get(c)) for c in cids)]
+    for r in cands:
+        r["min_margin_ns"] = min(r["corners"][c]["margin_to_1p5ns_ns"] for c in cids)
+    # Brackets along each axis (the other held fixed), per point and for
+    # "every point": adjacent tested cells, failing -> meeting.
+    brackets = []
+    for axis, fixed in (("fraction_c", "fraction_r"), ("fraction_r", "fraction_c")):
+        for val in sorted({r[fixed] for r in rows}, reverse=True):
+            seq = sorted((r for r in rows if r[fixed] == val), key=lambda r: -r[axis])
+            for a, b in zip(seq, seq[1:]):
+                for cid in cids + ["all"]:
+                    sel = cids if cid == "all" else [cid]
+                    if (not all(_ok(a["corners"].get(c)) for c in sel)
+                            and all(_ok(b["corners"].get(c)) for c in sel)):
+                        brackets.append({"axis": axis, fixed: val, "point": cid,
+                                         "fails_at": a[axis], "meets_at": b[axis],
+                                         "fails_id": a["id"], "meets_id": b["id"]})
+    nonmono = {}
+    for cid in cids:
+        flags = []
+        for axis, fixed in (("fraction_c", "fraction_r"), ("fraction_r", "fraction_c")):
+            for val in {r[fixed] for r in rows}:
+                seq = sorted((r for r in rows if r[fixed] == val
+                              and (r["corners"].get(cid) or {}).get("td_od50_ns") is not None),
+                             key=lambda r: -r[axis])
+                flags += [b["corners"][cid]["td_od50_ns"] > a["corners"][cid]["td_od50_ns"]
+                          for a, b in zip(seq, seq[1:])]
+        nonmono[cid] = any(flags)
+    best = {}
+    for cid in cids:
+        xs = [(r["corners"][cid]["td_od50_ns"], r["id"]) for r in scaled
+              if (r["corners"].get(cid) or {}).get("td_od50_ns") is not None]
+        if xs:
+            td, vid = min(xs)
+            best[cid] = {"id": vid, "td_od50_ns": td, "margin_to_1p5ns_ns": pm.SPEC_TD_OD50_NS_MAX - td}
+    tested = ", ".join(f"({r['fraction_c']:g}, {r['fraction_r']:g})" for r in scaled)
+    if not valid:
+        outcome = "refused: controls do not reproduce the cited decision times or are missing"
+        selected = None
+    elif cands:
+        sel = max(cands, key=lambda r: (r["fraction_c"], r["fraction_r"]))
+        selected = sel["id"]
+        outcome = (f"{len(cands)} tested cell(s) meet 1.5 ns at every stage point; selected "
+                   f"{sel['id']} (largest f_c, then largest f_r), minimum measured margin "
+                   f"{sel['min_margin_ns'] * 1e3:+.1f} ps at these points (tested cells only; "
+                   f"not a minimum budget, not an extrapolation)")
+    else:
+        selected = None
+        open_b = [b for b in brackets if b["point"] == "all"]
+        outcome = ("no tested cell meets 1.5 ns at every stage point "
+                   + ("(an every-point bracket exists; see brackets)" if open_b
+                      else "and no every-point crossing bracket exists")
+                   + f" (tested (f_c, f_r): {tested})")
+    return {
+        "issue": COMBO_ISSUE,
+        "generated_by": "layout/pex/parasitic_attribution.py combo-analyze",
+        "scope": man["scope"], "kind": man["kind"], "points": cids,
+        "source_sha256": man["source_sha256"], "controls_from": ctrl_src,
+        "controls": controls, "study_valid": valid, "missing": missing,
+        "outcome": outcome, "candidates": [r["id"] for r in cands],
+        "selected_candidate": selected,
+        "brackets": brackets, "non_monotonic_per_point": nonmono,
+        "fastest_scaled_per_point": best,
+        "variants": rows,
+    }
+
+
+def combo_table_md(a: dict, man: dict) -> str:
+    cids = a["points"]
+    lines = ["| variant | f_c | f_r | total ground C fF | total leg R ohm | "
+             + " | ".join(f"{c}: td_od50 ns / margin ns / vos shift mV / unresolved"
+                          for c in cids) + " |",
+             "|---|---|---|---|---|" + "---|" * len(cids)]
+    for r in a["variants"]:
+        cells = []
+        for c in cids:
+            x = r["corners"].get(c)
+            if not x or x["td_od50_ns"] is None:
+                cells.append("MISSING" if (x or {}).get("missing", True) else "UNRESOLVED")
+                continue
+            sh = x["dut_vos_shift_v"]
+            cells.append(f"{x['td_od50_ns']:.4f} / {x['margin_to_1p5ns_ns']:+.4f} / "
+                         + ("n/a" if sh is None else f"{sh * 1e3:+.2f}")
+                         + f" / {x['unresolved_count']}"
+                         + (" PASS" if x["meets_1p5ns"] else " fail"))
+        lines.append(f"| `{r['id']}` | {r['fraction_c']:g} | {r['fraction_r']:g} | "
+                     f"{r['total_ground_c_ff']:.2f} | {r['total_series_r_ohm']:.1f} | "
+                     + " | ".join(cells) + " |")
+    ext = [x for x in man["variants"] if x["side"] == "extracted"]
+    lines += ["", "Retained ground C per net (fF), from the variant netlists:", "",
+              "| net | " + " | ".join(f"`{x['id']}`" for x in ext) + " |",
+              "|---|" + "---|" * len(ext)]
+    for n in man["cg_nets"]:
+        lines.append(f"| {n} | " + " | ".join(f"{x['retained_ground_c_ff'][n]:.3f}"
+                                                for x in ext) + " |")
+    lines += ["", "Retained series-R leg sum per net (ohm), from the variant netlists:", "",
+              "| net | " + " | ".join(f"`{x['id']}`" for x in ext) + " |",
+              "|---|" + "---|" * len(ext)]
+    for n in man["leg_nets"]:
+        lines.append(f"| {n} | " + " | ".join(f"{x['retained_series_r_ohm'][n]:.2f}"
+                                                for x in ext) + " |")
+    return "\n".join(lines) + "\n"
+
+
+def cmd_combo_analyze(args) -> int:
+    outdir = Path(args.outdir).resolve()
+    a = combo_analyze(outdir)
+    man = json.loads((outdir / "stage.json").read_text())
+    (outdir / "combo.json").write_text(json.dumps(a, indent=2, sort_keys=True) + "\n")
+    (outdir / "combo-table.md").write_text(
+        "<!-- GENERATED by layout/pex/parasitic_attribution.py combo-analyze -- do not edit -->\n"
+        + combo_table_md(a, man))
+    print(f"study_valid={a['study_valid']} missing={len(a['missing'])}\n{a['outcome']}")
+    return 0 if a["study_valid"] and not a["missing"] else 1
+
+
+def cmd_combo_verify(args) -> int:
+    """PDK-free: stage.json's plan and data-input hashes are what the code
+    regenerates (code hashes are provenance; drift is only reported), every
+    report ran the deck regenerated here, and combo.json / combo-table.md are
+    what `combo-analyze` derives."""
+    outdir = Path(args.outdir).resolve()
+    check_bench()
+    text = load_extracted()
+    man = json.loads((outdir / "stage.json").read_text())
+    points = [parse_corner_id(c) for c in man["points"]]
+    plan = _combo_plan_from_manifest(man, text)
+    errors, drift = budget_manifest_diff(
+        man, combo_manifest(text, plan, points, man["kind"], man.get("controls_from")))
+    for d in drift:
+        print(f"NOTE provenance drift (not an error): {d}")
+    errors += verify_stage_reports(outdir, plan, points)
+    committed = outdir / "combo.json"
     if not committed.exists():
-        errors.append("budget.json missing")
-    elif json.loads(committed.read_text()) != json.loads(json.dumps(budget_analyze(outdir))):
-        errors.append("budget.json is not what `budget-analyze` derives from the reports")
+        errors.append("combo.json missing")
+    else:
+        a = combo_analyze(outdir)
+        if json.loads(committed.read_text()) != json.loads(json.dumps(a)):
+            errors.append("combo.json is not what `combo-analyze` derives from the reports")
+        tbl = outdir / "combo-table.md"
+        if not tbl.exists() or tbl.read_text().split("\n", 1)[1] != combo_table_md(a, man):
+            errors.append("combo-table.md is not what `combo-analyze` generates")
     for e in errors:
         print(f"FAIL {e}")
-    print(f"budget-verify: {len(errors)} error(s)")
+    print(f"combo-verify: {len(errors)} error(s)")
     return 1 if errors else 0
 
 
@@ -1338,11 +1836,30 @@ def main(argv=None) -> int:
     for name in ("budget-analyze", "budget-verify"):
         s = sub.add_parser(name)
         s.add_argument("outdir")
+    for name in ("combo-plan", "combo-run"):
+        c = sub.add_parser(name, help="combined ground-C x series-R budget (issue #264)")
+        if name == "combo-run":
+            c.add_argument("outdir")
+            c.add_argument("--backend", default="batch", choices=("batch", "local"))
+            c.add_argument("--jobs", type=int, default=2)
+        c.add_argument("--kind", default="grid", choices=tuple(COMBO_STAGE_CAPS),
+                       help="grid: two corners, controls rerun; refine: <= 4 cells on one "
+                            "axis, controls from --controls-from; seven: one candidate at "
+                            "the seven failing corners, controls rerun")
+        c.add_argument("--cells", help="comma list of f_c:f_r (each in (0,1]); default the "
+                                       "#264 grid 0.75,0.5,0.25 x 1.0,0.5")
+        c.add_argument("--controls-from", help="refine only: the earlier stage directory "
+                                               "(relative to OUTDIR) whose ctrl/sch are used")
+    for name in ("combo-analyze", "combo-verify"):
+        s = sub.add_parser(name)
+        s.add_argument("outdir")
     args = ap.parse_args(argv)
     return {"plan": cmd_plan, "run": cmd_run, "analyze": cmd_analyze,
             "verify": cmd_verify, "budget-plan": cmd_budget_plan,
             "budget-run": cmd_budget_run, "budget-analyze": cmd_budget_analyze,
-            "budget-verify": cmd_budget_verify}[args.cmd](args)
+            "budget-verify": cmd_budget_verify, "combo-plan": cmd_combo_plan,
+            "combo-run": cmd_combo_run, "combo-analyze": cmd_combo_analyze,
+            "combo-verify": cmd_combo_verify}[args.cmd](args)
 
 
 if __name__ == "__main__":
