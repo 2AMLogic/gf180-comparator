@@ -290,12 +290,23 @@ covered automatically:
 | `sim/<experiment>/corners/**` | raw per-corner ngspice logs (incl. orphaned aborted-run logs) |
 | `sim/<experiment>/netlist-snapshots/**` | netlists exactly as simulated |
 | `sim/<experiment>/yield/**` | Monte-Carlo yield evidence |
+| `sim/<experiment>/probes/**` | committed feasibility probe artifacts (reports, logs, refusals, and the `sources/` / `extract/` copies bundled into each probe) |
 | `sim/corner-matrix/**/*.json` | item-5 corner-matrix revision envelopes |
 
 Not protected: testbenches, `sim/harness/` and other tooling, experiment
 `README.md` files, DUT and configuration sources, mutable `layout/` reports,
 and the signoff manifest/report — those keep their existing re-pin/re-grade
 contract in `signoff/README.md`.
+
+**Probes are immutable but experimental.** Everything under an experiment's
+`probes/` directory is an empirical result exactly as run, including the
+`sources/` and `extract/` copies bundled into a probe (they are snapshots of the
+inputs, not working files). Protection applies once a file is committed;
+adding a new probe is always allowed. Protection does not promote a probe to
+signoff evidence: probes mint no reference record, are not in the signoff
+manifest, and signoff eligibility is unchanged. Editable testbench and DUT
+sources stay outside `probes/`; correct a probe by adding a new probe
+identifier and updating citations.
 
 **Correcting evidence.** There is no allowlist or exception file. A wrong or
 superseded result is corrected by adding a NEW run (a fresh `<record-id>`) or a

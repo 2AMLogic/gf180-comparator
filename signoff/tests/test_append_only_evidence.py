@@ -32,7 +32,10 @@ SNAP = "sim/comparator-regeneration/netlist-snapshots/20260910-125206-4805118.sp
 YIELD = "sim/comparator-offset-mc/yield/20260910-125341-4805118.json"
 ENVELOPE = "sim/corner-matrix/item5-corner-matrix-20260910-124917-4805118.json"
 NEW_EXP = "sim/comparator-brand-new/records/20261009-000000-abcdef0.md"
-PROTECTED = [REC, LOG, SNAP, YIELD, ENVELOPE, NEW_EXP]
+PROBE = "sim/comparator-offset-x/probes/20261010-negative-control/report-mc-tt.json"
+PROBE_SRC = "sim/comparator-offset-x/probes/20261010-negative-control/sources/testbench/tb.spice"
+PROBE_LOG = "sim/comparator-offset-x/probes/20261010-negative-control/err-mc-tt.attempt1.txt"
+PROTECTED = [REC, LOG, SNAP, YIELD, ENVELOPE, NEW_EXP, PROBE, PROBE_SRC, PROBE_LOG]
 UNPROTECTED = [
     "sim/comparator-offset-mc/README.md",
     "sim/comparator-offset-mc/testbench/tb.json",
@@ -40,6 +43,9 @@ UNPROTECTED = [
     "sim/harness/run.py",
     "sim/dut.json",
     "sim/corner-matrix/README.md",
+    "sim/comparator-offset-x/README.md",
+    "sim/comparator-offset-x/testbench/tb.spice",
+    "sim/probes/x.json",
     "layout/reports/drc-summary.json",
     "signoff/block-manifest.json",
     "signoff/signoff-report.json",
@@ -145,13 +151,14 @@ class TreeComparisonTests(Base):
 
     def test_additions_pass_in_every_family(self):
         for rel in PROTECTED:
-            self.r.write(rel.replace("4805118", "9999999").replace("abcdef0", "1234567"), "new\n")
+            self.r.write(rel.replace("4805118", "9999999").replace("abcdef0", "1234567")
+                         .replace("20261010-negative-control", "20261011-new-probe"), "new\n")
         self.r.write("sim/corner-matrix/item5-corner-matrix-r3.json", "{}\n")
         self.r.write("sim/comparator-other/records/first.md", "new experiment\n")
         self.r.commit()
         rc, out = self.check()
         self.assertEqual(rc, 0, out)
-        self.assertIn("8 protected path(s) added", out)
+        self.assertIn("11 protected path(s) added", out)
 
     def test_unprotected_changes_pass(self):
         for rel in UNPROTECTED:
@@ -167,6 +174,36 @@ class TreeComparisonTests(Base):
                 self.r.write(rel, "rewritten\n")
                 self.r.commit()
                 self.assertFailsNaming(self.check(), rel, "modified")
+
+    def test_probe_artifact_modification_deletion_fails(self):
+        for rel in (PROBE, PROBE_SRC, PROBE_LOG):
+            with self.subTest(rel=rel):
+                self.r.git("checkout", "-q", "-B", "work", self.base)
+                self.r.write(rel, "rewritten\n")
+                self.r.commit()
+                self.assertFailsNaming(self.check(), rel, "modified")
+                self.r.git("checkout", "-q", "-B", "work2", self.base)
+                self.r.git("rm", "-q", rel)
+                self.r.commit()
+                self.assertFailsNaming(self.check(), rel, "deleted")
+
+    def test_probe_rename_and_mode_change_fail(self):
+        self.r.git("mv", PROBE, PROBE.replace("report", "report2"))
+        self.r.commit()
+        self.assertFailsNaming(self.check(), PROBE, "moved/renamed")
+        self.r.git("checkout", "-q", "-B", "work", self.base)
+        os.chmod(self.r.root / PROBE_LOG, 0o755)
+        self.r.commit()
+        self.assertFailsNaming(self.check(), PROBE_LOG, "mode changed")
+
+    def test_new_probe_and_experiment_docs_edit_pass(self):
+        self.r.write("sim/comparator-offset-x/probes/20261011-corrected/report.json", "n\n")
+        self.r.write("sim/comparator-offset-x/README.md", "edited docs\n")
+        self.r.write("sim/comparator-offset-x/testbench/tb.spice", "edited tb\n")
+        self.r.commit()
+        rc, out = self.check()
+        self.assertEqual(rc, 0, out)
+        self.assertIn("1 protected path(s) added", out)
 
     def test_deletion_fails(self):
         self.r.git("rm", "-q", ENVELOPE)
