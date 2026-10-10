@@ -18,14 +18,30 @@ partition only, so 2.80 mV 3σ is the preamplifier's offset and a **lower bound*
 total input-referred offset. It excludes the StrongARM decision stage, which has no DC
 operating point, and the `ppolyf_u_1k` load-pair mismatch (the PDK hard-sets `mis_r = 0`).
 The additive bench that closes both,
-[`sim/comparator-offset-tran/`](../sim/comparator-offset-tran/README.md), has been
-**defined but not yet measured**. It is a whole-comparator transient Monte Carlo with
-N = 200, `setseed 20260909`, on tt/ss/ff × −40/27/125 °C at 3.3 V, with a paired
-same-draw latch term. It also adds a derived load-R hand budget: σ(ΔR/R)_pair = 0.19 %
-from the foundry's `ppolyf_u` `par_r = 0.021 µm`, with a 3× conservative variant scored.
-Its fleet runs have not produced a record so far (2AMLogic/klayout-tools#2970, #2833). No
-total-offset number is claimed until one does. The ratified bound and the verdict above
-are unchanged.
+[`sim/comparator-offset-tran/`](../sim/comparator-offset-tran/README.md), is a
+whole-comparator transient Monte Carlo (preamp + StrongARM latch + SR latch) with
+N = 200 draws per PVT point and seed 20260909 (the same seed as the DC bench). It runs
+on a **reduced grid**: tt/ss/ff × −40/27/125 °C at 3.3 V, 9 points, not 45. The
+latch term is paired, measured on the same draw. On top of that it adds a
+**derived, not simulated** load-R hand budget: σ(ΔR/R)_pair = A_R/√(WL) = 0.19 %,
+from the foundry's commented-out `ppolyf_u` `par_r = 0.021 µm`. The scored variant
+uses a 3× conservative A_R.
+
+**Measured total** ([`sim/comparator-offset-tran/records/20261010-013540611508-4a4df37.md`](../sim/comparator-offset-tran/records/20261010-013540611508-4a4df37.md), fleet job `klt-sim-816fb60826f4`):
+
+| 3σ input-referred offset | `tt_27c_3.30v` | 9-point range |
+|---|---|---|
+| DC bench, preamp only (record above) | 2.801 mV | 2.796–2.807 mV |
+| whole comparator, simulated | 2.897 mV | 2.897–3.439 mV |
+| **whole comparator + conservative load-R budget (scored)** | **3.146 mV** | **3.146–3.725 mV** (worst `ff_125c_3.30v`) |
+
+The latch contribution, as a paired 1σ, is 0.333 mV at nominal and
+0.203–0.608 mV across the grid. It is largest hot and fast, where the preamp gain
+is lowest. The load-R term is 0.136 mV 1σ at nominal (0.409 mV conservative).
+**The total is within the ≤ 15 mV target and the ≤ 8 mV stretch at 9/9 points**, so
+the verdict above stands with the latch and load-R terms included. Not covered:
+fs/sf and the ±10 % supply points (the DC sigma moves < 0.4 % across them), and
+layout-induced systematic offset (schematic DUT). The ratified bound is unchanged.
 
 ## Input-referred noise
 

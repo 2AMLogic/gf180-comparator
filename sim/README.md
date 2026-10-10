@@ -17,8 +17,9 @@ A fifth, additive bench backs the same Offset σ row from the other side:
 [`comparator-offset-tran/`](comparator-offset-tran/) is a whole-comparator
 transient Monte Carlo (preamp + StrongARM latch + SR latch) with a derived hand
 budget for the unmodelled `ppolyf_u_1k` load-pair mismatch. It covers the two
-terms `comparator-offset-mc/` cannot see (issue #157). It is fleet-only (`sim/tools/klt_record.py`) and
-**has no record yet**; see its README for the failed fleet attempts.
+terms `comparator-offset-mc/` cannot see (issue #157). It is fleet-only (`sim/tools/klt_record.py`); first record
+`comparator-offset-tran/records/20261010-013540611508-4a4df37` (total 3σ
+3.146–3.725 mV over its reduced 9-point grid).
 
 Metastability and kickback are first-class rows here, not appendices, per
 [`CLAUDE.md`](../CLAUDE.md).
@@ -137,8 +138,9 @@ expressed for the fleet runner (its `klt` 0.5.0 has no `noise` analysis), so a
 noise is run locally via `run_corners.py` (a single nominal point on a shared dispatch worker; the full PVT grid only on a workstation with the pinned PDK); fleet requests support the
 schematic DUT binding only, so extracted (`comparator-dr0001-layout`) records
 use the local `postlayout` path, and fleet records omit some secondary
-quantities (each record lists which). `comparator-offset-tran` is defined but
-has no record yet (see its README).
+quantities (each record lists which). `comparator-offset-tran` pins ngspice to one
+thread per unit (a `.control` block in its generated body) because the
+runner's per-process threads oversubscribed the job instance (see its README).
 
 A re-run mints a **new** record; it never overwrites one already committed.
 `sim/` is an evidence trail, not a status page.

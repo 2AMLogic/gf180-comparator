@@ -1,0 +1,80 @@
+{
+ "schema": "gf180-comparator/klt-source-bundle",
+ "version": 2,
+ "generator": "sim/tools/mk_klt_request.py",
+ "generated_utc": "2026-10-10T01:08:36Z",
+ "bench": "comparator-offset-tran",
+ "origin": {
+  "commit": "4a4df378e37fcbf63a37e947ac5b3ce3def05fac",
+  "dirty": false,
+  "dirty_paths": [],
+  "checked_paths": [
+   "design",
+   "sim/tools",
+   "sim/harness",
+   "sim/comparator-offset-tran/testbench",
+   "sim/dut.json",
+   "design/comparator.spice"
+  ]
+ },
+ "dut": {
+  "selector": null,
+  "key": "comparator-dr0001",
+  "dut_id": "comparator-dr0001",
+  "provenance": "schematic",
+  "netlist": "design/comparator.spice",
+  "netlist_sha256": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a",
+  "params": {
+   "dut_ib": 1e-05,
+   "dut_vcm": 1.65
+  },
+  "binding_config": "sim/dut.json",
+  "binding_entry_sha256": "77228add0ad0b1b62eda65cfcfd0f79c62b5d289ecd7eb1caa1522de9afb274e",
+  "staged_netlist": "sources/dut/comparator.spice",
+  "staged_binding": "sources/dut-binding.json"
+ },
+ "testbench": {
+  "experiment": "comparator-offset-tran",
+  "dir": "sim/comparator-offset-tran/testbench",
+  "netlist": "tb_offset_tran.spice",
+  "netlist_sha256": "1adfed227742098be0c5db0244f2ca248bb9420e8d8b3d5f13b4c2edc7d518fa",
+  "manifest_sha256": "91477d40b958f25d04e97c0bff79c5e5e8744c00f27c759f971e18ae4fa19649",
+  "staged_dir": "sources/testbench"
+ },
+ "parameters": {
+  "corners": [
+   "tt",
+   "ss",
+   "ff"
+  ],
+  "temperatures_c": [
+   -40.0,
+   27.0,
+   125.0
+  ],
+  "supply_tolerance": 0.0,
+  "supply_v": [
+   3.3
+  ],
+  "mc_n": 200
+ },
+ "requests": {
+  "main-v3.30": {
+   "leg": "main",
+   "vdd": 3.3,
+   "request": "request-main-v3.30.json",
+   "request_sha256": "1a7cc1735b2dd8ec3e714721ab927b8642d7ea20ef07ec5c3f47543a7d0fedc2",
+   "netlist": "body-v3.30.spice",
+   "netlist_sha256": "b981c9d233e7a9d613d106dfaf2d4ea7d37e50bd13348d68dd212c73e425d5eb"
+  }
+ },
+ "staged": {
+  "body-v3.30.spice": "b981c9d233e7a9d613d106dfaf2d4ea7d37e50bd13348d68dd212c73e425d5eb",
+  "design.ngspice": "091cb530bf85160a1f07878fb81f789ca367d018991c8ab41a584cd1a85c6692",
+  "request-main-v3.30.json": "1a7cc1735b2dd8ec3e714721ab927b8642d7ea20ef07ec5c3f47543a7d0fedc2",
+  "sources/dut/comparator.spice": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a",
+  "sources/dut-binding.json": "9ed024b2e635e241570e47b0e48c2fbe8719c0c4dbd38c92b7e97c1b06e49701",
+  "sources/testbench/tb.json": "91477d40b958f25d04e97c0bff79c5e5e8744c00f27c759f971e18ae4fa19649",
+  "sources/testbench/tb_offset_tran.spice": "1adfed227742098be0c5db0244f2ca248bb9420e8d8b3d5f13b4c2edc7d518fa"
+ }
+}

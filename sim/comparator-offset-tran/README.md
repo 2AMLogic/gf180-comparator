@@ -16,35 +16,75 @@ Twin-bench definition: same `tb.json` + `tb_*.spice` + `records/` layout as
 the other four benches, same `setseed 20260909` + `reset` draw convention
 (seed common to every PVT point, so movement across the grid is a PVT effect).
 
-## Status: defined, NOT yet measured (fleet could not run the grid)
+## Status: measured (record `20261010-013540611508-4a4df37`)
 
-**No record exists yet.** The `records` directory has not been created and no number from
-this bench is cited anywhere. Three fleet submissions were made on
-2026-10-09 (klt client 0.7.0+g86740f86d44f); none produced a result, and per
-the host rules none was replaced by a local grid:
+[`records/20261010-013540611508-4a4df37.md`](records/20261010-013540611508-4a4df37.md),
+fleet job `klt-sim-816fb60826f4` (c7i.4xlarge Spot, runner klt 0.5.0, 200 s
+elapsed). All 9 PVT points x N = 200 draws completed, with no failed unit or
+named problem. Commit `4a4df37`, clean.
+
+| quantity (3σ unless noted) | `tt_27c_3.30v` | range over the 9 points |
+|---|---|---|
+| whole-comparator, simulated (`vos_3sig_tran_mv`) | 2.897 mV | 2.897–3.439 mV |
+| DC bench, same corners ([`20260910-124917-4805118`](../comparator-offset-mc/records/20260910-124917-4805118.md)) | 2.801 mV | 2.796–2.807 mV |
+| latch term, paired 1σ (`sig_latch_mv`) | 0.333 mV | 0.203–0.608 mV (max `ff_125c`) |
+| load-R hand budget 1σ, nominal / 3× conservative (derived) | 0.136 / 0.409 mV | 0.114–0.166 / 0.342–0.499 mV |
+| **total incl. conservative load-R (`vos_3sig_total_cons_mv`, scored)** | **3.146 mV** | **3.146–3.725 mV (max `ff_125c`)** |
+
+**Score: within the ≤ 15 mV target and the ≤ 8 mV stretch at 9/9 points**
+(the worst point has 2.1× margin on the stretch). The ratified bound is
+unchanged. The latch adds a paired 1σ of 0.20–0.61 mV. It grows with
+temperature as the preamp gain falls (`av_mean` 26.7 → 11.5) and so divides
+the latch's own offset less. The same-draw preamp term `sig_vos_pre_mv`
+(0.898–1.040 mV) agrees with the DC bench's 0.932–0.936 mV to within
+−4/+12 %. The draws are independent and each sigma has 5 % precision, so
+that agreement is within about 1.6σ.
+
+### Fleet history
+
+The first three submissions, made on 2026-10-09 with klt client
+0.7.0+g86740f86d44f, produced no result. Per the host rules, none was
+replaced by a local grid:
 
 | attempt | outcome |
 |---|---|
 | 1, 2 | `batch_no_capacity`: "no capacity in any of the 30 pools after 3 attempt(s)". The requests then had no `batch.capacity_wait_s`; `sim/tools/mk_klt_request.py` now sets it (1800 s). |
 | 3 (job `klt-sim-8fc6a625dac7`, m7i.4xlarge Spot) | Launched, then hit the fleet's hard 3600 s job limit (exit 124) after about 64 of 1800 units, with an empty `report.json`, so every unit came back as `batch_job_timeout` and `klt_record.py` refused to publish (`EMPTY_RESULT`). The fleet runner (klt 0.5.0) ran about 450 s per unit per worker against about 5 s for the same unit locally. |
 
-The throughput and timeout gaps are tool-side, tracked at
-[2AMLogic/klayout-tools#2970](https://github.com/2AMLogic/klayout-tools/issues/2970)
-(per-unit transient runtime blow-up on the batch runner; data point from this
-run added) and
-[#2833](https://github.com/2AMLogic/klayout-tools/issues/2833) (a 3600 s
-whole-job timeout discards every result). The bench itself was smoke-checked
-with a single local unit (`tt`, 27 C, one draw, `klt sim --backend local`):
-every `.meas` ingredient came back finite, the output stepped cleanly 0 -> 1
-(`dn_start` ~ 1e-9, `dn_end` ~ 1.0) and the trip landed mid-staircase. That
-was a debug probe, not evidence, and no number from it is cited.
+**Root cause of the throughput collapse, and the fix (2026-10-10).** The
+batch job runs one ngspice per physical core. Each ngspice process also ran
+its own OpenMP device-evaluation threads, which oversubscribed the instance.
+Two 8-unit fleet probes on the same deck (`tt`, 27 C, one wave) isolate it:
 
-Once the fleet can run it, the invocation below mints the record unchanged.
+| probe job | ngspice threads | per-unit `runtime_s` | `.meas` values |
+|---|---|---|---|
+| `klt-sim-165f587b67e9` | default | ~422 s | reference |
+| `klt-sim-42cceb7f254f` | `set num_threads=1` | ~1.54 s | bit-identical (same seeds) |
+
+The request has no thread knob: the 0.5.0 runner drops
+`options.ngspice_init` (klt #2917). So `sim/tools/mk_klt_request.py` now ends
+this bench's generated body netlist with a `.control` / `set num_threads=1` /
+`.endc` block (`SINGLE_THREAD_BENCHES`). ngspice runs `.control` blocks in
+deck order, and the body is `.include`d ahead of klt's own `.control ... tran`,
+so the setting is in place before the analysis reads it. It changes only the
+thread count, not the circuit. One local unit drops from ~5 s to ~1.3 s with
+it as well. With the pin, the whole 1800-unit grid fits in a single job
+(200 s), well inside the 3600 s limit, so #2833's whole-job timeout is
+avoided rather than fixed. The finding is posted on
+[2AMLogic/klayout-tools#2970](https://github.com/2AMLogic/klayout-tools/issues/2970);
+[#2833](https://github.com/2AMLogic/klayout-tools/issues/2833) is still open
+on the tool side.
+
+Before the fleet run, the bench was smoke-checked with single local units
+(`tt`, 27 C, one draw, `klt sim --backend local`). These were debug probes,
+not evidence: every `.meas` ingredient came back finite, the output stepped
+cleanly 0 -> 1, and the threaded and single-thread runs gave identical values.
 
 ## Cold-start invocation
 
 Fleet only. A transient Monte Carlo is a grid (here 9 PVT points x 200
-draws = 1800 transients, ~5 s each locally) and must not run on a dispatch worker:
+draws = 1800 transients, ~1.5 s each single-threaded) and must not run on a
+dispatch worker:
 
 ```bash
 KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py comparator-offset-tran \
