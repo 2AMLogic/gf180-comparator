@@ -12,6 +12,8 @@ NOT_RUN_BY_CHARACTERIZE = {
         "(reproduce via sim/tools/klt_record.py, see sim/README.md)",
     "comparator-offset-cm-window": "supplemental, unscored feasibility stage; "
         "fleet path refused (nested sweep), no record",
+    "comparator-offset-tran-extracted-feasibility": "bounded feasibility "
+        "probe, not a campaign; fleet-only, mints_record: false, no record",
 }
 
 

@@ -85,12 +85,12 @@ regeneration record's `dut_vos_v` (-8.21806 mV) with the mismatch-capable
 netlist; at `ff_125c_3.63v` the two probes differ by 30 uV (-21.538 vs -21.568
 mV, one probe quantum).
 
-Executor notes: the tt request first failed the batch submit three times with
+Executor notes: the first tt batch submit (attempt 1, rc=1) failed with
 `batch backend failed: batch-fleet-provision.sh launch failed (exit 1): error:
 8 instance(s) already running + 1 requested exceeds
 BATCH_MAX_CONCURRENT_INSTANCES=8` (`err-mc-tt.attempt1.txt`); it was resubmitted
-to the **same** batch backend (no local fallback) and succeeded on a later
-attempt. Reports carry `runner_compatibility: mismatch` (fleet runner klt 0.5.0,
+to the **same** batch backend (no local fallback) and succeeded on attempt 2
+(rc=0; see `retry.log`). Reports carry `runner_compatibility: mismatch` (fleet runner klt 0.5.0,
 client 0.7.0), as every batch record in this repository does. Probe-leg
 reports are local single-unit runs (klt 0.7.0 client; no job id). The source
 bundles are marked dirty because the runs preceded the commit of this tool and
