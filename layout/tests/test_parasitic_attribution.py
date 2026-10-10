@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""PDK-free regressions for layout/pex/parasitic_attribution.py (#229).
+"""PDK-free regressions for layout/pex/parasitic_attribution.py (#229, #243, #264).
 
 No ngspice, no klt, no fleet. Covers: the netlist edits on a synthetic
 star-model extraction; the variant plan derived from the committed extracted
@@ -344,6 +344,162 @@ class BudgetCommittedEvidence(unittest.TestCase):
         errors, drift = pa.budget_manifest_diff(man, other)
         self.assertEqual(errors, [])
         self.assertEqual(len(drift), 2)
+
+
+class ComboScaling(unittest.TestCase):
+    """Combined ground-C x series-R scaling (#264), on the synthetic netlist."""
+
+    def changed(self, a, b):
+        return {x for x, y in zip(a.splitlines(), b.splitlines()) if x != y}
+
+    def test_r_scaling_changes_only_the_intended_leg_cards(self):
+        out = pa.scale_r(SYN, {"x", "vss"}, 0.5)
+        self.assertEqual(len(out.splitlines()), len(SYN.splitlines()))
+        self.assertEqual(self.changed(SYN, out),
+                         {"Rx_t0 x__t0 x 10.0", "Rx_t1 x__t1 x 20.0"}
+                         | {f"Rvss_t{k} vss__t{k} vss 1.0" for k in range(5)})
+        p, q = pa.parse(out), pa.parse(SYN)
+        self.assertEqual(p["legs"]["x"], [(0, 5.0), (1, 10.0)])
+        self.assertEqual(p["legs"]["y"], q["legs"]["y"])
+        self.assertEqual((p["cg"], p["cc"], p["vsubs_tie_ohm"]), (q["cg"], q["cc"], q["vsubs_tie_ohm"]))
+        self.assertIn("Rvsubs_dctie vsubs 0 1e+12", out)
+
+    def test_r_unit_factor_reproduces_exactly(self):
+        self.assertIs(pa.scale_r(SYN, {"x"}, 1.0), SYN)
+        self.assertIs(pa.scale_r(SYN, {"x"}, 1), SYN)
+        self.assertIs(pa.scale_cg_r(SYN, 1.0, 1.0), SYN)
+
+    def test_combined_changes_exactly_every_cg_and_leg_card(self):
+        out = pa.scale_cg_r(SYN, 0.5, 0.25)
+        want = {l for l in SYN.splitlines() if pa._CG_RE.match(l) or pa._LEG_RE.match(l)}
+        self.assertEqual(self.changed(SYN, out), want)
+        self.assertNotIn("Rvsubs_dctie", " ".join(want))
+        self.assertFalse([l for l in want if l.startswith(("Ccc_", "M", "X"))])
+
+    def test_combined_commutes(self):
+        p = pa.parse(SYN)
+        a = pa.scale_r(pa.scale_cg(SYN, set(p["cg"]), 0.5), set(p["legs"]), 0.25)
+        b = pa.scale_cg(pa.scale_r(SYN, set(p["legs"]), 0.25), set(p["cg"]), 0.5)
+        self.assertEqual(a, b)
+        self.assertEqual(a, pa.scale_cg_r(SYN, 0.5, 0.25))
+
+    def test_invalid_factors_rejected_by_both_scalers(self):
+        for bad in (0, 0.0, -0.1, 1.0001, 2, float("nan"), float("inf"), float("-inf"),
+                    True, False, "0.5", None):
+            for f in (lambda b: pa.scale_r(SYN, {"x"}, b),
+                      lambda b: pa.scale_cg_r(SYN, b, 0.5),
+                      lambda b: pa.scale_cg_r(SYN, 0.5, b),
+                      lambda b: pa.validate_positive_fraction(b),
+                      lambda b: pa.combo_id(b, 0.5)):
+                with self.assertRaises(ValueError, msg=repr(bad)):
+                    f(bad)
+
+    def test_invalid_nets_rejected(self):
+        with self.assertRaises(ValueError):
+            pa.scale_r(SYN, set(), 0.5)
+        with self.assertRaises(ValueError):
+            pa.scale_r(SYN, {"nosuch"}, 0.5)
+
+    def test_retained_r_reports_actual_card_values(self):
+        out = pa.scale_cg_r(SYN, 0.5, 0.5)
+        self.assertAlmostEqual(pa.retained_r_ohm(out)["x"], 15.0)
+        self.assertAlmostEqual(pa.retained_r_ohm(out)["vss"], 2.5)
+        self.assertAlmostEqual(pa.retained_ff(out, ["x"])["x"], 5.0)
+
+    def test_plan_refuses_duplicates_unit_and_empty(self):
+        for cells in ([(0.5, 0.5), (0.5, 0.5)], [(1.0, 1.0)], [], [(0.5, 0.0)],
+                      [(0.0625, 1.0), (0.0624, 1.0)]):
+            with self.assertRaises(ValueError, msg=repr(cells)):
+                pa.combo_variants(SYN, cells)
+
+    def test_grid_ids_and_request_count(self):
+        plan = pa.combo_variants(SYN, pa.combo_cells())
+        self.assertEqual([v["id"] for v in plan],
+                         ["ctrl", "cgr-0750-1000", "cgr-0500-1000", "cgr-0250-1000",
+                          "cgr-0750-0500", "cgr-0500-0500", "cgr-0250-0500", "sch"])
+        self.assertIs(plan[0]["dut"], SYN)
+        self.assertEqual(pa.count_requests(plan, pa.budget_points("two")), 23)
+
+    def test_stage_rules(self):
+        cells = [(0.2, 0.5), (0.15, 0.5)]
+        with self.assertRaises(ValueError):          # refine needs controls_from
+            pa.combo_stage_plan(SYN, cells, "refine", None)
+        with self.assertRaises(ValueError):          # two axes
+            pa.combo_stage_plan(SYN, [(0.2, 0.5), (0.15, 0.25)], "refine", "../s1")
+        with self.assertRaises(ValueError):          # too many cells
+            pa.combo_stage_plan(SYN, [(x / 10, 0.5) for x in range(1, 6)], "refine", "../s1")
+        with self.assertRaises(ValueError):          # controls_from outside refine
+            pa.combo_stage_plan(SYN, cells, "grid", "../s1")
+        with self.assertRaises(ValueError):          # seven: exactly one candidate
+            pa.combo_stage_plan(SYN, cells, "seven", None)
+        plan = pa.combo_stage_plan(SYN, cells, "refine", "../s1")
+        self.assertEqual([v["group"] for v in plan], ["scaled", "scaled"])
+        self.assertEqual(pa.count_requests(plan, pa.budget_points("two")), 6)
+
+    def test_request_budget_caps(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            with self.assertRaises(ValueError):
+                pa.check_request_budget(root / "s1", "grid", 24)
+            pa.check_request_budget(root / "s1", "grid", 23)
+            for name, n in (("s1", 23), ("s2", 12)):
+                (root / name).mkdir()
+                (root / name / "stage.json").write_text(json.dumps({"requests_planned": n}))
+            pa.check_request_budget(root / "s3", "seven", 29)
+            with self.assertRaises(ValueError):
+                pa.check_request_budget(root / "s3", "seven", 30)
+            (root / "s0").mkdir()
+            (root / "s0" / "stage.json").write_text(json.dumps({"requests_planned": 1}))
+            with self.assertRaises(ValueError):
+                pa.check_request_budget(root / "s3", "seven", 29)
+
+
+class ComboCommitted(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.text = pa.load_extracted()
+
+    def test_committed_dut_card_counts(self):
+        p = pa.parse(self.text)
+        self.assertEqual(len(p["cg"]), 20)
+        self.assertEqual(sum(len(v) for v in p["legs"].values()), 114)
+        self.assertEqual(len(p["cc"]), 60)
+
+    def test_committed_dut_combined_scaling_touches_cg_and_legs_only(self):
+        out = pa.scale_cg_r(self.text, 0.5, 0.5)
+        a, b = self.text.splitlines(), out.splitlines()
+        self.assertEqual(len(a), len(b))
+        diff = [x for x, y in zip(a, b) if x != y]
+        self.assertEqual(len(diff), 20 + 114)
+        self.assertTrue(all(pa._CG_RE.match(l) or pa._LEG_RE.match(l) for l in diff))
+        self.assertIn("Rvsubs_dctie vsubs 0 1e+12", out)
+        q = pa.parse(out)
+        self.assertEqual(q["cc"], pa.parse(self.text)["cc"])
+        tot = sum(pa.retained_r_ohm(self.text).values())
+        self.assertAlmostEqual(sum(pa.retained_r_ohm(out).values()), tot / 2, places=6)
+
+    def test_unit_cell_is_the_control(self):
+        self.assertIs(pa.scale_cg_r(self.text, 1.0, 1.0), self.text)
+        plan = pa.combo_variants(self.text, pa.combo_cells())
+        self.assertEqual(plan[0]["id"], "ctrl")
+        self.assertEqual(plan[0]["dut"], self.text)
+
+
+class ComboCommittedEvidence(unittest.TestCase):
+    def test_verify_every_committed_combo_stage(self):
+        stages = sorted((pa.HERE / "artifacts" / "combined-budget").glob("*/stage*/stage.json"))
+        for st in stages:
+            with contextlib.redirect_stdout(io.StringIO()) as out:
+                rc = pa.main(["combo-verify", str(st.parent)])
+            self.assertEqual(rc, 0, f"{st.parent}:\n{out.getvalue()}")
+            man = json.loads(st.read_text())
+            self.assertLessEqual(man["requests_planned"], pa.COMBO_STAGE_CAPS[man["kind"]])
+        roots = {st.parent.parent for st in stages}
+        for root in roots:
+            total = sum(json.loads(s.read_text())["requests_planned"]
+                        for s in root.glob("*/stage.json"))
+            self.assertLessEqual(total, pa.COMBO_TOTAL_CAP, root)
 
 
 if __name__ == "__main__":
