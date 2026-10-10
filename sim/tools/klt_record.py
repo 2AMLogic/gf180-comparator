@@ -359,6 +359,49 @@ def check_cm_window_request(req: dict) -> list[str]:
     return issues
 
 
+def check_cm_index_request(req: dict) -> list[str]:
+    """REQUEST_SHAPE_INVALID issues; [] only for ONE monotonic-index dc analysis
+    per draw whose 18 raw `.meas dc ... at=<k>` cards are exactly the fixed
+    label -> index mapping (issue #218). No `expr` entry is accepted."""
+    issues = []
+    if req.get("analysis") != {"kind": "dc", "args": mk.CM_INDEX_DC_ARGS}:
+        issues.append(f"REQUEST_SHAPE_INVALID: analysis {req.get('analysis')!r} is not the one monotonic "
+                      f"index sweep `dc {mk.CM_INDEX_DC_ARGS}`")
+    mc = req.get("monte_carlo") or {}
+    if mc.get("vary") != "mismatch" or not isinstance(mc.get("n"), int) or mc["n"] < 1:
+        issues.append(f"REQUEST_SHAPE_INVALID: monte_carlo {req.get('monte_carlo')!r} is not a mismatch draw set")
+    want = {m["name"]: m["spice"] for m in mk.cm_index_measurements()}
+    got = req.get("measurements") or []
+    names = [m.get("name") for m in got]
+    if sorted(map(str, names)) != sorted(want):
+        issues.append(f"REQUEST_SHAPE_INVALID: measurements {sorted(map(str, names))} != the six-point set")
+    for m in got:
+        if "expr" in m:
+            issues.append(f"REQUEST_SHAPE_INVALID: {m.get('name')!r} is an `expr` entry; the index bench "
+                          "uses raw `.meas` cards")
+        elif m.get("name") in want and m.get("spice") != want[m["name"]]:
+            issues.append(f"REQUEST_SHAPE_INVALID: {m['name']!r} reads {m.get('spice')!r}, its point is "
+                          f"{want[m['name']]!r}")
+    return issues
+
+
+def check_cm_index_executor(report: dict) -> list[str]:
+    """The report must name the fleet runner that produced it (executor
+    identity). No `expr` capability is needed, so no version gate."""
+    remote = (report.get("environment") or {}).get("remote")
+    runners = (remote.get("fleet") or [remote]) if isinstance(remote, dict) else remote
+    if not isinstance(runners, list) or not runners or not all(
+            isinstance(r, dict) and r.get("runner_klt_version") for r in runners):
+        return ["UNSUPPORTED_EXECUTOR_CAPABILITY: report names no fleet runner (environment.remote)"]
+    return []
+
+
+def collect_cm_index(report: dict, request: dict, vdd: float) -> tuple[dict, list[str]]:
+    """Index-stimulus counterpart of `collect_cm_window`: same identity,
+    coordinate read-back and finiteness checks over the 18 `.meas` values."""
+    return collect_cm_window(report, request, vdd, index=True)
+
+
 def check_cm_window_executor(report: dict) -> list[str]:
     """UNSUPPORTED_EXECUTOR_CAPABILITY unless every runner that produced the
     report is a version-matched klt with `expr` (environment.remote)."""
@@ -394,18 +437,19 @@ def pair_cm_window_reports(reports: list[dict]) -> dict:
     return reports[0]
 
 
-def collect_cm_window(report: dict, request: dict, vdd: float) -> tuple[dict, list[str]]:
+def collect_cm_window(report: dict, request: dict, vdd: float, index: bool = False) -> tuple[dict, list[str]]:
     """-> ({corner_id: {mcN: {label: dv}}}, issues), keyed by identity, never
     by position. A sample contributes only when it carries every one of the
     18 named values, finite, with both coordinate read-backs matching its
     labels; anything else is a named issue and the sample is excluded."""
-    issues = check_cm_window_request(request) + check_cm_window_executor(report)
+    issues = (check_cm_index_request(request) + check_cm_index_executor(report) if index
+              else check_cm_window_request(request) + check_cm_window_executor(report))
     declared, got_mc = request.get("monte_carlo") or {}, (report.get("environment") or {}).get("monte_carlo") or {}
     for k in ("n", "seed", "vary"):
         if got_mc.get(k) != declared.get(k):
             issues.append(f"MC_DECLARATION_MISMATCH: {k} requested {declared.get(k)!r}, report says {got_mc.get(k)!r}")
     want = expected_units(request, vdd)
-    names = {m["name"] for m in mk.cm_window_measurements()}
+    names = {m["name"] for m in (mk.cm_index_measurements() if index else mk.cm_window_measurements())}
     out: dict = {}
     seen: set = set()
     for c in report.get("corners", []):

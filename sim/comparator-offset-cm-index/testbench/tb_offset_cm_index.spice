@@ -1,0 +1,58 @@
+* tb_offset_cm_index -- SUPPLEMENTAL consumer-window common-mode bench, MONOTONIC
+* INDEX stimulus variant (issue #218). Sibling of tb_offset_cm_window.spice
+* (issue #182, nested sweep, refused on a klt 0.5.0 runner); that bench and its
+* sources are left as they are.
+*
+* Netlist FRAGMENT. The harness (or mk_klt_request.py's body netlist) supplies
+* the models, corner .lib sections, .temp, the DUT netlist, the .control block
+* and .end. Parameters from the harness: vdd_val, vdd_nom, temp_c, dut_ib,
+* dut_vcm.
+*
+* ONE source `vidx` is swept 0..5 in unit steps (`dc vidx 0 5 1`). Behavioural
+* sources map the index k to the SAME (vcmd, vd) pairs as the nested bench:
+*
+*     k   vcmd [V]  vd [V]   label
+*     0   -0.1      0        dn_0
+*     1   -0.1      2e-3     dn_2m
+*     2    0        0        mid_0
+*     3    0        2e-3     mid_2m
+*     4   +0.1      0        up_0
+*     5   +0.1      2e-3     up_2m
+*
+* Because the scale of the one analysis is the monotonic index, a raw
+* `.meas dc <n> find <node> at=<k>` names exactly one point. Each point is
+* read together with BOTH coordinates (`xcm` = v(cm) - v(cmb), `vd`), so a
+* mapping error is visible in the data. Thresholds below sit at half-integers
+* so the mapping does not depend on float equality of the sweep value.
+*
+* MISMATCH IS TURNED ON HERE, IN THE FRAGMENT (same reason as tb_offset_mc).
+
+.param sw_stat_mismatch=1
+
+.param c_route=10f
+
+* ---- supply ----------------------------------------------------------
+vsup vdd 0 dc {vdd_val}
+
+* ---- BEGIN stimulus (extracted verbatim by the semantics fixture) -----
+vidx idx 0 dc 0
+vcmb cmb 0 dc {dut_vcm}
+Bcmd cm  cmb v = v(idx) < 1.5 ? -0.1 : (v(idx) < 3.5 ? 0 : 0.1)
+Bvd  vd  0   v = v(idx) < 0.5 ? 0 : (v(idx) < 1.5 ? 2e-3 : (v(idx) < 2.5 ? 0 : (v(idx) < 3.5 ? 2e-3 : (v(idx) < 4.5 ? 0 : 2e-3))))
+Eap  ap cm vd 0 0.5
+Ean  an cm vd 0 -0.5
+* The common-mode delta as a node (a 0.5.0 `.meas` cannot evaluate v(a)-v(b)).
+Excm xcm 0 cm cmb 1
+* ---- END stimulus ----------------------------------------------------
+
+* ---- device under test (front end; see sim/dut/README.md) -------------
+ib   vdd ibn dc {dut_ib}
+Xa   ap an ibn aop aon vdd 0 comparator_dut_analog
+
+Cwp aop 0 {c_route}
+Cwn aon 0 {c_route}
+
+* ---- BEGIN probe -------------------------------------------------------
+* Differential output probe, a high-Z VCVS (no loading).
+Eddprobe dd 0 aop aon 1
+* ---- END probe ---------------------------------------------------------

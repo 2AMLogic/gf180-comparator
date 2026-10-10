@@ -18,6 +18,10 @@ One `klt sim` request carries ONE analysis, so a bench becomes one or more
     comparator-offset-mc    leg `main`  (monte_carlo, one dc sweep per draw)
     comparator-offset-tran  leg `main`  (monte_carlo, one clocked staircase
                             transient per draw; issue #157)
+    comparator-offset-cm-index
+                            leg `main` (monte_carlo, one monotonic-index dc
+                            sweep `vidx 0 5 1` per draw, raw `.meas dc ...
+                            at=k` cards; issue #218)
     comparator-offset-cm-window
                             REFUSED (UNSUPPORTED_EXECUTOR_CAPABILITY, issue
                             #182): the six-point same-draw request is
@@ -81,7 +85,8 @@ OFFSET_MC_N = 200
 #: `batch_no_capacity` refusal (request.batch.capacity_wait_s).
 BATCH_CAPACITY_WAIT_S = 1800
 #: Benches whose requests carry a `monte_carlo` block.
-MC_BENCHES = ("comparator-offset-mc", "comparator-offset-tran", "comparator-offset-cm-window")
+MC_BENCHES = ("comparator-offset-mc", "comparator-offset-tran", "comparator-offset-cm-window",
+              "comparator-offset-cm-index")
 
 #: Supplemental consumer-window common-mode bench (issue #182). Separately
 #: named: comparator-offset-mc's +-50 mV bench and records are untouched.
@@ -107,6 +112,39 @@ CM_WINDOW_MIN_RUNNER_KLT = (0, 7, 0)
 #: The fleet runner's klt as reported in environment.remote.runner_klt_version
 #: by every batch record in this repository through 2026-10-10.
 FLEET_RUNNER_KLT_OBSERVED = "0.5.0"
+
+
+#: Monotonic-index variant of the consumer-window bench (issue #218). A SEPARATE
+#: bench: the nested-sweep bench above keeps its refused/expr contract, and
+#: historical sources are not rewritten. ONE source `vidx` is swept 0..5 in
+#: unit steps and behavioural sources map each index k to the same (vcmd, vd)
+#: pair as CM_WINDOW_POINTS[label][2], so a raw `.meas dc ... find ... at=<k>`
+#: names each point unambiguously on a klt 0.5.0 runner (no `expr` needed).
+CM_INDEX_BENCH = "comparator-offset-cm-index"
+CM_INDEX_DC_ARGS = "vidx 0 5 1"
+#: Per quantity, the single node a `.meas` card reads (a 0.5.0 `.meas` cannot
+#: evaluate v(a)-v(b), so the fragment provides `xcm` = v(cm)-v(cmb) as a probe).
+CM_INDEX_NODES = {"dv": "v(dd)", "xcm": "v(xcm)", "xvd": "v(vd)"}
+
+
+def cm_index_measurements() -> list[dict]:
+    """The 18 raw `.meas dc` cards of the index request, label-major. Each
+    names one index `at=<k>` of the one monotonic scale, so no card can
+    address a coordinate other than the one its label says."""
+    return [{"name": f"{q}_{label}",
+             "spice": f".meas dc {q}_{label} find {CM_INDEX_NODES[q]} at={k}"}
+            for label, (_, _, k) in CM_WINDOW_POINTS.items()
+            for q in CM_INDEX_NODES]
+
+
+def cm_index_leg(mc_n: int) -> dict:
+    """ONE `dc vidx 0 5 1` analysis per draw; all six points are one solve
+    sequence of one instance of one mismatch draw."""
+    return {
+        "analysis": {"kind": "dc", "args": CM_INDEX_DC_ARGS},
+        "measurements": cm_index_measurements(),
+        "monte_carlo": {"n": mc_n, "seed": OFFSET_MC_SEED, "vary": "mismatch"},
+    }
 
 
 def parse_klt_version(text) -> tuple[int, int, int] | None:
@@ -347,6 +385,8 @@ def legs_for(bench: str, tb, mc_n: int) -> dict[str, dict]:
         if gap:
             raise SystemExit(f"UNSUPPORTED_EXECUTOR_CAPABILITY: {gap}")
         return {"main": cm_window_leg(mc_n)}
+    if bench == CM_INDEX_BENCH:
+        return {"main": cm_index_leg(mc_n)}
     raise SystemExit(f"unknown bench {bench!r}")
 
 
