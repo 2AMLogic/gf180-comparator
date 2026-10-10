@@ -19,15 +19,14 @@ Issues the operator starred (`loom:operator-priority`); land these first.
 
 Human-approved issues ready for implementation (`loom:issue`).
 
-_None._
+- **#209**: Extend paired extracted preamp noise measurement to full PVT coverage
+- **#210**: Correct current characterization report ratification and average-power verdicts
+- **#212**: Close unclosed file handles in layout scripts and make ResourceWarning fail the PDK-free suite
 
 ## In Progress
 
 Issues currently being built (`loom:building`).
 
-- **#125**: Define and measure the missing average-power operating condition for T1
-- **#157**: Measure total comparator offset: transient Monte Carlo covering the latch, plus a hand budget for load-resistor mismatch
-- **#160**: Measure kickback peaks on both comparator input nodes
 - **#177**: Test run_lvs interface-pin and device-geometry contract checks
 
 ## PRs Awaiting Review
@@ -49,14 +48,10 @@ Issues carrying `loom:curated`.
 - **#3**: Gap-to-T1 tracker: gf180-comparator artifact-presence survey *(curated)*
 - **#125**: Define and measure the missing average-power operating condition for T1 *(curated)*
 - **#158**: Characterize reverse-polarity comparator delay across PVT *(curated)*
-- **#160**: Measure kickback peaks on both comparator input nodes *(curated)*
 
 ## Proposed (Architect / Hermit)
 
-- **#181**: Refresh live simulation claims and reproduction guidance after spec ratification *(architect)*
-- **#182**: Characterize preamp common-mode offset across the documented consumer window *(architect)*
-- **#183**: Test harness CLI main() refusal paths and the sabotage no-write guarantee *(architect)*
-- **#184**: Test layout route_nets channel-assignment helpers and the run_drc exit-code contract *(architect)*
+_None._
 
 ## Epics
 
@@ -68,11 +63,11 @@ _None._
 |------|-------|
 | Operator merge-risk holds | 1 |
 | Operator priority | 1 |
-| Ready (`loom:issue`) | 0 |
-| In Progress (`loom:building`) | 4 |
+| Ready (`loom:issue`) | 3 |
+| In Progress (`loom:building`) | 1 |
 | PRs awaiting review | 0 |
 | Approved PRs awaiting merge | 1 |
-| Curated | 4 |
-| Architect / Hermit proposals | 4 |
+| Curated | 3 |
+| Architect / Hermit proposals | 0 |
 | Active epics | 0 |
 <!-- guide:plan-body:end -->
