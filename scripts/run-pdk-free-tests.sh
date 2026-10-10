@@ -91,6 +91,7 @@ step regrade     "Re-grade the manifest and verify the committed pins" 1 "$PY si
 step item5       "Item-5 corner-matrix wrapper freshness check"      0 "$PY signoff/make_item5_envelope.py --check"
 step routing-tbl "Layout README routing table freshness check"      0 "$PY layout/routing_table.py --check"
 step bench-inventory "sim bench inventory vs characterize.sh coverage" 0 "$PY scripts/check_bench_inventory.py"
+step claim-drift "Published headline claims vs committed records (registry)" 0 "$PY scripts/check_claim_drift.py"
 step unit-tests  "Unit tests: design/tests, signoff/tests, manifests, layout/tests" 0 'run_test_dirs'
 # ---- END STEPS --------------------------------------------------------------
 

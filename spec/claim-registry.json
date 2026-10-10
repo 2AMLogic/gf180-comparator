@@ -1,0 +1,398 @@
+{
+ "_comment": [
+  "Headline-claim registry for scripts/check_claim_drift.py (issue #245).",
+  "Each claim ties a literal in a named doc to a value in a record's JSON twin.",
+  "Add a row: see the script docstring. The check detects disagreement; it never edits a number."
+ ],
+ "claims": [
+  {
+   "id": "offset-scored-nominal-readme",
+   "doc": "README.md",
+   "literal": "3.146 mV 3σ at nominal",
+   "record": "sim/comparator-offset-tran/records/20261010-021500046481-d84e59d.json",
+   "pointer": "/derived/tt_27c_3.30v/vos_3sig_total_cons_mv",
+   "decimals": 3
+  },
+  {
+   "id": "offset-scored-max-readme",
+   "doc": "README.md",
+   "literal": "2.994–3.795 mV across all 45 points (binding corner `ff_125c_3.63v`)",
+   "record": "sim/comparator-offset-tran/records/20261010-021500046481-d84e59d.json",
+   "pointer": "/derived/*/vos_3sig_total_cons_mv",
+   "decimals": 3,
+   "agg": "max",
+   "corner": "ff_125c_3.63v"
+  },
+  {
+   "id": "offset-scored-min-readme",
+   "doc": "README.md",
+   "literal": "2.994–3.795 mV across all 45 points (binding corner `ff_125c_3.63v`)",
+   "record": "sim/comparator-offset-tran/records/20261010-021500046481-d84e59d.json",
+   "pointer": "/derived/*/vos_3sig_total_cons_mv",
+   "decimals": 3,
+   "agg": "min"
+  },
+  {
+   "id": "offset-scored-max-ledger",
+   "doc": "spec/evidence-ledger.md",
+   "literal": "**2.994–3.795 mV 3σ, worst `ff_125c_3.63v`**",
+   "record": "sim/comparator-offset-tran/records/20261010-021500046481-d84e59d.json",
+   "pointer": "/derived/*/vos_3sig_total_cons_mv",
+   "decimals": 3,
+   "agg": "max",
+   "corner": "ff_125c_3.63v"
+  },
+  {
+   "id": "offset-scored-min-ledger",
+   "doc": "spec/evidence-ledger.md",
+   "literal": "**2.994–3.795 mV 3σ, worst `ff_125c_3.63v`**",
+   "record": "sim/comparator-offset-tran/records/20261010-021500046481-d84e59d.json",
+   "pointer": "/derived/*/vos_3sig_total_cons_mv",
+   "decimals": 3,
+   "agg": "min"
+  },
+  {
+   "id": "offset-scored-max-consumers",
+   "doc": "spec/consumers.md",
+   "literal": "**2.994–3.795 mV 3σ over all 45 PVT points**",
+   "record": "sim/comparator-offset-tran/records/20261010-021500046481-d84e59d.json",
+   "pointer": "/derived/*/vos_3sig_total_cons_mv",
+   "decimals": 3,
+   "agg": "max"
+  },
+  {
+   "id": "offset-scored-min-consumers",
+   "doc": "spec/consumers.md",
+   "literal": "**2.994–3.795 mV 3σ over all 45 PVT points**",
+   "record": "sim/comparator-offset-tran/records/20261010-021500046481-d84e59d.json",
+   "pointer": "/derived/*/vos_3sig_total_cons_mv",
+   "decimals": 3,
+   "agg": "min"
+  },
+  {
+   "id": "offset-sim-min-readme",
+   "doc": "README.md",
+   "literal": "2.808–3.515 mV 3σ",
+   "record": "sim/comparator-offset-tran/records/20261010-021500046481-d84e59d.json",
+   "pointer": "/derived/*/vos_3sig_tran_mv",
+   "decimals": 3,
+   "agg": "min"
+  },
+  {
+   "id": "offset-pre-nominal-readme",
+   "doc": "README.md",
+   "literal": "nominal 2.80063 mV",
+   "record": "sim/comparator-offset-mc/records/20260910-124917-4805118.json",
+   "pointer": "/points/corner_id=tt_27c_3.30v/measurements/vos_3sig_mv",
+   "decimals": 5
+  },
+  {
+   "id": "offset-pre-min-readme",
+   "doc": "README.md",
+   "literal": "2.796–2.807 mV 3σ; nominal",
+   "record": "sim/comparator-offset-mc/records/20260910-124917-4805118.json",
+   "pointer": "/summary/vos_3sig_mv/min",
+   "decimals": 3
+  },
+  {
+   "id": "offset-pre-max-readme",
+   "doc": "README.md",
+   "literal": "2.796–2.807 mV 3σ; nominal",
+   "record": "sim/comparator-offset-mc/records/20260910-124917-4805118.json",
+   "pointer": "/summary/vos_3sig_mv/max",
+   "decimals": 3
+  },
+  {
+   "id": "offset-pre-max-consumers",
+   "doc": "spec/consumers.md",
+   "literal": "**measured 2.796–2.807 mV 3σ at every one of the 45 corners**",
+   "record": "sim/comparator-offset-mc/records/20260910-124917-4805118.json",
+   "pointer": "/summary/vos_3sig_mv/max",
+   "decimals": 3
+  },
+  {
+   "id": "offset-pre-min-consumers",
+   "doc": "spec/consumers.md",
+   "literal": "**measured 2.796–2.807 mV 3σ at every one of the 45 corners**",
+   "record": "sim/comparator-offset-mc/records/20260910-124917-4805118.json",
+   "pointer": "/summary/vos_3sig_mv/min",
+   "decimals": 3
+  },
+  {
+   "id": "noise-nominal-readme",
+   "doc": "README.md",
+   "literal": "91.25 µV rms nominal",
+   "record": "sim/comparator-preamp-noise/records/20260910-125200-4805118.json",
+   "pointer": "/points/corner_id=tt_27c_3.30v/measurements/vn_in_uv",
+   "decimals": 2
+  },
+  {
+   "id": "noise-worst-readme",
+   "doc": "README.md",
+   "literal": "128.8 µV rms worst case",
+   "record": "sim/comparator-preamp-noise/records/20260910-125200-4805118.json",
+   "pointer": "/summary/vn_in_uv/max",
+   "decimals": 1
+  },
+  {
+   "id": "noise-nominal-ledger",
+   "doc": "spec/evidence-ledger.md",
+   "literal": "reports 91.25 µV rms at nominal",
+   "record": "sim/comparator-preamp-noise/records/20260910-125200-4805118.json",
+   "pointer": "/points/corner_id=tt_27c_3.30v/measurements/vn_in_uv",
+   "decimals": 2
+  },
+  {
+   "id": "noise-worst-ledger",
+   "doc": "spec/evidence-ledger.md",
+   "literal": "128.8 µV rms worst-case across the grid (66.82 µV best-case `ss_-40c_2.97v` to 128.83 µV worst-case `ff_125c_3.63v`",
+   "record": "sim/comparator-preamp-noise/records/20260910-125200-4805118.json",
+   "pointer": "/summary/vn_in_uv/max",
+   "decimals": 2,
+   "corner": "ff_125c_3.63v",
+   "corner_pointer": "/summary/vn_in_uv/at_max"
+  },
+  {
+   "id": "noise-best-ledger",
+   "doc": "spec/evidence-ledger.md",
+   "literal": "128.8 µV rms worst-case across the grid (66.82 µV best-case `ss_-40c_2.97v` to 128.83 µV worst-case `ff_125c_3.63v`",
+   "record": "sim/comparator-preamp-noise/records/20260910-125200-4805118.json",
+   "pointer": "/summary/vn_in_uv/min",
+   "decimals": 2,
+   "corner": "ss_-40c_2.97v",
+   "corner_pointer": "/summary/vn_in_uv/at_min"
+  },
+  {
+   "id": "noise-nominal-consumers",
+   "doc": "spec/consumers.md",
+   "literal": "measured 91.25 µV rms nominal, 128.8 µV rms worst over the grid",
+   "record": "sim/comparator-preamp-noise/records/20260910-125200-4805118.json",
+   "pointer": "/points/corner_id=tt_27c_3.30v/measurements/vn_in_uv",
+   "decimals": 2
+  },
+  {
+   "id": "noise-worst-consumers",
+   "doc": "spec/consumers.md",
+   "literal": "measured 91.25 µV rms nominal, 128.8 µV rms worst over the grid",
+   "record": "sim/comparator-preamp-noise/records/20260910-125200-4805118.json",
+   "pointer": "/summary/vn_in_uv/max",
+   "decimals": 1
+  },
+  {
+   "id": "regen-nominal-ledger",
+   "doc": "spec/evidence-ledger.md",
+   "literal": "(`tt_27c_3.30v` 0.708061 ns)",
+   "record": "sim/comparator-regeneration/records/20260910-125206-4805118.json",
+   "pointer": "/points/corner_id=tt_27c_3.30v/measurements/td_od50_ns",
+   "decimals": 6
+  },
+  {
+   "id": "regen-range-ledger",
+   "doc": "spec/evidence-ledger.md",
+   "literal": "0.464–1.237 ns across the grid (worst-case `ss_125c_2.97v`)",
+   "record": "sim/comparator-regeneration/records/20260910-125206-4805118.json",
+   "pointer": "/summary/td_od50_ns/min",
+   "decimals": 3
+  },
+  {
+   "id": "regen-worst-ledger",
+   "doc": "spec/evidence-ledger.md",
+   "literal": "0.464–1.237 ns across the grid (worst-case `ss_125c_2.97v`)",
+   "record": "sim/comparator-regeneration/records/20260910-125206-4805118.json",
+   "pointer": "/summary/td_od50_ns/max",
+   "decimals": 3,
+   "corner": "ss_125c_2.97v",
+   "corner_pointer": "/summary/td_od50_ns/at_max"
+  },
+  {
+   "id": "regen-worst-readme",
+   "doc": "README.md",
+   "literal": "worst 1.237 ns",
+   "record": "sim/comparator-regeneration/records/20260910-125206-4805118.json",
+   "pointer": "/summary/td_od50_ns/max",
+   "decimals": 3
+  },
+  {
+   "id": "regen-nominal-consumers",
+   "doc": "spec/consumers.md",
+   "literal": "measured 0.708 ns nominal, 1.237 ns worst (`ss_125c_2.97v`)",
+   "record": "sim/comparator-regeneration/records/20260910-125206-4805118.json",
+   "pointer": "/points/corner_id=tt_27c_3.30v/measurements/td_od50_ns",
+   "decimals": 3
+  },
+  {
+   "id": "regen-worst-consumers",
+   "doc": "spec/consumers.md",
+   "literal": "measured 0.708 ns nominal, 1.237 ns worst (`ss_125c_2.97v`)",
+   "record": "sim/comparator-regeneration/records/20260910-125206-4805118.json",
+   "pointer": "/summary/td_od50_ns/max",
+   "decimals": 3,
+   "corner": "ss_125c_2.97v",
+   "corner_pointer": "/summary/td_od50_ns/at_max"
+  },
+  {
+   "id": "regen-layout-nominal-ledger",
+   "doc": "spec/evidence-ledger.md",
+   "literal": "reports 1.158 ns at nominal",
+   "record": "sim/comparator-regeneration/records/20261002-202641-baeffe5.json",
+   "pointer": "/points/corner_id=tt_27c_3.30v/measurements/td_od50_ns",
+   "decimals": 3
+  },
+  {
+   "id": "regen-layout-worst-ledger",
+   "doc": "spec/evidence-ledger.md",
+   "literal": "2.034 ns worst-case at `ss_125c_2.97v`",
+   "record": "sim/comparator-regeneration/records/20261002-202641-baeffe5.json",
+   "pointer": "/summary/td_od50_ns/max",
+   "decimals": 3,
+   "corner": "ss_125c_2.97v",
+   "corner_pointer": "/summary/td_od50_ns/at_max"
+  },
+  {
+   "id": "regen-layout-worst-readme",
+   "doc": "README.md",
+   "literal": "(worst 2.034 ns)",
+   "record": "sim/comparator-regeneration/records/20261002-202641-baeffe5.json",
+   "pointer": "/summary/td_od50_ns/max",
+   "decimals": 3
+  },
+  {
+   "id": "kick-nominal-readme",
+   "doc": "README.md",
+   "literal": "nominal 7.60 mV",
+   "record": "sim/comparator-kickback/records/20260910-125341-4805118.json",
+   "pointer": "/points/corner_id=tt_27c_3.30v/measurements/kick_1k_peak_mv",
+   "decimals": 2
+  },
+  {
+   "id": "kick-min-readme",
+   "doc": "README.md",
+   "literal": "schematic 4.53–10.01 mV",
+   "record": "sim/comparator-kickback/records/20260910-125341-4805118.json",
+   "pointer": "/summary/kick_1k_peak_mv/min",
+   "decimals": 2
+  },
+  {
+   "id": "kick-max-readme",
+   "doc": "README.md",
+   "literal": "schematic 4.53–10.01 mV",
+   "record": "sim/comparator-kickback/records/20260910-125341-4805118.json",
+   "pointer": "/summary/kick_1k_peak_mv/max",
+   "decimals": 2
+  },
+  {
+   "id": "kick-nominal-ledger",
+   "doc": "spec/evidence-ledger.md",
+   "literal": "7.60 mV at nominal (`tt_27c_3.30v` 7.59853 mV)",
+   "record": "sim/comparator-kickback/records/20260910-125341-4805118.json",
+   "pointer": "/points/corner_id=tt_27c_3.30v/measurements/kick_1k_peak_mv",
+   "decimals": 5
+  },
+  {
+   "id": "kick-max-ledger",
+   "doc": "spec/evidence-ledger.md",
+   "literal": "4.53–10.01 mV across the grid (`kick_1k_peak_mv`, best `ss_-40c_2.97v`, worst `sf_-40c_3.63v`)",
+   "record": "sim/comparator-kickback/records/20260910-125341-4805118.json",
+   "pointer": "/summary/kick_1k_peak_mv/max",
+   "decimals": 2,
+   "corner": "sf_-40c_3.63v",
+   "corner_pointer": "/summary/kick_1k_peak_mv/at_max"
+  },
+  {
+   "id": "kick-min-ledger",
+   "doc": "spec/evidence-ledger.md",
+   "literal": "4.53–10.01 mV across the grid (`kick_1k_peak_mv`, best `ss_-40c_2.97v`, worst `sf_-40c_3.63v`)",
+   "record": "sim/comparator-kickback/records/20260910-125341-4805118.json",
+   "pointer": "/summary/kick_1k_peak_mv/min",
+   "decimals": 2,
+   "corner": "ss_-40c_2.97v",
+   "corner_pointer": "/summary/kick_1k_peak_mv/at_min"
+  },
+  {
+   "id": "kick-layout-nominal-readme",
+   "doc": "README.md",
+   "literal": "nominal 10.03 mV",
+   "record": "sim/comparator-kickback/records/20261002-211343-6346fad.json",
+   "pointer": "/points/corner_id=tt_27c_3.30v/measurements/kick_1k_peak_mv",
+   "decimals": 2
+  },
+  {
+   "id": "kick-layout-range-readme",
+   "doc": "README.md",
+   "literal": "post-layout 8.49–14.58 mV",
+   "record": "sim/comparator-kickback/records/20261002-211343-6346fad.json",
+   "pointer": "/summary/kick_1k_peak_mv/min",
+   "decimals": 2
+  },
+  {
+   "id": "kick-layout-max-readme",
+   "doc": "README.md",
+   "literal": "post-layout 8.49–14.58 mV",
+   "record": "sim/comparator-kickback/records/20261002-211343-6346fad.json",
+   "pointer": "/summary/kick_1k_peak_mv/max",
+   "decimals": 2
+  },
+  {
+   "id": "kick-layout-ledger",
+   "doc": "spec/evidence-ledger.md",
+   "literal": "reports 10.03 mV at nominal (+32 % over schematic) and 8.49–14.58 mV across the grid",
+   "record": "sim/comparator-kickback/records/20261002-211343-6346fad.json",
+   "pointer": "/points/corner_id=tt_27c_3.30v/measurements/kick_1k_peak_mv",
+   "decimals": 2
+  },
+  {
+   "id": "kick-layout-max-ledger",
+   "doc": "spec/evidence-ledger.md",
+   "literal": "reports 10.03 mV at nominal (+32 % over schematic) and 8.49–14.58 mV across the grid",
+   "record": "sim/comparator-kickback/records/20261002-211343-6346fad.json",
+   "pointer": "/summary/kick_1k_peak_mv/max",
+   "decimals": 2
+  },
+  {
+   "id": "kick-layout-min-ledger",
+   "doc": "spec/evidence-ledger.md",
+   "literal": "reports 10.03 mV at nominal (+32 % over schematic) and 8.49–14.58 mV across the grid",
+   "record": "sim/comparator-kickback/records/20261002-211343-6346fad.json",
+   "pointer": "/summary/kick_1k_peak_mv/min",
+   "decimals": 2
+  },
+  {
+   "id": "offset-sim-max-readme",
+   "doc": "README.md",
+   "literal": "2.808–3.515 mV 3σ",
+   "record": "sim/comparator-offset-tran/records/20261010-021500046481-d84e59d.json",
+   "pointer": "/derived/*/vos_3sig_tran_mv",
+   "decimals": 3,
+   "agg": "max"
+  },
+  {
+   "id": "latch-min-readme",
+   "doc": "README.md",
+   "literal": "paired 0.184–0.659 mV 1σ",
+   "record": "sim/comparator-offset-tran/records/20261010-021500046481-d84e59d.json",
+   "pointer": "/derived/*/sig_latch_mv",
+   "decimals": 3,
+   "agg": "min"
+  },
+  {
+   "id": "latch-max-readme",
+   "doc": "README.md",
+   "literal": "paired 0.184–0.659 mV 1σ",
+   "record": "sim/comparator-offset-tran/records/20261010-021500046481-d84e59d.json",
+   "pointer": "/derived/*/sig_latch_mv",
+   "decimals": 3,
+   "agg": "max"
+  }
+ ],
+ "known_drift": [
+  {
+   "doc": "spec/evidence-ledger.md",
+   "cited": "20260910-125341-4805118",
+   "newer": [
+    "20261008-224115765170-7e61c52",
+    "20261010-022609774981-bf851ec"
+   ],
+   "issue": "#252"
+  }
+ ]
+}
