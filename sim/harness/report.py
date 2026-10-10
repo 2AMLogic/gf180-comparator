@@ -346,14 +346,64 @@ def _write_new(path: Path, text: str) -> None:
         fh.write(text)
 
 
-def _latest_schematic_record(tb: Testbench) -> tuple[str, dict] | None:
-    """The newest committed record of this experiment measured against a
-    ``schematic``-provenance DUT -- the counterpart a post-layout
-    (``extracted``) record documents its delta against. Record ids sort
-    lexicographically by mint time (``YYYYMMDD-HHMMSS-<sha>``), so a plain
-    max() over the parsed ``context.record_id`` picks the latest.
+def _is_committed(path: Path) -> bool:
+    """Whether ``path`` is tracked by git. Fails closed: any inability to
+    inspect git means "not committed" (the record is then not selected)."""
+    try:
+        out = subprocess.run(
+            ["git", "-C", str(REPO_ROOT), "ls-files", "--error-unmatch", str(path)],
+            capture_output=True, text=True, check=False, timeout=60,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    return out.returncode == 0
+
+
+def _point_keys(doc: dict) -> frozenset:
+    return frozenset(
+        (p.get("corner"), float(p.get("temp_c", float("nan"))),
+         float(p.get("vdd", float("nan"))))
+        for p in doc.get("points", []) if p.get("status") == "ok"
+    )
+
+
+def _methodology_mismatch(tb: Testbench, doc: dict) -> str | None:
+    """Reason the record's measurement definitions are not provably those of
+    ``tb`` (None = comparable). Missing provenance is disclosed, not assumed."""
+    prov = getattr(tb, "provenance", None)
+    if prov is None:
+        return "current testbench provenance unavailable"
+    now = prov()
+    then = doc.get("testbench") or {}
+    for key in ("manifest_sha256", "netlist_sha256"):
+        if not then.get(key):
+            return f"record lacks testbench {key} (legacy provenance)"
+        if then[key] != now.get(key):
+            return f"testbench {key} differs"
+    return None
+
+
+def _schematic_baseline(
+    tb: Testbench, context: dict
+) -> tuple[tuple[str, dict, str] | None, list[str]]:
+    """Select the schematic baseline an extracted record is compared against.
+
+    Returns ``((record_id, doc, basis), rejections)``; the selection is None
+    when no candidate qualifies, with ``rejections`` naming why each was
+    skipped. A candidate must: be schematic-provenance; carry the declared
+    baseline DUT identity (``context['schematic_baseline_id']`` -- extracted
+    and schematic netlist hashes legitimately differ, so identity is by
+    declared id, never hash); be non-dirty; be tracked in git; and share the
+    testbench manifest/fragment hashes. ``context['schematic_baseline_record']``
+    pins an exact record id (still validated). Never "newest file wins".
     """
-    best: tuple[str, dict] | None = None
+    want_id = context.get("schematic_baseline_id")
+    pinned = context.get("schematic_baseline_record")
+    if not want_id:
+        return None, ["no schematic baseline identity declared for this DUT "
+                      "binding (set 'schematic_baseline' in sim/dut.json)"]
+    best: tuple[str, dict, Path] | None = None
+    rejections: list[str] = []
     for path in sorted((tb.experiment_dir / "records").glob("*.json")):
         try:
             doc = json.loads(path.read_text())
@@ -363,9 +413,30 @@ def _latest_schematic_record(tb: Testbench) -> tuple[str, dict] | None:
         if ctx.get("dut_provenance") != "schematic":
             continue
         rid = str(ctx.get("record_id") or path.stem)
+        if pinned and rid != pinned:
+            continue
+        if ctx.get("dut_id") != want_id:
+            rejections.append(f"`{rid}`: different DUT `{ctx.get('dut_id')}`")
+            continue
+        if ctx.get("dirty") is not False:
+            rejections.append(f"`{rid}`: dirty or cleanliness not recorded")
+            continue
+        if not _is_committed(path):
+            rejections.append(f"`{rid}`: not committed")
+            continue
+        why = _methodology_mismatch(tb, doc)
+        if why:
+            rejections.append(f"`{rid}`: {why}")
+            continue
         if best is None or rid > best[0]:
-            best = (rid, doc)
-    return best
+            best = (rid, doc, path)
+    if best is None:
+        return None, rejections
+    basis = (f"declared baseline DUT `{want_id}`, clean, committed, "
+             "same testbench manifest and fragment hashes"
+             + ("; pinned by schematic_baseline_record" if pinned else
+                "; newest of the qualifying records"))
+    return (best[0], best[1], basis), rejections
 
 
 def _nominal_measurement(doc: dict, tb: Testbench, name: str) -> float | None:
@@ -396,23 +467,34 @@ def _postlayout_delta_lines(
     in isolation -- the convention gf180-sar-adc's `Supersedes` delta
     summaries follow, stated here as a table instead of prose).
     """
-    counterpart = _latest_schematic_record(tb)
+    counterpart, rejections = _schematic_baseline(tb, context)
     if counterpart is None:
         return [
             "",
-            "- **Post-layout delta**: NO schematic-provenance counterpart record "
-            "exists under records/ -- the delta this section exists to document "
-            "cannot be computed. This record stands alone, which is weaker "
-            "evidence than the convention asks for.",
+            "- **Post-layout delta**: UNAVAILABLE -- NO comparable "
+            "schematic-provenance counterpart record exists under records/ "
+            "(must be the declared baseline DUT, clean, committed, same "
+            "testbench). The delta this section exists to document cannot be "
+            "computed; this record stands alone, which is weaker evidence than "
+            "the convention asks for."
+            + (" Rejected candidates: " + "; ".join(rejections) + "."
+               if rejections else ""),
         ]
-    rid, doc = counterpart
+    rid, doc, basis = counterpart
     ok = [r for r in results if r.status == "ok"]
+    now_keys = frozenset(
+        (r.point.corner.name, float(r.point.temp_c), float(r.point.vdd)) for r in ok)
+    same_grid = now_keys == _point_keys(doc)
     lines = [
         "",
         f"- **Post-layout delta** vs schematic record `{rid}` "
         f"(`{doc['context'].get('dut_id', '?')}`): nominal column is the "
         f"`tt_27c_{tb.nominal_supply_v:.2f}v` point of each record; mean column "
-        "is each record's whole-grid mean.",
+        "is each record's whole-grid mean"
+        + ("." if same_grid else
+           " -- OMITTED (—): the two records cover different corner/temperature/"
+           "supply sets, so a whole-grid mean delta would not be like-for-like.")
+        + f" Baseline basis: {basis}.",
         "",
         "  | measurement | schematic nominal | post-layout nominal | Δ nominal | schematic mean | post-layout mean | Δ mean |",
         "  |---|---|---|---|---|---|---|",
@@ -433,6 +515,13 @@ def _postlayout_delta_lines(
         then_mean = then_sum.get("mean")
         if now_nom is None or then_nom is None or then_mean is None:
             lines.append(f"  | `{name}` | — | — | — | — | — | — |")
+            continue
+        if not same_grid:
+            d_nom = (now_nom - then_nom) / abs(then_nom) * 100.0 if then_nom else float("nan")
+            lines.append(
+                f"  | `{name}` | {_fmt(then_nom)} | {_fmt(now_nom)} | "
+                f"{d_nom:+.6g}% | — | — | — (corner sets differ) |"
+            )
             continue
         d_nom = (now_nom - then_nom) / abs(then_nom) * 100.0 if then_nom else float("nan")
         d_mean = (s.mean - then_mean) / abs(then_mean) * 100.0 if then_mean else float("nan")

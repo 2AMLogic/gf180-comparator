@@ -26,6 +26,7 @@ import sys
 import tempfile
 import types
 import unittest
+from unittest import mock
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
@@ -251,7 +252,16 @@ class CompatibilityCheckTest(_Fixture):
             )
 
 
+_CTX = {"dut_provenance": "extracted", "schematic_baseline_id": "fixture-dut"}
+
+
 class PostlayoutDeltaTest(_Fixture):
+    def setUp(self):
+        super().setUp()
+        p = mock.patch.object(report_mod, "_is_committed", return_value=True)
+        p.start()
+        self.addCleanup(p.stop)
+
     def _tb(self, directory: Path):
         directory.mkdir(parents=True, exist_ok=True)
         netlist = directory / "tb.spice"
@@ -262,6 +272,7 @@ class PostlayoutDeltaTest(_Fixture):
             netlist=netlist,
             nominal_supply_v=3.3,
             measure={"td_od50_ns": "td_a*1e9"},
+            provenance=lambda: {"manifest_sha256": "m", "netlist_sha256": "n"},
         )
 
     def _record(self, directory: Path, rid: str, provenance: str, nominal: float,
@@ -275,7 +286,9 @@ class PostlayoutDeltaTest(_Fixture):
                         "record_id": rid,
                         "dut_provenance": provenance,
                         "dut_id": "fixture-dut",
+                        "dirty": False,
                     },
+                    "testbench": {"manifest_sha256": "m", "netlist_sha256": "n"},
                     "points": [
                         {
                             "status": "ok",
@@ -316,7 +329,7 @@ class PostlayoutDeltaTest(_Fixture):
             self._record(directory, "20260102-000000-bbbbbbb", "extracted", 0.9, 0.95)
             results, summaries = self._results(0.780)
             lines = report_mod._postlayout_delta_lines(
-                self._tb(directory), results, summaries, {"dut_provenance": "extracted"}
+                self._tb(directory), results, summaries, _CTX
             )
             text = "\n".join(lines)
             self.assertIn("20260101-000000-aaaaaaa", text)
@@ -330,9 +343,9 @@ class PostlayoutDeltaTest(_Fixture):
             directory = Path(tmp) / "fixture-bench"
             results, summaries = self._results(0.780)
             lines = report_mod._postlayout_delta_lines(
-                self._tb(directory), results, summaries, {"dut_provenance": "extracted"}
+                self._tb(directory), results, summaries, _CTX
             )
-            self.assertTrue(any("NO schematic-provenance counterpart" in ln for ln in lines))
+            self.assertTrue(any("UNAVAILABLE" in ln for ln in lines))
 
 
 class ComposeDeckExtraParamsTest(_Fixture):
