@@ -1,16 +1,21 @@
 #!/usr/bin/env python3
 """PDK-free regressions for the pure helpers in layout/pex/pex_measure.py (#190).
 
-Synthetic strings/dicts only: no ngspice, no klt, no bench files, and none of
-the bench sha256 pins are read (the module has no import-time side effects;
-`_check_pins` runs only from `measure`).
+Synthetic strings/dicts only, plus (#241) the committed bench inputs for the
+pin/manifest preflight and temp-file mutations of them: no ngspice, no klt, no
+PDK, no fleet. The module has no import-time side effects; `_check_pins` runs
+only from `measure`.
 
     python3 layout/tests/test_pex_measure.py
 """
 
 from __future__ import annotations
 
+import contextlib
 import importlib.util
+import json
+import shutil
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -180,6 +185,124 @@ class Grade(unittest.TestCase):
         self.assertEqual(pm._grade("dut_vos_v", -s * 0.99, {}), "pass")
         self.assertEqual(pm._grade("dut_vos_v", s, {}), "fail")
         self.assertEqual(pm._grade("dut_vos_v", -s, {}), "fail")
+
+
+class PinPreflight(unittest.TestCase):
+    """#241: tb.json pinned by deck fields + graded bounds; fragments whole."""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+        self.tb = json.loads(Path(pm.TB_JSON).read_text())
+        self.saved = (pm.TB_JSON, pm.TB_MAIN, pm.TB_PROBE, dict(pm.PINNED_SHA256))
+        self.addCleanup(self._restore)
+
+    def _restore(self):
+        pm.TB_JSON, pm.TB_MAIN, pm.TB_PROBE = self.saved[:3]
+        pm.PINNED_SHA256.clear()
+        pm.PINNED_SHA256.update(self.saved[3])
+
+    def _use_tb(self, tb, raw=None):
+        p = self.tmp / "tb.json"
+        p.write_text(raw if raw is not None else json.dumps(tb, indent=3))
+        pm.TB_JSON = str(p)
+
+    def _refusal(self, fn=None):
+        with self.assertRaises(SystemExit) as cm:
+            (fn or pm._check_pins)()
+        return str(cm.exception)
+
+    def test_committed_inputs_pass(self):
+        pm._check_pins()
+        pm._check_meas_against_manifest()
+
+    def test_metadata_formatting_and_supplemental_checks_float(self):
+        tb = json.loads(json.dumps(self.tb))
+        tb["description"] = "changed"
+        tb["checks"]["td_od50_ns"]["description"] = "changed"
+        tb["checks"]["td_od1_over_tau"]["min"] = 7.0
+        tb["checks"]["brand_new_supplemental"] = {"min": 1.0}
+        tb = dict(reversed(list(tb.items())))
+        self._use_tb(tb)
+        pm._check_pins()
+        pm._check_meas_against_manifest()
+
+    def test_canonical_hash_is_key_order_independent_and_matches_attribution(self):
+        a = pm._tb_deck_sha256(self.tb)
+        self.assertEqual(a, pm._tb_deck_sha256(dict(reversed(list(self.tb.items())))))
+        self.assertEqual(a, pm.TB_JSON_DECK_SHA256)
+
+    def test_deck_field_mutations_refuse(self):
+        for mut in (lambda t: t["options"].append("itl1=1"),
+                    lambda t: t["analyses"].__setitem__(0, "tran 5p 61n"),
+                    lambda t: t["offset_probe"]["analyses"].__setitem__(0, "tran 1n 80u")):
+            tb = json.loads(json.dumps(self.tb))
+            mut(tb)
+            self._use_tb(tb)
+            self.assertIn("deck-field contract", self._refusal())
+
+    def test_missing_or_malformed_fields_refuse(self):
+        for key in ("options", "analyses", "offset_probe", "checks"):
+            tb = json.loads(json.dumps(self.tb))
+            del tb[key]
+            self._use_tb(tb)
+            msg = self._refusal()
+            self.assertTrue("missing" in msg or "required" in msg, msg)
+        tb = json.loads(json.dumps(self.tb))
+        tb["options"] = "reltol=1e-4"
+        self._use_tb(tb)
+        self.assertIn("malformed", self._refusal())
+        self._use_tb(None, raw="{not json")
+        self.assertIn("cannot be read as JSON", self._refusal())
+        self._use_tb(None, raw="[]")
+        self.assertIn("not a JSON object", self._refusal())
+
+    def test_missing_emitted_check_refuses(self):
+        tb = json.loads(json.dumps(self.tb))
+        del tb["checks"]["tau_ps"]
+        self._use_tb(tb)
+        self.assertIn("graded check 'tau_ps'", self._refusal())
+
+    def test_emitted_row_bound_change_refuses(self):
+        for name in pm.GRADED_CHECK_ROWS:
+            tb = json.loads(json.dumps(self.tb))
+            chk = tb["checks"][name]
+            key = "min" if "min" in chk else "max"
+            chk[key] = chk[key] + 0.5
+            self._use_tb(tb)
+            self.assertIn("grading-subset contract", self._refusal(), name)
+        tb = json.loads(json.dumps(self.tb))
+        del tb["checks"]["td_od50_ns"]["max"]
+        self._use_tb(tb)
+        self.assertIn("grading-subset contract", self._refusal())
+
+    def test_fragment_one_byte_change_refuses(self):
+        for attr in ("TB_MAIN", "TB_PROBE"):
+            src = Path(getattr(pm, attr))
+            copy = self.tmp / (attr + ".spice")
+            copy.write_bytes(src.read_bytes() + b" ")
+            pm.PINNED_SHA256[str(copy)] = self.saved[3][str(src)]
+            setattr(pm, attr, str(copy))
+            msg = self._refusal()
+            self.assertIn("SPICE fragment sha256", msg)
+            self.assertIn(attr + ".spice", msg)
+            setattr(pm, attr, str(src))
+            pm.PINNED_SHA256.pop(str(copy))
+
+    def test_measure_refuses_before_any_work(self):
+        tb = json.loads(json.dumps(self.tb))
+        tb["options"].append("x=1")
+        self._use_tb(tb)
+        work = self.tmp / "work"
+        with self.assertRaises(SystemExit):
+            pm.measure("schematic", pm.SCHEMATIC_NETLIST, str(work), "local")
+        self.assertFalse(work.exists())
+
+    def test_meas_manifest_check_refuses_malformed(self):
+        tb = json.loads(json.dumps(self.tb))
+        tb["analyses"] = "tran"
+        self._use_tb(tb)
+        self.assertIn("malformed", self._refusal(pm._check_meas_against_manifest))
 
 
 if __name__ == "__main__":
