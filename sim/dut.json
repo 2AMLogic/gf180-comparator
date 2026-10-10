@@ -44,6 +44,7 @@
       "netlist": "../layout/lvs/comparator.dut-layout.spice",
       "id": "comparator-dr0001-layout",
       "provenance": "extracted",
+      "schematic_baseline": "comparator-dr0001",
       "description": "Post-layout (extracted-netlist) binding of the same DR-0001 comparator: layout/comparator.gds extracted with `klt extract --parasitics` (first-order lumped RC per net plus vertical-overlap coupling), adapted onto the PDK's ngspice simulation primitives and the comparator_dut interface by layout/run_extract_sim.py. The extraction is LVS-matched to design/comparator.spice's comparator_dut per layout/lvs/comparator.lvs.json (issue #22); the device-class-to-primitive mapping is the same correspondence run_lvs.py's DEVICE_GEOMETRY_MAP asserts.",
       "params": {
         "dut_ib": 1e-05,
