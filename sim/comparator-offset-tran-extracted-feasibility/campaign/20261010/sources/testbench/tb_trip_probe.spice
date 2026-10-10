@@ -1,0 +1,33 @@
+* tb_trip_probe -- mismatch-DISABLED trip-point probe for the extracted
+* feasibility staircase (issue #219). Same stimulus shape as
+* sim/comparator-regeneration/testbench/tb_vosprobe.spice (slow symmetric
+* differential ramp, free-running clock, decision watched for LOW->HIGH), with
+* two differences: sw_stat_mismatch is pinned to 0 HERE (the probe is the
+* deterministic layout trip point; no Monte-Carlo variation, and the request
+* carries no monte_carlo block), and the output is the trip point itself.
+*
+*   t_flip  : time the supply-normalised decision rises through 0.5
+*   vos_v   : the differential input (vp - vn) at that same crossing = the TRIP POINT
+*             (one self-contained .meas card: the klt-generated deck cannot
+*             reference t_flip as a parameter)
+*             (negative of the input-referred offset)
+*
+* The ramp spans +-40 mV. A trip point outside the span produces no crossing,
+* no t_flip, and the point is refused (never mis-centred). Quantisation:
+* 80 mV / 80 us * 30 ns = 30 uV.
+.param sw_stat_mismatch=0
+.param vspan=40m
+.param tramp=80u
+
+vsup vdd 0 dc {vdd_val}
+vcm  cm  0 dc {dut_vcm}
+vclk clk 0 pulse(0 {vdd_val} 10n 100p 100p 10n 30n)
+
+vrmp rmp 0 pwl(0 {-vspan} {tramp} {vspan})
+Bpp  vp 0 v = 'v(cm)+v(rmp)/2'
+Bnn  vn 0 v = 'v(cm)-v(rmp)/2'
+
+ib   vdd ibn dc {dut_ib}
+Xa   vp vn clk ibn dout doutb vdd 0 comparator_dut
+
+Bdn  dn 0 v = 'v(dout)/v(vdd)'
