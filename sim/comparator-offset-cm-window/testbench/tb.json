@@ -1,0 +1,92 @@
+{
+  "name": "comparator-offset-cm-window",
+  "description": "SUPPLEMENTAL (issue #182): same-draw Monte-Carlo preamp offset and gain at the consumer's three input common modes, dut_vcm - 100 mV / dut_vcm / dut_vcm + 100 mV, from ONE nested dc sweep of ONE instance per draw.",
+  "claim": "SUPPLEMENTAL CHARACTERIZATION, NOT A VERDICT. No ratified row backs this bench and none is created by it: the README target table has no CMRR row and the consumer's rejection verdict in spec/consumers.md stays Unknown. It is separately named so that sim/comparator-offset-mc/ (its standalone +/-50 mV band and every historical record) is untouched. NO RECORD EXISTS: the fleet path is refused by sim/tools/mk_klt_request.py and sim/tools/klt_record.py with UNSUPPORTED_EXECUTOR_CAPABILITY (see this experiment's README.md), and the local control loop below was not run when it landed. Schematic preamp DC only -- not whole-comparator transient, not extracted-layout common-mode rejection.",
+  "netlist": "tb_offset_cm_window.spice",
+  "nominal_supply_v": 3.3,
+  "supply_tolerance": 0.1,
+  "temperatures_c": [
+    -40,
+    27,
+    125
+  ],
+  "corners": [
+    "mos"
+  ],
+  "analyses": [
+    "setseed 20260909",
+    "let n = 0",
+    "let nmax = 200",
+    "let svm = 0",
+    "let svmq = 0",
+    "let sdn = 0",
+    "let sdnq = 0",
+    "let sdu = 0",
+    "let sduq = 0",
+    "let sad = 0",
+    "let sam = 0",
+    "let samq = 0",
+    "let sau = 0",
+    "dowhile n < nmax",
+    "  reset",
+    "  dc vd 0 2m 2m vcmd -100m 100m 100m",
+    "  let dv = v(dd)",
+    "  let avd = (dv[1]-dv[0])/2e-3",
+    "  let avm = (dv[3]-dv[2])/2e-3",
+    "  let avu = (dv[5]-dv[4])/2e-3",
+    "  let vod = -dv[0]/avd",
+    "  let vom = -dv[2]/avm",
+    "  let vou = -dv[4]/avu",
+    "  let ddn = vod - vom",
+    "  let dun = vou - vom",
+    "  print vom",
+    "  print ddn",
+    "  print dun",
+    "  let svm = svm + vom",
+    "  let svmq = svmq + vom*vom",
+    "  let sdn = sdn + ddn",
+    "  let sdnq = sdnq + ddn*ddn",
+    "  let sdu = sdu + dun",
+    "  let sduq = sduq + dun*dun",
+    "  let sad = sad + avd",
+    "  let sam = sam + avm",
+    "  let samq = samq + avm*avm",
+    "  let sau = sau + avu",
+    "  let n = n + 1",
+    "end"
+  ],
+  "measure": {
+    "n_samples": "nmax",
+    "sig_vos_mid_mv": "sqrt(svmq/nmax - (svm/nmax)^2)*1e3",
+    "mean_vos_mid_uv": "svm/nmax*1e6",
+    "mean_dvos_dn_uv": "sdn/nmax*1e6",
+    "sig_dvos_dn_uv": "sqrt(sdnq/nmax - (sdn/nmax)^2)*1e6",
+    "mean_dvos_up_uv": "sdu/nmax*1e6",
+    "sig_dvos_up_uv": "sqrt(sduq/nmax - (sdu/nmax)^2)*1e6",
+    "av_dn_mean": "sad/nmax",
+    "av_mid_mean": "sam/nmax",
+    "av_up_mean": "sau/nmax",
+    "av_sigma_pct": "sqrt(samq/nmax - (sam/nmax)^2)/(sam/nmax)*100"
+  },
+  "checks": {
+    "sig_vos_mid_mv": {
+      "min": 0.05,
+      "description": "MISMATCH-ON GUARD, not a spec bound -- the same floor and reason as sim/comparator-offset-mc/'s sig_vos_mv: a deck whose local mismatch failed to turn on reports ~0 here while everything else still looks plausible."
+    },
+    "av_sigma_pct": {
+      "max": 5.0,
+      "description": "DRAW-PRESERVATION DIAGNOSTIC, not proof of identity. Gain at each common mode is (dv(+2 mV) - dv(0)) / 2 mV from ONE dc sweep; if the draw were re-rolled between sweep points the gain would scatter by tens of percent. The identity argument itself is structural (one instance, one analysis, one draw per loop iteration) -- see this experiment's README.md."
+    }
+  },
+  "evidence": {
+    "record_kind": "monte-carlo",
+    "mc_seed": "Local control loop: ngspice `setseed 20260909` then 200 draws per PVT point through `dowhile`/`reset`, exactly as sim/comparator-offset-mc/. Fleet path (when supported): klt sim monte_carlo {n: 200, seed: 20260909, vary: mismatch}, one deck and one `.options seed=` per draw. Equal seeds across separate requests are NOT draw identity; the six points of a draw must come from one analysis of one instance.",
+    "mc_scope": "mismatch-only (sw_stat_mismatch = 1 set by the fragment, sw_stat_global left at the PDK default 0); global process variation is the corner axis.",
+    "mc_sigma": "Per draw and per common mode p in {dn, mid, up}: A_v,p = (dv_p(+2 mV) - dv_p(0)) / 2 mV and V_os,p = -dv_p(0) / A_v,p; the paired deltas are V_os,dn - V_os,mid and V_os,up - V_os,mid within the SAME draw. Means and population standard deviations are taken over the draws.",
+    "notes": [
+      "SUPPLEMENTAL AND UNSCORED. There is no ratified CMRR bound; the consumer's rejection verdict stays Unknown until a decision record says otherwise.",
+      "FULL 45-POINT COVERAGE IS PENDING. No record of this bench exists; see README.md for the executor capability gap and the next step.",
+      "WHAT THIS IS NOT. Schematic preamp DC offset vs common mode: not whole-comparator transient behaviour, not extracted-layout common-mode rejection, and it carries no load-resistor mismatch (the PDK models none; see sim/comparator-offset-mc/)."
+    ]
+  }
+}
