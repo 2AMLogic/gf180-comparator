@@ -16,7 +16,66 @@ Twin-bench definition: same `tb.json` + `tb_*.spice` + `records/` layout as
 the other four benches, same `setseed 20260909` + `reset` draw convention
 (seed common to every PVT point, so movement across the grid is a PVT effect).
 
-## Status: measured (record `20261010-013540611508-4a4df37`)
+## Status: measured on the full 45-point grid (record `20261010-021500046481-d84e59d`)
+
+Issue #200 extended the nine-point reference below to the whole PVT grid.
+Record [`records/20261010-021500046481-d84e59d.md`](records/20261010-021500046481-d84e59d.md): **45 of 45 PVT points x N = 200
+valid draws** (tt/ss/ff/fs/sf x -40/27/125 C x 2.97/3.30/3.63 V; 9,000
+transients), no named problem, `reference: true`, source bundle at clean
+commit `d84e59d`. Seed 20260909 (common to every point), `vary: mismatch`,
+ngspice pinned to one thread per unit.
+
+| quantity | value over the 45 points | worst / binding point |
+|---|---|---|
+| whole-comparator, simulated 3σ (`vos_3sig_tran_mv`) | 2.808–3.515 mV | `ff_125c_3.63v` |
+| latch term, paired 1σ (`sig_latch_mv`, simulated) | 0.184–0.659 mV | `ff_125c_3.63v` |
+| load-R hand budget 1σ, 3× conservative (`sig_rload_cons_mv`, **derived, not simulated**) | 0.342–0.501 mV | `ss_125c_2.97v` |
+| mean offset (`mean_vos_tran_uv`, simulated) | -126.4 – +118.4 uV | `sf_27c_3.63v` / `ss_-40c_3.63v` |
+| **total incl. conservative load-R (`vos_3sig_total_cons_mv`, scored)** | **2.994–3.795 mV** | **`ff_125c_3.63v`** |
+
+**Score: within the ≤ 15 mV target and the ≤ 8 mV stretch at 45/45 points**
+(the binding corner has 2.1× margin on the stretch). The ratified bound is
+unchanged. Compared with the nine-point record the binding corner moves from
+`ff_125c_3.30v` (3.725 mV) to `ff_125c_3.63v` (3.795 mV): +0.07 mV, so the
+fs/sf and ±10 % supply points add little to the sigma, and the new extremes
+did not saturate the staircase. The mean offset stays within ±0.13 mV, far
+inside the ±5.04 mV staircase. What is simulated versus derived: the scored
+total adds the derived load-R term (at most 0.50 mV 1σ, conservative) in
+quadrature to the simulated sigma; `vos_3sig_tran_mv` is the purely simulated
+3σ. The preamp-only DC bench (2.796–2.807 mV) stays as its own diagnostic
+record.
+
+Limitations: schematic DUT only (no extracted-layout statistics); single seed
+(common random numbers across points, so N is effectively 200, no seed
+replication); sigma precision 1/sqrt(2N) = 5 % per point; the resistor term is
+a cited-coefficient hand budget; the common-mode convention is held at the
+bench's 1.65 V (the common-mode window is issue #182).
+
+**Debug probes before the campaign (not evidence).** One-draw local
+`ngspice -b` runs at the newly covered extremes (`fs_-40c_2.97v`,
+`sf_-40c_2.97v`, `fs_125c_3.63v`, `sf_125c_3.63v`, `ss_125c_2.97v`,
+`ff_-40c_3.63v`) gave finite `.meas` values, positive gain, trip levels
+inside 1..63 (levels 28-30) and flips within the evaluate phase. Nothing was
+clipped or discarded afterwards: the fleet record has no failed unit.
+
+**Fleet execution (cost and capacity).** 9,000 transients at ~1.5 s
+single-threaded is ~3.8 core-hours, split as three requests (one per supply,
+3,000 units each). Jobs `klt-sim-ee7ad68415d2` (m7i.4xlarge Spot, 349 s),
+`klt-sim-a503009e268a` (m6i.4xlarge Spot, 415 s) and `klt-sim-031f74d456a0`
+(m7i.4xlarge Spot, 340 s), runner klt 0.5.0, client klt
+0.7.0+g5e5b55992a7f, no capacity refusal, no retry; about 0.3 instance-hours
+in total.
+
+Reproduce (fleet only; `klt_record.py` refuses a local backend):
+
+```bash
+git checkout d84e59d   # originating commit (clean tree)
+KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py comparator-offset-tran \
+    --label "DR-0001 whole-comparator, transient MC, full 45-point grid"
+```
+
+### Nine-point reference (record `20261010-013540611508-4a4df37`, history)
+
 
 [`records/20261010-013540611508-4a4df37.md`](records/20261010-013540611508-4a4df37.md),
 fleet job `klt-sim-816fb60826f4` (c7i.4xlarge Spot, runner klt 0.5.0, 200 s
@@ -82,8 +141,8 @@ cleanly 0 -> 1, and the threaded and single-thread runs gave identical values.
 
 ## Cold-start invocation
 
-Fleet only. A transient Monte Carlo is a grid (here 9 PVT points x 200
-draws = 1800 transients, ~1.5 s each single-threaded) and must not run on a
+Fleet only. A transient Monte Carlo is a grid (here 45 PVT points x 200
+draws = 9000 transients, ~1.5 s each single-threaded) and must not run on a
 dispatch worker:
 
 ```bash
@@ -100,17 +159,15 @@ verifies the source bundle, derives the quantities below and mints
 not wired into `sim/run_corners.py` / `sim/selftest.sh` (a local hand-run of
 this grid is exactly what the host rules forbid).
 
-## Grid: reduced, and which reduction
+## Grid
 
-**tt / ss / ff x -40 / 27 / 125 C at the nominal 3.3 V supply (9 PVT
-points), N = 200 draws each.** Not the 45-point grid. The reason is cost (a
-clocked 1.6 us transient per draw), and the justification is the DC bench's
-own record: its 1-sigma moves < 0.4 % across all 45 points (the mismatch
-sigma lives in the PDK's `fets_mm` subcircuits, not in a corner section), so
-fs/sf and the +/-10 % supply points add cost, not information, for a
-*sigma* — they are where the *mean* moves, and the mean is reported here too.
-Extending to the full grid is a `tb.json` edit (`corners`, `supply_tolerance`)
-and a re-run.
+**tt / ss / ff / fs / sf x -40 / 27 / 125 C x 2.97 / 3.30 / 3.63 V (45 PVT
+points), N = 200 draws each**, the same grid as the other four benches. The
+nine-point record (tt/ss/ff at nominal supply) was the first, reduced run; the
+cost argument for reducing it (a clocked 1.6 us transient per draw) was
+superseded once the single-thread pin made 1,800 units fit in 200 s. The
+`mk_klt_request.py` request is one `klt sim` per supply point (the supply is
+baked into each body netlist), each 5 x 3 x 200 = 3,000 units.
 
 ## Method
 

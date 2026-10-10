@@ -346,15 +346,18 @@ class MkKltRequest(unittest.TestCase):
             self.assertEqual(len(req["measurements"]), len(tb.analyses) - 1)
             self.assertTrue(all(m["spice"].startswith(".meas tran ") for m in req["measurements"]))
 
-    def test_offset_tran_is_tran_monte_carlo_on_the_reduced_grid(self):
+    def test_offset_tran_is_tran_monte_carlo_on_the_full_grid(self):
         tb = htb.load(SIM / "comparator-offset-tran")
         rc, reqs, bodies = self._mk("comparator-offset-tran", "--mc-n", "5")
         self.assertEqual(rc, 0)
-        self.assertEqual(sorted(reqs), ["request-main-v3.30.json"])  # nominal supply only
+        # Full 45-point grid (issue #200): 3 supply requests x 5 corners x 3 temps.
+        self.assertEqual(sorted(reqs), [f"request-main-v{v}.json" for v in ("2.97", "3.30", "3.63")])
         req = reqs["request-main-v3.30.json"]
+        for r in reqs.values():
+            self.assertEqual(r["corners"], req["corners"])
         self.assertEqual(req["monte_carlo"], {"n": 5, "seed": mk.OFFSET_MC_SEED, "vary": "mismatch"})
         self.assertEqual(req["analysis"]["kind"], "tran")
-        self.assertEqual([c["name"] for c in req["corners"]["process"]], ["tt", "ss", "ff"])
+        self.assertEqual([c["name"] for c in req["corners"]["process"]], ["tt", "ss", "ff", "fs", "sf"])
         self.assertEqual(req["corners"]["temperature_c"], [-40.0, 27.0, 125.0])
         self.assertEqual(len(req["measurements"]), len(tb.analyses) - 1)
         self.assertTrue(all(m["spice"].startswith(".meas tran ") for m in req["measurements"]))
