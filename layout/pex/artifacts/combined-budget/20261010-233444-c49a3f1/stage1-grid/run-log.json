@@ -1,0 +1,24 @@
+{
+  "backend": "batch",
+  "failed_jobs": [],
+  "finished_utc": "2026-10-10T23:52:11+00:00",
+  "issue": 264,
+  "job_errors": {},
+  "klt_sim_client": {
+    "git_commit": "c622e8addb362491664d44ba4d717f354ca88bbd",
+    "git_tag": "v0.6.0",
+    "is_release": true,
+    "version": "0.6.0"
+  },
+  "started_utc": "2026-10-10T23:34:44+00:00",
+  "variants": [
+    "ctrl",
+    "cgr-0750-1000",
+    "cgr-0500-1000",
+    "cgr-0250-1000",
+    "cgr-0750-0500",
+    "cgr-0500-0500",
+    "cgr-0250-0500",
+    "sch"
+  ]
+}
