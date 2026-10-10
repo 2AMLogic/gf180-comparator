@@ -12,6 +12,9 @@ NOT_RUN_BY_CHARACTERIZE = {
         "(reproduce via sim/tools/klt_record.py, see sim/README.md)",
     "comparator-offset-cm-window": "supplemental, unscored feasibility stage; "
         "fleet path refused (nested sweep), no record",
+    "comparator-offset-cm-index": "supplemental, unscored monotonic-index "
+        "variant of the cm-window bench (issue #218); fleet-only via "
+        "sim/tools/mk_klt_request.py, see its README for coverage status",
     "comparator-offset-tran-extracted-feasibility": "bounded feasibility "
         "probe, not a campaign; fleet-only, mints_record: false, no record",
 }

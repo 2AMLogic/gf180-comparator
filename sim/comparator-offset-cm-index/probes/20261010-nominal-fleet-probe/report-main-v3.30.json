@@ -1,0 +1,1632 @@
+{
+  "schema_version": 3,
+  "netlist": {
+    "path": null,
+    "scope": "external"
+  },
+  "status": "pass",
+  "corner_count": 3,
+  "passed": 3,
+  "failed": 0,
+  "errored": 0,
+  "inconclusive": 0,
+  "diagnostic_counts": {
+    "by_code": {},
+    "by_severity": {},
+    "corners_with_diagnostics": 0
+  },
+  "metrics": {
+    "sim__corner__count": 3,
+    "sim__corner__passed_count": 3,
+    "sim__corner__failed_count": 0,
+    "sim__corner__errored_count": 0,
+    "sim__corner__inconclusive_count": 0
+  },
+  "environment": {
+    "engine": "ngspice",
+    "engine_version": "46",
+    "ngspice_binary": "/home/ubuntu/.local/bin/ngspice",
+    "models_lib": {
+      "path": null,
+      "scope": "external"
+    },
+    "models_lib_sha256": "6edba54d23b38a2c60f8ffdbaa3eb75a7568c615e4820808969bd1121b77b1aa",
+    "netlist_sha256": "6fc5854d435026474e8e72517b216db300418f70574d62a0967b7217ff2c2121",
+    "netlist_closure": [
+      {
+        "path": null,
+        "scope": "external",
+        "sha256": "6fc5854d435026474e8e72517b216db300418f70574d62a0967b7217ff2c2121"
+      },
+      {
+        "path": null,
+        "scope": "external",
+        "sha256": "091cb530bf85160a1f07878fb81f789ca367d018991c8ab41a584cd1a85c6692"
+      },
+      {
+        "path": null,
+        "scope": "external",
+        "sha256": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a"
+      },
+      {
+        "path": null,
+        "scope": "external",
+        "sha256": "014293424ecff1e2d81bc979e2d9eb5b8e28e346cecc1326be28125f0b5fc344"
+      }
+    ],
+    "remote": {
+      "provider": "aws-batch-fleet",
+      "job_id": "klt-sim-a04c0e729586",
+      "bucket": "2am-batch-jobs-221082181346",
+      "region": "us-east-1",
+      "instance_id": "i-086c33879c5cc6e70",
+      "instance_type": "c7i.8xlarge",
+      "availability_zone": "us-east-1d",
+      "ami_id": "ami-0e40e3245f1923ac8",
+      "lifecycle": "spot",
+      "spot": true,
+      "state": "done",
+      "exit_code": "0",
+      "concurrency": "2",
+      "physical_cores": "16",
+      "elapsed_seconds": 9,
+      "runner_klt_version": "0.5.0",
+      "client_klt_version": "0.7.0+g8eec069c7576",
+      "runner_compatibility": "mismatch",
+      "runner_compatibility_warning": "the fleet runner ran klt 0.5.0 but the submitting client is 0.7.0+g8eec069c7576; request options the runner does not know may have been ignored -- update the runner image or use a compatible client"
+    },
+    "monte_carlo": {
+      "n": 3,
+      "seed": 20260909,
+      "vary": "mismatch",
+      "family_mismatch": []
+    }
+  },
+  "coverage": {
+    "corners_simulated": 3,
+    "measurements_declared": 18,
+    "measurements_with_limits": 0,
+    "unrecognized_limit_keys": [],
+    "schema_version": 1,
+    "known": true,
+    "checked": [
+      "measurement:[0,\"tt/novdd/27C/mc0\",\"dv_dn_0\"]/observation",
+      "measurement:[0,\"tt/novdd/27C/mc0\",\"dv_dn_2m\"]/observation",
+      "measurement:[0,\"tt/novdd/27C/mc0\",\"dv_mid_0\"]/observation",
+      "measurement:[0,\"tt/novdd/27C/mc0\",\"dv_mid_2m\"]/observation",
+      "measurement:[0,\"tt/novdd/27C/mc0\",\"dv_up_0\"]/observation",
+      "measurement:[0,\"tt/novdd/27C/mc0\",\"dv_up_2m\"]/observation",
+      "measurement:[0,\"tt/novdd/27C/mc0\",\"xcm_dn_0\"]/observation",
+      "measurement:[0,\"tt/novdd/27C/mc0\",\"xcm_dn_2m\"]/observation",
+      "measurement:[0,\"tt/novdd/27C/mc0\",\"xcm_mid_0\"]/observation",
+      "measurement:[0,\"tt/novdd/27C/mc0\",\"xcm_mid_2m\"]/observation",
+      "measurement:[0,\"tt/novdd/27C/mc0\",\"xcm_up_0\"]/observation",
+      "measurement:[0,\"tt/novdd/27C/mc0\",\"xcm_up_2m\"]/observation",
+      "measurement:[0,\"tt/novdd/27C/mc0\",\"xvd_dn_0\"]/observation",
+      "measurement:[0,\"tt/novdd/27C/mc0\",\"xvd_dn_2m\"]/observation",
+      "measurement:[0,\"tt/novdd/27C/mc0\",\"xvd_mid_0\"]/observation",
+      "measurement:[0,\"tt/novdd/27C/mc0\",\"xvd_mid_2m\"]/observation",
+      "measurement:[0,\"tt/novdd/27C/mc0\",\"xvd_up_0\"]/observation",
+      "measurement:[0,\"tt/novdd/27C/mc0\",\"xvd_up_2m\"]/observation",
+      "measurement:[1,\"tt/novdd/27C/mc1\",\"dv_dn_0\"]/observation",
+      "measurement:[1,\"tt/novdd/27C/mc1\",\"dv_dn_2m\"]/observation",
+      "measurement:[1,\"tt/novdd/27C/mc1\",\"dv_mid_0\"]/observation",
+      "measurement:[1,\"tt/novdd/27C/mc1\",\"dv_mid_2m\"]/observation",
+      "measurement:[1,\"tt/novdd/27C/mc1\",\"dv_up_0\"]/observation",
+      "measurement:[1,\"tt/novdd/27C/mc1\",\"dv_up_2m\"]/observation",
+      "measurement:[1,\"tt/novdd/27C/mc1\",\"xcm_dn_0\"]/observation",
+      "measurement:[1,\"tt/novdd/27C/mc1\",\"xcm_dn_2m\"]/observation",
+      "measurement:[1,\"tt/novdd/27C/mc1\",\"xcm_mid_0\"]/observation",
+      "measurement:[1,\"tt/novdd/27C/mc1\",\"xcm_mid_2m\"]/observation",
+      "measurement:[1,\"tt/novdd/27C/mc1\",\"xcm_up_0\"]/observation",
+      "measurement:[1,\"tt/novdd/27C/mc1\",\"xcm_up_2m\"]/observation",
+      "measurement:[1,\"tt/novdd/27C/mc1\",\"xvd_dn_0\"]/observation",
+      "measurement:[1,\"tt/novdd/27C/mc1\",\"xvd_dn_2m\"]/observation",
+      "measurement:[1,\"tt/novdd/27C/mc1\",\"xvd_mid_0\"]/observation",
+      "measurement:[1,\"tt/novdd/27C/mc1\",\"xvd_mid_2m\"]/observation",
+      "measurement:[1,\"tt/novdd/27C/mc1\",\"xvd_up_0\"]/observation",
+      "measurement:[1,\"tt/novdd/27C/mc1\",\"xvd_up_2m\"]/observation",
+      "measurement:[2,\"tt/novdd/27C/mc2\",\"dv_dn_0\"]/observation",
+      "measurement:[2,\"tt/novdd/27C/mc2\",\"dv_dn_2m\"]/observation",
+      "measurement:[2,\"tt/novdd/27C/mc2\",\"dv_mid_0\"]/observation",
+      "measurement:[2,\"tt/novdd/27C/mc2\",\"dv_mid_2m\"]/observation",
+      "measurement:[2,\"tt/novdd/27C/mc2\",\"dv_up_0\"]/observation",
+      "measurement:[2,\"tt/novdd/27C/mc2\",\"dv_up_2m\"]/observation",
+      "measurement:[2,\"tt/novdd/27C/mc2\",\"xcm_dn_0\"]/observation",
+      "measurement:[2,\"tt/novdd/27C/mc2\",\"xcm_dn_2m\"]/observation",
+      "measurement:[2,\"tt/novdd/27C/mc2\",\"xcm_mid_0\"]/observation",
+      "measurement:[2,\"tt/novdd/27C/mc2\",\"xcm_mid_2m\"]/observation",
+      "measurement:[2,\"tt/novdd/27C/mc2\",\"xcm_up_0\"]/observation",
+      "measurement:[2,\"tt/novdd/27C/mc2\",\"xcm_up_2m\"]/observation",
+      "measurement:[2,\"tt/novdd/27C/mc2\",\"xvd_dn_0\"]/observation",
+      "measurement:[2,\"tt/novdd/27C/mc2\",\"xvd_dn_2m\"]/observation",
+      "measurement:[2,\"tt/novdd/27C/mc2\",\"xvd_mid_0\"]/observation",
+      "measurement:[2,\"tt/novdd/27C/mc2\",\"xvd_mid_2m\"]/observation",
+      "measurement:[2,\"tt/novdd/27C/mc2\",\"xvd_up_0\"]/observation",
+      "measurement:[2,\"tt/novdd/27C/mc2\",\"xvd_up_2m\"]/observation"
+    ],
+    "skipped": [],
+    "inapplicable": [
+      {
+        "id": "measurement:[0,\"tt/novdd/27C/mc0\",\"dv_dn_0\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/27C/mc0\",\"dv_dn_2m\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/27C/mc0\",\"dv_mid_0\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/27C/mc0\",\"dv_mid_2m\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/27C/mc0\",\"dv_up_0\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/27C/mc0\",\"dv_up_2m\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/27C/mc0\",\"xcm_dn_0\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/27C/mc0\",\"xcm_dn_2m\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/27C/mc0\",\"xcm_mid_0\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/27C/mc0\",\"xcm_mid_2m\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/27C/mc0\",\"xcm_up_0\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/27C/mc0\",\"xcm_up_2m\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/27C/mc0\",\"xvd_dn_0\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/27C/mc0\",\"xvd_dn_2m\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/27C/mc0\",\"xvd_mid_0\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/27C/mc0\",\"xvd_mid_2m\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/27C/mc0\",\"xvd_up_0\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/27C/mc0\",\"xvd_up_2m\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C/mc1\",\"dv_dn_0\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C/mc1\",\"dv_dn_2m\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C/mc1\",\"dv_mid_0\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C/mc1\",\"dv_mid_2m\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C/mc1\",\"dv_up_0\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C/mc1\",\"dv_up_2m\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C/mc1\",\"xcm_dn_0\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C/mc1\",\"xcm_dn_2m\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C/mc1\",\"xcm_mid_0\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C/mc1\",\"xcm_mid_2m\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C/mc1\",\"xcm_up_0\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C/mc1\",\"xcm_up_2m\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C/mc1\",\"xvd_dn_0\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C/mc1\",\"xvd_dn_2m\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C/mc1\",\"xvd_mid_0\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C/mc1\",\"xvd_mid_2m\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C/mc1\",\"xvd_up_0\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C/mc1\",\"xvd_up_2m\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/27C/mc2\",\"dv_dn_0\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/27C/mc2\",\"dv_dn_2m\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/27C/mc2\",\"dv_mid_0\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/27C/mc2\",\"dv_mid_2m\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/27C/mc2\",\"dv_up_0\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/27C/mc2\",\"dv_up_2m\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/27C/mc2\",\"xcm_dn_0\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/27C/mc2\",\"xcm_dn_2m\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/27C/mc2\",\"xcm_mid_0\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/27C/mc2\",\"xcm_mid_2m\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/27C/mc2\",\"xcm_up_0\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/27C/mc2\",\"xcm_up_2m\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/27C/mc2\",\"xvd_dn_0\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/27C/mc2\",\"xvd_dn_2m\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/27C/mc2\",\"xvd_mid_0\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/27C/mc2\",\"xvd_mid_2m\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/27C/mc2\",\"xvd_up_0\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/27C/mc2\",\"xvd_up_2m\"]/limits",
+        "reason": "characterization_without_limits"
+      }
+    ],
+    "unknown": [],
+    "nothing_checked": false,
+    "nothing_checked_reasons": []
+  },
+  "provenance": {
+    "klt_version": "0.7.0+g8eec069c7576",
+    "klayout_version": "0.30.12",
+    "pdk": {
+      "name": "gf180mcuD",
+      "source": "search root: ~/.volare",
+      "version": "open_pdks c6d73a35f524070e85faff4a6a9eef49553ebc2b"
+    },
+    "deck": {
+      "name": "sm141064.ngspice",
+      "content_hash": "sha256:6edba54d23b38a2c60f8ffdbaa3eb75a7568c615e4820808969bd1121b77b1aa",
+      "released": false
+    },
+    "input": {
+      "content_hash": "sha256:6fc5854d435026474e8e72517b216db300418f70574d62a0967b7217ff2c2121",
+      "role": "netlist"
+    }
+  },
+  "measurements": [
+    {
+      "name": "dv_dn_0",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C/mc0",
+        "value": 0.0174707,
+        "margin": null
+      },
+      "monte_carlo": {
+        "n": 3,
+        "errored": 0,
+        "inconclusive": 0,
+        "mean": 0.004515166666666667,
+        "stddev": 0.024323764618441227,
+        "min": -0.0235441,
+        "max": 0.0196189,
+        "quantiles": {
+          "p5": -0.01944262,
+          "p50": 0.0174707,
+          "p95": 0.01940408
+        },
+        "sigma_window": null,
+        "by_corner": [
+          {
+            "corner_id": "tt/novdd/27C",
+            "n": 3,
+            "errored": 0,
+            "inconclusive": 0,
+            "mean": 0.004515166666666667,
+            "stddev": 0.024323764618441227,
+            "min": -0.0235441,
+            "max": 0.0196189,
+            "quantiles": {
+              "p5": -0.01944262,
+              "p50": 0.0174707,
+              "p95": 0.01940408
+            },
+            "sigma_window": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "xcm_dn_0",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C/mc0",
+        "value": -0.1,
+        "margin": null
+      },
+      "monte_carlo": {
+        "n": 3,
+        "errored": 0,
+        "inconclusive": 0,
+        "mean": -0.10000000000000002,
+        "stddev": 0.0,
+        "min": -0.1,
+        "max": -0.1,
+        "quantiles": {
+          "p5": -0.1,
+          "p50": -0.1,
+          "p95": -0.1
+        },
+        "sigma_window": null,
+        "by_corner": [
+          {
+            "corner_id": "tt/novdd/27C",
+            "n": 3,
+            "errored": 0,
+            "inconclusive": 0,
+            "mean": -0.10000000000000002,
+            "stddev": 0.0,
+            "min": -0.1,
+            "max": -0.1,
+            "quantiles": {
+              "p5": -0.1,
+              "p50": -0.1,
+              "p95": -0.1
+            },
+            "sigma_window": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "xvd_dn_0",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C/mc0",
+        "value": 0.0,
+        "margin": null
+      },
+      "monte_carlo": {
+        "n": 3,
+        "errored": 0,
+        "inconclusive": 0,
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "quantiles": {
+          "p5": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "sigma_window": null,
+        "by_corner": [
+          {
+            "corner_id": "tt/novdd/27C",
+            "n": 3,
+            "errored": 0,
+            "inconclusive": 0,
+            "mean": 0.0,
+            "stddev": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "quantiles": {
+              "p5": 0.0,
+              "p50": 0.0,
+              "p95": 0.0
+            },
+            "sigma_window": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "dv_dn_2m",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C/mc0",
+        "value": 0.053463,
+        "margin": null
+      },
+      "monte_carlo": {
+        "n": 3,
+        "errored": 0,
+        "inconclusive": 0,
+        "mean": 0.040343333333333335,
+        "stddev": 0.02455829533362064,
+        "min": 0.0120116,
+        "max": 0.0555554,
+        "quantiles": {
+          "p5": 0.016156740000000003,
+          "p50": 0.053463,
+          "p95": 0.05534616
+        },
+        "sigma_window": null,
+        "by_corner": [
+          {
+            "corner_id": "tt/novdd/27C",
+            "n": 3,
+            "errored": 0,
+            "inconclusive": 0,
+            "mean": 0.040343333333333335,
+            "stddev": 0.02455829533362064,
+            "min": 0.0120116,
+            "max": 0.0555554,
+            "quantiles": {
+              "p5": 0.016156740000000003,
+              "p50": 0.053463,
+              "p95": 0.05534616
+            },
+            "sigma_window": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "xcm_dn_2m",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C/mc0",
+        "value": -0.1,
+        "margin": null
+      },
+      "monte_carlo": {
+        "n": 3,
+        "errored": 0,
+        "inconclusive": 0,
+        "mean": -0.10000000000000002,
+        "stddev": 0.0,
+        "min": -0.1,
+        "max": -0.1,
+        "quantiles": {
+          "p5": -0.1,
+          "p50": -0.1,
+          "p95": -0.1
+        },
+        "sigma_window": null,
+        "by_corner": [
+          {
+            "corner_id": "tt/novdd/27C",
+            "n": 3,
+            "errored": 0,
+            "inconclusive": 0,
+            "mean": -0.10000000000000002,
+            "stddev": 0.0,
+            "min": -0.1,
+            "max": -0.1,
+            "quantiles": {
+              "p5": -0.1,
+              "p50": -0.1,
+              "p95": -0.1
+            },
+            "sigma_window": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "xvd_dn_2m",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C/mc0",
+        "value": 0.002,
+        "margin": null
+      },
+      "monte_carlo": {
+        "n": 3,
+        "errored": 0,
+        "inconclusive": 0,
+        "mean": 0.002,
+        "stddev": 0.0,
+        "min": 0.002,
+        "max": 0.002,
+        "quantiles": {
+          "p5": 0.002,
+          "p50": 0.002,
+          "p95": 0.002
+        },
+        "sigma_window": null,
+        "by_corner": [
+          {
+            "corner_id": "tt/novdd/27C",
+            "n": 3,
+            "errored": 0,
+            "inconclusive": 0,
+            "mean": 0.002,
+            "stddev": 0.0,
+            "min": 0.002,
+            "max": 0.002,
+            "quantiles": {
+              "p5": 0.002,
+              "p50": 0.002,
+              "p95": 0.002
+            },
+            "sigma_window": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "dv_mid_0",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C/mc0",
+        "value": 0.0175037,
+        "margin": null
+      },
+      "monte_carlo": {
+        "n": 3,
+        "errored": 0,
+        "inconclusive": 0,
+        "mean": 0.004523500000000001,
+        "stddev": 0.024369818450698397,
+        "min": -0.0235889,
+        "max": 0.0196557,
+        "quantiles": {
+          "p5": -0.01947964,
+          "p50": 0.0175037,
+          "p95": 0.0194405
+        },
+        "sigma_window": null,
+        "by_corner": [
+          {
+            "corner_id": "tt/novdd/27C",
+            "n": 3,
+            "errored": 0,
+            "inconclusive": 0,
+            "mean": 0.004523500000000001,
+            "stddev": 0.024369818450698397,
+            "min": -0.0235889,
+            "max": 0.0196557,
+            "quantiles": {
+              "p5": -0.01947964,
+              "p50": 0.0175037,
+              "p95": 0.0194405
+            },
+            "sigma_window": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "xcm_mid_0",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C/mc0",
+        "value": 0.0,
+        "margin": null
+      },
+      "monte_carlo": {
+        "n": 3,
+        "errored": 0,
+        "inconclusive": 0,
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "quantiles": {
+          "p5": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "sigma_window": null,
+        "by_corner": [
+          {
+            "corner_id": "tt/novdd/27C",
+            "n": 3,
+            "errored": 0,
+            "inconclusive": 0,
+            "mean": 0.0,
+            "stddev": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "quantiles": {
+              "p5": 0.0,
+              "p50": 0.0,
+              "p95": 0.0
+            },
+            "sigma_window": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "xvd_mid_0",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C/mc0",
+        "value": 0.0,
+        "margin": null
+      },
+      "monte_carlo": {
+        "n": 3,
+        "errored": 0,
+        "inconclusive": 0,
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "quantiles": {
+          "p5": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "sigma_window": null,
+        "by_corner": [
+          {
+            "corner_id": "tt/novdd/27C",
+            "n": 3,
+            "errored": 0,
+            "inconclusive": 0,
+            "mean": 0.0,
+            "stddev": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "quantiles": {
+              "p5": 0.0,
+              "p50": 0.0,
+              "p95": 0.0
+            },
+            "sigma_window": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "dv_mid_2m",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C/mc0",
+        "value": 0.053546,
+        "margin": null
+      },
+      "monte_carlo": {
+        "n": 3,
+        "errored": 0,
+        "inconclusive": 0,
+        "mean": 0.04040333333333334,
+        "stddev": 0.024601199225715267,
+        "min": 0.0120221,
+        "max": 0.0556419,
+        "quantiles": {
+          "p5": 0.01617449,
+          "p50": 0.053546,
+          "p95": 0.055432310000000005
+        },
+        "sigma_window": null,
+        "by_corner": [
+          {
+            "corner_id": "tt/novdd/27C",
+            "n": 3,
+            "errored": 0,
+            "inconclusive": 0,
+            "mean": 0.04040333333333334,
+            "stddev": 0.024601199225715267,
+            "min": 0.0120221,
+            "max": 0.0556419,
+            "quantiles": {
+              "p5": 0.01617449,
+              "p50": 0.053546,
+              "p95": 0.055432310000000005
+            },
+            "sigma_window": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "xcm_mid_2m",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C/mc0",
+        "value": 0.0,
+        "margin": null
+      },
+      "monte_carlo": {
+        "n": 3,
+        "errored": 0,
+        "inconclusive": 0,
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "quantiles": {
+          "p5": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "sigma_window": null,
+        "by_corner": [
+          {
+            "corner_id": "tt/novdd/27C",
+            "n": 3,
+            "errored": 0,
+            "inconclusive": 0,
+            "mean": 0.0,
+            "stddev": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "quantiles": {
+              "p5": 0.0,
+              "p50": 0.0,
+              "p95": 0.0
+            },
+            "sigma_window": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "xvd_mid_2m",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C/mc0",
+        "value": 0.002,
+        "margin": null
+      },
+      "monte_carlo": {
+        "n": 3,
+        "errored": 0,
+        "inconclusive": 0,
+        "mean": 0.002,
+        "stddev": 0.0,
+        "min": 0.002,
+        "max": 0.002,
+        "quantiles": {
+          "p5": 0.002,
+          "p50": 0.002,
+          "p95": 0.002
+        },
+        "sigma_window": null,
+        "by_corner": [
+          {
+            "corner_id": "tt/novdd/27C",
+            "n": 3,
+            "errored": 0,
+            "inconclusive": 0,
+            "mean": 0.002,
+            "stddev": 0.0,
+            "min": 0.002,
+            "max": 0.002,
+            "quantiles": {
+              "p5": 0.002,
+              "p50": 0.002,
+              "p95": 0.002
+            },
+            "sigma_window": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "dv_up_0",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C/mc0",
+        "value": 0.0175343,
+        "margin": null
+      },
+      "monte_carlo": {
+        "n": 3,
+        "errored": 0,
+        "inconclusive": 0,
+        "mean": 0.004531133333333333,
+        "stddev": 0.02441275321718821,
+        "min": -0.0236308,
+        "max": 0.0196899,
+        "quantiles": {
+          "p5": -0.01951429,
+          "p50": 0.0175343,
+          "p95": 0.01947434
+        },
+        "sigma_window": null,
+        "by_corner": [
+          {
+            "corner_id": "tt/novdd/27C",
+            "n": 3,
+            "errored": 0,
+            "inconclusive": 0,
+            "mean": 0.004531133333333333,
+            "stddev": 0.02441275321718821,
+            "min": -0.0236308,
+            "max": 0.0196899,
+            "quantiles": {
+              "p5": -0.01951429,
+              "p50": 0.0175343,
+              "p95": 0.01947434
+            },
+            "sigma_window": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "xcm_up_0",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C/mc0",
+        "value": 0.1,
+        "margin": null
+      },
+      "monte_carlo": {
+        "n": 3,
+        "errored": 0,
+        "inconclusive": 0,
+        "mean": 0.10000000000000002,
+        "stddev": 0.0,
+        "min": 0.1,
+        "max": 0.1,
+        "quantiles": {
+          "p5": 0.1,
+          "p50": 0.1,
+          "p95": 0.1
+        },
+        "sigma_window": null,
+        "by_corner": [
+          {
+            "corner_id": "tt/novdd/27C",
+            "n": 3,
+            "errored": 0,
+            "inconclusive": 0,
+            "mean": 0.10000000000000002,
+            "stddev": 0.0,
+            "min": 0.1,
+            "max": 0.1,
+            "quantiles": {
+              "p5": 0.1,
+              "p50": 0.1,
+              "p95": 0.1
+            },
+            "sigma_window": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "xvd_up_0",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C/mc0",
+        "value": 0.0,
+        "margin": null
+      },
+      "monte_carlo": {
+        "n": 3,
+        "errored": 0,
+        "inconclusive": 0,
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "quantiles": {
+          "p5": 0.0,
+          "p50": 0.0,
+          "p95": 0.0
+        },
+        "sigma_window": null,
+        "by_corner": [
+          {
+            "corner_id": "tt/novdd/27C",
+            "n": 3,
+            "errored": 0,
+            "inconclusive": 0,
+            "mean": 0.0,
+            "stddev": 0.0,
+            "min": 0.0,
+            "max": 0.0,
+            "quantiles": {
+              "p5": 0.0,
+              "p50": 0.0,
+              "p95": 0.0
+            },
+            "sigma_window": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "dv_up_2m",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C/mc0",
+        "value": 0.0536267,
+        "margin": null
+      },
+      "monte_carlo": {
+        "n": 3,
+        "errored": 0,
+        "inconclusive": 0,
+        "mean": 0.04046093333333333,
+        "stddev": 0.024644276165944362,
+        "min": 0.01203,
+        "max": 0.0557261,
+        "quantiles": {
+          "p5": 0.016189670000000003,
+          "p50": 0.0536267,
+          "p95": 0.05551616
+        },
+        "sigma_window": null,
+        "by_corner": [
+          {
+            "corner_id": "tt/novdd/27C",
+            "n": 3,
+            "errored": 0,
+            "inconclusive": 0,
+            "mean": 0.04046093333333333,
+            "stddev": 0.024644276165944362,
+            "min": 0.01203,
+            "max": 0.0557261,
+            "quantiles": {
+              "p5": 0.016189670000000003,
+              "p50": 0.0536267,
+              "p95": 0.05551616
+            },
+            "sigma_window": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "xcm_up_2m",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C/mc0",
+        "value": 0.1,
+        "margin": null
+      },
+      "monte_carlo": {
+        "n": 3,
+        "errored": 0,
+        "inconclusive": 0,
+        "mean": 0.10000000000000002,
+        "stddev": 0.0,
+        "min": 0.1,
+        "max": 0.1,
+        "quantiles": {
+          "p5": 0.1,
+          "p50": 0.1,
+          "p95": 0.1
+        },
+        "sigma_window": null,
+        "by_corner": [
+          {
+            "corner_id": "tt/novdd/27C",
+            "n": 3,
+            "errored": 0,
+            "inconclusive": 0,
+            "mean": 0.10000000000000002,
+            "stddev": 0.0,
+            "min": 0.1,
+            "max": 0.1,
+            "quantiles": {
+              "p5": 0.1,
+              "p50": 0.1,
+              "p95": 0.1
+            },
+            "sigma_window": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "xvd_up_2m",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C/mc0",
+        "value": 0.002,
+        "margin": null
+      },
+      "monte_carlo": {
+        "n": 3,
+        "errored": 0,
+        "inconclusive": 0,
+        "mean": 0.002,
+        "stddev": 0.0,
+        "min": 0.002,
+        "max": 0.002,
+        "quantiles": {
+          "p5": 0.002,
+          "p50": 0.002,
+          "p95": 0.002
+        },
+        "sigma_window": null,
+        "by_corner": [
+          {
+            "corner_id": "tt/novdd/27C",
+            "n": 3,
+            "errored": 0,
+            "inconclusive": 0,
+            "mean": 0.002,
+            "stddev": 0.0,
+            "min": 0.002,
+            "max": 0.002,
+            "quantiles": {
+              "p5": 0.002,
+              "p50": 0.002,
+              "p95": 0.002
+            },
+            "sigma_window": null
+          }
+        ]
+      }
+    }
+  ],
+  "corners": [
+    {
+      "corner_id": "tt/novdd/27C/mc0",
+      "process": "tt",
+      "supply_v": {},
+      "temperature_c": 27.0,
+      "status": "pass",
+      "runtime_s": 0.536,
+      "measurements": [
+        {
+          "name": "dv_dn_0",
+          "value": 0.0174707,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xcm_dn_0",
+          "value": -0.1,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xvd_dn_0",
+          "value": 0.0,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "dv_dn_2m",
+          "value": 0.053463,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xcm_dn_2m",
+          "value": -0.1,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xvd_dn_2m",
+          "value": 0.002,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "dv_mid_0",
+          "value": 0.0175037,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xcm_mid_0",
+          "value": 0.0,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xvd_mid_0",
+          "value": 0.0,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "dv_mid_2m",
+          "value": 0.053546,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xcm_mid_2m",
+          "value": 0.0,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xvd_mid_2m",
+          "value": 0.002,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "dv_up_0",
+          "value": 0.0175343,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xcm_up_0",
+          "value": 0.1,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xvd_up_0",
+          "value": 0.0,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "dv_up_2m",
+          "value": 0.0536267,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xcm_up_2m",
+          "value": 0.1,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xvd_up_2m",
+          "value": 0.002,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "out-main-v3.30/tt_novdd_27C_mc0/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "out-main-v3.30/tt_novdd_27C_mc0/corner.cir"
+      },
+      "monte_carlo": {
+        "sample_index": 0,
+        "seed": 1830626436,
+        "process_seed": 54328116,
+        "mismatch_seed": 20517072
+      }
+    },
+    {
+      "corner_id": "tt/novdd/27C/mc1",
+      "process": "tt",
+      "supply_v": {},
+      "temperature_c": 27.0,
+      "status": "pass",
+      "runtime_s": 0.534,
+      "measurements": [
+        {
+          "name": "dv_dn_0",
+          "value": 0.0196189,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xcm_dn_0",
+          "value": -0.1,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xvd_dn_0",
+          "value": 0.0,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "dv_dn_2m",
+          "value": 0.0555554,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xcm_dn_2m",
+          "value": -0.1,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xvd_dn_2m",
+          "value": 0.002,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "dv_mid_0",
+          "value": 0.0196557,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xcm_mid_0",
+          "value": 0.0,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xvd_mid_0",
+          "value": 0.0,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "dv_mid_2m",
+          "value": 0.0556419,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xcm_mid_2m",
+          "value": 0.0,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xvd_mid_2m",
+          "value": 0.002,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "dv_up_0",
+          "value": 0.0196899,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xcm_up_0",
+          "value": 0.1,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xvd_up_0",
+          "value": 0.0,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "dv_up_2m",
+          "value": 0.0557261,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xcm_up_2m",
+          "value": 0.1,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xvd_up_2m",
+          "value": 0.002,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "out-main-v3.30/tt_novdd_27C_mc1/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "out-main-v3.30/tt_novdd_27C_mc1/corner.cir"
+      },
+      "monte_carlo": {
+        "sample_index": 1,
+        "seed": 412841731,
+        "process_seed": 54328116,
+        "mismatch_seed": 1148350913
+      }
+    },
+    {
+      "corner_id": "tt/novdd/27C/mc2",
+      "process": "tt",
+      "supply_v": {},
+      "temperature_c": 27.0,
+      "status": "pass",
+      "runtime_s": 0.533,
+      "measurements": [
+        {
+          "name": "dv_dn_0",
+          "value": -0.0235441,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xcm_dn_0",
+          "value": -0.1,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xvd_dn_0",
+          "value": 0.0,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "dv_dn_2m",
+          "value": 0.0120116,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xcm_dn_2m",
+          "value": -0.1,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xvd_dn_2m",
+          "value": 0.002,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "dv_mid_0",
+          "value": -0.0235889,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xcm_mid_0",
+          "value": 0.0,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xvd_mid_0",
+          "value": 0.0,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "dv_mid_2m",
+          "value": 0.0120221,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xcm_mid_2m",
+          "value": 0.0,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xvd_mid_2m",
+          "value": 0.002,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "dv_up_0",
+          "value": -0.0236308,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xcm_up_0",
+          "value": 0.1,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xvd_up_0",
+          "value": 0.0,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "dv_up_2m",
+          "value": 0.01203,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xcm_up_2m",
+          "value": 0.1,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "xvd_up_2m",
+          "value": 0.002,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "out-main-v3.30/tt_novdd_27C_mc2/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "out-main-v3.30/tt_novdd_27C_mc2/corner.cir"
+      },
+      "monte_carlo": {
+        "sample_index": 2,
+        "seed": 1543271729,
+        "process_seed": 54328116,
+        "mismatch_seed": 1960247257
+      }
+    }
+  ]
+}

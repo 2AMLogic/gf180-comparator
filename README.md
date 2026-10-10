@@ -55,11 +55,11 @@ publishes what this block takes and exposes (consumer requirement rows:
 ## Verification harness
 
 Every row of the table below has a testbench, a committed PVT corner matrix,
-and a documented way to reproduce it — see [`sim/`](sim/). `sim/` holds six
+and a documented way to reproduce it — see [`sim/`](sim/). `sim/` holds seven
 bench directories: four corner-grid benches (offset-mc, preamp-noise,
 regeneration, kickback) that `characterize.sh` runs, the fleet-only
 `comparator-offset-tran` (whole-comparator offset evidence), and the
-supplemental, unscored `comparator-offset-cm-window` (no record yet).
+supplemental, unscored `comparator-offset-cm-window` (no record yet) and its monotonic-index variant `comparator-offset-cm-index` (nominal fleet probe only, no record yet).
 
 ```bash
 python3 sim/run_corners.py --check-env   # PDK, pinned toolchain, DUT contract

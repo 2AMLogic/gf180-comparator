@@ -65,7 +65,9 @@ The consumer window is covered by the separate supplemental bench
 [`comparator-offset-cm-window/`](../comparator-offset-cm-window/) (issue #182).
 It is at the feasibility stage only: the fleet runner cannot yet address a
 nested sweep's points, no record exists, and the consumer verdict stays
-Unknown.
+Unknown. Its monotonic-index variant
+[`comparator-offset-cm-index/`](../comparator-offset-cm-index/) (issue #218) has
+only a nominal fleet probe so far.
 
 ## Provenance
 
