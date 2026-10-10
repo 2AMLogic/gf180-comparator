@@ -980,6 +980,149 @@ def legacy_diagnostic(bench: str, work: Path) -> int:
     return 3
 
 
+def mint_cm_index(a) -> int:
+    """Issue #218: append-only record for the monotonic-index common-mode
+    bench. UNSCORED: no ratified bound exists, so there is no target/stretch
+    verdict and the consumer's rejection verdict stays Unknown. Full coverage
+    is claimed only when every requested PVT point is complete (`complete`)
+    AND the source identity is citable; draws are joined by identity inside
+    one report (`collect_cm_index`), never pooled across requests."""
+    bench = a.bench
+    work = Path(a.from_report or a.work or f"/tmp/klt-{bench}").resolve()
+    if not a.from_report:
+        work.mkdir(parents=True, exist_ok=True)
+        subprocess.check_call([sys.executable, str(HERE / "mk_klt_request.py"), bench, str(work),
+                               "--mc-n", str(a.mc_n)] + (["--dut", a.dut] if a.dut else []))
+    b = load_bundle(work, bench)
+    check_dut_selection(b, a.dut)
+    d, t, origin = b["dut"], b["testbench"], b["origin"]
+    tb = htb.load(_staged_path(work, t["staged_dir"]))
+    vdds = hc.supply_points(tb.nominal_supply_v, tb.supply_tolerance)
+    names = {f"main-v{v:.2f}": ("main", v) for v in vdds}
+    verify_staged(work, b, names)
+    if not a.from_report:
+        dispatch(work, list(names))
+    reports = {n: json.loads((work / f"report-{n}.json").read_text()) for n in names}
+    link_notes = verify_reports(work, b, names, reports)
+    unverified = verify_origin_commit(b)
+    drift = checkout_drift(b)
+    requests = {n: json.loads((work / b["requests"][n]["request"]).read_text()) for n in names}
+    samples: dict = {}
+    issues: list[str] = []
+    expected = 0
+    for n, (_, v) in names.items():
+        pair_cm_window_reports([reports[n]])  # one report per supply point, by construction
+        got, iss = collect_cm_index(reports[n], requests[n], v)
+        issues += [f"{n}: {i}" for i in iss]
+        expected += len(expected_units(requests[n], v))
+        for cid, smp in got.items():
+            samples.setdefault(cid, {}).update(smp)
+    mcs = {json.dumps(r.get("monte_carlo"), sort_keys=True) for r in requests.values()}
+    if len(mcs) > 1:
+        issues.append(f"MC_DECLARATION_MISMATCH: requests disagree on monte_carlo: {sorted(mcs)}")
+    derived, dprob = derive_cm_window(samples)
+    problems = issues + dprob
+    complete = not problems and len(derived) == expected
+    if not derived:
+        print("\n".join(["no complete PVT point: nothing derived, no record written"] + problems[:60]), file=sys.stderr)
+        raise SystemExit(f"EMPTY_RESULT: {bench} produced no complete PVT point; refusing to publish a record")
+    ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S%f")
+    sha = origin["commit"][:7]
+    ingest_sha, tools_dirty = git_state()
+    citable = not origin["dirty"] and not unverified and not tools_dirty
+    bundle_sha = mk.sha256_file(work / mk.BUNDLE_NAME)
+    rid = f"{ts}-{sha}"
+    exp = SIM / bench
+    for sub in ("records", "corners", "netlist-snapshots"):
+        (exp / sub).mkdir(exist_ok=True)
+    cdir = exp / "corners" / rid
+    cdir.mkdir()
+    for f in [mk.BUNDLE_NAME, "design.ngspice"] + [f"body-v{v:.2f}.spice" for v in vdds] \
+            + [f"request-{n}.json" for n in names] + [f"report-{n}.json" for n in names]:
+        shutil.copy2(work / f, cdir / f)
+    shutil.copytree(work / mk.SOURCES_DIR, cdir / mk.SOURCES_DIR)
+    snap = exp / "netlist-snapshots" / f"{rid}.spice"
+    snap.write_text(_staged_path(work, d["staged_netlist"]).read_text() + "\n* ---- testbench fragment ----\n" + tb.netlist.read_text())
+    noncite = []
+    if origin["dirty"]:
+        noncite.append(f"sources uncommitted at request generation: {', '.join(origin['dirty_paths'])}")
+    noncite += [f"origin unverifiable: {u}" for u in unverified]
+    if tools_dirty:
+        noncite.append(f"derivation tooling (sim/tools, sim/harness) dirty at ingest commit {ingest_sha}")
+    reference = complete and citable
+    full = reference
+    rem = [r["environment"].get("remote") for r in reports.values()]
+    ng = sorted({str(r["environment"].get("engine_version")) for r in reports.values()})
+    mc = next(iter(reports.values()))["environment"].get("monte_carlo", {})
+    draws = {cid: d_["n_samples"] for cid, d_ in derived.items()}
+    cols = list(next(iter(derived.values())).keys())
+    if reference:
+        claim = ("COMPLETE: every requested PVT point returned every draw with verified coordinates; "
+                 "FULL COVERAGE of the documented 1.55/1.65/1.75 V window, as schematic preamp DC characterization")
+    elif not complete:
+        claim = "NON-COMPLETE DIAGNOSTIC (full coverage NOT claimed; see INCOMPLETE / FAILED UNITS)" + ("; also NOT CITABLE, see Commit" if not citable else "")
+    else:
+        claim = "NOT-CITABLE DIAGNOSTIC (full coverage NOT claimed; source identity not citable, see Commit)"
+    lines = [
+        f"# Record {rid}", "",
+        f"- **Record ID**: {rid}",
+        f"- **Experiment**: `sim/{bench}/` (klt sim requests, one per supply point: {', '.join(names)})",
+        f"- **Topology label**: {a.label or d['dut_id']}",
+        f"- **Claim**: {claim}. UNSCORED: no ratified common-mode rejection bound exists; the consumer's rejection verdict stays **Unknown**. Schematic preamp DC only -- not whole-comparator transient, not extracted-layout.",
+        f"- **DUT**: `{d['dut_id']}` -- **{d['provenance']}** -- `{d['netlist']}` (sha256 `{d['netlist_sha256']}`), binding `{d['binding_config']}` entry `{d['key']}` (sha256 `{d['binding_entry_sha256'][:16]}`), params {json.dumps(d['params'], sort_keys=True)}",
+        f"- **Testbench**: `{t['dir']}/{t['netlist']}` (sha256 `{t['netlist_sha256']}`), manifest sha256 `{t['manifest_sha256'][:16]}`",
+        f"- **Commit**: `{sha}` (originating commit, from the source bundle `corners/{rid}/{mk.BUNDLE_NAME}` sha256 `{bundle_sha[:16]}`)"
+        + (f" -- **NOT CITABLE until re-minted from a clean commit**: {'; '.join(noncite)}" if noncite else ""),
+        f"- **Ingested**: at commit `{ingest_sha}` by `sim/tools/klt_record.py`; report-to-request linkage verified",
+        f"- **Source drift since generation**: {', '.join(drift) if drift else 'none'}",
+        f"- **Executor**: `klt sim` ({klt_version()}), backend `{os.environ.get('KLT_SIM_BACKEND', '?')}`; remote/batch descriptor(s): `{json.dumps(rem)}`; ngspice engine_version(s) reported: {ng}",
+        f"- **Coverage**: {len(derived)} of {expected} PVT points complete; draws per point min {min(draws.values())} / max {max(draws.values())} (requested {mc.get('n')}).",
+        f"- **Monte Carlo**: seed {mc.get('seed')}, n = {mc.get('n')} draws requested per PVT point, vary = {mc.get('vary')}. One draw is one `corners[]` entry of one report (one analysis `dc {mk.CM_INDEX_DC_ARGS}` of one instance), joined by `monte_carlo.sample_index`; both coordinate read-backs checked within {CM_COORD_TOL_V:g} V. Seed equality across requests is not used as pairing.",
+        "- **Definitions**: per draw, `A_p = (dv_p(2 mV) - dv_p(0))/2 mV`, `Vos_p = -dv_p(0)/A_p`; `dvos_dn/up` = endpoint minus midpoint offset change within the same draw (reported in uV). No rejection ratio is defined. Sigmas are population.",
+    ]
+    lines += [f"  - linkage note: {n}" for n in link_notes]
+    if problems:
+        lines += ["- **INCOMPLETE / FAILED UNITS**:"] + [f"  - {p}" for p in problems[:60]]
+    lines += ["- **Result**:", "", "  | corner-id | " + " | ".join(f"`{n}`" for n in cols) + " |", "  |---|" + "---|" * len(cols)]
+    for cid, dd in derived.items():
+        lines.append(f"  | `{cid}` | " + " | ".join(fmt(dd[n]) for n in cols) + " |")
+    lines += [
+        "",
+        f"- **Reproduce**: at commit `{sha}`: `KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py {bench}`",
+        "",
+    ]
+    (exp / "records" / f"{rid}.md").write_text("\n".join(lines))
+    (exp / "records" / f"{rid}.json").write_text(json.dumps({
+        "record_id": rid, "bench": bench, "commit": sha, "dirty": bool(origin["dirty"]),
+        "citable": citable, "not_citable_reasons": noncite,
+        "dut": {
+            "dut_id": d["dut_id"], "dut_provenance": d["provenance"], "dut_netlist": d["netlist"],
+            "dut_netlist_sha256": d["netlist_sha256"], "dut_params": d["params"],
+            "dut_selector": d.get("selector"), "dut_binding_config": d["binding_config"],
+            "dut_binding_entry_sha256": d["binding_entry_sha256"],
+        },
+        "testbench": {"dir": t["dir"], "netlist": t["netlist"], "netlist_sha256": t["netlist_sha256"],
+                      "manifest_sha256": t["manifest_sha256"]},
+        "source_bundle": {"file": f"corners/{rid}/{mk.BUNDLE_NAME}", "sha256": bundle_sha,
+                          "schema": b["schema"], "version": b["version"],
+                          "origin_commit": origin["commit"], "origin_dirty_paths": origin["dirty_paths"]},
+        "executor": {"remote": rem, "engine_versions": ng, "backend": os.environ.get("KLT_SIM_BACKEND", "?")},
+        "monte_carlo": {"n": mc.get("n"), "seed": mc.get("seed"), "vary": mc.get("vary"), "draws_per_point": draws},
+        "ingest": {"commit": ingest_sha, "tools_dirty": tools_dirty, "source_drift": drift,
+                   "linkage_notes": link_notes},
+        "scored": False, "verdict": "Unknown",
+        "complete": complete, "outcome": "complete" if complete else "incomplete", "expected_points": expected,
+        "full_coverage": full, "reference": reference, "points": len(derived), "problems": problems,
+        "derived": derived,
+    }, indent=1, allow_nan=False) + "\n")
+    print(f"record {rid}: {len(derived)} of {expected} points, complete={complete}, citable={citable}"
+          + ("" if citable else " -- NOT CITABLE: " + "; ".join(noncite)))
+    if not complete:
+        print(f"INCOMPLETE: {len(problems)} problem(s); non-complete diagnostic, full coverage not claimed", file=sys.stderr)
+        return 1
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("bench", choices=sorted(LEGS) + [mk.CM_WINDOW_BENCH, mk.CM_INDEX_BENCH])
@@ -993,12 +1136,7 @@ def main() -> int:
     a = ap.parse_args()
 
     if a.bench == mk.CM_INDEX_BENCH:
-        # Issue #218: requests are generated by mk_klt_request.py and the
-        # ingest checks exist (`collect_cm_index`), but no record is minted
-        # until a bounded nominal fleet probe establishes executor support and
-        # the complete 45-point grid is returned. See the bench README.
-        refuse("RECORD_PATH_PENDING",
-               f"{a.bench} has no record-minting path yet (full 45-point coverage pending, issue #218)")
+        return mint_cm_index(a)
     if a.bench == mk.CM_WINDOW_BENCH:
         # Issue #182: refused before any dispatch or ingest, so no evidence
         # record can be minted for it. Even with a capable runner there is no
