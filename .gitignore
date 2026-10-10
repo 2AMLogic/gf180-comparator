@@ -52,6 +52,10 @@ layout/lvs/comparator.dut-layout.spice
 # under layout/pex/artifacts/ ARE committed -- they are the item-7 evidence.
 layout/pex/comparator.extracted-rc.spice
 layout/pex/artifacts/**/*.spice
+# ...except the preamp-noise PVT request sets (issue #209): their body
+# netlists and staged sources are sha256-bound by source-bundle.json, and
+# `preamp_noise_pvt.py ingest` re-hashes them before it validates anything.
+!layout/pex/artifacts/preamp-noise-pvt/**/*.spice
 # local klt install, created by the setup script
 .venv/
 # >>> loom-managed (do not edit) >>>

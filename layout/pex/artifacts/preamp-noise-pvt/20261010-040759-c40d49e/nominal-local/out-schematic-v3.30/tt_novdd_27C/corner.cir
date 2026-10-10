@@ -1,0 +1,78 @@
+* klt sim -- generated corner deck, do not edit
+.lib /home/ubuntu/.volare/gf180mcuD/libs.tech/ngspice/sm141064.ngspice typical
+.lib /home/ubuntu/.volare/gf180mcuD/libs.tech/ngspice/sm141064.ngspice res_typical
+.lib /home/ubuntu/.volare/gf180mcuD/libs.tech/ngspice/sm141064.ngspice bjt_typical
+.lib /home/ubuntu/.volare/gf180mcuD/libs.tech/ngspice/sm141064.ngspice diode_typical
+.lib /home/ubuntu/.volare/gf180mcuD/libs.tech/ngspice/sm141064.ngspice moscap_typical
+.lib /home/ubuntu/.volare/gf180mcuD/libs.tech/ngspice/sm141064.ngspice mimcap_typical
+.include /home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-209/layout/pex/artifacts/preamp-noise-pvt/20261010-040759-c40d49e/nominal-local/body-schematic-v3.30.spice
+.temp 27.0
+.control
+save all
+setplot new
+echo klt_step_begin 0 $curplot
+op
+echo klt_step_end 0 $curplot
+set klt_plot_0 = $curplot
+let vbias_mv = v(ibn)*1e3
+let op__vbias_mv = vbias_mv
+print op__vbias_mv
+let dc_p = v(xdut.aop)
+let op__dc_p = dc_p
+print op__dc_p
+let dc_n = v(xdut.aon)
+let op__dc_n = dc_n
+print op__dc_n
+setplot new
+echo klt_step_begin 1 $curplot
+noise v(xdut.aop,xdut.aon) vd dec 20 1 1e9
+echo klt_step_end 1 $curplot
+set klt_plot_1 = $curplot
+let onoise = onoise_total
+let nfull__onoise = onoise
+print nfull__onoise
+let inoise = inoise_total
+let nfull__inoise = inoise
+print nfull__inoise
+setplot new
+echo klt_step_begin 2 $curplot
+noise v(xdut.aop,xdut.aon) vd dec 20 1e3 1e9
+echo klt_step_end 2 $curplot
+set klt_plot_2 = $curplot
+let onoise = onoise_total
+let nhf__onoise = onoise
+print nhf__onoise
+setplot new
+echo klt_step_begin 3 $curplot
+noise v(xdut.aop,xdut.aon) vd lin 11 995000 1.005e+06
+echo klt_step_end 3 $curplot
+set klt_plot_3 = $curplot
+let onoise = onoise_total
+let nwhite__onoise = onoise
+print nwhite__onoise
+setplot new
+echo klt_step_begin 4 $curplot
+ac dec 20 1 1e9
+echo klt_step_end 4 $curplot
+set klt_plot_4 = $curplot
+let av_dc = mag(v(xdut.aop)-v(xdut.aon))[0]
+let ac__av_dc = av_dc
+print ac__av_dc
+setplot new
+let vn_in_uv = {$klt_plot_1}.onoise/{$klt_plot_4}.av_dc*1e6
+print vn_in_uv
+let vn_in_hf_uv = {$klt_plot_2}.onoise/{$klt_plot_4}.av_dc*1e6
+print vn_in_hf_uv
+let onoise_uv = {$klt_plot_1}.onoise*1e6
+print onoise_uv
+let onoise_hf_uv = {$klt_plot_2}.onoise*1e6
+print onoise_hf_uv
+let inoise_band_uv = {$klt_plot_1}.inoise*1e6
+print inoise_band_uv
+let white_nv_rthz = {$klt_plot_3}.onoise/sqrt(10000)*1e9
+print white_nv_rthz
+let enbw_mhz = {$klt_plot_1}.onoise^2/({$klt_plot_3}.onoise^2/10000)/1e6
+print enbw_mhz
+quit
+.endc
+.end

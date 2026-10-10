@@ -1,0 +1,126 @@
+{
+ "binding_corners": {},
+ "coverage": {
+  "extracted": "1/1",
+  "schematic": "1/1"
+ },
+ "grid": {
+  "process": [
+   "tt"
+  ],
+  "process_sections": {
+   "tt": [
+    "typical",
+    "res_typical",
+    "bjt_typical",
+    "diode_typical",
+    "moscap_typical",
+    "mimcap_typical"
+   ]
+  },
+  "supply_v": [
+   3.3
+  ],
+  "temperatures_c": [
+   27.0
+  ]
+ },
+ "issue": 209,
+ "issues": [
+  "COVERAGE_INCOMPLETE: the bundle's grid has 1 corners, not the 45-point PVT matrix",
+  "schematic-v3.30: UNSUPPORTED_EXECUTOR_CAPABILITY: report names no fleet runner (environment.remote)",
+  "extracted-v3.30: UNSUPPORTED_EXECUTOR_CAPABILITY: report names no fleet runner (environment.remote)"
+ ],
+ "legs": {
+  "extracted": {
+   "c_route": "0",
+   "dut_sha256": "a7ca3c00ea4db8a2b00cad69f2edc2d9320738499049cfa9c7faec517b7b5f45",
+   "dut_source": "layout/pex/artifacts/preamp-noise/comparator.dut-layout.cir",
+   "observation": [
+    "xdut.xlayout_dut.aop",
+    "xdut.xlayout_dut.aon"
+   ],
+   "staged_dut": "sources/extracted/comparator.dut-layout.cir"
+  },
+  "schematic": {
+   "c_route": "0",
+   "dut_sha256": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a",
+   "dut_source": "design/comparator.spice",
+   "observation": [
+    "xdut.aop",
+    "xdut.aon"
+   ],
+   "staged_dut": "sources/schematic/comparator.spice"
+  }
+ },
+ "params": {
+  "dut_ib": 1e-05,
+  "dut_vcm": 1.65
+ },
+ "per_corner": {
+  "tt_27c_3.30v": {
+   "delta_pct": {
+    "av_dc": -0.45669080300886716,
+    "enbw_mhz": -53.67946367916269,
+    "inoise_band_uv": 3.2161673810898304,
+    "vn_in_hf_uv": -31.296338478918152,
+    "vn_in_uv": -31.108130702303427,
+    "white_nv_rthz": 0.761182038805643
+   },
+   "extracted": {
+    "av_dc": 17.93000457507,
+    "enbw_mhz": 25.423275110575528,
+    "inoise_band_uv": 340.1149753047,
+    "onoise_hf_uv": 1264.591387558,
+    "onoise_uv": 1271.177692019,
+    "vn_in_hf_uv": 70.5293399264547,
+    "vn_in_uv": 70.89667415849152,
+    "white_nv_rthz": 252.1102565012
+   },
+   "schematic": {
+    "av_dc": 18.01226493243,
+    "enbw_mhz": 54.88553702073362,
+    "inoise_band_uv": 329.5171521424,
+    "onoise_hf_uv": 1849.090904529,
+    "onoise_uv": 1853.643529765,
+    "vn_in_hf_uv": 102.65732329973801,
+    "vn_in_uv": 102.91007470291125,
+    "white_nv_rthz": 250.2057353834
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "tt/novdd/27C",
+     "netlist_sha256": "f60b60e540c0a91ed3eff5e4327ad4442c91e07eb6a116f680fc9648baee0e3d",
+     "report": "report-extracted-v3.30.json",
+     "request": "request-extracted-v3.30.json"
+    },
+    "schematic": {
+     "corner_id": "tt/novdd/27C",
+     "netlist_sha256": "90d978214d8779da5d910335f6e541146fc8db03f32b1e3e802f85857933034b",
+     "report": "report-schematic-v3.30.json",
+     "request": "request-schematic-v3.30.json"
+    }
+   }
+  }
+ },
+ "pinned_identity": {
+  "extracted": "a7ca3c00ea4db8a2b00cad69f2edc2d9320738499049cfa9c7faec517b7b5f45",
+  "params": {
+   "dut_ib": 1e-05,
+   "dut_vcm": 1.65
+  },
+  "record": "layout/pex/artifacts/preamp-noise/record.json",
+  "record_sha256": "e5b64f03f928b65df086b003b2e1635ed473b32bba11c80058c779e15a5429bf",
+  "schematic": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a"
+ },
+ "scope": {
+  "bandwidth_note": "Report gain, noise, white density AND ENBW together: a lower vn_in from heavier extracted loading is a narrower noise bandwidth, not a quieter preamp.",
+  "disclosures": "Body bias: preamp NMOS bulks and resistor substrate resolve to vss (#202 mapping). Extraction: first-order lumped RC per net, no lateral coupling, distributed_rc false (#202 record identity).",
+  "excludes": "Reset-state `.noise` about the clk-low operating point: the preamp's thermal and flicker noise with the real latch gate load, referred by the measured DC gain. It EXCLUDES the latch's regenerative noise (no operating point to linearise about during regeneration) and is NOT whole-comparator decision noise; it cannot by itself complete T1 item 7.",
+  "promotion": "No T1 promotion, spec-row verdict or signoff input follows from this summary, complete or not; a partial-coverage result is never presented as complete.",
+  "schematic_allowance": "The like-for-like schematic leg has NO 10 fF routing allowance; the bench's 10 fF-allowance numbers are the committed sim/comparator-preamp-noise/ records and are not the like-for-like comparison. Extracted capacitance supplies the extracted leg's loading.",
+  "spec_row_verdict": null,
+  "t1_promotion": false
+ },
+ "verdict": "incomplete"
+}
