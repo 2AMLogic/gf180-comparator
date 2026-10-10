@@ -4,6 +4,21 @@ Chronological record of merged pull requests and closed issues. Newest entries a
 
 ### 2026-10-10
 
+- **Issue #225** (closed): Guard README bench inventory: fix stale 'seven bench directories' and check it in bench-inventory
+- **Issue #219** (closed): Establish extracted-layout transient offset Monte Carlo feasibility
+- **Issue #177** (closed): Test run_lvs interface-pin and device-geometry contract checks
+- **Issue #216** (closed): Reconcile bench inventory docs and guard characterize.sh coverage
+- **Issue #212** (closed): Close unclosed file handles in layout scripts and make ResourceWarning fail the PDK-free suite
+- **Issue #197** (closed): Auditor guard telemetry: stash-scope:create-redirect — keep flagged
+- **Issue #210** (closed): Correct current characterization report ratification and average-power verdicts
+- **PR #226**: Fix README bench count; add README-DRIFT checks (#225)
+- **PR #224**: Establish extracted-layout transient offset Monte Carlo feasibility (#219)
+- **PR #222**: feat: monotonic-index common-mode stimulus, semantics fixture, nominal fleet probe (#218)
+- **PR #221**: test: cover run_lvs interface-pin and device-geometry contract checks
+- **PR #220**: Reconcile bench inventory docs and guard characterize.sh coverage
+- **PR #215**: Close unclosed file handles; fail PDK-free suite on ResourceWarning
+- **PR #217**: feat(pex): paired preamp-noise 45-point PVT path; stopped at fleet executor-capability gate (#209)
+- **PR #214**: docs: correct characterization report ratification and average-power verdicts
 - **Issue #188** (closed): Test run_extract_sim.py: netlist adaptation, positional pin wiring and fail-closed branches
 - **Issue #189** (closed): Test verify-report.py grade_drift and pin checks, the signoff anti-rot gate
 - **Issue #190** (closed): Test pex_measure.py pure helpers: template edits, derivation and grading
