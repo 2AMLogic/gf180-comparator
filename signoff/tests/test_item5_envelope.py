@@ -81,6 +81,16 @@ def make_fixture(root: Path, *, kickback_mv: float | None) -> None:
             dst.write_text(json.dumps(rec, indent=2) + "\n")
         else:
             shutil.copyfile(src, dst)
+    # The both-node kickback record revision 4 scores the kickback row on (#204).
+    ksrc = REPO_ROOT / "sim" / wrapper.KICKBACK_BENCH / "records" / f"{wrapper.KICKBACK_BOTH_RECORD_ID}.json"
+    kdst = root / "sim" / wrapper.KICKBACK_BENCH / "records" / ksrc.name
+    if kickback_mv is not None:
+        krec = json.loads(ksrc.read_text())
+        for d in krec["derived"].values():
+            d["kick_1k_peak_mv"] = kickback_mv
+        kdst.write_text(json.dumps(krec, indent=2) + "\n")
+    else:
+        shutil.copyfile(ksrc, kdst)
     # The whole-comparator record revision 3 scores the offset row on (#200).
     tsrc = REPO_ROOT / "sim" / wrapper.OFFSET_TRAN_BENCH / "records" / f"{wrapper.OFFSET_TRAN_RECORD_ID}.json"
     tdst = root / "sim" / wrapper.OFFSET_TRAN_BENCH / "records" / tsrc.name
@@ -506,12 +516,127 @@ class WholeComparatorOffsetScoring(unittest.TestCase):
 
     def test_unrelated_failure_still_fails(self) -> None:
         # A degraded offset claim must not mask a measured miss elsewhere.
-        make_fixture_kick = json.loads((self.root / "sim/comparator-kickback/records" / f"{dict(self.mod.RECORDS)['comparator-kickback']}.json").read_text())
-        for p in make_fixture_kick["points"]:
-            p["measurements"]["kick_1k_peak_mv"] = 9.0
-        (self.root / "sim/comparator-kickback/records" / f"{dict(self.mod.RECORDS)['comparator-kickback']}.json").write_text(json.dumps(make_fixture_kick))
+        kp = self.root / "sim/comparator-kickback/records" / f"{self.mod.KICKBACK_BOTH_RECORD_ID}.json"
+        krec = json.loads(kp.read_text())
+        for d in krec["derived"].values():
+            d["kick_1k_peak_mv"] = 9.0
+        kp.write_text(json.dumps(krec))
         self.tran.unlink()
         self.assertEqual(self.mod.build_envelope()["status"], "fail")
+
+
+class BothNodeKickbackScoring(unittest.TestCase):
+    """Issue #204: the kickback row is scored on the both-node record only if
+    it validates; every degraded case falls back to the positive-node-only
+    record with an explicit partial-node-coverage disclosure."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        make_fixture(self.root, kickback_mv=None)
+        self.mod = load_wrapper(self.root)
+        self.rec = self.root / "sim" / self.mod.KICKBACK_BENCH / "records" / f"{self.mod.KICKBACK_BOTH_RECORD_ID}.json"
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def mutate(self, fn) -> None:
+        rec = json.loads(self.rec.read_text())
+        fn(rec)
+        self.rec.write_text(json.dumps(rec, indent=2) + "\n")
+
+    def kick_row(self, env) -> dict:
+        return [r for r in env["spec_rows"] if r["name"] == self.mod.KICKBACK_ROW][0]
+
+    def kick_values(self, env) -> dict:
+        return {c["corner_id"]: [m for m in c["measurements"] if m["name"] == self.mod.KICKBACK_ROW][0]
+                for c in env["corners"]}
+
+    def assert_fallback(self, needle: str) -> None:
+        env = self.mod.build_envelope()  # must not raise
+        row = self.kick_row(env)
+        self.assertEqual(row["input_node_coverage"], "positive_node_only")
+        self.assertTrue(row["partial_node_coverage"])
+        self.assertEqual(row["fallback_reason"], self.mod.KICKBACK_FALLBACK_REASON)
+        self.assertEqual(row["record_id"], dict(self.mod.RECORDS)["comparator-kickback"])
+        self.assertIn(needle, " ".join(row["both_node_problems"]))
+        self.assertTrue(env["kickback_source"]["partial_node_coverage"])
+        self.assertTrue(all(m["partial_node_coverage"] for m in self.kick_values(env).values()))
+        # Fallback values are the older record's, verbatim.
+        old = json.loads((self.root / "sim/comparator-kickback/records"
+                          / f"{dict(self.mod.RECORDS)['comparator-kickback']}.json").read_text())
+        want = {p["corner_id"]: p["measurements"]["kick_1k_peak_mv"] for p in old["points"]}
+        self.assertEqual({c: m["value"] for c, m in self.kick_values(env).items()}, want)
+        # Ratified bounds and counts are unaffected.
+        self.assertEqual((row["target_max"], row["stretch_max"]), (5.0, 2.0))
+        self.assertEqual((row["corners_within_target"], row["corners_within_stretch"]), (1, 0))
+
+    def test_both_node_record_used_when_valid(self) -> None:
+        env = self.mod.build_envelope()
+        row = self.kick_row(env)
+        self.assertEqual(row["input_node_coverage"], "both")
+        self.assertNotIn("partial_node_coverage", row)
+        self.assertEqual(row["record_id"], self.mod.KICKBACK_BOTH_RECORD_ID)
+        self.assertEqual((row["target_max"], row["stretch_max"]), (5.0, 2.0))
+        self.assertEqual((row["corners_within_target"], row["corners_within_stretch"]), (1, 0))
+        self.assertEqual(env["failed"], 44)
+        rec = json.loads(self.rec.read_text())
+        for cid, m in self.kick_values(env).items():
+            self.assertEqual(m["value"], rec["derived"][cid]["kick_1k_peak_mv"])
+        self.assertIn(f"{self.mod.KICKBACK_BOTH_RECORD_ID}.json", " ".join(s["path"] for s in env["source_records"]))
+
+    def test_revision_suffix_and_name(self) -> None:
+        self.assertEqual(self.mod.SCORING_REVISION, 4)
+        out = self.mod.output_path()
+        self.assertTrue(out.name.endswith("-r4.json"))
+        self.assertIn(self.mod.KICKBACK_BOTH_RECORD_ID, out.name)
+        self.assertEqual(self.mod.build_envelope()["scoring_revision"], 4)
+
+    def test_older_envelopes_remain_committed(self) -> None:
+        real = load_wrapper(REPO_ROOT)
+        self.assertTrue(real.predecessor_path().is_file())
+        self.assertTrue(real.supersedes_path().is_file())
+        self.assertTrue(real.supersedes_path().name.endswith("-r3.json"))
+
+    def test_shuffled_corner_keys_still_valid(self) -> None:
+        self.mutate(lambda r: r.update(derived=dict(reversed(list(r["derived"].items())))))
+        self.assertEqual(self.mod.validate_kickback_both(json.loads(self.rec.read_text())), [])
+
+    def test_missing_record(self) -> None:
+        self.rec.unlink()
+        self.assert_fallback("no comparator-kickback record")
+
+    def test_unparseable_record(self) -> None:
+        self.rec.write_text("{not json")
+        self.assert_fallback("not an object")
+
+    def test_not_citable(self) -> None:
+        self.mutate(lambda r: r.update(citable=False, not_citable_reasons=["dirty"]))
+        self.assert_fallback("source provenance not valid")
+
+    def test_partial_coverage(self) -> None:
+        self.mutate(lambda r: r.update(input_node_coverage="positive"))
+        self.assert_fallback("input_node_coverage")
+
+    def test_omitted_corner(self) -> None:
+        self.mutate(lambda r: r["derived"].pop("sf_125c_3.63v"))
+        self.assert_fallback("omitted corner")
+
+    def test_non_finite_value(self) -> None:
+        self.mutate(lambda r: r["derived"]["tt_27c_3.30v"].update(kick_1k_peak_mv=float("nan")))
+        self.assert_fallback("not a finite number")
+
+    def test_stale_dut(self) -> None:
+        self.mutate(lambda r: r["dut"].update(dut_netlist_sha256="0" * 64))
+        self.assert_fallback("dut_netlist_sha256")
+
+    def test_relaxed_bound_rejected(self) -> None:
+        self.mutate(lambda r: r["spec_row"].update(target_max=10.0))
+        self.assert_fallback("unchanged 5 / 2 mV bounds")
+
+    def test_wrong_point_count(self) -> None:
+        self.mutate(lambda r: r.update(expected_points=44))
+        self.assert_fallback("expected_points")
 
 
 class HistoricalEvidenceUnchanged(unittest.TestCase):
