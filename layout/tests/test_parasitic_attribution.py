@@ -295,6 +295,56 @@ class BudgetCommittedEvidence(unittest.TestCase):
                 rc = pa.main(["budget-verify", str(st.parent)])
             self.assertEqual(rc, 0, f"{st.parent}:\n{out.getvalue()}")
 
+    def test_source_edit_alone_cannot_break_committed_verification(self):
+        """#249: an edit to pex_measure.py / this script / the tb.json pin
+        (simulated by perturbing what `file_sha` and the pin constant return
+        for them) must not fail `budget-verify` on committed stages; it is
+        reported as provenance drift only."""
+        stages = sorted((pa.HERE / "artifacts" / "ground-c-budget").glob("*/stage*/stage.json"))
+        self.assertTrue(stages)
+        real_file_sha, real_pin, real_check = pa.file_sha, pa.TB_JSON_CONSUMED_SHA256, pa.check_bench
+        code = {(pa.HERE / "pex_measure.py").resolve(),
+                Path(pa.__file__).resolve()}
+
+        def edited_file_sha(path):
+            h = real_file_sha(path)
+            return ("0" * 64 if h != "0" * 64 else "1" * 64) if Path(path).resolve() in code else h
+        try:
+            pa.file_sha = edited_file_sha
+            # a re-pin of tb.json's consumed fields moves the constant and
+            # tb.json together; the bench gate itself is not under test here
+            pa.TB_JSON_CONSUMED_SHA256 = "f" * 64
+            pa.check_bench = lambda: None
+            for st in stages:
+                with contextlib.redirect_stdout(io.StringIO()) as out:
+                    rc = pa.cmd_budget_verify(type("A", (), {"outdir": str(st.parent)})())
+                self.assertEqual(rc, 0, f"{st.parent}:\n{out.getvalue()}")
+                self.assertIn("provenance drift", out.getvalue())
+                self.assertIn("pex_measure_py", out.getvalue())
+        finally:
+            pa.file_sha, pa.TB_JSON_CONSUMED_SHA256, pa.check_bench = \
+                real_file_sha, real_pin, real_check
+
+    def test_manifest_diff_still_gates_plan_and_data_inputs(self):
+        st = sorted((pa.HERE / "artifacts" / "ground-c-budget").glob("*/stage*/stage.json"))[0]
+        man = json.loads(st.read_text())
+        self.assertEqual(pa.budget_manifest_diff(man, man), ([], []))
+        for mutate in (lambda m: m["source_sha256"].__setitem__("extracted_dut", "0" * 64),
+                       lambda m: m["source_sha256"].__setitem__("cited_report", "0" * 64),
+                       lambda m: m["variants"][0].__setitem__("probe_deck_sha256", "0" * 64),
+                       lambda m: m["points"].pop(),
+                       lambda m: m["nets"].pop()):
+            other = json.loads(json.dumps(man))
+            mutate(other)
+            errors, _ = pa.budget_manifest_diff(man, other)
+            self.assertTrue(errors)
+        other = json.loads(json.dumps(man))
+        other["source_sha256"]["pex_measure_py"] = "0" * 64
+        other["scope"] = "edited"
+        errors, drift = pa.budget_manifest_diff(man, other)
+        self.assertEqual(errors, [])
+        self.assertEqual(len(drift), 2)
+
 
 if __name__ == "__main__":
     unittest.main()

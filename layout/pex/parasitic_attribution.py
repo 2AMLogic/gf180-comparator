@@ -1204,9 +1204,56 @@ def cmd_budget_analyze(args) -> int:
     return 0 if a["study_valid"] and not a["missing"] else 1
 
 
+#: stage.json `source_sha256` keys that record the CODE the stage ran with.
+#: They are provenance: verifying committed evidence must not require the
+#: working tree's source to still hash the same (any later, unrelated edit to
+#: pex_measure.py would otherwise break every committed stage -- the #249
+#: failure). Drift is reported, never an error. The integrity gates are the
+#: data-input hashes below, the regenerated deck sha256s vs. each report's
+#: netlist_sha256, and the control / study_valid derivation of budget.json.
+BUDGET_PROVENANCE_SOURCE_KEYS = ("parasitic_attribution_py", "pex_measure_py",
+                                 "tb_json_consumed_fields")
+#: Narrative manifest fields written from code constants; provenance as well.
+BUDGET_PROVENANCE_FIELDS = ("generated_by", "scope")
+
+
+def budget_manifest_diff(committed: dict, regenerated: dict) -> tuple[list[str], list[str]]:
+    """Compare a committed stage.json with the regenerated manifest.
+
+    Returns (errors, drift). Errors: anything that defines the plan or its
+    data inputs (issue, nets, points, variants with their DUT / probe-deck /
+    retained-C values, and the extracted / schematic DUT, cited report and
+    #229 attribution hashes). Drift: provenance keys whose working-tree value
+    differs from the recorded one -- informational only."""
+    a = json.loads(json.dumps(committed))
+    b = json.loads(json.dumps(regenerated))
+    drift = []
+    for k in BUDGET_PROVENANCE_SOURCE_KEYS:
+        x = a.get("source_sha256", {}).pop(k, None)
+        y = b.get("source_sha256", {}).pop(k, None)
+        if x != y:
+            drift.append(f"source_sha256.{k}: recorded {x}, working tree {y}")
+    for k in BUDGET_PROVENANCE_FIELDS:
+        x, y = a.pop(k, None), b.pop(k, None)
+        if x != y:
+            drift.append(f"{k}: recorded text differs from the current code's")
+    errors = []
+    for k in sorted(set(a) | set(b)):
+        if k == "source_sha256":
+            sa, sb = a.get(k, {}), b.get(k, {})
+            for s in sorted(set(sa) | set(sb)):
+                if sa.get(s) != sb.get(s):
+                    errors.append(f"stage.json source_sha256.{s} differs from the regenerated "
+                                  f"manifest ({sa.get(s)} vs {sb.get(s)})")
+        elif a.get(k) != b.get(k):
+            errors.append(f"stage.json {k} differs from the regenerated manifest")
+    return errors, drift
+
+
 def cmd_budget_verify(args) -> int:
-    """PDK-free: stage.json is what the code regenerates (ignoring the script
-    hash), every report ran the deck regenerated here, and budget.json is
+    """PDK-free: stage.json's plan and data-input hashes are what the code
+    regenerates (source-code hashes are recorded provenance; drift is only
+    reported), every report ran the deck regenerated here, and budget.json is
     what `budget-analyze` derives."""
     outdir = Path(args.outdir).resolve()
     check_bench()
@@ -1214,13 +1261,10 @@ def cmd_budget_verify(args) -> int:
     man = json.loads((outdir / "stage.json").read_text())
     points = [parse_corner_id(c) for c in man["points"]]
     plan = _plan_from_manifest(man, text)
-    errors = []
-    want = json.loads(json.dumps(budget_manifest(text, plan, points, man["nets"])))
-    got_m = json.loads(json.dumps(man))
-    for d in (want, got_m):
-        d["source_sha256"].pop("parasitic_attribution_py", None)
-    if want != got_m:
-        errors.append("stage.json differs from the regenerated manifest")
+    errors, drift = budget_manifest_diff(
+        man, budget_manifest(text, plan, points, man["nets"]))
+    for d in drift:
+        print(f"NOTE provenance drift (not an error): {d}")
     for v in plan:
         vdir = outdir / v["id"]
         if not vdir.is_dir():
