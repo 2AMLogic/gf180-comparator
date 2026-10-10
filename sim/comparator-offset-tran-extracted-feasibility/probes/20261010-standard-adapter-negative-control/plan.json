@@ -1,0 +1,60 @@
+{
+  "tt_27c_3.30v": {
+    "probe": {
+      "request": "request-probe-tt_27c_3.30v.json",
+      "centre_mv": null,
+      "mc_n": null,
+      "dirty_paths": [
+        "/tmp/feas219/dut-binding.json (outside the repository)",
+        "/tmp/feas219/extract/comparator.dut-layout.spice (outside the repository)",
+        "sim/comparator-offset-tran-extracted-feasibility/testbench/tb.json",
+        "sim/comparator-offset-tran-extracted-feasibility/testbench/tb_offset_tran_extracted.spice",
+        "sim/comparator-offset-tran-extracted-feasibility/testbench/tb_trip_probe.spice",
+        "sim/tools/extracted_tran_feasibility.py"
+      ]
+    },
+    "mc": {
+      "request": "request-mc-tt_27c_3.30v.json",
+      "centre_mv": -8.22,
+      "mc_n": 20,
+      "dirty_paths": [
+        "/tmp/feas219/dut-binding.json (outside the repository)",
+        "/tmp/feas219/extract/comparator.dut-layout.spice (outside the repository)",
+        "sim/comparator-offset-tran-extracted-feasibility/testbench/tb.json",
+        "sim/comparator-offset-tran-extracted-feasibility/testbench/tb_offset_tran_extracted.spice",
+        "sim/comparator-offset-tran-extracted-feasibility/testbench/tb_trip_probe.spice",
+        "sim/harness/tests/test_extracted_tran_feasibility.py",
+        "sim/tools/extracted_tran_feasibility.py"
+      ]
+    }
+  },
+  "ff_125c_3.63v": {
+    "probe": {
+      "request": "request-probe-ff_125c_3.63v.json",
+      "centre_mv": null,
+      "mc_n": null,
+      "dirty_paths": [
+        "/tmp/feas219/dut-binding.json (outside the repository)",
+        "/tmp/feas219/extract/comparator.dut-layout.spice (outside the repository)",
+        "sim/comparator-offset-tran-extracted-feasibility/testbench/tb.json",
+        "sim/comparator-offset-tran-extracted-feasibility/testbench/tb_offset_tran_extracted.spice",
+        "sim/comparator-offset-tran-extracted-feasibility/testbench/tb_trip_probe.spice",
+        "sim/tools/extracted_tran_feasibility.py"
+      ]
+    },
+    "mc": {
+      "request": "request-mc-ff_125c_3.63v.json",
+      "centre_mv": -21.57,
+      "mc_n": 20,
+      "dirty_paths": [
+        "/tmp/feas219/dut-binding.json (outside the repository)",
+        "/tmp/feas219/extract/comparator.dut-layout.spice (outside the repository)",
+        "sim/comparator-offset-tran-extracted-feasibility/testbench/tb.json",
+        "sim/comparator-offset-tran-extracted-feasibility/testbench/tb_offset_tran_extracted.spice",
+        "sim/comparator-offset-tran-extracted-feasibility/testbench/tb_trip_probe.spice",
+        "sim/harness/tests/test_extracted_tran_feasibility.py",
+        "sim/tools/extracted_tran_feasibility.py"
+      ]
+    }
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "name": "comparator-offset-tran-extracted-feasibility",
+  "description": "FEASIBILITY ONLY (issue #219): can the whole-comparator staircase transient Monte Carlo be run against the EXTRACTED binding with a valid measurement contract? Limited grid (named PVT points, small N); never a 45x200 campaign and never a reference record.",
+  "claim": "NONE. A feasibility result establishes (or refuses) the measurement contract toward T1 post-layout verification; it is not signoff item 7, mints no record under any bench's records/ directory, and relaxes no ratified bound. The absolute mean trip point (deterministic layout offset + draw mean) and the random sigma are reported separately; the staircase centre is a documented stimulus choice and is never subtracted from the mean.",
+  "netlist": "tb_offset_tran_extracted.spice",
+  "nominal_supply_v": 3.3,
+  "supply_tolerance": 0.1,
+  "temperatures_c": [
+    27
+  ],
+  "corners": [
+    "tt"
+  ],
+  "analyses": [
+    "tran 300p 1636n 0 300p",
+    "meas tran t_trip when v(dn)=0.5 rise=1 td=71n",
+    "meas tran dn_start find v(dn) at=27n",
+    "meas tran dn_end find v(dn) at=1635n",
+    "meas tran dd_start find v(dd) at=27.5n",
+    "meas tran dd_end find v(dd) at=1635.5n",
+    "meas tran ap_start find v(apo) at=27.5n"
+  ],
+  "params": {
+    "stair_t0_ns": 4.0,
+    "stair_period_ns": 24.0,
+    "stair_clk_high_ns": 8.0,
+    "stair_v0_mv": -5.04,
+    "stair_step_mv": 0.16,
+    "stair_levels": 64,
+    "stair_lead_cycles": 2,
+    "edge_margin_steps": 3,
+    "centre_resolution_mv": 0.01,
+    "probe_vspan_mv": 40.0
+  },
+  "measure": {
+    "n_samples": "n",
+    "trip_abs_mean_mv": "m_trip*1e3",
+    "sig_trip_raw_mv": "s_trip*1e3",
+    "sig_trip_mv": "sqrt(max(s_trip**2 - q2, 0))*1e3"
+  },
+  "probe": {
+    "netlist": "tb_trip_probe.spice",
+    "analyses": [
+      "tran 100n 80u 0 100n",
+      "meas tran t_flip when v(dn)=0.5 rise=1 td=8u",
+      "meas tran vos_v find v(rmp) when v(dn)=0.5 rise=1 td=8u"
+    ]
+  },
+  "evidence": {}
+}

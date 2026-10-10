@@ -30,6 +30,14 @@ fleet path is refused with `UNSUPPORTED_EXECUTOR_CAPABILITY`, because the fleet
 runner (klt 0.5.0) cannot address a nested sweep's points. Full 45-point
 coverage is pending.
 
+A further supplemental feasibility stage,
+[`comparator-offset-tran-extracted-feasibility/`](comparator-offset-tran-extracted-feasibility/)
+(issue #219), establishes the measurement contract for the whole-comparator
+transient offset against the **extracted** binding (two PVT points, N = 20, no
+record). It finds that the committed extraction adapter's bare `M` MOS cards
+bypass the PDK mismatch subckt, and runs only with a feasibility-only
+mismatch-capable variant. It claims no signoff item and no full-grid statistics.
+
 Metastability and kickback are first-class rows here, not appendices, per
 [`CLAUDE.md`](../CLAUDE.md).
 

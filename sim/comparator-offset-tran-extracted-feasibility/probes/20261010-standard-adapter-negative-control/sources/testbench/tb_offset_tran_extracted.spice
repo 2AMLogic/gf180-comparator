@@ -1,0 +1,41 @@
+* tb_offset_tran_extracted -- FEASIBILITY fragment: whole-comparator transient
+* offset staircase against the EXTRACTED binding (issue #219). Same clock,
+* supply, common mode, DUT hookup, supply-normalised decision probe and
+* mismatch switch as sim/comparator-offset-tran/testbench/tb_offset_tran.spice.
+*
+* NOT in this fragment, by design (sim/tools/extracted_tran_feasibility.py
+* writes them into the per-point BODY netlist):
+*   vsd    the differential staircase, 64 levels x 0.16 mV, with its START
+*          centred on the mismatch-free trip point probed at THIS PVT point
+*          (tb_trip_probe.spice). The centre is a per-point number, so the
+*          stimulus is generated, not frozen here.
+*   Eddprobe / Eapo   the preamp-output probes. They name subckt-internal
+*          extraction nodes (xa.xlayout_dut.<hub>); the hub names are DERIVED
+*          from the extracted connectivity (layout/pex/preamp_nodes.py), never
+*          written down as net numbers or labels in this tree.
+* The fragment therefore does not simulate on its own. Timing contract (the
+* generator reproduces the committed staircase byte-for-byte at centre 0):
+*   cycle c rises at t0 + c*T (t0 = 4 ns, T = 24 ns); level k = clamp(c-2, 0, 63);
+*   absolute level V_k = centre + (-5.04 mV + 0.16 mV * k); steps at t0 + c*T + 9n.
+*
+* MISMATCH IS TURNED ON HERE (same reason as the schematic bench).
+
+.param sw_stat_mismatch=1
+
+* ---- supply, clock, common mode ---------------------------------------
+vsup vdd 0 dc {vdd_val}
+vclk clk 0 pulse(0 {vdd_val} 4n 100p 100p 8n 24n)
+vcm  cm  0 dc {dut_vcm}
+
+Eap ap cm sd 0 0.5
+Ean an cm sd 0 -0.5
+
+* ---- device under test: the WHOLE comparator --------------------------
+ib   vdd ibn dc {dut_ib}
+Xa   ap an clk ibn dout doutb vdd 0 comparator_dut
+
+* ---- probes -----------------------------------------------------------
+* Supply-normalised output (crossed at 0.5), as in the schematic bench.
+Bdn dn 0 v = 'v(dout)/v(vdd)'
+* Eddprobe (preamp differential, hierarchical) and Eapo (preamp positive-output
+* node) are generated into the body; see the header.

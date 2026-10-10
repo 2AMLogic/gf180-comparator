@@ -1,0 +1,7 @@
+{
+  "feasibility_only": true,
+  "point": "tt_27c_3.30v",
+  "published": false,
+  "code": "MISMATCH_NOT_EXERCISED",
+  "reason": "tt_27c_3.30v: zero trip-point spread over 20 draws (mismatch is not reaching the adapted devices, or the staircase is too coarse)"
+}
