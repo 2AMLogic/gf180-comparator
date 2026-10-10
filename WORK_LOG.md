@@ -2,7 +2,39 @@
 
 Chronological record of merged pull requests and closed issues. Newest entries appear first.
 
+### 2026-10-10
+
+- **Issue #188** (closed): Test run_extract_sim.py: netlist adaptation, positional pin wiring and fail-closed branches
+- **Issue #189** (closed): Test verify-report.py grade_drift and pin checks, the signoff anti-rot gate
+- **Issue #190** (closed): Test pex_measure.py pure helpers: template edits, derivation and grading
+- **Issue #157** (closed): Measure total comparator offset: transient Monte Carlo covering the latch, plus a hand budget for load-resistor mismatch
+- **Issue #194** (closed): Remove duplicated INTERFACE_PINS in layout/pex/run_pex.py and pin the contract in a test
+- **Issue #193** (closed): Test gen_comparator connectivity tables against the netlist and committed placement evidence
+- **Issue #200** (closed): Expand whole-comparator transient offset evidence to the full 45-point PVT grid
+- **Issue #160** (closed): Measure kickback peaks on both comparator input nodes
+- **Issue #184** (closed): Test layout route_nets channel-assignment helpers and the run_drc exit-code contract
+- **Issue #202** (closed): Establish extracted preamp observation nodes for a paired post-layout noise feasibility probe
+- **Issue #182** (closed): Prove paired preamp common-mode measurement feasibility for the consumer window
+- **Issue #208** (closed): Test preamp_noise_probe fail-closed helpers and deck builder PDK-free
+- **PR #191**: test(layout): cover run_extract_sim.py adaptation and fail-closed branches
+- **PR #192**: test(signoff): cover verify-report.py drift and pin checks
+- **PR #195**: test(pex): cover pex_measure pure helpers (#190)
+- **PR #196**: Measure total comparator offset: thread-pinned transient MC record + load-R budget (#157)
+- **PR #198**: Dedupe INTERFACE_PINS in run_pex and pin contract in a test (#194)
+- **PR #199**: test(layout): cross-check gen_comparator tables vs netlist and evidence (#193)
+- **PR #201**: Expand whole-comparator transient offset evidence to the full 45-point PVT grid
+- **PR #203**: evidence(sim): both-node kickback schematic 45-corner record (#160)
+- **PR #205**: test(layout): route_nets helpers and run_drc exit-code contract
+- **PR #206**: Extracted preamp observation nodes and paired nominal noise feasibility probe
+- **PR #207**: feat(sim): consumer-window CM paired-measurement feasibility; refuse unsupported fleet path (#182)
+- **PR #211**: test(pex): PDK-free tests for preamp_noise_probe (#208)
+
 ### 2026-10-09
+
+- **Issue #183** (closed): Test harness CLI main() refusal paths and the sabotage no-write guarantee
+- **Issue #181** (closed): Refresh live simulation claims and reproduction guidance after spec ratification
+- **PR #186**: test(harness): cover cli main() refusal paths and sabotage no-write (#183)
+- **PR #187**: docs(sim): refresh live bench claims and reproduction guidance (#181)
 
 - **PR #180**: test(harness): cover summarize() bound and per-axis branches (#176)
 - **PR #179**: test(harness): cover testbench load/validation and PDK discovery (#172)
