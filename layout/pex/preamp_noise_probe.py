@@ -156,17 +156,21 @@ def build_deck(title: str, dut_include: str, pdk, obs: list[tuple[str, str, str]
 _VAL = re.compile(r"^\s*(\S+)\s*=\s*([-+0-9.eE]+)\s*$")
 
 
-def run_ngspice(deck: str, deck_path: str, log_path: str) -> dict[str, float]:
-    open(deck_path, "w").write(deck)
-    proc = subprocess.run(["ngspice", "-b", "-o", log_path, deck_path],
-                          capture_output=True, text=True, timeout=900)
-    text = open(log_path).read() if os.path.exists(log_path) else proc.stdout
+def parse_measures(text: str) -> dict[str, float]:
     vals: dict[str, float] = {}
     for line in text.splitlines():
         m = _VAL.match(line)
         if m:
             vals[m.group(1).lower()] = float(m.group(2))
     return vals
+
+
+def run_ngspice(deck: str, deck_path: str, log_path: str) -> dict[str, float]:
+    open(deck_path, "w").write(deck)
+    proc = subprocess.run(["ngspice", "-b", "-o", log_path, deck_path],
+                          capture_output=True, text=True, timeout=900)
+    text = open(log_path).read() if os.path.exists(log_path) else proc.stdout
+    return parse_measures(text)
 
 
 def check_finite_positive(vals: dict[str, float], obs_names: list[str]) -> list[str]:
