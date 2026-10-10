@@ -105,6 +105,47 @@ class ClaimDrift(unittest.TestCase):
         self.assertEqual(rc, 1)
         self.assertIn("3.146", out)
 
+    def _lit(self, literal):
+        return run(self.tree(readme=f"Result {literal} (sim/{B}/records/{OLD}.md).\n",
+                             literal=literal))
+
+    def test_superstring_value_fails(self):
+        rc, out = self._lit("13.146 mV worst ff")
+        self.assertEqual(rc, 1)
+        self.assertIn("c1", out)
+
+    def test_sign_exponent_decimal_suffix_fail(self):
+        for lit in ("-3.146 mV worst ff", "3.1465 mV worst ff",
+                    "3.146e3 mV worst ff", "3.146E-3 mV worst ff",
+                    "\u22123.146 mV worst ff"):
+            self.assertEqual(self._lit(lit)[0], 1, lit)
+
+    def test_range_and_unit_literals_pass(self):
+        for lit in ("2.0\u20133.146 mV worst ff", "2.0-3.146 mV worst ff",
+                    "(3.146 mV), worst ff", "worst ff 3.146."):
+            rc, out = self._lit(lit)
+            self.assertEqual(rc, 0, f"{lit}: {out}")
+
+    def test_bad_formatting_metadata_fails(self):
+        for k, v in (("decimals", "x"), ("decimals", -1), ("scale", "x"),
+                     ("scale", "inf")):
+            t = self.tree()
+            p = Path(t) / "spec" / "claim-registry.json"
+            reg = json.loads(p.read_text())
+            reg["claims"][0][k] = v
+            p.write_text(json.dumps(reg))
+            rc, out = run(t)
+            self.assertEqual(rc, 1, (k, v))
+            self.assertIn("claim c1", out)
+
+    def test_non_finite_value_fails(self):
+        t = self.tree()
+        d = Path(t) / "sim" / B / "records" / f"{OLD}.json"
+        d.write_text(d.read_text().replace("3.146", "Infinity"))
+        rc, out = run(t)
+        self.assertEqual(rc, 1)
+        self.assertIn("claim c1", out)
+
     def test_wrong_corner_fails(self):
         t = self.tree()
         p = Path(t) / "spec" / "claim-registry.json"
