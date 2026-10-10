@@ -4,6 +4,28 @@ Chronological record of merged pull requests and closed issues. Newest entries a
 
 ### 2026-10-10
 
+- **PR #250**: feat(signoff): size budget guard for protected sim/ evidence
+- **PR #249**: Finite ground-C budget sweep for the post-layout delay gap (#243)
+- **PR #248**: fix(pex): narrow pex_measure tb.json pin to deck fields + graded bounds (#241)
+- **PR #242**: feat(pex): attribute the post-layout td_od50 misses to extracted parasitics (#229)
+- **PR #237**: Protect committed probe artifacts with the append-only evidence guard
+- **PR #236**: feat(sim): extracted offset 45-point campaign tool (experimental, not yet run) (#231)
+- **PR #235**: docs(signoff): refresh item-10 CI disclosure and grader rulebook comments
+- **PR #234**: feat: full 45-point common-mode window record for monotonic-index bench (#218)
+- **PR #230**: docs: refresh whole-comparator offset headline to 45-point campaign
+- **PR #228**: feat(signoff): score item-5 kickback on the both-node record (r4)
+- **Issue #246** (closed): Set an evidence size budget for new protected sim/ artifacts
+- **Issue #243** (closed): Establish finite routing-capacitance budgets for the post-layout delay gap
+- **Issue #241** (closed): pex_measure.py's whole-file tb.json pin is stale since #181, so run_pex.py cannot regenerate item 7
+- **Issue #239** (closed): Checkpoint orchestration blocked by worktree-write-confinement: investigate target routing
+- **Issue #238** (closed): Auditor guard decision: keep unresolved-variable removal flagged
+- **Issue #233** (closed): Refresh signoff item-10 CI disclosure after harness and source-pin checks landed
+- **Issue #232** (closed): Protect committed feasibility probe artifacts with the append-only evidence guard
+- **Issue #229** (closed): Attribute the 7 post-layout decision-time misses (T1 item 7) to extracted parasitics
+- **Issue #223** (closed): Refresh headline whole-comparator offset claims after the 45-point campaign
+- **Issue #218** (closed): Measure the consumer common-mode window with a monotonic index stimulus
+- **Issue #204** (closed): Repin item-5 kickback row to the both-node schematic record (new scoring revision)
+
 - **Issue #225** (closed): Guard README bench inventory: fix stale 'seven bench directories' and check it in bench-inventory
 - **Issue #219** (closed): Establish extracted-layout transient offset Monte Carlo feasibility
 - **Issue #177** (closed): Test run_lvs interface-pin and device-geometry contract checks
