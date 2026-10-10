@@ -1,0 +1,22 @@
+{
+  "backend": "batch",
+  "failed_jobs": [],
+  "finished_utc": "2026-10-10T16:04:01+00:00",
+  "issue": 243,
+  "job_errors": {},
+  "klt_sim_client": {
+    "git_commit": "c622e8addb362491664d44ba4d717f354ca88bbd",
+    "git_tag": "v0.6.0",
+    "is_release": true,
+    "version": "0.6.0"
+  },
+  "started_utc": "2026-10-10T15:52:52+00:00",
+  "variants": [
+    "ctrl",
+    "cgs-0125",
+    "cgs-0062",
+    "cgs-0031",
+    "cgs-0016",
+    "sch"
+  ]
+}

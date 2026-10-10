@@ -1049,9 +1049,12 @@ def cmd_budget_plan(args) -> int:
 def _budget_values(vdir: Path, points) -> dict:
     out = {}
     probes = {}
+    probe_jobs: set[str] = set()
     for f in sorted(vdir.glob("probe-*.report.json")):
         if f.read_text().strip():
-            probes.update(_trip_from_probe(json.loads(f.read_text())))
+            prep = json.loads(f.read_text())
+            probes.update(_trip_from_probe(prep))
+            probe_jobs.add(((prep.get("environment") or {}).get("remote") or {}).get("job_id"))
     for pt in points:
         path = vdir / f"ladder-{pid(pt)}.report.json"
         if not path.exists() or not path.read_text().strip():
@@ -1062,6 +1065,7 @@ def _budget_values(vdir: Path, points) -> dict:
         d["dut_vos_v"] = probes.get(pt)
         d["job_ids"] = sorted({(rep.get("environment") or {}).get("remote", {}).get("job_id")}
                               - {None})
+        d["probe_job_ids"] = sorted(probe_jobs - {None})
         d["ladder_netlist_sha256"] = rep["environment"]["netlist_sha256"]
         out[pt] = d
     return out
@@ -1120,7 +1124,7 @@ def budget_analyze(outdir: Path) -> dict:
                                     else r["dut_vos_v"] - c["dut_vos_v"]),
                 "margin_to_1p5ns_ns": pm.SPEC_TD_OD50_NS_MAX - r["td_od50_ns"],
                 "meets_1p5ns": r["td_od50_ns"] <= pm.SPEC_TD_OD50_NS_MAX,
-                "job_ids": r["job_ids"],
+                "job_ids": r["job_ids"], "probe_job_ids": r["probe_job_ids"],
                 "ladder_netlist_sha256": r["ladder_netlist_sha256"]}
         rows.append(row)
     rows.sort(key=lambda r: -r["fraction"])
@@ -1148,10 +1152,14 @@ def budget_analyze(outdir: Path) -> dict:
     elif finite:
         outcome = (f"largest tested finite fraction meeting 1.5 ns at every stage point: "
                    f"{max(finite):g} (tested points only; not a minimum, not an extrapolation)")
-    elif 0.0 in all_pass:
-        outcome = "no finite tested fraction clears the bound at every stage point; only zero-C does"
     else:
-        outcome = "no-crossing: no tested fraction, including zero ground C, clears every stage point"
+        tested = ", ".join(f"{r['fraction']:g}" for r in rows if r["id"] != "ctrl")
+        if 0.0 in all_pass:
+            outcome = ("no finite tested fraction clears the bound at every stage point; "
+                       f"only zero ground C does (tested: {tested})")
+        else:
+            outcome = ("no-crossing: no tested fraction clears the bound at every stage point "
+                       f"(tested: {tested})")
     return {
         "issue": BUDGET_ISSUE, "generated_by": "layout/pex/parasitic_attribution.py budget-analyze",
         "scope": man["scope"], "nets": nets, "points": cids,

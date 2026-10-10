@@ -1,0 +1,105 @@
+{
+  "generated_by": "layout/pex/parasitic_attribution.py budget-run",
+  "issue": 243,
+  "nets": [
+    "sn",
+    "doutb",
+    "qn",
+    "dout"
+  ],
+  "points": [
+    "tt_125c_2.97v",
+    "ss_125c_2.97v"
+  ],
+  "scope": "diagnostic only: joint ground-C scaling of sn, doutb, qn, dout; series R, coupling C, device geometry fixed; each variant centred on its own probed trip point; no spec row scored, T1 item 7 unchanged",
+  "source_sha256": {
+    "attribution_json_229": "08b2a55136b943c7cbc91c7b881c3df9bb2629857c551dc3fe164e8ef76b633b",
+    "cited_report": "385fadcf7cd74c60508e01b3cd0341df7b64341479f437c0446c09bd07497dd8",
+    "extracted_dut": "a7ca3c00ea4db8a2b00cad69f2edc2d9320738499049cfa9c7faec517b7b5f45",
+    "parasitic_attribution_py": "1a6778080e5e6c65b9cf795b22a9b32d83aa81bf07b2e5f420d790beffea4ea9",
+    "pex_measure_py": "91fd1aaad696a0c71b364b9aea8420b758c6560d182be032db19b8108c2093b4",
+    "schematic_dut": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a",
+    "tb_json_consumed_fields": "462b79b389613fbc06de8037311ed54b0820a60f48778e1a1322c48c94a13f74"
+  },
+  "variants": [
+    {
+      "centre": "probed",
+      "dut_sha256": "a7ca3c00ea4db8a2b00cad69f2edc2d9320738499049cfa9c7faec517b7b5f45",
+      "fraction": 1.0,
+      "id": "ctrl",
+      "probe_deck_sha256": "171b9eace488887991790ec89f3d9bad981a8f810b4a4ad53840801bf41bdb9f",
+      "retained_ground_c_ff": {
+        "dout": 22.656011,
+        "doutb": 27.305946,
+        "qn": 30.94521,
+        "sn": 20.83313
+      },
+      "side": "extracted"
+    },
+    {
+      "centre": "probed",
+      "dut_sha256": "1b867d66b723a9857d92a8a51e53dac2685fbe3d2ffb0c4c9d5284ad6147ae32",
+      "fraction": 0.75,
+      "id": "cgs-0750",
+      "probe_deck_sha256": "854792c94a4fe938d5bdcb9b68485313d397a3f6073ce033c72f2f899d8ef645",
+      "retained_ground_c_ff": {
+        "dout": 16.9920083,
+        "doutb": 20.4794595,
+        "qn": 23.208907500000002,
+        "sn": 15.6248475
+      },
+      "side": "extracted"
+    },
+    {
+      "centre": "probed",
+      "dut_sha256": "93a009d9bc2d8ec99ae5b33dc96c906642b4349f822c57187cd508086f71fb84",
+      "fraction": 0.5,
+      "id": "cgs-0500",
+      "probe_deck_sha256": "ac8030fc8aeb95f708f627ca71e28737bbbd96b84844c3fcf757a1c59535efb5",
+      "retained_ground_c_ff": {
+        "dout": 11.3280055,
+        "doutb": 13.652973,
+        "qn": 15.472605,
+        "sn": 10.416565
+      },
+      "side": "extracted"
+    },
+    {
+      "centre": "probed",
+      "dut_sha256": "234dd3a2f48028a9b9c22e54f7bd5945d3627289323e2cd190ce03f448de0567",
+      "fraction": 0.25,
+      "id": "cgs-0250",
+      "probe_deck_sha256": "dc9726eff86caed52384119ff0894f4af35f9517c75552ddf57d19b0dab55d09",
+      "retained_ground_c_ff": {
+        "dout": 5.66400275,
+        "doutb": 6.8264865,
+        "qn": 7.7363025,
+        "sn": 5.2082825
+      },
+      "side": "extracted"
+    },
+    {
+      "centre": "probed",
+      "dut_sha256": "a6ef30fb4d19523c27c4ad7a236023713e6a4d543c74258aafa3409860de473f",
+      "fraction": 0.0,
+      "id": "cgs-0000",
+      "probe_deck_sha256": "fd5741bc4631ba9308e02efa85afcab575767e0a9734df4ba61ceb6aa0bd2b29",
+      "retained_ground_c_ff": {
+        "dout": 0.0,
+        "doutb": 0.0,
+        "qn": 0.0,
+        "sn": 0.0
+      },
+      "side": "extracted"
+    },
+    {
+      "centre": "zero",
+      "dut_sha256": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a",
+      "fraction": null,
+      "id": "sch",
+      "probe_deck_sha256": "8bddb05f22e5145d925895b38b5d78d9fe7064a6bf1b64837a0ab25b51abe86a",
+      "retained_ground_c_ff": null,
+      "side": "schematic"
+    }
+  ]
+}
