@@ -20,8 +20,9 @@ operating point, and the `ppolyf_u_1k` load-pair mismatch (the PDK hard-sets `mi
 The additive bench that closes both,
 [`sim/comparator-offset-tran/`](../sim/comparator-offset-tran/README.md), is a
 whole-comparator transient Monte Carlo (preamp + StrongARM latch + SR latch) with
-N = 200 draws per PVT point and seed 20260909 (the same seed as the DC bench). It runs
-on a **reduced grid**: tt/ss/ff × −40/27/125 °C at 3.3 V, 9 points, not 45. The
+N = 200 draws per PVT point and seed 20260909 (the same seed as the DC bench). Its first
+record ran a **reduced grid** (tt/ss/ff × −40/27/125 °C at 3.3 V, 9 points, kept as history); the
+full 45-point grid is now measured (below). The
 latch term is paired, measured on the same draw. On top of that it adds a
 **derived, not simulated** load-R hand budget: σ(ΔR/R)_pair = A_R/√(WL) = 0.19 %,
 from the foundry's commented-out `ppolyf_u` `par_r = 0.021 µm`. The scored variant
@@ -39,9 +40,21 @@ The latch contribution, as a paired 1σ, is 0.333 mV at nominal and
 0.203–0.608 mV across the grid. It is largest hot and fast, where the preamp gain
 is lowest. The load-R term is 0.136 mV 1σ at nominal (0.409 mV conservative).
 **The total is within the ≤ 15 mV target and the ≤ 8 mV stretch at 9/9 points**, so
-the verdict above stands with the latch and load-R terms included. Not covered:
-fs/sf and the ±10 % supply points (the DC sigma moves < 0.4 % across them), and
+the verdict above stands with the latch and load-R terms included. Not covered by that nine-point record:
+fs/sf and the ±10 % supply points (now covered, below), and
 layout-induced systematic offset (schematic DUT). The ratified bound is unchanged.
+
+**Full 45-point grid** (issue #200;
+[`sim/comparator-offset-tran/records/20261010-021500046481-d84e59d.md`](../sim/comparator-offset-tran/records/20261010-021500046481-d84e59d.md),
+fleet jobs `klt-sim-ee7ad68415d2`, `klt-sim-a503009e268a`, `klt-sim-031f74d456a0`;
+tt/ss/ff/fs/sf × −40/27/125 °C × 2.97/3.30/3.63 V, 45 points × N = 200, no failed unit):
+the scored total (simulated whole-comparator mismatch **plus the derived, not simulated,
+conservative load-R budget**) is **2.994–3.795 mV 3σ, worst `ff_125c_3.63v`**, within the ≤ 15 mV
+target and the ≤ 8 mV stretch at **45/45** points; the purely simulated whole-comparator 3σ
+is 2.808–3.515 mV, the paired latch 1σ 0.184–0.659 mV, the derived load-R 1σ (3×) 0.342–0.501 mV.
+The ratified bound is unchanged. Item-5 scoring now uses this record for the offset row
+(the preamp-only DC value stays as a separate diagnostic); the item-6 yield citation is
+still the preamp-only DC samples (see `signoff/README.md`).
 
 ## Input-referred noise
 

@@ -264,6 +264,18 @@ committed logs and cross-checks them against the record's mean/sigma. Result:
 (target) / 8.5 (stretch), `sample_size.verdict: sufficient` and the negative
 control `detected` at all 45 points.
 
+**Item-6 support for the total-offset metric (issue #200 assessment).** The
+citation above remains the **preamp-only** DC samples; it has not been
+relabelled and is not evidence for the whole-comparator total. The
+whole-comparator record has per-draw simulated trip points (raw `.meas` in
+`sim/comparator-offset-tran/corners/20261010-021500046481-d84e59d/report-main-v*.json`),
+but (a) the scored total adds a *derived* load-resistor allowance that is not a
+per-draw sample, so it cannot be presented as simulated samples to `klt yield`;
+(b) only the simulated whole-comparator part could be wrapped, in a separate,
+explicitly labelled yield report with its own adapter, which this change does
+not add. Item 6 therefore stays on preamp-only evidence; a total-offset yield
+report is a candidate follow-up, not claimed here.
+
 **"Met" is weaker than it looks.** The pinned 0.6.0 grader reads the report's
 `status` (`reported`: no `target_yield` is declared, so it cannot fail); it
 does not grade the checklist's prose sub-requirements. The disclosed gaps,
@@ -289,7 +301,7 @@ Item 5 accepts only a `klt sim` envelope (`measurements` + `corner_count`;
 generic and every other kind render `wrong_kind`). The committed corner
 records are this repo's harness format, so
 `signoff/make_item5_envelope.py` **wraps them without re-simulating**:
-`sim/corner-matrix/item5-corner-matrix-<four record ids>-r2.json`, the 45-point
+`sim/corner-matrix/item5-corner-matrix-<four record ids>-r2.json` (revision 3, below, appends the whole-comparator record id), the 45-point
 PVT grid of the four records DR-0002 ratified
 (`20260910-{124917,125200,125206,125341}-4805118`), every value copied
 verbatim, each source record pinned by sha256 in `source_records`. The
@@ -351,6 +363,32 @@ a measured per-decision energy the bench actually checks). The manifest pin is
 the DUT netlist (`provenance.input`, role `netlist`, `design/comparator.spice`),
 which `verify-report.py` re-hashes; `python3 signoff/make_item5_envelope.py
 --check` re-derives the envelope from the four records and fails on drift.
+
+**Revision 3 (issue #200): the offset row is scored on the whole-comparator
+record.** `item5-corner-matrix-<four ids>-<offset-tran id>-r3.json` scores
+`offset_3sigma_mv` on `sim/comparator-offset-tran/records/20261010-021500046481-d84e59d`
+(45 PVT points x N = 200, fleet jobs `klt-sim-ee7ad68415d2`,
+`klt-sim-a503009e268a`, `klt-sim-031f74d456a0`), value `vos_3sig_total_cons_mv`
+= simulated whole-comparator mismatch (latch included) plus a **derived, not
+simulated** conservative load-resistor budget (the PDK models none). Result:
+2.994-3.795 mV, 45/45 within target and stretch, binding corner
+`ff_125c_3.63v`. The record is used **only** if `validate_offset_tran` finds
+complete supported coverage and valid provenance (`complete`, no named problem
+such as `TRIP_OUT_OF_RANGE`, 45 expected corners, exactly 200 finite draws per
+point, `citable` + `reference` + clean source bundle, DUT netlist hash = current,
+unchanged 15 / 8 mV bounds). Otherwise the offset row falls back to the
+preamp-only DC value, is marked `coverage: incomplete` (reason
+`offset_whole_comparator_not_substantiated`, problems listed), is added to
+`coverage.skipped` and the corners' `unscored_rows`, and the envelope cannot
+exceed `pass_partial`. Each offset measurement discloses `simulated` and
+`derived_not_simulated` terms; the preamp-only value rides along as
+`diagnostic_preamp_only_3sigma_mv` (per corner) and `preamp_only_diagnostic`
+(row). Unrelated unmet items are unchanged: kickback still fails (44/45
+corners `fail`) and average power stays unscored, so item 5 remains `unmet`
+(`check_failed`). Regression fixtures in `signoff/tests/test_item5_envelope.py`
+cover an omitted corner, missing draws, a saturation/incomplete record,
+non-finite derivation, dirty/uncitable provenance, stale DUT, a relaxed bound
+and a missing record. The r2 file stays committed unchanged.
 
 **Append-only identity.** The file name is the four record ids plus
 `-r<SCORING_REVISION>`: a new record set *or* a new scoring revision mints a

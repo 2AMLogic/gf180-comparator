@@ -81,6 +81,11 @@ def make_fixture(root: Path, *, kickback_mv: float | None) -> None:
             dst.write_text(json.dumps(rec, indent=2) + "\n")
         else:
             shutil.copyfile(src, dst)
+    # The whole-comparator record revision 3 scores the offset row on (#200).
+    tsrc = REPO_ROOT / "sim" / wrapper.OFFSET_TRAN_BENCH / "records" / f"{wrapper.OFFSET_TRAN_RECORD_ID}.json"
+    tdst = root / "sim" / wrapper.OFFSET_TRAN_BENCH / "records" / tsrc.name
+    tdst.parent.mkdir(parents=True)
+    shutil.copyfile(tsrc, tdst)
 
 
 def run_main(mod, *argv: str) -> tuple[int, str]:
@@ -389,10 +394,133 @@ class InvalidSourceRefusal(unittest.TestCase):
                 self.assertEqual(out.read_bytes(), before)
 
 
+class WholeComparatorOffsetScoring(unittest.TestCase):
+    """Issue #200: the offset row is scored on the full-grid whole-comparator
+    record only with complete supported coverage and valid provenance; every
+    degraded case becomes incomplete coverage, never a passing claim."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        make_fixture(self.root, kickback_mv=1.0)  # every OTHER measured row passes
+        self.mod = load_wrapper(self.root)
+        self.tran = self.root / "sim" / self.mod.OFFSET_TRAN_BENCH / "records" / f"{self.mod.OFFSET_TRAN_RECORD_ID}.json"
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def mutate(self, fn) -> None:
+        rec = json.loads(self.tran.read_text())
+        fn(rec)
+        self.tran.write_text(json.dumps(rec, indent=2) + "\n")
+
+    def offset_row(self, env) -> dict:
+        return [r for r in env["spec_rows"] if r["name"] == self.mod.OFFSET_ROW][0]
+
+    def assert_degraded(self, needle: str) -> dict:
+        env = self.mod.build_envelope()  # must not raise
+        row = self.offset_row(env)
+        self.assertEqual(row["coverage"], "incomplete", row)
+        self.assertEqual(row["coverage_reason"], self.mod.OFFSET_TRAN_SKIP_REASON)
+        self.assertIn(needle, " ".join(row["problems"]))
+        self.assertIsNone(row["corners_within_target"])
+        self.assertNotEqual(env["status"], "pass")
+        self.assertEqual(env["status"], "pass_partial")  # only coverage is missing
+        self.assertFalse(env["eligibility"]["eligible"])
+        self.assertIn(self.mod.OFFSET_ROW, env["eligibility"]["incomplete_rows"])
+        reasons = {s["reason"] for s in env["coverage"]["skipped"]}
+        self.assertIn(self.mod.OFFSET_TRAN_SKIP_REASON, reasons)
+        self.assertTrue(all(self.mod.OFFSET_ROW in c["unscored_rows"] for c in env["corners"]))
+        # Falls back to the preamp-only value, labelled as such (never as whole-comparator).
+        self.assertTrue(all(
+            m["scope"] == "preamp_only" for c in env["corners"] for m in c["measurements"]
+            if m["name"] == self.mod.OFFSET_ROW))
+        return env
+
+    def test_full_grid_scored_with_disclosure(self) -> None:
+        env = self.mod.build_envelope()
+        row = self.offset_row(env)
+        self.assertEqual((row["coverage"], row["scope"]), ("complete", "whole_comparator"))
+        self.assertEqual(row["corners_total"], 45)
+        self.assertEqual(row["draws_per_corner"], 200)
+        self.assertEqual((row["target_max"], row["stretch_max"]), (15.0, 8.0))
+        self.assertEqual(row["evidence_bench"], "comparator-offset-tran")
+        self.assertEqual(row["corners_within_target"], 45)
+        self.assertEqual(row["binding_corner"], "ff_125c_3.63v")
+        self.assertIn("NOT simulated", row["composition"])
+        self.assertEqual(row["preamp_only_diagnostic"]["evidence_bench"], "comparator-offset-mc")
+        for c in env["corners"]:
+            m = [x for x in c["measurements"] if x["name"] == self.mod.OFFSET_ROW][0]
+            self.assertEqual(m["scope"], "whole_comparator")
+            self.assertGreater(m["value"], m["simulated"]["vos_3sig_tran_mv"])  # derived term adds
+            self.assertGreater(m["derived_not_simulated"]["load_r_1sigma_conservative_mv"], 0)
+            self.assertEqual(m["simulated"]["n_samples"], 200)
+            self.assertNotEqual(m["value"], m["diagnostic_preamp_only_3sigma_mv"])
+        # Only the unrelated average-power row stays unscored.
+        self.assertEqual(env["eligibility"]["incomplete_rows"], [self.mod.AVG_POWER_ROW])
+        self.assertEqual(env["status"], "pass_partial")
+
+    def test_source_record_pinned(self) -> None:
+        env = self.mod.build_envelope()
+        paths = [s["path"] for s in env["source_records"]]
+        self.assertIn(self.tran.relative_to(self.root).as_posix(), paths)
+
+    def test_missing_record_is_incomplete(self) -> None:
+        self.tran.unlink()
+        self.assert_degraded("no comparator-offset-tran record")
+
+    def test_omitted_corner(self) -> None:
+        self.mutate(lambda r: r["derived"].pop("sf_125c_3.63v"))
+        self.assert_degraded("omitted corner")
+
+    def test_missing_draws(self) -> None:
+        self.mutate(lambda r: r["derived"]["tt_27c_3.30v"].update(n_samples=199))
+        self.assert_degraded("tt_27c_3.30v: n_samples 199")
+
+    def test_saturation_named_problem(self) -> None:
+        def f(r):
+            r["complete"], r["outcome"] = False, "incomplete"
+            r["problems"] = ["TRIP_OUT_OF_RANGE: fs_-40c_2.97v/mc3 flipped in cycle 70 (level 68) outside 1..63"]
+        self.mutate(f)
+        self.assert_degraded("not complete")
+        self.assert_degraded("TRIP_OUT_OF_RANGE")
+
+    def test_non_finite_derivation(self) -> None:
+        self.mutate(lambda r: r["derived"]["ss_125c_2.97v"].update(vos_3sig_total_cons_mv=float("nan")))
+        self.assert_degraded("not a finite number")
+
+    def test_dirty_or_uncitable_source(self) -> None:
+        def f(r):
+            r["citable"], r["dirty"] = False, True
+            r["source_bundle"]["origin_dirty_paths"] = ["sim/tools"]
+        self.mutate(f)
+        self.assert_degraded("source provenance not valid")
+
+    def test_stale_dut(self) -> None:
+        self.mutate(lambda r: r["dut"].update(dut_netlist_sha256="0" * 64))
+        self.assert_degraded("dut_netlist_sha256")
+
+    def test_relaxed_bound_rejected(self) -> None:
+        self.mutate(lambda r: r["spec_row"].update(target_max=20.0))
+        self.assert_degraded("unchanged 15 / 8 mV bounds")
+
+    def test_unrelated_failure_still_fails(self) -> None:
+        # A degraded offset claim must not mask a measured miss elsewhere.
+        make_fixture_kick = json.loads((self.root / "sim/comparator-kickback/records" / f"{dict(self.mod.RECORDS)['comparator-kickback']}.json").read_text())
+        for p in make_fixture_kick["points"]:
+            p["measurements"]["kick_1k_peak_mv"] = 9.0
+        (self.root / "sim/comparator-kickback/records" / f"{dict(self.mod.RECORDS)['comparator-kickback']}.json").write_text(json.dumps(make_fixture_kick))
+        self.tran.unlink()
+        self.assertEqual(self.mod.build_envelope()["status"], "fail")
+
+
 class HistoricalEvidenceUnchanged(unittest.TestCase):
     def test_r1_envelope_bytes(self) -> None:
         r1 = load_wrapper(REPO_ROOT).predecessor_path()
         self.assertEqual(hashlib.sha256(r1.read_bytes()).hexdigest(), HISTORICAL_R1_SHA256)
+
+    def test_r2_envelope_still_committed(self) -> None:
+        self.assertTrue(load_wrapper(REPO_ROOT).supersedes_path().is_file())
 
     def test_source_records_match_successor_pins(self) -> None:
         wrapper = load_wrapper(REPO_ROOT)

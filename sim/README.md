@@ -19,7 +19,9 @@ transient Monte Carlo (preamp + StrongARM latch + SR latch) with a derived hand
 budget for the unmodelled `ppolyf_u_1k` load-pair mismatch. It covers the two
 terms `comparator-offset-mc/` cannot see (issue #157). It is fleet-only (`sim/tools/klt_record.py`); first record
 `comparator-offset-tran/records/20261010-013540611508-4a4df37` (total 3σ
-3.146–3.725 mV over its reduced 9-point grid).
+3.146–3.725 mV over its reduced 9-point grid, kept as history) and the full
+45-point record `comparator-offset-tran/records/20261010-021500046481-d84e59d` (total 3σ
+2.994–3.795 mV, 45/45 within target and stretch, issue #200).
 
 Metastability and kickback are first-class rows here, not appendices, per
 [`CLAUDE.md`](../CLAUDE.md).

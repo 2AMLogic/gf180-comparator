@@ -1,0 +1,4407 @@
+{
+  "schema_version": 1,
+  "netlist": "design/comparator.spice",
+  "status": "fail",
+  "corner_count": 45,
+  "passed": 0,
+  "passed_partial": 1,
+  "failed": 44,
+  "errored": 0,
+  "scoring_revision": 3,
+  "supersedes": "sim/corner-matrix/item5-corner-matrix-20260910-124917-4805118-20260910-125200-4805118-20260910-125206-4805118-20260910-125341-4805118-r2.json",
+  "wrapper": "NOT a `klt sim` run. Hand-wrapped by signoff/make_item5_envelope.py from committed sim/*/records/*.json (harness format; ngspice-46, gf180mcuD, 45-point full-factorial PVT), values copied verbatim, no re-simulation. The offset row is scored on the whole-comparator transient Monte Carlo record (simulated mismatch + a DERIVED, conservative load-resistor budget) when that record has complete, source-bound 45-point coverage, else it is marked incomplete; the preamp-only DC value is carried as a separate diagnostic. Measured rows are scored against the DR-0002 ratified TARGET bounds at every corner; stretch is reported in spec_rows only. The ratified average-power row is NOT scored (its clock rate is TBD): static_power_uw = i_static_ua x vdd is carried as explicitly partial evidence, and the row is recorded as skipped work in coverage, so status can be at best pass_partial.",
+  "scored_against": "spec/decision-records/DR-0002-target-spec-ratification.md",
+  "source_records": [
+    {
+      "path": "sim/comparator-offset-mc/records/20260910-124917-4805118.json",
+      "content_hash": "sha256:eaae9c29ceae363ad4959498d5638c3287edb0ceb146d66907360d0c3fe24bac"
+    },
+    {
+      "path": "sim/comparator-preamp-noise/records/20260910-125200-4805118.json",
+      "content_hash": "sha256:fa69eedc19ba736b36d62285494749103499b8ace0fa8fbec43385354687f989"
+    },
+    {
+      "path": "sim/comparator-regeneration/records/20260910-125206-4805118.json",
+      "content_hash": "sha256:f3d343e67e21646196c16838d514fae78b91b79d1fdc7ff1f035ee6f2b18cafb"
+    },
+    {
+      "path": "sim/comparator-kickback/records/20260910-125341-4805118.json",
+      "content_hash": "sha256:ef9296d627f242286d4f92c94f151ab822087fd15e80bdcb1d92ddd5bcd24d88"
+    },
+    {
+      "path": "sim/comparator-offset-tran/records/20261010-021500046481-d84e59d.json",
+      "content_hash": "sha256:0b865ea0dfab16a3cdbf459f0904c92b7b3455e66c40e89ad6a69240acb871d0"
+    }
+  ],
+  "eligibility": {
+    "numerical": "fail",
+    "coverage": "incomplete",
+    "incomplete_rows": [
+      "supply_avg_power_uw"
+    ],
+    "eligible": false,
+    "note": "Item 5 needs BOTH every measured target met AND every ratified row scored. coverage=incomplete is not a numerical failure: status is pass_partial (grader reason partial_coverage) when the measured targets all pass, fail (check_failed) when any misses."
+  },
+  "spec_rows": [
+    {
+      "name": "offset_3sigma_mv",
+      "label": "Offset sigma (3-sigma input-referred)",
+      "unit": "mV",
+      "target_max": 15.0,
+      "stretch_max": 8.0,
+      "coverage": "complete",
+      "corners_total": 45,
+      "corners_within_target": 45,
+      "corners_within_stretch": 45,
+      "min": 2.9938830729697026,
+      "max": 3.7951769454955873,
+      "binding_corner": "ff_125c_3.63v",
+      "evidence_bench": "comparator-offset-tran",
+      "scope": "whole_comparator",
+      "scored_quantity": "vos_3sig_total_cons_mv",
+      "draws_per_corner": 200,
+      "composition": "scored value = 3 * sqrt(simulated whole-comparator sigma^2 + derived load-resistor sigma^2), the load term at the CONSERVATIVE (3x) matching coefficient. The simulated part is a transient Monte Carlo (preamp + latch mismatch, PDK sw_stat_mismatch); the load-resistor term is a hand-derived budget because the PDK models no ppolyf_u_1k mismatch. It is NOT simulated samples.",
+      "simulated_3sigma_mv": {
+        "min": 2.807592449056665,
+        "max": 3.515378784711542,
+        "min_corner": "fs_-40c_2.97v",
+        "max_corner": "ff_125c_3.63v"
+      },
+      "derived_load_r_1sigma_conservative_mv": {
+        "min": 0.3424155260520803,
+        "max": 0.500511605705081,
+        "min_corner": "ff_-40c_3.30v",
+        "max_corner": "ss_125c_2.97v"
+      },
+      "latch_1sigma_mv": {
+        "min": 0.1837664494759654,
+        "max": 0.6592700861440243,
+        "min_corner": "ss_-40c_2.97v",
+        "max_corner": "ff_125c_3.63v"
+      },
+      "mean_offset_uv": {
+        "min": -126.39999999999982,
+        "max": 118.4000000000002,
+        "min_corner": "sf_27c_3.63v",
+        "max_corner": "ss_-40c_3.63v"
+      },
+      "preamp_only_diagnostic": {
+        "evidence_bench": "comparator-offset-mc",
+        "scope": "preamp_only (analog partition; sees neither the latch nor the load-resistor mismatch)",
+        "corners_within_target": 45,
+        "corners_within_stretch": 45,
+        "min": 2.7961695038,
+        "max": 2.8068818142,
+        "binding_corner": "sf_125c_3.30v"
+      }
+    },
+    {
+      "name": "input_noise_uv_rms",
+      "label": "Input-referred noise",
+      "unit": "uV",
+      "target_max": 1000.0,
+      "stretch_max": 600.0,
+      "coverage": "complete",
+      "corners_total": 45,
+      "corners_within_target": 45,
+      "corners_within_stretch": 45,
+      "min": 66.824261776,
+      "max": 128.83247277,
+      "binding_corner": "ff_125c_3.63v",
+      "evidence_bench": "comparator-preamp-noise"
+    },
+    {
+      "name": "decision_time_od50_ns",
+      "label": "Decision time (50 mV overdrive)",
+      "unit": "ns",
+      "target_max": 1.5,
+      "stretch_max": 0.8,
+      "coverage": "complete",
+      "corners_total": 45,
+      "corners_within_target": 45,
+      "corners_within_stretch": 29,
+      "min": 0.4636757,
+      "max": 1.237471,
+      "binding_corner": "ss_125c_2.97v",
+      "evidence_bench": "comparator-regeneration"
+    },
+    {
+      "name": "kickback_1k_peak_mv",
+      "label": "Kickback into 1 kOhm",
+      "unit": "mV",
+      "target_max": 5.0,
+      "stretch_max": 2.0,
+      "coverage": "complete",
+      "corners_total": 45,
+      "corners_within_target": 1,
+      "corners_within_stretch": 0,
+      "min": 4.52785,
+      "max": 10.00758,
+      "binding_corner": "sf_-40c_3.63v",
+      "evidence_bench": "comparator-kickback"
+    },
+    {
+      "name": "supply_avg_power_uw",
+      "label": "Supply / power (average, one decision per clock edge at a stated clock rate -- rate TBD)",
+      "unit": "uW",
+      "target_max": 1000.0,
+      "stretch_max": 500.0,
+      "coverage": "incomplete",
+      "coverage_reason": "average_power_clock_rate_tbd",
+      "clock_rate": null,
+      "corners_total": 45,
+      "corners_within_target": null,
+      "corners_within_stretch": null,
+      "unscored_component": "per-decision switching energy x clock rate; the clock rate is TBD in the ratified row and choosing one needs a decision record (spec/README.md). The regeneration bench records e_dec_fj but deliberately attaches no check to it, so it is not combined here.",
+      "partial_evidence": {
+        "measurement": "static_power_uw",
+        "label": "Static power (i_static_ua x vdd) -- PARTIAL evidence for the average-power row; does not score it",
+        "corners_within_target": 45,
+        "corners_within_stretch": 45,
+        "min": 84.3738093,
+        "max": 104.51819069999999,
+        "binding_corner": "ss_-40c_3.63v",
+        "evidence_bench": "comparator-regeneration"
+      },
+      "evidence_bench": "comparator-regeneration"
+    }
+  ],
+  "metrics": {
+    "corner_count": 45,
+    "corners_passed": 0,
+    "corners_passed_partial": 1,
+    "corners_failed": 44
+  },
+  "provenance": {
+    "input": {
+      "path": "design/comparator.spice",
+      "role": "netlist",
+      "content_hash": "sha256:0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a"
+    }
+  },
+  "coverage": {
+    "schema_version": 1,
+    "known": true,
+    "checked": [
+      "measurement:[0,\"tt_-40c_2.97v\",\"decision_time_od50_ns\"]",
+      "measurement:[0,\"tt_-40c_2.97v\",\"input_noise_uv_rms\"]",
+      "measurement:[0,\"tt_-40c_2.97v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[0,\"tt_-40c_2.97v\",\"offset_3sigma_mv\"]",
+      "measurement:[0,\"tt_-40c_2.97v\",\"static_power_uw\"]",
+      "measurement:[1,\"tt_-40c_3.30v\",\"decision_time_od50_ns\"]",
+      "measurement:[1,\"tt_-40c_3.30v\",\"input_noise_uv_rms\"]",
+      "measurement:[1,\"tt_-40c_3.30v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[1,\"tt_-40c_3.30v\",\"offset_3sigma_mv\"]",
+      "measurement:[1,\"tt_-40c_3.30v\",\"static_power_uw\"]",
+      "measurement:[10,\"ff_-40c_3.30v\",\"decision_time_od50_ns\"]",
+      "measurement:[10,\"ff_-40c_3.30v\",\"input_noise_uv_rms\"]",
+      "measurement:[10,\"ff_-40c_3.30v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[10,\"ff_-40c_3.30v\",\"offset_3sigma_mv\"]",
+      "measurement:[10,\"ff_-40c_3.30v\",\"static_power_uw\"]",
+      "measurement:[11,\"ff_-40c_3.63v\",\"decision_time_od50_ns\"]",
+      "measurement:[11,\"ff_-40c_3.63v\",\"input_noise_uv_rms\"]",
+      "measurement:[11,\"ff_-40c_3.63v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[11,\"ff_-40c_3.63v\",\"offset_3sigma_mv\"]",
+      "measurement:[11,\"ff_-40c_3.63v\",\"static_power_uw\"]",
+      "measurement:[12,\"ff_27c_2.97v\",\"decision_time_od50_ns\"]",
+      "measurement:[12,\"ff_27c_2.97v\",\"input_noise_uv_rms\"]",
+      "measurement:[12,\"ff_27c_2.97v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[12,\"ff_27c_2.97v\",\"offset_3sigma_mv\"]",
+      "measurement:[12,\"ff_27c_2.97v\",\"static_power_uw\"]",
+      "measurement:[13,\"ff_27c_3.30v\",\"decision_time_od50_ns\"]",
+      "measurement:[13,\"ff_27c_3.30v\",\"input_noise_uv_rms\"]",
+      "measurement:[13,\"ff_27c_3.30v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[13,\"ff_27c_3.30v\",\"offset_3sigma_mv\"]",
+      "measurement:[13,\"ff_27c_3.30v\",\"static_power_uw\"]",
+      "measurement:[14,\"ff_27c_3.63v\",\"decision_time_od50_ns\"]",
+      "measurement:[14,\"ff_27c_3.63v\",\"input_noise_uv_rms\"]",
+      "measurement:[14,\"ff_27c_3.63v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[14,\"ff_27c_3.63v\",\"offset_3sigma_mv\"]",
+      "measurement:[14,\"ff_27c_3.63v\",\"static_power_uw\"]",
+      "measurement:[15,\"ff_125c_2.97v\",\"decision_time_od50_ns\"]",
+      "measurement:[15,\"ff_125c_2.97v\",\"input_noise_uv_rms\"]",
+      "measurement:[15,\"ff_125c_2.97v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[15,\"ff_125c_2.97v\",\"offset_3sigma_mv\"]",
+      "measurement:[15,\"ff_125c_2.97v\",\"static_power_uw\"]",
+      "measurement:[16,\"ff_125c_3.30v\",\"decision_time_od50_ns\"]",
+      "measurement:[16,\"ff_125c_3.30v\",\"input_noise_uv_rms\"]",
+      "measurement:[16,\"ff_125c_3.30v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[16,\"ff_125c_3.30v\",\"offset_3sigma_mv\"]",
+      "measurement:[16,\"ff_125c_3.30v\",\"static_power_uw\"]",
+      "measurement:[17,\"ff_125c_3.63v\",\"decision_time_od50_ns\"]",
+      "measurement:[17,\"ff_125c_3.63v\",\"input_noise_uv_rms\"]",
+      "measurement:[17,\"ff_125c_3.63v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[17,\"ff_125c_3.63v\",\"offset_3sigma_mv\"]",
+      "measurement:[17,\"ff_125c_3.63v\",\"static_power_uw\"]",
+      "measurement:[18,\"ss_-40c_2.97v\",\"decision_time_od50_ns\"]",
+      "measurement:[18,\"ss_-40c_2.97v\",\"input_noise_uv_rms\"]",
+      "measurement:[18,\"ss_-40c_2.97v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[18,\"ss_-40c_2.97v\",\"offset_3sigma_mv\"]",
+      "measurement:[18,\"ss_-40c_2.97v\",\"static_power_uw\"]",
+      "measurement:[19,\"ss_-40c_3.30v\",\"decision_time_od50_ns\"]",
+      "measurement:[19,\"ss_-40c_3.30v\",\"input_noise_uv_rms\"]",
+      "measurement:[19,\"ss_-40c_3.30v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[19,\"ss_-40c_3.30v\",\"offset_3sigma_mv\"]",
+      "measurement:[19,\"ss_-40c_3.30v\",\"static_power_uw\"]",
+      "measurement:[2,\"tt_-40c_3.63v\",\"decision_time_od50_ns\"]",
+      "measurement:[2,\"tt_-40c_3.63v\",\"input_noise_uv_rms\"]",
+      "measurement:[2,\"tt_-40c_3.63v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[2,\"tt_-40c_3.63v\",\"offset_3sigma_mv\"]",
+      "measurement:[2,\"tt_-40c_3.63v\",\"static_power_uw\"]",
+      "measurement:[20,\"ss_-40c_3.63v\",\"decision_time_od50_ns\"]",
+      "measurement:[20,\"ss_-40c_3.63v\",\"input_noise_uv_rms\"]",
+      "measurement:[20,\"ss_-40c_3.63v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[20,\"ss_-40c_3.63v\",\"offset_3sigma_mv\"]",
+      "measurement:[20,\"ss_-40c_3.63v\",\"static_power_uw\"]",
+      "measurement:[21,\"ss_27c_2.97v\",\"decision_time_od50_ns\"]",
+      "measurement:[21,\"ss_27c_2.97v\",\"input_noise_uv_rms\"]",
+      "measurement:[21,\"ss_27c_2.97v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[21,\"ss_27c_2.97v\",\"offset_3sigma_mv\"]",
+      "measurement:[21,\"ss_27c_2.97v\",\"static_power_uw\"]",
+      "measurement:[22,\"ss_27c_3.30v\",\"decision_time_od50_ns\"]",
+      "measurement:[22,\"ss_27c_3.30v\",\"input_noise_uv_rms\"]",
+      "measurement:[22,\"ss_27c_3.30v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[22,\"ss_27c_3.30v\",\"offset_3sigma_mv\"]",
+      "measurement:[22,\"ss_27c_3.30v\",\"static_power_uw\"]",
+      "measurement:[23,\"ss_27c_3.63v\",\"decision_time_od50_ns\"]",
+      "measurement:[23,\"ss_27c_3.63v\",\"input_noise_uv_rms\"]",
+      "measurement:[23,\"ss_27c_3.63v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[23,\"ss_27c_3.63v\",\"offset_3sigma_mv\"]",
+      "measurement:[23,\"ss_27c_3.63v\",\"static_power_uw\"]",
+      "measurement:[24,\"ss_125c_2.97v\",\"decision_time_od50_ns\"]",
+      "measurement:[24,\"ss_125c_2.97v\",\"input_noise_uv_rms\"]",
+      "measurement:[24,\"ss_125c_2.97v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[24,\"ss_125c_2.97v\",\"offset_3sigma_mv\"]",
+      "measurement:[24,\"ss_125c_2.97v\",\"static_power_uw\"]",
+      "measurement:[25,\"ss_125c_3.30v\",\"decision_time_od50_ns\"]",
+      "measurement:[25,\"ss_125c_3.30v\",\"input_noise_uv_rms\"]",
+      "measurement:[25,\"ss_125c_3.30v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[25,\"ss_125c_3.30v\",\"offset_3sigma_mv\"]",
+      "measurement:[25,\"ss_125c_3.30v\",\"static_power_uw\"]",
+      "measurement:[26,\"ss_125c_3.63v\",\"decision_time_od50_ns\"]",
+      "measurement:[26,\"ss_125c_3.63v\",\"input_noise_uv_rms\"]",
+      "measurement:[26,\"ss_125c_3.63v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[26,\"ss_125c_3.63v\",\"offset_3sigma_mv\"]",
+      "measurement:[26,\"ss_125c_3.63v\",\"static_power_uw\"]",
+      "measurement:[27,\"fs_-40c_2.97v\",\"decision_time_od50_ns\"]",
+      "measurement:[27,\"fs_-40c_2.97v\",\"input_noise_uv_rms\"]",
+      "measurement:[27,\"fs_-40c_2.97v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[27,\"fs_-40c_2.97v\",\"offset_3sigma_mv\"]",
+      "measurement:[27,\"fs_-40c_2.97v\",\"static_power_uw\"]",
+      "measurement:[28,\"fs_-40c_3.30v\",\"decision_time_od50_ns\"]",
+      "measurement:[28,\"fs_-40c_3.30v\",\"input_noise_uv_rms\"]",
+      "measurement:[28,\"fs_-40c_3.30v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[28,\"fs_-40c_3.30v\",\"offset_3sigma_mv\"]",
+      "measurement:[28,\"fs_-40c_3.30v\",\"static_power_uw\"]",
+      "measurement:[29,\"fs_-40c_3.63v\",\"decision_time_od50_ns\"]",
+      "measurement:[29,\"fs_-40c_3.63v\",\"input_noise_uv_rms\"]",
+      "measurement:[29,\"fs_-40c_3.63v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[29,\"fs_-40c_3.63v\",\"offset_3sigma_mv\"]",
+      "measurement:[29,\"fs_-40c_3.63v\",\"static_power_uw\"]",
+      "measurement:[3,\"tt_27c_2.97v\",\"decision_time_od50_ns\"]",
+      "measurement:[3,\"tt_27c_2.97v\",\"input_noise_uv_rms\"]",
+      "measurement:[3,\"tt_27c_2.97v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[3,\"tt_27c_2.97v\",\"offset_3sigma_mv\"]",
+      "measurement:[3,\"tt_27c_2.97v\",\"static_power_uw\"]",
+      "measurement:[30,\"fs_27c_2.97v\",\"decision_time_od50_ns\"]",
+      "measurement:[30,\"fs_27c_2.97v\",\"input_noise_uv_rms\"]",
+      "measurement:[30,\"fs_27c_2.97v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[30,\"fs_27c_2.97v\",\"offset_3sigma_mv\"]",
+      "measurement:[30,\"fs_27c_2.97v\",\"static_power_uw\"]",
+      "measurement:[31,\"fs_27c_3.30v\",\"decision_time_od50_ns\"]",
+      "measurement:[31,\"fs_27c_3.30v\",\"input_noise_uv_rms\"]",
+      "measurement:[31,\"fs_27c_3.30v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[31,\"fs_27c_3.30v\",\"offset_3sigma_mv\"]",
+      "measurement:[31,\"fs_27c_3.30v\",\"static_power_uw\"]",
+      "measurement:[32,\"fs_27c_3.63v\",\"decision_time_od50_ns\"]",
+      "measurement:[32,\"fs_27c_3.63v\",\"input_noise_uv_rms\"]",
+      "measurement:[32,\"fs_27c_3.63v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[32,\"fs_27c_3.63v\",\"offset_3sigma_mv\"]",
+      "measurement:[32,\"fs_27c_3.63v\",\"static_power_uw\"]",
+      "measurement:[33,\"fs_125c_2.97v\",\"decision_time_od50_ns\"]",
+      "measurement:[33,\"fs_125c_2.97v\",\"input_noise_uv_rms\"]",
+      "measurement:[33,\"fs_125c_2.97v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[33,\"fs_125c_2.97v\",\"offset_3sigma_mv\"]",
+      "measurement:[33,\"fs_125c_2.97v\",\"static_power_uw\"]",
+      "measurement:[34,\"fs_125c_3.30v\",\"decision_time_od50_ns\"]",
+      "measurement:[34,\"fs_125c_3.30v\",\"input_noise_uv_rms\"]",
+      "measurement:[34,\"fs_125c_3.30v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[34,\"fs_125c_3.30v\",\"offset_3sigma_mv\"]",
+      "measurement:[34,\"fs_125c_3.30v\",\"static_power_uw\"]",
+      "measurement:[35,\"fs_125c_3.63v\",\"decision_time_od50_ns\"]",
+      "measurement:[35,\"fs_125c_3.63v\",\"input_noise_uv_rms\"]",
+      "measurement:[35,\"fs_125c_3.63v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[35,\"fs_125c_3.63v\",\"offset_3sigma_mv\"]",
+      "measurement:[35,\"fs_125c_3.63v\",\"static_power_uw\"]",
+      "measurement:[36,\"sf_-40c_2.97v\",\"decision_time_od50_ns\"]",
+      "measurement:[36,\"sf_-40c_2.97v\",\"input_noise_uv_rms\"]",
+      "measurement:[36,\"sf_-40c_2.97v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[36,\"sf_-40c_2.97v\",\"offset_3sigma_mv\"]",
+      "measurement:[36,\"sf_-40c_2.97v\",\"static_power_uw\"]",
+      "measurement:[37,\"sf_-40c_3.30v\",\"decision_time_od50_ns\"]",
+      "measurement:[37,\"sf_-40c_3.30v\",\"input_noise_uv_rms\"]",
+      "measurement:[37,\"sf_-40c_3.30v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[37,\"sf_-40c_3.30v\",\"offset_3sigma_mv\"]",
+      "measurement:[37,\"sf_-40c_3.30v\",\"static_power_uw\"]",
+      "measurement:[38,\"sf_-40c_3.63v\",\"decision_time_od50_ns\"]",
+      "measurement:[38,\"sf_-40c_3.63v\",\"input_noise_uv_rms\"]",
+      "measurement:[38,\"sf_-40c_3.63v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[38,\"sf_-40c_3.63v\",\"offset_3sigma_mv\"]",
+      "measurement:[38,\"sf_-40c_3.63v\",\"static_power_uw\"]",
+      "measurement:[39,\"sf_27c_2.97v\",\"decision_time_od50_ns\"]",
+      "measurement:[39,\"sf_27c_2.97v\",\"input_noise_uv_rms\"]",
+      "measurement:[39,\"sf_27c_2.97v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[39,\"sf_27c_2.97v\",\"offset_3sigma_mv\"]",
+      "measurement:[39,\"sf_27c_2.97v\",\"static_power_uw\"]",
+      "measurement:[4,\"tt_27c_3.30v\",\"decision_time_od50_ns\"]",
+      "measurement:[4,\"tt_27c_3.30v\",\"input_noise_uv_rms\"]",
+      "measurement:[4,\"tt_27c_3.30v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[4,\"tt_27c_3.30v\",\"offset_3sigma_mv\"]",
+      "measurement:[4,\"tt_27c_3.30v\",\"static_power_uw\"]",
+      "measurement:[40,\"sf_27c_3.30v\",\"decision_time_od50_ns\"]",
+      "measurement:[40,\"sf_27c_3.30v\",\"input_noise_uv_rms\"]",
+      "measurement:[40,\"sf_27c_3.30v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[40,\"sf_27c_3.30v\",\"offset_3sigma_mv\"]",
+      "measurement:[40,\"sf_27c_3.30v\",\"static_power_uw\"]",
+      "measurement:[41,\"sf_27c_3.63v\",\"decision_time_od50_ns\"]",
+      "measurement:[41,\"sf_27c_3.63v\",\"input_noise_uv_rms\"]",
+      "measurement:[41,\"sf_27c_3.63v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[41,\"sf_27c_3.63v\",\"offset_3sigma_mv\"]",
+      "measurement:[41,\"sf_27c_3.63v\",\"static_power_uw\"]",
+      "measurement:[42,\"sf_125c_2.97v\",\"decision_time_od50_ns\"]",
+      "measurement:[42,\"sf_125c_2.97v\",\"input_noise_uv_rms\"]",
+      "measurement:[42,\"sf_125c_2.97v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[42,\"sf_125c_2.97v\",\"offset_3sigma_mv\"]",
+      "measurement:[42,\"sf_125c_2.97v\",\"static_power_uw\"]",
+      "measurement:[43,\"sf_125c_3.30v\",\"decision_time_od50_ns\"]",
+      "measurement:[43,\"sf_125c_3.30v\",\"input_noise_uv_rms\"]",
+      "measurement:[43,\"sf_125c_3.30v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[43,\"sf_125c_3.30v\",\"offset_3sigma_mv\"]",
+      "measurement:[43,\"sf_125c_3.30v\",\"static_power_uw\"]",
+      "measurement:[44,\"sf_125c_3.63v\",\"decision_time_od50_ns\"]",
+      "measurement:[44,\"sf_125c_3.63v\",\"input_noise_uv_rms\"]",
+      "measurement:[44,\"sf_125c_3.63v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[44,\"sf_125c_3.63v\",\"offset_3sigma_mv\"]",
+      "measurement:[44,\"sf_125c_3.63v\",\"static_power_uw\"]",
+      "measurement:[5,\"tt_27c_3.63v\",\"decision_time_od50_ns\"]",
+      "measurement:[5,\"tt_27c_3.63v\",\"input_noise_uv_rms\"]",
+      "measurement:[5,\"tt_27c_3.63v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[5,\"tt_27c_3.63v\",\"offset_3sigma_mv\"]",
+      "measurement:[5,\"tt_27c_3.63v\",\"static_power_uw\"]",
+      "measurement:[6,\"tt_125c_2.97v\",\"decision_time_od50_ns\"]",
+      "measurement:[6,\"tt_125c_2.97v\",\"input_noise_uv_rms\"]",
+      "measurement:[6,\"tt_125c_2.97v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[6,\"tt_125c_2.97v\",\"offset_3sigma_mv\"]",
+      "measurement:[6,\"tt_125c_2.97v\",\"static_power_uw\"]",
+      "measurement:[7,\"tt_125c_3.30v\",\"decision_time_od50_ns\"]",
+      "measurement:[7,\"tt_125c_3.30v\",\"input_noise_uv_rms\"]",
+      "measurement:[7,\"tt_125c_3.30v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[7,\"tt_125c_3.30v\",\"offset_3sigma_mv\"]",
+      "measurement:[7,\"tt_125c_3.30v\",\"static_power_uw\"]",
+      "measurement:[8,\"tt_125c_3.63v\",\"decision_time_od50_ns\"]",
+      "measurement:[8,\"tt_125c_3.63v\",\"input_noise_uv_rms\"]",
+      "measurement:[8,\"tt_125c_3.63v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[8,\"tt_125c_3.63v\",\"offset_3sigma_mv\"]",
+      "measurement:[8,\"tt_125c_3.63v\",\"static_power_uw\"]",
+      "measurement:[9,\"ff_-40c_2.97v\",\"decision_time_od50_ns\"]",
+      "measurement:[9,\"ff_-40c_2.97v\",\"input_noise_uv_rms\"]",
+      "measurement:[9,\"ff_-40c_2.97v\",\"kickback_1k_peak_mv\"]",
+      "measurement:[9,\"ff_-40c_2.97v\",\"offset_3sigma_mv\"]",
+      "measurement:[9,\"ff_-40c_2.97v\",\"static_power_uw\"]"
+    ],
+    "skipped": [
+      {
+        "id": "spec_row:[0,\"tt_-40c_2.97v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[1,\"tt_-40c_3.30v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[10,\"ff_-40c_3.30v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[11,\"ff_-40c_3.63v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[12,\"ff_27c_2.97v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[13,\"ff_27c_3.30v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[14,\"ff_27c_3.63v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[15,\"ff_125c_2.97v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[16,\"ff_125c_3.30v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[17,\"ff_125c_3.63v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[18,\"ss_-40c_2.97v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[19,\"ss_-40c_3.30v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[2,\"tt_-40c_3.63v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[20,\"ss_-40c_3.63v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[21,\"ss_27c_2.97v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[22,\"ss_27c_3.30v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[23,\"ss_27c_3.63v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[24,\"ss_125c_2.97v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[25,\"ss_125c_3.30v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[26,\"ss_125c_3.63v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[27,\"fs_-40c_2.97v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[28,\"fs_-40c_3.30v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[29,\"fs_-40c_3.63v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[3,\"tt_27c_2.97v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[30,\"fs_27c_2.97v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[31,\"fs_27c_3.30v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[32,\"fs_27c_3.63v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[33,\"fs_125c_2.97v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[34,\"fs_125c_3.30v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[35,\"fs_125c_3.63v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[36,\"sf_-40c_2.97v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[37,\"sf_-40c_3.30v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[38,\"sf_-40c_3.63v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[39,\"sf_27c_2.97v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[4,\"tt_27c_3.30v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[40,\"sf_27c_3.30v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[41,\"sf_27c_3.63v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[42,\"sf_125c_2.97v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[43,\"sf_125c_3.30v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[44,\"sf_125c_3.63v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[5,\"tt_27c_3.63v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[6,\"tt_125c_2.97v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[7,\"tt_125c_3.30v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[8,\"tt_125c_3.63v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      },
+      {
+        "id": "spec_row:[9,\"ff_-40c_2.97v\",\"supply_avg_power_uw\"]",
+        "reason": "average_power_clock_rate_tbd"
+      }
+    ],
+    "inapplicable": [],
+    "unknown": [],
+    "nothing_checked": false,
+    "nothing_checked_reasons": [],
+    "spec_rows_incomplete": [
+      "supply_avg_power_uw"
+    ]
+  },
+  "measurements": [
+    {
+      "name": "offset_3sigma_mv",
+      "unit": "mV",
+      "limits": {
+        "max": 15.0
+      },
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "ff_125c_3.63v",
+        "value": 3.7951769454955873,
+        "margin": 11.204823054504413
+      }
+    },
+    {
+      "name": "input_noise_uv_rms",
+      "unit": "uV",
+      "limits": {
+        "max": 1000.0
+      },
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "ff_125c_3.63v",
+        "value": 128.83247277,
+        "margin": 871.16752723
+      }
+    },
+    {
+      "name": "decision_time_od50_ns",
+      "unit": "ns",
+      "limits": {
+        "max": 1.5
+      },
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "ss_125c_2.97v",
+        "value": 1.237471,
+        "margin": 0.262529
+      }
+    },
+    {
+      "name": "kickback_1k_peak_mv",
+      "unit": "mV",
+      "limits": {
+        "max": 5.0
+      },
+      "status": "fail",
+      "worst_case": {
+        "corner_id": "sf_-40c_3.63v",
+        "value": 10.00758,
+        "margin": -5.007580000000001
+      }
+    },
+    {
+      "name": "static_power_uw",
+      "unit": "uW",
+      "limits": {
+        "max": 1000.0
+      },
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "ss_-40c_3.63v",
+        "value": 104.51819069999999,
+        "margin": 895.4818093
+      },
+      "partial_of": "supply_avg_power_uw"
+    }
+  ],
+  "corners": [
+    {
+      "corner_id": "tt_-40c_2.97v",
+      "process": "tt",
+      "temp_c": -40.0,
+      "vdd": 2.97,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.3182114344773184,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.681788565522682,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 3.1464152554931464,
+            "mean_offset_uv": 18.400000000000183,
+            "latch_1sigma_mv": 0.21104707860298128,
+            "preamp_1sigma_mv": 1.0318004880992857,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.11709435700818688,
+            "load_r_1sigma_conservative_mv": 0.35128307102456063,
+            "total_3sigma_cited_coefficient_mv": 3.1659641116077815
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.7992219551
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 72.928456716,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 927.071543284,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.6603491,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.8396509,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 6.24191,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -1.2419099999999998,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 86.66920350000001,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 913.3307965,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "tt_-40c_3.30v",
+      "process": "tt",
+      "temp_c": -40.0,
+      "vdd": 3.3,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.3481132770997606,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.65188672290024,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 3.178623702170486,
+            "mean_offset_uv": 15.200000000000168,
+            "latch_1sigma_mv": 0.23375617928680603,
+            "preamp_1sigma_mv": 1.0318425220052196,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.11686300285248487,
+            "load_r_1sigma_conservative_mv": 0.35058900855745456,
+            "total_3sigma_cited_coefficient_mv": 3.1978995126365843
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.7992289707
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 74.007168599,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 925.992831401,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.5885728,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.9114272,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 7.753691,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -2.753691,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 94.959876,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 905.040124,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "tt_-40c_3.63v",
+      "process": "tt",
+      "temp_c": -40.0,
+      "vdd": 3.63,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.356873807179489,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.64312619282051,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 3.1884094090941333,
+            "mean_offset_uv": 9.60000000000015,
+            "latch_1sigma_mv": 0.2529610784110123,
+            "preamp_1sigma_mv": 1.0318601758147004,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.11667445462512602,
+            "load_r_1sigma_conservative_mv": 0.35002336387537797,
+            "total_3sigma_cited_coefficient_mv": 3.2075646392954633
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.7992447866
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 74.806338501,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 925.193661499,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.5391615,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.9608385,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 9.426399,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -4.426399,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 103.01638709999999,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 896.9836129,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "tt_27c_2.97v",
+      "process": "tt",
+      "temp_c": 27.0,
+      "vdd": 2.97,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.122491041278502,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.877508958721497,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 2.8701287497253505,
+            "mean_offset_uv": 71.20000000000023,
+            "latch_1sigma_mv": 0.30148263134720465,
+            "preamp_1sigma_mv": 0.9223169016824184,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.13664007251930255,
+            "load_r_1sigma_conservative_mv": 0.40992021755790753,
+            "total_3sigma_cited_coefficient_mv": 2.899253977278073
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.8006290873
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 89.952668678,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 910.047331322,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.7944964,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.7055036,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 6.293948,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -1.2939480000000003,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 85.6750554,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 914.3249446,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "tt_27c_3.30v",
+      "process": "tt",
+      "temp_c": 27.0,
+      "vdd": 3.3,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.1463272346113,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.8536727653887,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 2.897365313521925,
+            "mean_offset_uv": 74.40000000000018,
+            "latch_1sigma_mv": 0.3327317154462551,
+            "preamp_1sigma_mv": 0.9222773511666065,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.13629349717994854,
+            "load_r_1sigma_conservative_mv": 0.4088804915398457,
+            "total_3sigma_cited_coefficient_mv": 2.9260739936580324
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.8006286762
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 91.254867091,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 908.745132909,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.7080612,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.7919388,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 7.598533,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -2.5985329999999998,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 93.874968,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 906.125032,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "tt_27c_3.63v",
+      "process": "tt",
+      "temp_c": 27.0,
+      "vdd": 3.63,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.1313159104305885,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.868684089569411,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 2.881802102851617,
+            "mean_offset_uv": 73.60000000000021,
+            "latch_1sigma_mv": 0.3486995394037543,
+            "preamp_1sigma_mv": 0.9222971165672003,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.13609890969872612,
+            "load_r_1sigma_conservative_mv": 0.40829672909617837,
+            "total_3sigma_cited_coefficient_mv": 2.910582343619682
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.8006342438
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 92.156984567,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 907.843015433,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.6471158,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.8528842,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 9.140092,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -4.140091999999999,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 101.8379076,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 898.1620924,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "tt_125c_2.97v",
+      "process": "tt",
+      "temp_c": 125.0,
+      "vdd": 2.97,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.625823872266322,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.374176127733678,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 3.3159026282446837,
+            "mean_offset_uv": 19.200000000000184,
+            "latch_1sigma_mv": 0.4285783234288668,
+            "preamp_1sigma_mv": 0.9745113834457487,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.16297347026002976,
+            "load_r_1sigma_conservative_mv": 0.4889204107800893,
+            "total_3sigma_cited_coefficient_mv": 3.3517537809447417
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.8049666317
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 113.32920442,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 886.67079558,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.9867192,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.5132808,
+          "status": "pass",
+          "within_stretch": false
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 6.055985,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -1.0559849999999997,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 84.65857290000001,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 915.3414271,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "tt_125c_3.30v",
+      "process": "tt",
+      "temp_c": 125.0,
+      "vdd": 3.3,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.676488979330415,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.323511020669585,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 3.372779411701868,
+            "mean_offset_uv": 21.600000000000186,
+            "latch_1sigma_mv": 0.4691759305413533,
+            "preamp_1sigma_mv": 0.9744135849071036,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.16257686710523417,
+            "load_r_1sigma_conservative_mv": 0.48773060131570256,
+            "total_3sigma_cited_coefficient_mv": 3.4078618075649403
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.8049620568
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 114.87710901,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 885.12289099,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.8811783,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.6188217,
+          "status": "pass",
+          "within_stretch": false
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 7.211283,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -2.211283,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 92.76639899999999,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 907.233601,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "tt_125c_3.63v",
+      "process": "tt",
+      "temp_c": 125.0,
+      "vdd": 3.63,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.736822779445987,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.263177220554013,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 3.4392139567058058,
+            "mean_offset_uv": 24.800000000000196,
+            "latch_1sigma_mv": 0.5144745737742392,
+            "preamp_1sigma_mv": 0.9743454460240821,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.16237632881773836,
+            "load_r_1sigma_conservative_mv": 0.4871289864532151,
+            "total_3sigma_cited_coefficient_mv": 3.4735410303381964
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.8049626494
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 115.97060956,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 884.02939044,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.8067747,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.6932253,
+          "status": "pass",
+          "within_stretch": false
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 8.579597,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -3.5795969999999997,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 100.6502442,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 899.3497558,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "ff_-40c_2.97v",
+      "process": "ff",
+      "temp_c": -40.0,
+      "vdd": 2.97,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.3356151319038005,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.6643848680962,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 3.1731981595860037,
+            "mean_offset_uv": -89.59999999999981,
+            "latch_1sigma_mv": 0.3046605785322738,
+            "preamp_1sigma_mv": 1.0399214067160156,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.11424155414580735,
+            "load_r_1sigma_conservative_mv": 0.3427246624374221,
+            "total_3sigma_cited_coefficient_mv": 3.1916526681709656
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.796213988
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 81.619694503,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 918.380305497,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.545647,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.954353,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 6.740782,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -1.7407820000000003,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 85.84782030000001,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 914.1521797,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "ff_-40c_3.30v",
+      "process": "ff",
+      "temp_c": -40.0,
+      "vdd": 3.3,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.3635700575926326,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.636429942407368,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 3.2028687141373746,
+            "mean_offset_uv": -87.9999999999998,
+            "latch_1sigma_mv": 0.3306468936912935,
+            "preamp_1sigma_mv": 1.0399639576742565,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.11413850868402677,
+            "load_r_1sigma_conservative_mv": 0.3424155260520803,
+            "total_3sigma_cited_coefficient_mv": 3.22112036292988
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.7962225967
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 82.5461143,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 917.4538857,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.4977737,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 1.0022263,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 8.025255,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -3.0252549999999996,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 94.28020799999999,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 905.719792,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "ff_-40c_3.63v",
+      "process": "ff",
+      "temp_c": -40.0,
+      "vdd": 3.63,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.3993529911432994,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.6006470088567,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 3.2403036894710966,
+            "mean_offset_uv": -91.99999999999982,
+            "latch_1sigma_mv": 0.36066348613205823,
+            "preamp_1sigma_mv": 1.0399328826381342,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.11418161612827767,
+            "load_r_1sigma_conservative_mv": 0.34254484838483307,
+            "total_3sigma_cited_coefficient_mv": 3.2583592455643977
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.7962359019
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 83.215839228,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 916.784160772,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.4636757,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 1.0363243,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 9.465283,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -4.4652829999999994,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 102.5819487,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 897.4180513,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "ff_27c_2.97v",
+      "process": "ff",
+      "temp_c": 27.0,
+      "vdd": 2.97,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.234055186611697,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.765944813388304,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 3.003144911588517,
+            "mean_offset_uv": 26.400000000000205,
+            "latch_1sigma_mv": 0.41936641183312334,
+            "preamp_1sigma_mv": 0.8980616503701055,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.13334414724897284,
+            "load_r_1sigma_conservative_mv": 0.40003244174691854,
+            "total_3sigma_cited_coefficient_mv": 3.0296708260882084
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.797695002
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 100.59845846,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 899.40154154,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.6576048,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.8423952,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 6.397145,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -1.397145,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 85.1186556,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 914.8813444,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "ff_27c_3.30v",
+      "process": "ff",
+      "temp_c": 27.0,
+      "vdd": 3.3,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.272498115995671,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.72750188400433,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 3.0450105024449425,
+            "mean_offset_uv": 21.600000000000204,
+            "latch_1sigma_mv": 0.4516440369181402,
+            "preamp_1sigma_mv": 0.8980464131553761,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.1332015533589036,
+            "load_r_1sigma_conservative_mv": 0.39960466007671075,
+            "total_3sigma_cited_coefficient_mv": 3.071119151767809
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.7976960447
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 101.65819728,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 898.34180272,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.600185,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.899815,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 7.559004,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -2.559004,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 93.514806,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 906.485194,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "ff_27c_3.63v",
+      "process": "ff",
+      "temp_c": 27.0,
+      "vdd": 3.63,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.3369107370845015,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.663089262915499,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 3.113999460500917,
+            "mean_offset_uv": 24.800000000000203,
+            "latch_1sigma_mv": 0.49942213575788846,
+            "preamp_1sigma_mv": 0.8980470598150117,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.13323981105602314,
+            "load_r_1sigma_conservative_mv": 0.39971943316806946,
+            "total_3sigma_cited_coefficient_mv": 3.1395490544427243
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.7977002698
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 102.46089216,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 897.53910784,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.5589166,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.9410834,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 8.819615,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -3.8196150000000006,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 101.7938394,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 898.2061606,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "ff_125c_2.97v",
+      "process": "ff",
+      "temp_c": 125.0,
+      "vdd": 2.97,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.685754158023822,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.314245841976177,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 3.3964008244022086,
+            "mean_offset_uv": -29.599999999999813,
+            "latch_1sigma_mv": 0.5650635534789998,
+            "preamp_1sigma_mv": 1.02114425401486,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.1590576086874081,
+            "load_r_1sigma_conservative_mv": 0.4771728260622243,
+            "total_3sigma_cited_coefficient_mv": 3.4297569106180417
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.8028145917
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 126.52201671,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 873.47798329,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.8234207,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.6765793,
+          "status": "pass",
+          "within_stretch": false
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 5.867662,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -0.8676620000000002,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 84.3738093,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 915.6261907,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "ff_125c_3.30v",
+      "process": "ff",
+      "temp_c": 125.0,
+      "vdd": 3.3,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.724884774692679,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.27511522530732,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 3.439435860719023,
+            "mean_offset_uv": -28.799999999999834,
+            "latch_1sigma_mv": 0.6080152782277921,
+            "preamp_1sigma_mv": 1.0211146509123485,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.15889462090427325,
+            "load_r_1sigma_conservative_mv": 0.47668386271281976,
+            "total_3sigma_cited_coefficient_mv": 3.4723114124414045
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.8028121221
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 127.8155325,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 872.1844675,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.7526589,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.7473411,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 6.865688,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -1.8656879999999996,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 92.74352999999999,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 907.25647,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "ff_125c_3.63v",
+      "process": "ff",
+      "temp_c": 125.0,
+      "vdd": 3.63,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.7951769454955873,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.204823054504413,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 3.515378784711542,
+            "mean_offset_uv": -31.99999999999983,
+            "latch_1sigma_mv": 0.6592700861440243,
+            "preamp_1sigma_mv": 1.0211166465250696,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.15891142216369808,
+            "load_r_1sigma_conservative_mv": 0.4767342664910942,
+            "total_3sigma_cited_coefficient_mv": 3.547557407688677
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.8028134122
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 128.83247277,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 871.16752723,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.7001474,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.7998526,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 7.942339,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -2.9423389999999996,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 101.0028624,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 898.9971376,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "ss_-40c_2.97v",
+      "process": "ss",
+      "temp_c": -40.0,
+      "vdd": 2.97,
+      "status": "pass_partial",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.321176658810675,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.678823341189325,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 3.139928050131086,
+            "mean_offset_uv": 117.60000000000021,
+            "latch_1sigma_mv": 0.1837664494759654,
+            "preamp_1sigma_mv": 1.026397892593344,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.12023979328510542,
+            "load_r_1sigma_conservative_mv": 0.36071937985531627,
+            "total_3sigma_cited_coefficient_mv": 3.1605801098854003
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.8014723475
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 66.824261776,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 933.175738224,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.8525613,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.6474387,
+          "status": "pass",
+          "within_stretch": false
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 4.52785,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": 0.47215000000000007,
+          "status": "pass",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 88.1937936,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 911.8062064,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "ss_-40c_3.30v",
+      "process": "ss",
+      "temp_c": -40.0,
+      "vdd": 3.3,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.3253879620244438,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.674612037975557,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 3.145705796796642,
+            "mean_offset_uv": 118.40000000000019,
+            "latch_1sigma_mv": 0.20314259347128844,
+            "preamp_1sigma_mv": 1.0260072858870648,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.11981158757914688,
+            "load_r_1sigma_conservative_mv": 0.3594347627374407,
+            "total_3sigma_cited_coefficient_mv": 3.1661740806001366
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.8014670784
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 67.526867739,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 932.473132261,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.7247975,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.7752025,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 6.768546,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -1.7685459999999997,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 96.39494699999999,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 903.605053,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "ss_-40c_3.63v",
+      "process": "ss",
+      "temp_c": -40.0,
+      "vdd": 3.63,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.3400128203514567,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.659987179648542,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 3.1625067525619612,
+            "mean_offset_uv": 118.4000000000002,
+            "latch_1sigma_mv": 0.2124015504121049,
+            "preamp_1sigma_mv": 1.0259129086427434,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.11937267508495997,
+            "load_r_1sigma_conservative_mv": 0.35811802525487996,
+            "total_3sigma_cited_coefficient_mv": 3.182718567516213
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.8014786924
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 68.53990498,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 931.46009502,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.6468852,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.8531148,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 8.538693,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -3.5386930000000003,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 104.51819069999999,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 895.4818093,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "ss_27c_2.97v",
+      "process": "ss",
+      "temp_c": 27.0,
+      "vdd": 2.97,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.281442134668954,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.718557865331046,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 3.0304147834908672,
+            "mean_offset_uv": -14.399999999999775,
+            "latch_1sigma_mv": 0.20243282930150291,
+            "preamp_1sigma_mv": 0.9882463709674915,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.1398609857962911,
+            "load_r_1sigma_conservative_mv": 0.4195829573888734,
+            "total_3sigma_cited_coefficient_mv": 3.0593240459505417
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.8028363645
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 82.237353019,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 917.762646981,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 1.010101,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.4898990000000001,
+          "status": "pass",
+          "within_stretch": false
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 5.094648,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -0.09464800000000029,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 86.8425921,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 913.1574079,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "ss_27c_3.30v",
+      "process": "ss",
+      "temp_c": 27.0,
+      "vdd": 3.3,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.2941942041475354,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.705805795852465,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 3.045752872443856,
+            "mean_offset_uv": -9.599999999999785,
+            "latch_1sigma_mv": 0.22754037058944318,
+            "preamp_1sigma_mv": 0.9882124126995598,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.1394479811255447,
+            "load_r_1sigma_conservative_mv": 0.41834394337663416,
+            "total_3sigma_cited_coefficient_mv": 3.0743490717483457
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.8028298197
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 83.36660363,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 916.63339637,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.8663271,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.6336729,
+          "status": "pass",
+          "within_stretch": false
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 6.95748,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -1.9574800000000003,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 95.124546,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 904.875454,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "ss_27c_3.63v",
+      "process": "ss",
+      "temp_c": 27.0,
+      "vdd": 3.63,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.3100922707222353,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.689907729277765,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 3.0648128425729366,
+            "mean_offset_uv": -14.3999999999998,
+            "latch_1sigma_mv": 0.24465033097710182,
+            "preamp_1sigma_mv": 0.9881309226090919,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.13893923890444598,
+            "load_r_1sigma_conservative_mv": 0.41681771671333795,
+            "total_3sigma_cited_coefficient_mv": 3.093026797324285
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.8028332578
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 84.505297221,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 915.494702779,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.7743452,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.7256548,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 8.574669,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -3.574669,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 103.1003127,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 896.8996873,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "ss_125c_2.97v",
+      "process": "ss",
+      "temp_c": 125.0,
+      "vdd": 2.97,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.566734675723624,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.433265324276377,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 3.2352726994799066,
+            "mean_offset_uv": 7.200000000000195,
+            "latch_1sigma_mv": 0.27541949888061534,
+            "preamp_1sigma_mv": 1.0304415081008405,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.16683720190169368,
+            "load_r_1sigma_conservative_mv": 0.500511605705081,
+            "total_3sigma_cited_coefficient_mv": 3.2737595066598097
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.8065627983
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 103.47828772,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 896.52171228,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 1.237471,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.262529,
+          "status": "pass",
+          "within_stretch": false
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 5.52475,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -0.52475,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 85.69121220000001,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 914.3087878,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "ss_125c_3.30v",
+      "process": "ss",
+      "temp_c": 125.0,
+      "vdd": 3.3,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.6093860132447317,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.390613986755268,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 3.2845845034037415,
+            "mean_offset_uv": 6.4000000000001895,
+            "latch_1sigma_mv": 0.31165502338325496,
+            "preamp_1sigma_mv": 1.0302096342836147,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.16626514718359914,
+            "load_r_1sigma_conservative_mv": 0.49879544155079736,
+            "total_3sigma_cited_coefficient_mv": 3.322242052065421
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.8065535167
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 105.12424404,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 894.87575596,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 1.070753,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.42924699999999993,
+          "status": "pass",
+          "within_stretch": false
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 6.901925,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -1.9019250000000003,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 93.82579799999999,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 906.174202,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "ss_125c_3.63v",
+      "process": "ss",
+      "temp_c": 125.0,
+      "vdd": 3.63,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.6314658444701124,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.368534155529888,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 3.3109926004145653,
+            "mean_offset_uv": 4.000000000000178,
+            "latch_1sigma_mv": 0.3476351999910599,
+            "preamp_1sigma_mv": 1.0300359352501582,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.16573339365456644,
+            "load_r_1sigma_conservative_mv": 0.4972001809636994,
+            "total_3sigma_cited_coefficient_mv": 3.3481158910572884
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.806551994
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 106.42504006,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 893.57495994,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.958005,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.541995,
+          "status": "pass",
+          "within_stretch": false
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 8.365687,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -3.3656869999999994,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 101.65339469999999,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 898.3466053,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "fs_-40c_2.97v",
+      "process": "fs",
+      "temp_c": -40.0,
+      "vdd": 2.97,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 2.9938830729697026,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 12.006116927030298,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 2.807592449056665,
+            "mean_offset_uv": -33.599999999999824,
+            "latch_1sigma_mv": 0.2356881660668908,
+            "preamp_1sigma_mv": 0.8944490345693044,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.11551070147711259,
+            "load_r_1sigma_conservative_mv": 0.3465321044313378,
+            "total_3sigma_cited_coefficient_mv": 2.828897286824252
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.7961695038
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 72.762967989,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 927.237032011,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.6379129,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.8620871,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 6.00087,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -1.00087,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 86.59017180000001,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 913.4098282,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "fs_-40c_3.30v",
+      "process": "fs",
+      "temp_c": -40.0,
+      "vdd": 3.3,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 2.997648305159519,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 12.002351694840481,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 2.812392120597696,
+            "mean_offset_uv": -32.79999999999983,
+            "latch_1sigma_mv": 0.25144039957916886,
+            "preamp_1sigma_mv": 0.8944538131130438,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.11527454728676889,
+            "load_r_1sigma_conservative_mv": 0.34582364186030673,
+            "total_3sigma_cited_coefficient_mv": 2.8335743207598294
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.7961717924
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 73.81071088,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 926.18928912,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.5702265,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.9297735,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 7.260398,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -2.2603980000000004,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 94.87823399999999,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 905.121766,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "fs_-40c_3.63v",
+      "process": "fs",
+      "temp_c": -40.0,
+      "vdd": 3.63,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.008911634472788,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.991088365527212,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 2.8250616701233273,
+            "mean_offset_uv": -32.79999999999981,
+            "latch_1sigma_mv": 0.2676150213918951,
+            "preamp_1sigma_mv": 0.8944826919738964,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.11507248301175296,
+            "load_r_1sigma_conservative_mv": 0.34521744903525886,
+            "total_3sigma_cited_coefficient_mv": 2.846075987586841
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.7961823862
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 74.593073611,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 925.406926389,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.5227957,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.9772043,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 8.697491,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -3.6974909999999994,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 102.94211729999999,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 897.0578827,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "fs_27c_2.97v",
+      "process": "fs",
+      "temp_c": 27.0,
+      "vdd": 2.97,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.0997954093290367,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.900204590670963,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 2.853334218068399,
+            "mean_offset_uv": -77.5999999999998,
+            "latch_1sigma_mv": 0.2840271964154207,
+            "preamp_1sigma_mv": 0.9204557454117928,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.13458740882247397,
+            "load_r_1sigma_conservative_mv": 0.403762226467422,
+            "total_3sigma_cited_coefficient_mv": 2.8817598955363946
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.7977225164
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 89.690606639,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 910.309393361,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.7685118,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.7314882,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 5.869039,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -0.8690389999999999,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 85.5722934,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 914.4277066,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "fs_27c_3.30v",
+      "process": "fs",
+      "temp_c": 27.0,
+      "vdd": 3.3,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.1334901735169467,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.866509826483053,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 2.891156059433666,
+            "mean_offset_uv": -66.3999999999998,
+            "latch_1sigma_mv": 0.31660588768828,
+            "preamp_1sigma_mv": 0.920474506396413,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.1342550230123262,
+            "load_r_1sigma_conservative_mv": 0.4027650690369786,
+            "total_3sigma_cited_coefficient_mv": 2.919075720298527
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.7977196742
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 90.959034228,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 909.040965772,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.6864164,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.8135836,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 6.953274,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -1.9532740000000004,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 93.777651,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 906.222349,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "fs_27c_3.63v",
+      "process": "fs",
+      "temp_c": 27.0,
+      "vdd": 3.63,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.147325095131138,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.852674904868863,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 2.9069565115426137,
+            "mean_offset_uv": -57.5999999999998,
+            "latch_1sigma_mv": 0.3436875591751138,
+            "preamp_1sigma_mv": 0.9204482954352151,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.13403791127804318,
+            "load_r_1sigma_conservative_mv": 0.4021137338341295,
+            "total_3sigma_cited_coefficient_mv": 2.934636538813287
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.7977227362
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 91.842199517,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 908.157800483,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.6282575,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.8717425,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 8.277787,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -3.277787,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 101.7488274,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 898.2511726,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "fs_125c_2.97v",
+      "process": "fs",
+      "temp_c": 125.0,
+      "vdd": 2.97,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.406351458719043,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.593648541280956,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 3.0845095298928804,
+            "mean_offset_uv": -28.799999999999816,
+            "latch_1sigma_mv": 0.3743176033571481,
+            "preamp_1sigma_mv": 0.9782356135957088,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.16059423679823268,
+            "load_r_1sigma_conservative_mv": 0.481782710394698,
+            "total_3sigma_cited_coefficient_mv": 3.121908650174643
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.8027821355
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 112.90686998,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 887.09313002,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.9547793,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.5452207,
+          "status": "pass",
+          "within_stretch": false
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 5.45985,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -0.4598500000000003,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 84.53686230000001,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 915.4631377,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "fs_125c_3.30v",
+      "process": "fs",
+      "temp_c": 125.0,
+      "vdd": 3.3,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.448406577966019,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.551593422033982,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 3.132566998485428,
+            "mean_offset_uv": -35.99999999999982,
+            "latch_1sigma_mv": 0.41288176822189,
+            "preamp_1sigma_mv": 0.9782089184024302,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.1601901619549464,
+            "load_r_1sigma_conservative_mv": 0.4805704858648392,
+            "total_3sigma_cited_coefficient_mv": 3.1692150434901656
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.8027787392
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 114.41789158,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 885.5821084199999,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.855338,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.644662,
+          "status": "pass",
+          "within_stretch": false
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 6.432522,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -1.4325219999999996,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 92.65254900000001,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 907.347451,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "fs_125c_3.63v",
+      "process": "fs",
+      "temp_c": 125.0,
+      "vdd": 3.63,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.4704967128601316,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.529503287139867,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 3.157788694640603,
+            "mean_offset_uv": -32.79999999999984,
+            "latch_1sigma_mv": 0.4477925351574422,
+            "preamp_1sigma_mv": 0.978169911119432,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.15996596837047372,
+            "load_r_1sigma_conservative_mv": 0.4798979051114211,
+            "total_3sigma_cited_coefficient_mv": 3.194046248777612
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.8027779836
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 115.4902172,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 884.5097828,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.7841595,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.7158405,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 7.606886,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -2.6068860000000003,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 100.54566390000001,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 899.4543361,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "sf_-40c_2.97v",
+      "process": "sf",
+      "temp_c": -40.0,
+      "vdd": 2.97,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.2817867189917664,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.718213281008234,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 3.103127299999148,
+            "mean_offset_uv": -28.799999999999816,
+            "latch_1sigma_mv": 0.23332441095292375,
+            "preamp_1sigma_mv": 0.9962287268680955,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.11867192190562431,
+            "load_r_1sigma_conservative_mv": 0.35601576571687293,
+            "total_3sigma_cited_coefficient_mv": 3.1234830342806372
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.8018839586
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 73.145684717,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 926.854315283,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.6956204,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.8043796,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 6.405153,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -1.4051530000000003,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 86.7493935,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 913.2506065,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "sf_-40c_3.30v",
+      "process": "sf",
+      "temp_c": -40.0,
+      "vdd": 3.3,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.319389317086338,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.680610682913661,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 3.143565466154634,
+            "mean_offset_uv": -23.19999999999982,
+            "latch_1sigma_mv": 0.2605025918833113,
+            "preamp_1sigma_mv": 0.996226455311761,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.11844369388895527,
+            "load_r_1sigma_conservative_mv": 0.3553310816668658,
+            "total_3sigma_cited_coefficient_mv": 3.163584046235938
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.8018953266
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 74.253822041,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 925.746177959,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.6163357,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.8836643,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 8.121165,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -3.1211649999999995,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 95.04138599999999,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 904.958614,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "sf_-40c_3.63v",
+      "process": "sf",
+      "temp_c": -40.0,
+      "vdd": 3.63,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.3342446574009537,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.665755342599047,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 3.1597772073359853,
+            "mean_offset_uv": -23.99999999999981,
+            "latch_1sigma_mv": 0.2775154300471558,
+            "preamp_1sigma_mv": 0.9962488135366954,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.11826917589966227,
+            "load_r_1sigma_conservative_mv": 0.3548075276989868,
+            "total_3sigma_cited_coefficient_mv": 3.1796352592257913
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.8019141539
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 75.070956301,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 924.929043699,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.5630562,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.9369438,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 10.00758,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -5.007580000000001,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 103.09399649999999,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 896.9060035,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "sf_27c_2.97v",
+      "process": "sf",
+      "temp_c": 27.0,
+      "vdd": 2.97,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.0928701111061674,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.907129888893833,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 2.8311483465194827,
+            "mean_offset_uv": -121.5999999999998,
+            "latch_1sigma_mv": 0.30750943622853316,
+            "preamp_1sigma_mv": 0.934965054858986,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.13835205425192235,
+            "load_r_1sigma_conservative_mv": 0.41505616275576707,
+            "total_3sigma_cited_coefficient_mv": 2.861410941867935
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.8031733997
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 90.267691269,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 909.732308731,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.8342552,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.6657448,
+          "status": "pass",
+          "within_stretch": false
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 6.565738,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -1.5657379999999996,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 85.7741643,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 914.2258357000001,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "sf_27c_3.30v",
+      "process": "sf",
+      "temp_c": 27.0,
+      "vdd": 3.3,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.078496410514488,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.921503589485512,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 2.8167634192455715,
+            "mean_offset_uv": -122.3999999999998,
+            "latch_1sigma_mv": 0.32700887597437706,
+            "preamp_1sigma_mv": 0.934952799077736,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.13801878515687663,
+            "load_r_1sigma_conservative_mv": 0.4140563554706299,
+            "total_3sigma_cited_coefficient_mv": 2.847033337617532
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.8031750506
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 91.602023967,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 908.397976033,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.7398857,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.7601143,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 8.093421,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -3.0934209999999993,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 93.970041,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 906.029959,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "sf_27c_3.63v",
+      "process": "sf",
+      "temp_c": 27.0,
+      "vdd": 3.63,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.113789944196926,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.886210055803074,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 2.8560026890743644,
+            "mean_offset_uv": -126.39999999999982,
+            "latch_1sigma_mv": 0.3538563219429153,
+            "preamp_1sigma_mv": 0.9349406855174063,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.1378376418593872,
+            "load_r_1sigma_conservative_mv": 0.4135129255781616,
+            "total_3sigma_cited_coefficient_mv": 2.8857831345442806
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.8031829506
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 92.524842192,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 907.475157808,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.6744761,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.8255239,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 9.852139,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -4.852138999999999,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 101.92902059999999,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 898.0709794,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "sf_125c_2.97v",
+      "process": "sf",
+      "temp_c": 125.0,
+      "vdd": 2.97,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.3935985276863962,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.606401472313603,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 3.050239177507233,
+            "mean_offset_uv": -91.1999999999998,
+            "latch_1sigma_mv": 0.39750164511231234,
+            "preamp_1sigma_mv": 0.9481372364975271,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.1652738814523093,
+            "load_r_1sigma_conservative_mv": 0.4958216443569281,
+            "total_3sigma_cited_coefficient_mv": 3.0902747682063496
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.8068732839
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 113.80134709,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 886.19865291,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 1.033578,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.4664219999999999,
+          "status": "pass",
+          "within_stretch": false
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 6.504919,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -1.5049190000000001,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 84.774195,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 915.225805,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "sf_125c_3.30v",
+      "process": "sf",
+      "temp_c": 125.0,
+      "vdd": 3.3,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.4211695150860977,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.578830484913903,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 3.082671464817489,
+            "mean_offset_uv": -86.3999999999998,
+            "latch_1sigma_mv": 0.4373891292964697,
+            "preamp_1sigma_mv": 0.9480241075955956,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.16486198833256996,
+            "load_r_1sigma_conservative_mv": 0.49458596499770985,
+            "total_3sigma_cited_coefficient_mv": 3.1220952318551594
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.8068818142
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 115.38411731,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 884.61588269,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.9184798,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.5815202,
+          "status": "pass",
+          "within_stretch": false
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 7.856665,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -2.8566649999999996,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 92.87566199999999,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 907.124338,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    },
+    {
+      "corner_id": "sf_125c_3.63v",
+      "process": "sf",
+      "temp_c": 125.0,
+      "vdd": 3.63,
+      "status": "fail",
+      "unscored_rows": [
+        "supply_avg_power_uw"
+      ],
+      "measurements": [
+        {
+          "name": "offset_3sigma_mv",
+          "unit": "mV",
+          "value": 3.4802089578678577,
+          "limits": {
+            "max": 15.0
+          },
+          "margin": 11.519791042132143,
+          "status": "pass",
+          "within_stretch": true,
+          "scope": "whole_comparator",
+          "scored_quantity": "vos_3sig_total_cons_mv",
+          "simulated": {
+            "vos_3sig_tran_mv": 3.1488207316390695,
+            "mean_offset_uv": -87.9999999999998,
+            "latch_1sigma_mv": 0.47635507718706877,
+            "preamp_1sigma_mv": 0.9479684662135786,
+            "n_samples": 200
+          },
+          "derived_not_simulated": {
+            "load_r_1sigma_nominal_mv": 0.16468384939678876,
+            "load_r_1sigma_conservative_mv": 0.4940515481903663,
+            "total_3sigma_cited_coefficient_mv": 3.187343554163765
+          },
+          "diagnostic_preamp_only_3sigma_mv": 2.8068717487
+        },
+        {
+          "name": "input_noise_uv_rms",
+          "unit": "uV",
+          "value": 116.50076974,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 883.49923026,
+          "status": "pass",
+          "within_stretch": true
+        },
+        {
+          "name": "decision_time_od50_ns",
+          "unit": "ns",
+          "value": 0.8388506,
+          "limits": {
+            "max": 1.5
+          },
+          "margin": 0.6611494,
+          "status": "pass",
+          "within_stretch": false
+        },
+        {
+          "name": "kickback_1k_peak_mv",
+          "unit": "mV",
+          "value": 9.429093,
+          "limits": {
+            "max": 5.0
+          },
+          "margin": -4.429093,
+          "status": "fail",
+          "within_stretch": false
+        },
+        {
+          "name": "static_power_uw",
+          "unit": "uW",
+          "value": 100.7543889,
+          "limits": {
+            "max": 1000.0
+          },
+          "margin": 899.2456111,
+          "status": "pass",
+          "within_stretch": true,
+          "partial_of": "supply_avg_power_uw"
+        }
+      ]
+    }
+  ]
+}

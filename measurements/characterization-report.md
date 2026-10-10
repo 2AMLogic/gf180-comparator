@@ -125,7 +125,7 @@ schematic, `provenance: schematic`).
 clocks the *whole* comparator through a 64-level, ±5.04 mV input staircase
 (0.16 mV steps), one decision per level. It uses N = 200 mismatch draws per
 PVT point with seed 20260909, the same seed as the DC bench, on a **reduced**
-grid: tt/ss/ff × −40/27/125 °C at 3.3 V. The per-draw trip point is the
+grid for the first record (tt/ss/ff × −40/27/125 °C at 3.3 V); the full grid follows below. The per-draw trip point is the
 midpoint of the one-step bracket. The staircase's quantisation variance,
 step²/12, is subtracted in quadrature (σ_q = 0.046 mV). On the same draw it also
 measures the DC-equivalent preamp offset, so the latch contribution is a
@@ -150,6 +150,28 @@ Across the 9 points:
 - The scored total spans 3.146–**3.725 mV** (worst `ff_125c_3.30v`).
 
 Scored against the ratified row, the total **meets the ≤ 15 mV target and the ≤ 8 mV stretch at 9/9 points.** The ratified bound is unchanged.
+
+*Full 45-point grid (issue #200).* Cited evidence:
+[`sim/comparator-offset-tran/records/20261010-021500046481-d84e59d.md`](../sim/comparator-offset-tran/records/20261010-021500046481-d84e59d.md)
+(fleet jobs `klt-sim-ee7ad68415d2`, `klt-sim-a503009e268a`, `klt-sim-031f74d456a0`; source bundle at
+clean commit `d84e59d`; reproduce with
+`KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py comparator-offset-tran`). Same method,
+seed 20260909 and N = 200, extended to tt/ss/ff/fs/sf × −40/27/125 °C × 2.97/3.30/3.63 V: 45 of 45
+points, 200 valid draws each, no failed unit and no staircase saturation (the mean offset stays within
+±0.13 mV of the ±5.04 mV range).
+
+| 3σ input-referred offset, 45 points | range | binding point |
+|---|---|---|
+| DC bench, preamp only (diagnostic, separate record) | 2.796–2.807 mV | `sf_125c_3.30v` |
+| whole comparator, **simulated** | 2.808–3.515 mV | `ff_125c_3.63v` |
+| **whole comparator + conservative load-R budget (scored)** | **2.994–3.795 mV** | **`ff_125c_3.63v`** |
+
+The latch's paired 1σ is 0.184–0.659 mV (simulated, largest at `ff_125c_3.63v`); the load-R 1σ is
+0.342–0.501 mV at the conservative 3× coefficient (**derived, not simulated**: the PDK models no
+`ppolyf_u_1k` mismatch). **The total meets the ≤ 15 mV target and the ≤ 8 mV stretch at 45/45
+points** (2.1× margin on the stretch at the binding point), so the offset row now rests on the
+whole comparator at every corner rather than on the preamp alone. The ratified bound is unchanged.
+Limitations: schematic DUT, one seed, 5 % sigma precision per point, hand-budgeted resistor term.
 
 ### Input-referred noise — preamplifier `.noise`
 
@@ -312,7 +334,9 @@ Decision table and the same
 [`20260910-124917-4805118`](../sim/comparator-offset-mc/records/20260910-124917-4805118.md)
 record — so this report and `README.md`'s offset-sigma row remain numerically
 consistent by construction (2.80 mV 3σ nominal, 2.796–2.807 mV 3σ across the
-grid, meets both bounds at every corner).
+grid, meets both bounds at every corner). The whole-comparator total (preamp + latch + derived load-R
+budget, 2.994–3.795 mV 3σ over the same 45 points, issue #200) is a separate, additive record; it is the
+value item-5 scoring uses, and the preamp-only record above remains the item-6 yield source.
 
 ## What this report does not claim
 

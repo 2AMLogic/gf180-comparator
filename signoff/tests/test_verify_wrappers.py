@@ -48,6 +48,9 @@ def make_tree(root: Path) -> None:
         rel = f"sim/{bench}/records/{rid}.json"
         (root / rel).parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(REPO_ROOT / rel, root / rel)
+    rel = f"sim/{WRAP5.OFFSET_TRAN_BENCH}/records/{WRAP5.OFFSET_TRAN_RECORD_ID}.json"  # #200
+    (root / rel).parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(REPO_ROOT / rel, root / rel)
     for rel in (WRAP5.output_path(), WRAP5.predecessor_path()):
         rel = rel.relative_to(REPO_ROOT)
         (root / rel).parent.mkdir(parents=True, exist_ok=True)
