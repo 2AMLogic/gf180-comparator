@@ -89,6 +89,7 @@ step integrator  "Verify integrator manifest (maturity, paths, ports, area)" 0 "
 step regrade     "Re-grade the manifest and verify the committed pins" 1 "$PY signoff/verify-report.py"
 step item5       "Item-5 corner-matrix wrapper freshness check"      0 "$PY signoff/make_item5_envelope.py --check"
 step routing-tbl "Layout README routing table freshness check"      0 "$PY layout/routing_table.py --check"
+step bench-inventory "sim bench inventory vs characterize.sh coverage" 0 "$PY scripts/check_bench_inventory.py"
 step unit-tests  "Unit tests: design/tests, signoff/tests, manifests, layout/tests" 0 'run_test_dirs'
 # ---- END STEPS --------------------------------------------------------------
 

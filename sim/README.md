@@ -3,7 +3,7 @@
 xschem + ngspice testbenches and **append-only** results for
 `gf180-comparator`, on the gf180mcu 3.3 V rail.
 
-Four experiments, one per first-class row of
+Four corner-grid experiments (run by `characterize.sh`), one per first-class row of
 [`README.md`'s target specification](../README.md#target-specification-ratified-via-dr-0002):
 
 | experiment | row it backs | method |
