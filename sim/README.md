@@ -28,7 +28,10 @@ A supplemental, unscored bench, [`comparator-offset-cm-window/`](comparator-offs
 ±100 mV common-mode window. It is a **feasibility stage with no record**. Its
 fleet path is refused with `UNSUPPORTED_EXECUTOR_CAPABILITY`, because the fleet
 runner (klt 0.5.0) cannot address a nested sweep's points. Full 45-point
-coverage is pending.
+coverage is pending. Its monotonic-index variant,
+[`comparator-offset-cm-index/`](comparator-offset-cm-index/) (issue #218), is
+executable on the 0.5.0 runner (nominal fleet probe done); the 45-point campaign
+and its record are still pending, so measured coverage remains none.
 
 Metastability and kickback are first-class rows here, not appendices, per
 [`CLAUDE.md`](../CLAUDE.md).

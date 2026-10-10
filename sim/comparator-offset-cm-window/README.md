@@ -63,7 +63,8 @@ produced:
    `sim/tools/mk_klt_request.py` with that report as the cited source. Run a
    small nominal probe first. After that, add the record path and the 45-point
    campaign.
-2. **Alternative, needs its own review.** Redesign the stimulus as one
+2. **Alternative (implemented as a separate bench in
+   [`comparator-offset-cm-index/`](../comparator-offset-cm-index/), issue #218).** Redesign the stimulus as one
    *monotonic* six-step index sweep: one source driving both `vd` and `vcmd`
    through behavioural sources. Then 0.5.0's `.meas dc … at=<k>` names each
    point unambiguously. This changes the stimulus form, so it was not done here.
