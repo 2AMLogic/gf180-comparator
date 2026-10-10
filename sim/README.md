@@ -337,3 +337,40 @@ With no `--base`, if `origin/main` is missing, equals `HEAD`, or shares no
 history with it, the check prints `SKIP (local-only)` and exits 0. A `--base`
 or `--head` that does not resolve fails (exit 2). The check compares committed
 trees, so commit your changes before running it.
+
+## Evidence size budget
+
+Protected evidence is append-only, so every committed byte is permanent and is
+paid for by every clone. `signoff/check_sim_size_budget.py` (issue
+[#246](https://github.com/2AMLogic/gf180-comparator/issues/246)) is the
+`sim-size` step of `scripts/run-pdk-free-tests.sh`. It lists the ten largest
+tracked `sim/**` files and applies a per-file budget to protected paths (the
+table above):
+
+| Size of one protected file | Result |
+|----------------------------|--------|
+| up to 5 MiB | fine |
+| over 5 MiB, up to 25 MiB | `WARN` (listed, exit 0) |
+| over 25 MiB | `FAIL` unless allowlisted |
+
+**Allowlist.** `signoff/sim_size_allowlist.json` maps a repo path to a
+non-empty reason. An allowlisted file is exempt from the warning and the
+failure and is printed as `GRANDFATHERED`. An entry with an empty reason, or
+naming a path that is not a tracked protected file, fails the check. The six
+reports above 5 MiB that predate the budget are listed there; none was
+modified, moved or deleted. Add an entry only when the full file is the
+evidence and no slimmer form exists, and say why in the reason.
+
+**What is worth committing in full:** the evidence record and its JSON twin,
+the netlist snapshots, the per-corner logs, and measurement values (the
+per-corner results and Monte-Carlo samples the record cites). **Regenerable
+bulk:** the tool-emitted `coverage` block (limit-key bookkeeping, not
+measurement) and other dumps that a re-run of the committed request
+reproduces. Prefer not to commit the latter in full.
+
+**Proposing a slimmer report form.** Do not change the harness ad hoc. Open a
+decision record from `spec/decision-records/TEMPLATE.md` stating the fields
+kept and dropped, why the record's citations and the JSON-twin readers still
+work, and how the dropped data is regenerated. A tool-side option (for example
+omitting `coverage`) is a generic gap for the `2AMLogic/klayout-tools` tracker
+under the friction protocol.
