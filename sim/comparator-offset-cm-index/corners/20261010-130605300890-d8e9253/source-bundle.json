@@ -1,0 +1,104 @@
+{
+ "schema": "gf180-comparator/klt-source-bundle",
+ "version": 2,
+ "generator": "sim/tools/mk_klt_request.py",
+ "generated_utc": "2026-10-10T11:48:28Z",
+ "bench": "comparator-offset-cm-index",
+ "origin": {
+  "commit": "d8e9253f6a929c92d6485379439c3856f38dfd98",
+  "dirty": false,
+  "dirty_paths": [],
+  "checked_paths": [
+   "design",
+   "sim/tools",
+   "sim/harness",
+   "sim/comparator-offset-cm-index/testbench",
+   "sim/dut.json",
+   "design/comparator.spice"
+  ]
+ },
+ "dut": {
+  "selector": null,
+  "key": "comparator-dr0001",
+  "dut_id": "comparator-dr0001",
+  "provenance": "schematic",
+  "netlist": "design/comparator.spice",
+  "netlist_sha256": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a",
+  "params": {
+   "dut_ib": 1e-05,
+   "dut_vcm": 1.65
+  },
+  "binding_config": "sim/dut.json",
+  "binding_entry_sha256": "77228add0ad0b1b62eda65cfcfd0f79c62b5d289ecd7eb1caa1522de9afb274e",
+  "staged_netlist": "sources/dut/comparator.spice",
+  "staged_binding": "sources/dut-binding.json"
+ },
+ "testbench": {
+  "experiment": "comparator-offset-cm-index",
+  "dir": "sim/comparator-offset-cm-index/testbench",
+  "netlist": "tb_offset_cm_index.spice",
+  "netlist_sha256": "014293424ecff1e2d81bc979e2d9eb5b8e28e346cecc1326be28125f0b5fc344",
+  "manifest_sha256": "8b164b74c2474a98aef743212a7770e73736f65ad4cd98e53b0fcec4b644c59d",
+  "staged_dir": "sources/testbench"
+ },
+ "parameters": {
+  "corners": [
+   "tt",
+   "ff",
+   "ss",
+   "fs",
+   "sf"
+  ],
+  "temperatures_c": [
+   -40.0,
+   27.0,
+   125.0
+  ],
+  "supply_tolerance": 0.1,
+  "supply_v": [
+   2.97,
+   3.3,
+   3.63
+  ],
+  "mc_n": 200
+ },
+ "requests": {
+  "main-v2.97": {
+   "leg": "main",
+   "vdd": 2.97,
+   "request": "request-main-v2.97.json",
+   "request_sha256": "89ab96b2e84f4a567b2584c5a8cb317d614fcb8d119f532993d27673dc96b5e2",
+   "netlist": "body-v2.97.spice",
+   "netlist_sha256": "fe52ca36715a3c7ae29c06e9dc1d97d4a2a1c89b21345e5403354c79fde76870"
+  },
+  "main-v3.30": {
+   "leg": "main",
+   "vdd": 3.3,
+   "request": "request-main-v3.30.json",
+   "request_sha256": "5831fecd2f125f0768cb6a803298a4cadf69bbc36208604b52e778ebfba71cac",
+   "netlist": "body-v3.30.spice",
+   "netlist_sha256": "6fc5854d435026474e8e72517b216db300418f70574d62a0967b7217ff2c2121"
+  },
+  "main-v3.63": {
+   "leg": "main",
+   "vdd": 3.63,
+   "request": "request-main-v3.63.json",
+   "request_sha256": "14430c78744f4e7998a9cff2ff61b5b0a38eeafdc9c0918234450d8e8c963005",
+   "netlist": "body-v3.63.spice",
+   "netlist_sha256": "bc79a67faddcd2801a3e8102d7591035156e4cf268e5f56851512d9e74ae5416"
+  }
+ },
+ "staged": {
+  "body-v2.97.spice": "fe52ca36715a3c7ae29c06e9dc1d97d4a2a1c89b21345e5403354c79fde76870",
+  "body-v3.30.spice": "6fc5854d435026474e8e72517b216db300418f70574d62a0967b7217ff2c2121",
+  "body-v3.63.spice": "bc79a67faddcd2801a3e8102d7591035156e4cf268e5f56851512d9e74ae5416",
+  "design.ngspice": "091cb530bf85160a1f07878fb81f789ca367d018991c8ab41a584cd1a85c6692",
+  "request-main-v2.97.json": "89ab96b2e84f4a567b2584c5a8cb317d614fcb8d119f532993d27673dc96b5e2",
+  "request-main-v3.30.json": "5831fecd2f125f0768cb6a803298a4cadf69bbc36208604b52e778ebfba71cac",
+  "request-main-v3.63.json": "14430c78744f4e7998a9cff2ff61b5b0a38eeafdc9c0918234450d8e8c963005",
+  "sources/dut/comparator.spice": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a",
+  "sources/dut-binding.json": "9ed024b2e635e241570e47b0e48c2fbe8719c0c4dbd38c92b7e97c1b06e49701",
+  "sources/testbench/tb.json": "8b164b74c2474a98aef743212a7770e73736f65ad4cd98e53b0fcec4b644c59d",
+  "sources/testbench/tb_offset_cm_index.spice": "014293424ecff1e2d81bc979e2d9eb5b8e28e346cecc1326be28125f0b5fc344"
+ }
+}

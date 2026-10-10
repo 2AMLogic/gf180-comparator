@@ -242,5 +242,17 @@ class IndexIngest(unittest.TestCase):
         self.assertIn("SEPARATE_REQUEST_PAIRING", str(cm.exception))
 
 
+class MintPath(unittest.TestCase):
+    def test_mint_requires_source_bundle_not_pending_refusal(self):
+        import argparse
+        with tempfile.TemporaryDirectory() as d:
+            a = argparse.Namespace(bench=mk.CM_INDEX_BENCH, work=None, from_report=d, mc_n=200,
+                                   dut=None, label="")
+            with self.assertRaises(SystemExit) as cm:
+                kr.mint_cm_index(a)
+        self.assertIn("LEGACY_WORKDIR_UNBOUND", str(cm.exception))
+        self.assertNotIn("RECORD_PATH_PENDING", str(cm.exception))
+
+
 if __name__ == "__main__":
     unittest.main()

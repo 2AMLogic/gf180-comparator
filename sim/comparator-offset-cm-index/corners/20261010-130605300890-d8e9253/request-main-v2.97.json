@@ -1,0 +1,167 @@
+{
+  "netlist": "body-v2.97.spice",
+  "engine": "ngspice",
+  "models": {
+    "pdk": "gf180mcuD",
+    "lib": "libs.tech/ngspice/sm141064.ngspice"
+  },
+  "corners": {
+    "process": [
+      {
+        "name": "tt",
+        "sections": [
+          "typical",
+          "res_typical",
+          "bjt_typical",
+          "diode_typical",
+          "moscap_typical",
+          "mimcap_typical"
+        ]
+      },
+      {
+        "name": "ff",
+        "sections": [
+          "ff",
+          "res_ff",
+          "bjt_ff",
+          "diode_ff",
+          "moscap_ff",
+          "mimcap_ff"
+        ]
+      },
+      {
+        "name": "ss",
+        "sections": [
+          "ss",
+          "res_ss",
+          "bjt_ss",
+          "diode_ss",
+          "moscap_ss",
+          "mimcap_ss"
+        ]
+      },
+      {
+        "name": "fs",
+        "sections": [
+          "fs",
+          "res_typical",
+          "bjt_typical",
+          "diode_typical",
+          "moscap_typical",
+          "mimcap_typical"
+        ]
+      },
+      {
+        "name": "sf",
+        "sections": [
+          "sf",
+          "res_typical",
+          "bjt_typical",
+          "diode_typical",
+          "moscap_typical",
+          "mimcap_typical"
+        ]
+      }
+    ],
+    "temperature_c": [
+      -40.0,
+      27.0,
+      125.0
+    ]
+  },
+  "batch": {
+    "runner_version_check": "warn",
+    "capacity_wait_s": 1800
+  },
+  "analysis": {
+    "kind": "dc",
+    "args": "vidx 0 5 1"
+  },
+  "measurements": [
+    {
+      "name": "dv_dn_0",
+      "spice": ".meas dc dv_dn_0 find v(dd) at=0"
+    },
+    {
+      "name": "xcm_dn_0",
+      "spice": ".meas dc xcm_dn_0 find v(xcm) at=0"
+    },
+    {
+      "name": "xvd_dn_0",
+      "spice": ".meas dc xvd_dn_0 find v(vd) at=0"
+    },
+    {
+      "name": "dv_dn_2m",
+      "spice": ".meas dc dv_dn_2m find v(dd) at=1"
+    },
+    {
+      "name": "xcm_dn_2m",
+      "spice": ".meas dc xcm_dn_2m find v(xcm) at=1"
+    },
+    {
+      "name": "xvd_dn_2m",
+      "spice": ".meas dc xvd_dn_2m find v(vd) at=1"
+    },
+    {
+      "name": "dv_mid_0",
+      "spice": ".meas dc dv_mid_0 find v(dd) at=2"
+    },
+    {
+      "name": "xcm_mid_0",
+      "spice": ".meas dc xcm_mid_0 find v(xcm) at=2"
+    },
+    {
+      "name": "xvd_mid_0",
+      "spice": ".meas dc xvd_mid_0 find v(vd) at=2"
+    },
+    {
+      "name": "dv_mid_2m",
+      "spice": ".meas dc dv_mid_2m find v(dd) at=3"
+    },
+    {
+      "name": "xcm_mid_2m",
+      "spice": ".meas dc xcm_mid_2m find v(xcm) at=3"
+    },
+    {
+      "name": "xvd_mid_2m",
+      "spice": ".meas dc xvd_mid_2m find v(vd) at=3"
+    },
+    {
+      "name": "dv_up_0",
+      "spice": ".meas dc dv_up_0 find v(dd) at=4"
+    },
+    {
+      "name": "xcm_up_0",
+      "spice": ".meas dc xcm_up_0 find v(xcm) at=4"
+    },
+    {
+      "name": "xvd_up_0",
+      "spice": ".meas dc xvd_up_0 find v(vd) at=4"
+    },
+    {
+      "name": "dv_up_2m",
+      "spice": ".meas dc dv_up_2m find v(dd) at=5"
+    },
+    {
+      "name": "xcm_up_2m",
+      "spice": ".meas dc xcm_up_2m find v(xcm) at=5"
+    },
+    {
+      "name": "xvd_up_2m",
+      "spice": ".meas dc xvd_up_2m find v(vd) at=5"
+    }
+  ],
+  "options": {
+    "timeout_s": 3000,
+    "keep_artifacts": true,
+    "ngspice_init": [
+      "set measureprec=12",
+      "set numdgt=12"
+    ]
+  },
+  "monte_carlo": {
+    "n": 200,
+    "seed": 20260909,
+    "vary": "mismatch"
+  }
+}

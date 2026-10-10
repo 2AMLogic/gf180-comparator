@@ -60,8 +60,8 @@ and a documented way to reproduce it — see [`sim/`](sim/). `sim/` holds eight 
 `comparator-kickback`) that `characterize.sh` runs, the fleet-only
 `comparator-offset-tran` (whole-comparator offset evidence), the
 supplemental, unscored `comparator-offset-cm-window` (no record yet) and its
-monotonic-index variant `comparator-offset-cm-index` (nominal fleet probe
-only, no record yet), and `comparator-offset-tran-extracted-feasibility`
+monotonic-index variant `comparator-offset-cm-index` (unscored; complete
+45-point record, verdict Unknown), and `comparator-offset-tran-extracted-feasibility`
 (bounded, unscored, fleet-only feasibility probe; no record).
 
 ```bash

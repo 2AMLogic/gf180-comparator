@@ -20,7 +20,7 @@ extracted-layout result.
 | Stimulus bench, request generation, ingest checks | Done (this directory, `sim/tools/mk_klt_request.py`, `sim/tools/klt_record.py`) |
 | PDK-free asymmetric semantics fixture and unit tests | Done (`sim/harness/tests/test_cm_index_semantics.py`) |
 | Bounded nominal fleet probe | **Done, executor supports the stimulus** ([`probes/20261010-nominal-fleet-probe/`](probes/20261010-nominal-fleet-probe/)) |
-| 45-point PVT x N=200 campaign and append-only record | **Pending. Measured coverage: none.** `klt_record.py` refuses this bench with `RECORD_PATH_PENDING` until a record-minting path exists. |
+| 45-point PVT x N=200 campaign and append-only record | **Done: 45 of 45 points, 200 of 200 draws each** ([`records/20261010-130605300890-d8e9253.md`](records/20261010-130605300890-d8e9253.md)). Unscored; verdict stays Unknown. |
 
 ## Stimulus
 
@@ -85,9 +85,55 @@ report are under `probes/20261010-nominal-fleet-probe/`. Ingest via
 `collect_cm_index` accepted it with no issues. With three draws no statistic
 here characterizes the window; the per-point outputs are plumbing only.
 
+## Full-grid record (measured coverage: complete, 45 of 45 points)
+
+Record [`20261010-130605300890-d8e9253`](records/20261010-130605300890-d8e9253.md) (JSON beside it), minted by
+`python3 sim/tools/klt_record.py comparator-offset-cm-index` at clean commit
+`d8e9253` (`mint_cm_index`: scoring-free, append-only). Three requests, one per
+supply (2.97 / 3.30 / 3.63 V), each 5 processes x 3 temperatures x 200 draws =
+3000 units; `monte_carlo {n: 200, seed: 20260909, vary: mismatch}`. Every
+point returned 200 of 200 draws, all 18 finite values per draw, coordinate
+read-backs within 1 uV, identity by `monte_carlo.sample_index`. Fleet jobs
+`klt-sim-2abdda80958b` (2.97 V), `klt-sim-bfc397ed478e` (3.30 V),
+`klt-sim-b86615e15b95` (3.63 V); executor `aws-batch-fleet` spot `c7i.4xlarge`,
+runner klt 0.5.0 (client 0.7.0, warn-mode `mismatch`, harmless: no `expr`).
+DUT `comparator-dr0001` (`design/comparator.spice`, sha256 `0df618e7...`),
+source bundle and request/report/body files are under `corners/20261010-130605300890-d8e9253/`.
+
+What it shows (schematic preamp DC, `dut_vcm` = 1.65 V, window 1.55/1.65/1.75 V):
+
+| quantity (over all 45 points) | range |
+|---|---|
+| midpoint offset sigma `sig_vos_mid_mv` | 0.895 .. 1.043 mV |
+| endpoint-minus-midpoint offset change, mean (`mean_dvos_dn_uv`, `mean_dvos_up_uv`) | -0.24 .. +0.21 uV |
+| endpoint-minus-midpoint offset change, sigma (`sig_dvos_dn_uv`, `sig_dvos_up_uv`) | 0.26 .. 1.13 uV |
+| gain at 1.55 / 1.65 / 1.75 V (`av_dn/mid/up_mean`) | 11.5 .. 26.5 V/V, rising 0.03-0.29 % per +100 mV |
+| gain spread `av_sigma_pct` | 0.40 .. 0.72 % |
+
+Limitations, stated plainly:
+
+- **Unscored.** No ratified bound exists for common-mode offset change or
+  rejection, so the consumer's rejection verdict stays **Unknown**. No CMRR
+  figure is defined or claimed.
+- **Resolution.** The offset changes are sub-microvolt to ~1 uV, against a ~1 mV
+  midpoint sigma. They come from differences of two 12-digit `.meas` reads of
+  ~1 uV deltas on a dc solve, so solver tolerance may be a visible fraction of
+  them. The 125 C points show larger sigmas and means that change sign between
+  supplies (for example `tt_125c`); read those as noise-floor, not as a trend.
+  The result is that the preamp's *systematic* offset shift across the window is
+  at most of order a microvolt, small beside its random offset; it is not a
+  precision measurement of that shift.
+- **Scope.** Schematic preamp DC characterization only. Not whole-comparator
+  transient, not extracted-layout, no load-resistor mismatch (the PDK models none).
+- **Draws shared across supplies.** All three requests use seed 20260909, so
+  draw `mcN` is the same random sequence at each supply; the 45 points are not
+  independent samples. Pairing inside a draw is by single report/analysis, never
+  by seed.
+- **Operational.** The first dispatch was lost client-side (the foreground
+  wrapper timed out and killed the clients for 2.97 V and 3.30 V; their fleet jobs
+  were orphaned, never ingested). A re-submit then hit
+  `BATCH_MAX_CONCURRENT_INSTANCES=8` ("11 instance(s) already running") and was
+  retried until accepted; neither case fell back to local simulation.
+
 **Conclusion.** The selected executor supports this stimulus and returns all
-ingredients. The full campaign was **not** dispatched in this change because it
-needs a record-minting path (scoring-free record writer, completeness gate over
-all 45 points) that is not written yet. Until a complete append-only record
-exists, **measured coverage of the window is none** and the 45-point claim must
-not be made.
+ingredients. The full campaign was dispatched after the record-minting path (`mint_cm_index`) was added; see the section above.
