@@ -26,7 +26,7 @@ export PYTHONWARNINGS="error::ResourceWarning"
 # Directories whose test files are run one by one as scripts (each is a
 # stdlib unittest / self-checking script). sim/harness/tests is run through
 # `unittest discover` instead (see the `harness` step).
-TEST_DIRS=(design/tests signoff/tests manifests layout/tests)
+TEST_DIRS=(design/tests signoff/tests manifests layout/tests scripts/tests)
 UNITTEST_DIRS=(sim/harness/tests)
 
 have_klt() {
