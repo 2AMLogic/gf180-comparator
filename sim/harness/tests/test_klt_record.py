@@ -21,6 +21,7 @@ import tempfile
 import types
 import unittest
 from contextlib import redirect_stdout
+from datetime import datetime
 from pathlib import Path
 from unittest import mock
 
@@ -1132,6 +1133,106 @@ class MainCoverageGate(unittest.TestCase):
         self.assertIsInstance(rc, str)
         self.assertIn("EMPTY_RESULT", rc)
         self.assertIsNone(rec)
+
+
+class _FrozenClock:
+    """`datetime` stand-in for klt_record: every record id gets the same stamp."""
+
+    @staticmethod
+    def now(tz=None):
+        return datetime(2026, 1, 2, 3, 4, 5, 6, tzinfo=tz)
+
+
+def _cm_index_work(td: Path, n: int = 2) -> Path:
+    """A generated common-mode index request set with clean synthetic reports:
+    every requested draw carries all 18 values, coordinates read back exactly."""
+    work = _generate(td, "--mc-n", str(n), bench=mk.CM_INDEX_BENCH)
+    b = _bundle(work)
+    vals = []
+    for i, (label, (vcmd, vd, _)) in enumerate(mk.CM_WINDOW_POINTS.items()):
+        dv = 1e-4 * (i // 2 + 1) + (50e-3 if vd else 0.0)
+        vals += [{"name": f"dv_{label}", "value": dv}, {"name": f"xcm_{label}", "value": vcmd},
+                 {"name": f"xvd_{label}", "value": vd}]
+    for name, r in b["requests"].items():
+        req = json.loads((work / r["request"]).read_text())
+        corners = [{"corner_id": f"{p['name']}/{t:g}C/mc{i}", "status": "pass",
+                    "monte_carlo": {"sample_index": i},
+                    "measurements": [dict(v, value=v["value"] * (1 + 0.1 * i)) if v["name"].startswith("dv_")
+                                     else dict(v) for v in vals]}
+                   for p in req["corners"]["process"] for t in req["corners"]["temperature_c"] for i in range(n)]
+        env = _link_env(work, b, r)
+        env["monte_carlo"] = dict(req["monte_carlo"])
+        env["remote"] = {"runner_klt_version": "0.5.0", "runner_compatibility": "match"}
+        (work / f"report-{name}.json").write_text(json.dumps(
+            {"corners": corners, "measurements": [{"name": m["name"]} for m in req["measurements"]],
+             "environment": env}))
+    return work
+
+
+class CmIndexReplay(unittest.TestCase):
+    """Issue #254: a successful common-mode replay through `mint_cm_index`,
+    sharing the archive/provenance helpers with the scored path."""
+
+    def test_clean_replay_is_complete_unscored_reference(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work = _cm_index_work(td)
+            rc, rec, _ = _ingest(td, work, bench=mk.CM_INDEX_BENCH)
+            self.assertEqual(rc, 0)
+            self.assertTrue(rec["complete"] and rec["citable"] and rec["reference"] and rec["full_coverage"])
+            self.assertEqual((rec["scored"], rec["verdict"]), (False, "Unknown"))
+            self.assertNotIn("spec_row", rec)
+            self.assertEqual(rec["not_citable_reasons"], [])
+            self.assertEqual(rec["points"], rec["expected_points"])
+            exp = td / "evidence" / mk.CM_INDEX_BENCH
+            cdir = exp / "corners" / rec["record_id"]
+            b = _bundle(work)
+            want = {mk.BUNDLE_NAME, "design.ngspice", mk.SOURCES_DIR} | \
+                {f"body-v{r['vdd']:.2f}.spice" for r in b["requests"].values()} | \
+                {f"{k}-{n}.json" for n in b["requests"] for k in ("request", "report")}
+            self.assertEqual({p.name for p in cdir.iterdir()}, want)
+            self.assertEqual(rec["source_bundle"]["sha256"], _sha(cdir / mk.BUNDLE_NAME))
+            snap = (exp / "netlist-snapshots" / f"{rec['record_id']}.spice").read_text()
+            self.assertIn("\n* ---- testbench fragment ----\n", snap)
+            self.assertEqual(list(rec)[:9], ["record_id", "bench", "commit", "dirty", "citable",
+                                             "not_citable_reasons", "dut", "testbench", "source_bundle"])
+            self.assertEqual(list(rec)[9:12], ["executor", "monte_carlo", "ingest"])
+
+    def test_dirty_tools_replay_is_not_citable(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            rc, rec, _ = _ingest(td, _cm_index_work(td), bench=mk.CM_INDEX_BENCH, ingest_dirty=True)
+            self.assertEqual(rc, 0)
+            self.assertFalse(rec["citable"] or rec["reference"])
+            self.assertEqual(rec["not_citable_reasons"],
+                             ["derivation tooling (sim/tools, sim/harness) dirty at ingest commit 1ngest0"])
+
+
+class ExistingRecordRefused(unittest.TestCase):
+    """Both writers create the corner dir exclusively: an existing record id
+    is refused, never overwritten (issue #254 keeps this for both paths)."""
+
+    def _twice(self, bench, work_fn):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work = work_fn(td)
+            with mock.patch.object(kr, "datetime", _FrozenClock):
+                rc, _rec, _ = _ingest(td, work, bench=bench)
+                self.assertIn(rc, (0, 1))
+                before = sorted(p.relative_to(td) for p in (td / "evidence").rglob("*"))
+                with self.assertRaises(FileExistsError):
+                    _ingest(td, work, bench=bench)
+            self.assertEqual(sorted(p.relative_to(td) for p in (td / "evidence").rglob("*")), before)
+
+    def test_scored_path(self):
+        def work_fn(td):
+            work = _generate(td)
+            _write_reports(work)
+            return work
+        self._twice(BENCH, work_fn)
+
+    def test_common_mode_path(self):
+        self._twice(mk.CM_INDEX_BENCH, _cm_index_work)
 
 
 class KickbackBothNodes(unittest.TestCase):

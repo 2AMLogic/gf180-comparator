@@ -980,6 +980,62 @@ def legacy_diagnostic(bench: str, work: Path) -> int:
     return 3
 
 
+def _archive_record(bench: str, work: Path, b: dict, tb, vdds, names: dict, unverified: list[str]) -> dict:
+    """Record identity, citability and the append-only archive, shared by both
+    record writers (issue #254). Call only once a nonempty result is derived and
+    every verification has passed. The corner dir is created exclusively (an
+    existing record id raises); it receives the bundle, design include, bodies,
+    requests, reports and staged-source tree, plus the netlist snapshot."""
+    origin = b["origin"]
+    ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S%f")
+    ingest_sha, tools_dirty = git_state()
+    noncite = []
+    if origin["dirty"]:
+        noncite.append(f"sources uncommitted at request generation: {', '.join(origin['dirty_paths'])}")
+    noncite += [f"origin unverifiable: {u}" for u in unverified]
+    if tools_dirty:
+        noncite.append(f"derivation tooling (sim/tools, sim/harness) dirty at ingest commit {ingest_sha}")
+    sha = origin["commit"][:7]
+    r = {"rid": f"{ts}-{sha}", "sha": sha, "exp": SIM / bench, "bundle_sha": mk.sha256_file(work / mk.BUNDLE_NAME),
+         "ingest_sha": ingest_sha, "tools_dirty": tools_dirty, "noncite": noncite,
+         "citable": not noncite}  # == not (origin dirty or origin unverified or tooling dirty)
+    for sub in ("records", "corners", "netlist-snapshots"):
+        (r["exp"] / sub).mkdir(exist_ok=True)
+    cdir = r["exp"] / "corners" / r["rid"]
+    cdir.mkdir()  # exclusive: raises if the id exists
+    for f in [mk.BUNDLE_NAME, "design.ngspice"] + [f"body-v{v:.2f}.spice" for v in vdds] \
+            + [f"request-{n}.json" for n in names] + [f"report-{n}.json" for n in names]:
+        shutil.copy2(work / f, cdir / f)
+    shutil.copytree(work / mk.SOURCES_DIR, cdir / mk.SOURCES_DIR)
+    snap = r["exp"] / "netlist-snapshots" / f"{r['rid']}.spice"
+    snap.write_text(_staged_path(work, b["dut"]["staged_netlist"]).read_text()
+                    + "\n* ---- testbench fragment ----\n" + tb.netlist.read_text())
+    return r
+
+
+def _provenance(r: dict, bench: str, b: dict, drift: list[str], link_notes: list[str]) -> dict:
+    """The record JSON fields common to both writers (identity, DUT, testbench,
+    source bundle, ingest); each caller composes its own fields around them."""
+    d, t, origin = b["dut"], b["testbench"], b["origin"]
+    return {
+        "record_id": r["rid"], "bench": bench, "commit": r["sha"], "dirty": bool(origin["dirty"]),
+        "citable": r["citable"], "not_citable_reasons": r["noncite"],
+        "dut": {
+            "dut_id": d["dut_id"], "dut_provenance": d["provenance"], "dut_netlist": d["netlist"],
+            "dut_netlist_sha256": d["netlist_sha256"], "dut_params": d["params"],
+            "dut_selector": d.get("selector"), "dut_binding_config": d["binding_config"],
+            "dut_binding_entry_sha256": d["binding_entry_sha256"],
+        },
+        "testbench": {"dir": t["dir"], "netlist": t["netlist"], "netlist_sha256": t["netlist_sha256"],
+                      "manifest_sha256": t["manifest_sha256"]},
+        "source_bundle": {"file": f"corners/{r['rid']}/{mk.BUNDLE_NAME}", "sha256": r["bundle_sha"],
+                          "schema": b["schema"], "version": b["version"],
+                          "origin_commit": origin["commit"], "origin_dirty_paths": origin["dirty_paths"]},
+        "ingest": {"commit": r["ingest_sha"], "tools_dirty": r["tools_dirty"], "source_drift": drift,
+                   "linkage_notes": link_notes},
+    }
+
+
 def mint_cm_index(a) -> int:
     """Issue #218: append-only record for the monotonic-index common-mode
     bench. UNSCORED: no ratified bound exists, so there is no target/stretch
@@ -995,7 +1051,7 @@ def mint_cm_index(a) -> int:
                                "--mc-n", str(a.mc_n)] + (["--dut", a.dut] if a.dut else []))
     b = load_bundle(work, bench)
     check_dut_selection(b, a.dut)
-    d, t, origin = b["dut"], b["testbench"], b["origin"]
+    d, t = b["dut"], b["testbench"]
     tb = htb.load(_staged_path(work, t["staged_dir"]))
     vdds = hc.supply_points(tb.nominal_supply_v, tb.supply_tolerance)
     names = {f"main-v{v:.2f}": ("main", v) for v in vdds}
@@ -1026,33 +1082,13 @@ def mint_cm_index(a) -> int:
     if not derived:
         print("\n".join(["no complete PVT point: nothing derived, no record written"] + problems[:60]), file=sys.stderr)
         raise SystemExit(f"EMPTY_RESULT: {bench} produced no complete PVT point; refusing to publish a record")
-    ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S%f")
-    sha = origin["commit"][:7]
-    ingest_sha, tools_dirty = git_state()
-    citable = not origin["dirty"] and not unverified and not tools_dirty
-    bundle_sha = mk.sha256_file(work / mk.BUNDLE_NAME)
-    rid = f"{ts}-{sha}"
-    exp = SIM / bench
-    for sub in ("records", "corners", "netlist-snapshots"):
-        (exp / sub).mkdir(exist_ok=True)
-    cdir = exp / "corners" / rid
-    cdir.mkdir()
-    for f in [mk.BUNDLE_NAME, "design.ngspice"] + [f"body-v{v:.2f}.spice" for v in vdds] \
-            + [f"request-{n}.json" for n in names] + [f"report-{n}.json" for n in names]:
-        shutil.copy2(work / f, cdir / f)
-    shutil.copytree(work / mk.SOURCES_DIR, cdir / mk.SOURCES_DIR)
-    snap = exp / "netlist-snapshots" / f"{rid}.spice"
-    snap.write_text(_staged_path(work, d["staged_netlist"]).read_text() + "\n* ---- testbench fragment ----\n" + tb.netlist.read_text())
-    noncite = []
-    if origin["dirty"]:
-        noncite.append(f"sources uncommitted at request generation: {', '.join(origin['dirty_paths'])}")
-    noncite += [f"origin unverifiable: {u}" for u in unverified]
-    if tools_dirty:
-        noncite.append(f"derivation tooling (sim/tools, sim/harness) dirty at ingest commit {ingest_sha}")
+    r = _archive_record(bench, work, b, tb, vdds, names, unverified)
+    rid, sha, exp, bundle_sha, ingest_sha, citable, noncite = (
+        r[k] for k in ("rid", "sha", "exp", "bundle_sha", "ingest_sha", "citable", "noncite"))
     reference = complete and citable
     full = reference
-    rem = [r["environment"].get("remote") for r in reports.values()]
-    ng = sorted({str(r["environment"].get("engine_version")) for r in reports.values()})
+    rem = [rep["environment"].get("remote") for rep in reports.values()]
+    ng = sorted({str(rep["environment"].get("engine_version")) for rep in reports.values()})
     mc = next(iter(reports.values()))["environment"].get("monte_carlo", {})
     draws = {cid: d_["n_samples"] for cid, d_ in derived.items()}
     cols = list(next(iter(derived.values())).keys())
@@ -1092,24 +1128,13 @@ def mint_cm_index(a) -> int:
         "",
     ]
     (exp / "records" / f"{rid}.md").write_text("\n".join(lines))
+    meta = _provenance(r, bench, b, drift, link_notes)
+    ingest = meta.pop("ingest")  # this schema places executor/monte_carlo before ingest
     (exp / "records" / f"{rid}.json").write_text(json.dumps({
-        "record_id": rid, "bench": bench, "commit": sha, "dirty": bool(origin["dirty"]),
-        "citable": citable, "not_citable_reasons": noncite,
-        "dut": {
-            "dut_id": d["dut_id"], "dut_provenance": d["provenance"], "dut_netlist": d["netlist"],
-            "dut_netlist_sha256": d["netlist_sha256"], "dut_params": d["params"],
-            "dut_selector": d.get("selector"), "dut_binding_config": d["binding_config"],
-            "dut_binding_entry_sha256": d["binding_entry_sha256"],
-        },
-        "testbench": {"dir": t["dir"], "netlist": t["netlist"], "netlist_sha256": t["netlist_sha256"],
-                      "manifest_sha256": t["manifest_sha256"]},
-        "source_bundle": {"file": f"corners/{rid}/{mk.BUNDLE_NAME}", "sha256": bundle_sha,
-                          "schema": b["schema"], "version": b["version"],
-                          "origin_commit": origin["commit"], "origin_dirty_paths": origin["dirty_paths"]},
+        **meta,
         "executor": {"remote": rem, "engine_versions": ng, "backend": os.environ.get("KLT_SIM_BACKEND", "?")},
         "monte_carlo": {"n": mc.get("n"), "seed": mc.get("seed"), "vary": mc.get("vary"), "draws_per_point": draws},
-        "ingest": {"commit": ingest_sha, "tools_dirty": tools_dirty, "source_drift": drift,
-                   "linkage_notes": link_notes},
+        "ingest": ingest,
         "scored": False, "verdict": "Unknown",
         "complete": complete, "outcome": "complete" if complete else "incomplete", "expected_points": expected,
         "full_coverage": full, "reference": reference, "points": len(derived), "problems": problems,
@@ -1155,7 +1180,7 @@ def main() -> int:
     # time -- not from today's checkout (issue #151).
     b = load_bundle(work, a.bench)
     check_dut_selection(b, a.dut)
-    d, t, origin = b["dut"], b["testbench"], b["origin"]
+    d, t = b["dut"], b["testbench"]
     tb = htb.load(_staged_path(work, t["staged_dir"]))  # originating manifest + `measure`
     vdds = hc.supply_points(tb.nominal_supply_v, tb.supply_tolerance)
     names = {f"{leg}-v{v:.2f}": (leg, v) for leg in LEGS[a.bench] for v in vdds}
@@ -1184,31 +1209,12 @@ def main() -> int:
     best_cid = min(vals, key=vals.get)
     n_t = sum(v <= tgt for v in vals.values())
     n_s = sum(v <= stretch for v in vals.values())
-    ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S%f")
-    sha = origin["commit"][:7]
-    ingest_sha, tools_dirty = git_state()
-    citable = not origin["dirty"] and not unverified and not tools_dirty
-    bundle_sha = mk.sha256_file(work / mk.BUNDLE_NAME)
-    rid = f"{ts}-{sha}"
-    exp = SIM / a.bench
-    for sub in ("records", "corners", "netlist-snapshots"):
-        (exp / sub).mkdir(exist_ok=True)
-    cdir = exp / "corners" / rid
-    cdir.mkdir()  # exclusive: raises if the id exists
-    for f in [mk.BUNDLE_NAME, "design.ngspice"] + [f"body-v{v:.2f}.spice" for v in vdds] + [f"request-{n}.json" for n in names] + [f"report-{n}.json" for n in names]:
-        shutil.copy2(work / f, cdir / f)
-    shutil.copytree(work / mk.SOURCES_DIR, cdir / mk.SOURCES_DIR)
-    snap = exp / "netlist-snapshots" / f"{rid}.spice"
-    snap.write_text(_staged_path(work, d["staged_netlist"]).read_text() + "\n* ---- testbench fragment ----\n" + tb.netlist.read_text())
+    r = _archive_record(a.bench, work, b, tb, vdds, names, unverified)
+    rid, sha, exp, bundle_sha, ingest_sha, citable, noncite = (
+        r[k] for k in ("rid", "sha", "exp", "bundle_sha", "ingest_sha", "citable", "noncite"))
 
-    rem = [r["environment"].get("remote") for r in reports.values()]
-    ng = [r["environment"].get("engine_version") for r in reports.values()]
-    noncite = []
-    if origin["dirty"]:
-        noncite.append(f"sources uncommitted at request generation: {', '.join(origin['dirty_paths'])}")
-    noncite += [f"origin unverifiable: {u}" for u in unverified]
-    if tools_dirty:
-        noncite.append(f"derivation tooling (sim/tools, sim/harness) dirty at ingest commit {ingest_sha}")
+    rem = [rep["environment"].get("remote") for rep in reports.values()]
+    ng = [rep["environment"].get("engine_version") for rep in reports.values()]
     # Citable REFERENCE evidence needs BOTH gates: exact PVT/MC coverage
     # (#152, `complete`) and verified source identity (#151, `citable`).
     reference = complete and citable
@@ -1280,21 +1286,7 @@ def main() -> int:
     ]
     (exp / "records" / f"{rid}.md").write_text("\n".join(lines))
     (exp / "records" / f"{rid}.json").write_text(json.dumps({
-        "record_id": rid, "bench": a.bench, "commit": sha, "dirty": bool(origin["dirty"]),
-        "citable": citable, "not_citable_reasons": noncite,
-        "dut": {
-            "dut_id": d["dut_id"], "dut_provenance": d["provenance"], "dut_netlist": d["netlist"],
-            "dut_netlist_sha256": d["netlist_sha256"], "dut_params": d["params"],
-            "dut_selector": d.get("selector"), "dut_binding_config": d["binding_config"],
-            "dut_binding_entry_sha256": d["binding_entry_sha256"],
-        },
-        "testbench": {"dir": t["dir"], "netlist": t["netlist"], "netlist_sha256": t["netlist_sha256"],
-                      "manifest_sha256": t["manifest_sha256"]},
-        "source_bundle": {"file": f"corners/{rid}/{mk.BUNDLE_NAME}", "sha256": bundle_sha,
-                          "schema": b["schema"], "version": b["version"],
-                          "origin_commit": origin["commit"], "origin_dirty_paths": origin["dirty_paths"]},
-        "ingest": {"commit": ingest_sha, "tools_dirty": tools_dirty, "source_drift": drift,
-                   "linkage_notes": link_notes},
+        **_provenance(r, a.bench, b, drift, link_notes),
         "spec_row": {"label": label, "measure": key, "target_max": tgt, "stretch_max": stretch, "unit": unit},
         "complete": complete, "outcome": "complete" if complete else "incomplete", "expected_points": expected,
         "reference": reference,
