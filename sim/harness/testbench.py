@@ -264,7 +264,7 @@ def _validate_checks(checks: dict[str, dict], measure: dict[str, str], path: Pat
                     nonneg=key.endswith("_spread_pct"),
                 )
         _check_pair(vals.get("min"), vals.get("max"),
-                    f"check {name!r}: min", f"max", path)
+                    f"check {name!r}: min", "max", path)
         _check_pair(vals.get("min_spread_pct"), vals.get("max_spread_pct"),
                     f"check {name!r}: min_spread_pct", "max_spread_pct", path)
         by_axis: dict[str, dict[str, float]] = {}
@@ -329,8 +329,19 @@ def load(directory: str | Path) -> Testbench:
                 f"back as {key.lower()!r} and never matches)"
             )
 
-    checks = dict(manifest.get("checks", {}))
+    raw_checks = manifest.get("checks", {})
+    if not isinstance(raw_checks, dict):
+        raise ValueError(
+            f"{manifest_path}: 'checks' must be an object, got {raw_checks!r}"
+            if isinstance(raw_checks, _NonstandardConstant)
+            else f"{manifest_path}: 'checks' must be an object, got {type(raw_checks).__name__}"
+        )
+    checks = dict(raw_checks)
     _validate_checks(checks, measure, manifest_path)
+    # _validate_checks only inspects the bound keys; sweep the rest of the
+    # subtree (e.g. ``description``) so no _NonstandardConstant marker can
+    # escape load() and break json.dumps of tb.checks in the report later.
+    _reject_nonstandard(checks, "checks", manifest_path)
 
     evidence = dict(manifest.get("evidence", {}))
     unknown_evidence = sorted(set(evidence) - set(EVIDENCE_KEYS))

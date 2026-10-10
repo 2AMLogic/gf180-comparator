@@ -171,6 +171,52 @@ class CheckBoundValueTests(_Base):
         with self.assertRaisesRegex(ValueError, "nominal_supply_v.*nonstandard"):
             tb_mod.load(self.dir)
 
+    def test_nonstandard_constant_in_check_description_rejected(self):
+        # Regression: `description` is an allowed check key but not a bound,
+        # so the marker used to slip through into tb.checks and break
+        # json.dumps in report.py after the simulation had already run.
+        for token in ("NaN", "Infinity", "-Infinity"):
+            with self.subTest(token=token):
+                self.write()
+                (self.dir / "tb.json").write_text(
+                    '{"netlist": "frag.spice", "measure": {"m_a": "expr"}, '
+                    f'"checks": {{"m_a": {{"min": 0, "description": {token}}}}}}}'
+                )
+                with self.assertRaisesRegex(
+                    ValueError, r"checks\.m_a\.description.*nonstandard JSON constant"
+                ):
+                    tb_mod.load(self.dir)
+
+    def test_checks_itself_nonstandard_or_not_object(self):
+        for raw, pat in (("NaN", "nonstandard JSON constant NaN"), ("[1]", "list"), ('"x"', "str")):
+            with self.subTest(raw=raw):
+                self.write()
+                (self.dir / "tb.json").write_text(
+                    '{"netlist": "frag.spice", "measure": {"m_a": "expr"}, '
+                    f'"checks": {raw}}}'
+                )
+                with self.assertRaisesRegex(ValueError, rf"tb\.json: 'checks' must be an object.*{pat}"):
+                    tb_mod.load(self.dir)
+
+    def test_no_marker_survives_load(self):
+        tb = self.load_manifest(
+            checks={"m_a": {"min": -1, "max": 2, "description": "ok",
+                            "max_spread_pct_by_axis": {"supply": 1}}}
+        )
+
+        def walk(node):
+            self.assertNotIsInstance(node, tb_mod._NonstandardConstant)
+            if isinstance(node, dict):
+                for v in node.values():
+                    walk(v)
+            elif isinstance(node, (list, tuple)):
+                for v in node:
+                    walk(v)
+
+        for f in tb_mod.Testbench.__dataclass_fields__:
+            walk(getattr(tb, f))
+        json.dumps(tb.checks)
+
     def test_reversed_pairs(self):
         cases = (
             {"min": 2, "max": 1},
