@@ -1,0 +1,16 @@
+{
+  "netlist": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-231/sim/comparator-offset-tran-extracted-feasibility/campaign/20261010/extract/comparator.dut-layout-mm.spice",
+  "id": "comparator-dr0001-layout",
+  "provenance": "extracted",
+  "description": "Post-layout (extracted-netlist) binding of the same DR-0001 comparator: layout/comparator.gds extracted with `klt extract --parasitics` (first-order lumped RC per net plus vertical-overlap coupling), adapted onto the PDK's ngspice simulation primitives and the comparator_dut interface by layout/run_extract_sim.py. The extraction is LVS-matched to design/comparator.spice's comparator_dut per layout/lvs/comparator.lvs.json (issue #22); the device-class-to-primitive mapping is the same correspondence run_lvs.py's DEVICE_GEOMETRY_MAP asserts.",
+  "params": {
+    "dut_ib": 1e-05,
+    "dut_vcm": 1.65
+  },
+  "notes": [
+    "The netlist is regenerated scratch (gitignored): run `python3 layout/run_extract_sim.py` before simulating against this entry (run_corners.py --dut comparator-dr0001-layout). The committed evidence for what it was extracted from is layout/lvs/comparator.extract-rc.json.",
+    "Params are identical to the schematic entry by design: the post-layout delta a record documents must be the layout parasitics' effect, not an operating-point change.",
+    "A flat extraction defines only the whole-comparator subckt -- the two analog-partition benches (comparator-offset-mc, comparator-preamp-noise) are refused against this entry with a message naming the schematic binding.",
+    "First-order lumped RC (one series R + one ground C per net, star-distributed across terminals, plus vertical-overlap coupling caps): no per-segment distributed RC ladders, no lateral coupling except on --critical-net nets (none named here). Per-net values are in the committed extract report."
+  ]
+}

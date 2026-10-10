@@ -1,0 +1,160 @@
+{
+  "schema_version": 3,
+  "netlist": {
+    "path": "sim/comparator-offset-tran-extracted-feasibility/campaign/20261010/body-probe-fs_-40c_2.97v.spice",
+    "scope": "repo"
+  },
+  "status": "pass",
+  "corner_count": 1,
+  "passed": 1,
+  "failed": 0,
+  "errored": 0,
+  "inconclusive": 0,
+  "diagnostic_counts": {
+    "by_code": {},
+    "by_severity": {},
+    "corners_with_diagnostics": 0
+  },
+  "metrics": {
+    "sim__corner__count": 1,
+    "sim__corner__passed_count": 1,
+    "sim__corner__failed_count": 0,
+    "sim__corner__errored_count": 0,
+    "sim__corner__inconclusive_count": 0
+  },
+  "environment": {
+    "engine": "ngspice",
+    "engine_version": "42",
+    "ngspice_binary": "/usr/bin/ngspice",
+    "models_lib": {
+      "path": null,
+      "scope": "external"
+    },
+    "models_lib_sha256": "6edba54d23b38a2c60f8ffdbaa3eb75a7568c615e4820808969bd1121b77b1aa",
+    "netlist_sha256": "1f85cc11625f6440fa8d2809b8fd44dc45bafcd4f5536fcf32e1ad59b76b002e",
+    "netlist_closure": [
+      {
+        "path": "sim/comparator-offset-tran-extracted-feasibility/campaign/20261010/body-probe-fs_-40c_2.97v.spice",
+        "scope": "repo",
+        "sha256": "1f85cc11625f6440fa8d2809b8fd44dc45bafcd4f5536fcf32e1ad59b76b002e"
+      },
+      {
+        "path": "sim/comparator-offset-tran-extracted-feasibility/campaign/20261010/design.ngspice",
+        "scope": "repo",
+        "sha256": "091cb530bf85160a1f07878fb81f789ca367d018991c8ab41a584cd1a85c6692"
+      },
+      {
+        "path": "sim/comparator-offset-tran-extracted-feasibility/campaign/20261010/sources/dut/comparator.dut-layout-mm.spice",
+        "scope": "repo",
+        "sha256": "ab00c5ff7b53bd7141715fc1e1dd3171982dca45e0b245eb4d073f010e6f5997"
+      },
+      {
+        "path": "sim/comparator-offset-tran-extracted-feasibility/campaign/20261010/sources/testbench/tb_trip_probe.spice",
+        "scope": "repo",
+        "sha256": "6ae89e60cdc0904d2ae938e2810d3be61e2c5385170a246d31df82a4365ee245"
+      }
+    ]
+  },
+  "coverage": {
+    "corners_simulated": 1,
+    "measurements_declared": 2,
+    "measurements_with_limits": 0,
+    "unrecognized_limit_keys": [],
+    "schema_version": 1,
+    "known": true,
+    "checked": [
+      "measurement:[0,\"fs/novdd/-40C\",\"t_flip\"]/observation",
+      "measurement:[0,\"fs/novdd/-40C\",\"vos_v\"]/observation"
+    ],
+    "skipped": [],
+    "inapplicable": [
+      {
+        "id": "measurement:[0,\"fs/novdd/-40C\",\"t_flip\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"fs/novdd/-40C\",\"vos_v\"]/limits",
+        "reason": "characterization_without_limits"
+      }
+    ],
+    "unknown": [],
+    "nothing_checked": false,
+    "nothing_checked_reasons": []
+  },
+  "provenance": {
+    "klt_version": "0.7.0+gf03eb675fa81",
+    "klayout_version": "0.30.12",
+    "pdk": {
+      "name": "gf180mcuD",
+      "source": "search root: ~/.volare",
+      "version": "open_pdks c6d73a35f524070e85faff4a6a9eef49553ebc2b"
+    },
+    "deck": {
+      "name": "sm141064.ngspice",
+      "content_hash": "sha256:6edba54d23b38a2c60f8ffdbaa3eb75a7568c615e4820808969bd1121b77b1aa",
+      "released": false
+    },
+    "input": {
+      "content_hash": "sha256:1f85cc11625f6440fa8d2809b8fd44dc45bafcd4f5536fcf32e1ad59b76b002e",
+      "role": "netlist"
+    }
+  },
+  "measurements": [
+    {
+      "name": "t_flip",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "fs/novdd/-40C",
+        "value": 3.58018e-05,
+        "margin": null
+      }
+    },
+    {
+      "name": "vos_v",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "fs/novdd/-40C",
+        "value": -0.004198207,
+        "margin": null
+      }
+    }
+  ],
+  "corners": [
+    {
+      "corner_id": "fs/novdd/-40C",
+      "process": "fs",
+      "supply_v": {},
+      "temperature_c": -40.0,
+      "status": "pass",
+      "runtime_s": 37.295,
+      "measurements": [
+        {
+          "name": "t_flip",
+          "value": 3.58018e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "vos_v",
+          "value": -0.004198207,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-231/sim/comparator-offset-tran-extracted-feasibility/campaign/20261010/out/fs_novdd_n40C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-231/sim/comparator-offset-tran-extracted-feasibility/campaign/20261010/out/fs_novdd_n40C/corner.cir"
+      },
+      "monte_carlo": null
+    }
+  ]
+}
