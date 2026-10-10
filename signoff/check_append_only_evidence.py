@@ -13,7 +13,14 @@ is protected with no edit here):
     sim/<experiment>/corners/**
     sim/<experiment>/netlist-snapshots/**
     sim/<experiment>/yield/**
+    sim/<experiment>/probes/**           (committed feasibility probe artifacts)
     sim/corner-matrix/**/*.json          (item-5 revision envelopes)
+
+Probe artifacts (reports, logs, refusals, and the `sources/` / `extract/`
+copies bundled into a probe) are empirical results exactly as run, so the whole
+subtree is immutable once committed. They stay experimental: protection does not
+make them signoff evidence. Editable testbench/DUT sources live outside
+`probes/`; a correction is a NEW probe identifier.
 
 Everything else is out of scope: testbenches, harness code, experiment
 README files, DUT/configuration sources, mutable `layout/` reports and the
@@ -69,7 +76,7 @@ import sys
 from pathlib import Path
 
 PROG = "check_append_only_evidence"
-FAMILIES = ("records", "corners", "netlist-snapshots", "yield")
+FAMILIES = ("records", "corners", "netlist-snapshots", "yield", "probes")
 CORNER_MATRIX = "corner-matrix"
 SHA_RE = re.compile(r"^(?:[0-9a-f]{40}|[0-9a-f]{64})$")
 ZERO_RE = re.compile(r"^0+$")
