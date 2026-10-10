@@ -3,7 +3,8 @@
 
 `subprocess.run` is mocked: exit 0 (clean) and 3 (violations) both carry a
 JSON payload on stdout; any other exit code is a hard failure that forwards
-stderr and raises SystemExit. `main()` returns 0 only for `status: clean`.
+stderr and raises SystemExit. `main()` returns 0 only for `status: clean`;
+any other status fails closed (klt's own code, or 1 if klt exited 0).
 
     python3 layout/tests/test_run_drc.py
 """
@@ -78,7 +79,6 @@ class MainAndReport(unittest.TestCase):
     def _main(self, code, status):
         with tempfile.TemporaryDirectory() as d, \
                 mock.patch.object(run_drc, "OUTDIR", d), \
-                mock.patch.object(run_drc, "REPORT", str(Path(d) / "r.json")), \
                 mock.patch.object(run_drc, "run_drc",
                                   return_value=(_report(status), code)), \
                 mock.patch.object(run_drc, "write_report") as w, \
@@ -90,8 +90,9 @@ class MainAndReport(unittest.TestCase):
     def test_main_zero_only_when_clean(self):
         self.assertEqual(self._main(0, "clean"), 0)
         self.assertEqual(self._main(3, "violations"), 3)
-        # a non-clean status never maps to 0, even with exit code 0
-        self.assertNotEqual(self._main(0, "violations") or 1, 0)
+        # a non-clean status never maps to 0, even with klt exit code 0
+        self.assertEqual(self._main(0, "violations"), 1)
+        self.assertEqual(self._main(0, "error"), 1)
 
     def test_write_report_deterministic(self):
         rep = {"b": 1, "a": {"z": 2, "y": [3]}}

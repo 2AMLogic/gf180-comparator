@@ -83,6 +83,11 @@ class Classify(unittest.TestCase):
         got = {p["port"]: p["updown"] for p in pins}
         self.assertEqual(got, {"Q1_1_S": "down", "Q2_1_S": "up",
                                "Q1_1_G": "down", "Q2_1_G": "up"})
+        # Q1_1_S / Q2_1_S share x=0: both S/D pins get the escape stub,
+        # the gates keep their own column
+        stubs = {p["port"]: p["stub_um"] for p in pins}
+        self.assertEqual(stubs, {"Q1_1_S": rn.STUB_UM, "Q2_1_S": rn.STUB_UM,
+                                 "Q1_1_G": 0.0, "Q2_1_G": 0.0})
 
     def test_single_row_goes_up(self):
         pins = [_pin("a", "row", "M1_S")]
