@@ -1,0 +1,59 @@
+{
+  "feasibility_only": true,
+  "point": "ff_125c_3.63v",
+  "mints_record": false,
+  "probe": {
+    "probe_unit": "ff/novdd/125C",
+    "trip_mv": -21.53818,
+    "t_flip_s": 1.84618e-05,
+    "centre_mv": -21.54,
+    "centre_resolution_mv": 0.01
+  },
+  "population": {
+    "n_valid_draws": 20,
+    "trip_abs_mean_mv": -21.331999999999997,
+    "sig_trip_mv": 1.328353366641071,
+    "sig_trip_raw_mv": 1.3291561232601687,
+    "trip_abs_min_mv": -23.139999999999997,
+    "trip_abs_max_mv": -18.499999999999996,
+    "trip_levels": [
+      22,
+      51
+    ],
+    "probe_trip_mv": -21.53818,
+    "centre_mv": -21.54,
+    "convention": "trip = differential input at which the decision flips (absolute, centre NOT subtracted); input-referred offset = -trip; sigma is quantisation-corrected population (ddof=0) sigma"
+  },
+  "executor": {
+    "remote": {
+      "provider": "aws-batch-fleet",
+      "job_id": "klt-sim-1002b3587cf6",
+      "bucket": "2am-batch-jobs-221082181346",
+      "region": "us-east-1",
+      "instance_id": "i-091fc22c9f115b748",
+      "instance_type": "c7i.4xlarge",
+      "availability_zone": "us-east-1c",
+      "ami_id": "ami-0e40e3245f1923ac8",
+      "lifecycle": "spot",
+      "spot": true,
+      "state": "done",
+      "exit_code": "0",
+      "concurrency": "1",
+      "physical_cores": "8",
+      "elapsed_seconds": 11,
+      "runner_klt_version": "0.5.0",
+      "client_klt_version": "0.7.0+g8eec069c7576",
+      "runner_compatibility": "mismatch",
+      "runner_compatibility_warning": "the fleet runner ran klt 0.5.0 but the submitting client is 0.7.0+g8eec069c7576; request options the runner does not know may have been ignored -- update the runner image or use a compatible client"
+    },
+    "monte_carlo": {
+      "n": 20,
+      "seed": 20260909,
+      "vary": "mismatch",
+      "family_mismatch": []
+    },
+    "engine_version": "46"
+  },
+  "seed": 20260909,
+  "n": 20
+}

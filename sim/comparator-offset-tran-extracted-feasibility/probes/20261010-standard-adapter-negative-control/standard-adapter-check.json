@@ -1,0 +1,5 @@
+{
+  "feasibility_only": true,
+  "code": "ADAPTED_MOS_BYPASS_MISMATCH",
+  "reason": "27 of 27 MOS cards (M$1, M$2, M$3, M$4...) are bare `M` instances of the PDK .model, not calls of the `nfet_03v3`/`pfet_03v3` subckt: the `delvto='mis_vth*sw_stat_mismatch'` / `mulu0='1-mis_k*sw_stat_mismatch'` mismatch lives only in the subckt body, so sw_stat_mismatch=1 changes NOTHING for these devices"
+}
