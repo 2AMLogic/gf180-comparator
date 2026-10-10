@@ -22,15 +22,15 @@ The additive bench that closes both,
 whole-comparator transient Monte Carlo (preamp + StrongARM latch + SR latch) with
 N = 200 draws per PVT point and seed 20260909 (the same seed as the DC bench). Its first
 record ran a **reduced grid** (tt/ss/ff × −40/27/125 °C at 3.3 V, 9 points, kept as history); the
-full 45-point grid is now measured (below). The
+full 45-point grid is now measured and is the **current reference** (below). The
 latch term is paired, measured on the same draw. On top of that it adds a
 **derived, not simulated** load-R hand budget: σ(ΔR/R)_pair = A_R/√(WL) = 0.19 %,
 from the foundry's commented-out `ppolyf_u` `par_r = 0.021 µm`. The scored variant
 uses a 3× conservative A_R.
 
-**Measured total** ([`sim/comparator-offset-tran/records/20261010-013540611508-4a4df37.md`](../sim/comparator-offset-tran/records/20261010-013540611508-4a4df37.md), fleet job `klt-sim-816fb60826f4`):
+**Earlier campaign (historical, superseded by the full 45-point grid below): nine-point measured total** ([`sim/comparator-offset-tran/records/20261010-013540611508-4a4df37.md`](../sim/comparator-offset-tran/records/20261010-013540611508-4a4df37.md), fleet job `klt-sim-816fb60826f4`):
 
-| 3σ input-referred offset | `tt_27c_3.30v` | 9-point range |
+| 3σ input-referred offset (earlier nine-point run) | `tt_27c_3.30v` | 9-point range |
 |---|---|---|
 | DC bench, preamp only (record above) | 2.801 mV | 2.796–2.807 mV |
 | whole comparator, simulated | 2.897 mV | 2.897–3.439 mV |
@@ -44,7 +44,7 @@ the verdict above stands with the latch and load-R terms included. Not covered b
 fs/sf and the ±10 % supply points (now covered, below), and
 layout-induced systematic offset (schematic DUT). The ratified bound is unchanged.
 
-**Full 45-point grid** (issue #200;
+**Current reference: full 45-point grid** (issue #200;
 [`sim/comparator-offset-tran/records/20261010-021500046481-d84e59d.md`](../sim/comparator-offset-tran/records/20261010-021500046481-d84e59d.md),
 fleet jobs `klt-sim-ee7ad68415d2`, `klt-sim-a503009e268a`, `klt-sim-031f74d456a0`;
 tt/ss/ff/fs/sf × −40/27/125 °C × 2.97/3.30/3.63 V, 45 points × N = 200, no failed unit):
