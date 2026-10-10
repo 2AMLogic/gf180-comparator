@@ -491,6 +491,47 @@ Disclosures (the report's own `extraction.model` limits, stated, not hidden):
 * Mismatch is off (deterministic corners); this is not a Monte-Carlo
   post-layout claim.
 
+Findings: parasitic attribution of the misses
+([#229](https://github.com/2AMLogic/gf180-comparator/issues/229); diagnostic
+only, **item 7 stays `unmet`**, the citation above is unchanged):
+
+* **What was run.** The cited extracted DUT was re-measured at
+  `ss_125c_2.97v` and `tt_125c_2.97v`, using `pex_measure.py`'s own decks
+  with 52 netlist variants. Each of the 20 extracted nets gets one variant
+  with its series R removed and one with its ground C removed. There are
+  also aggregate R/C/coupling variants, a device-geometry variant, and
+  centring legs. All 154 `klt sim` requests went to the batch fleet. Evidence:
+  [`layout/pex/artifacts/parasitic-attribution/20261010-120720-230574b/`](../layout/pex/artifacts/parasitic-attribution/20261010-120720-230574b/README.md),
+  produced by `layout/pex/parasitic_attribution.py`.
+* **Controls.** The control decks are byte-identical to the cited decks. Both
+  the extracted and the schematic control reproduce the cited rows exactly
+  (1.58774 / 2.02956 ns and 0.986719 / 1.23747 ns). Removing every parasitic
+  *and* setting the schematic's S/D junction geometry reproduces the schematic
+  leg. So the gap has exactly two sources: extracted RC and extracted
+  junction geometry.
+* **Dominant contributor: ground C on a few nets.** Removing all ground C
+  closes 83 % of the gap (tt 82.6 %, ss 83.6 %). The star-model series R
+  accounts for about 5.5 % (largest single net: `ltail`, 2.6 %). The
+  vertical-overlap coupling C accounts for about 0.5 %. Four nets on the
+  decision-to-output path explain about 71 % together: `sn` 21.8 %, `doutb`
+  19.2 %, `qn` 15.2 % and `dout` 14.7 %. `sn` carries about 3x the ground C
+  of its mirror `sp` (20.8 vs 7.1 fF). The remaining ~14 % is the extracted
+  S/D junction geometry (AS/AD = 0.5 um x W against the schematic's 0.18 um
+  x W). Tying the extraction's floating `vsubs` node to ground slows the
+  decision slightly (-2 %), so it is not a contributor.
+* **Centring confound: ruled out.** Centring the extracted ladder at 0 V
+  (the schematic's convention) would make the extracted leg *faster* by about
+  4 % of the gap, because 0 V centring over-drives by |dut_vos|. Centring
+  the schematic at its own probed trip point (+32 uV) moves `td_od50_ns` by
+  at most 0.11 ps. None of the +60 % comes from the convention.
+* **What the data points to: a layout change.** The data points to reducing
+  routing ground C on `sn`, `doutb`, `qn` and `dout`, and to shorter or
+  shared S/D diffusions. A DR-0004-era re-layout would target the same nets.
+  The data does not point to a new decision record: the miss is a physical
+  loading effect, not a measurement artefact. Any layout change or decision
+  record is a separate issue. No variant here was graded against the spec,
+  and nothing here relaxes it.
+
 ### met — item 8 (Characterization report): generic envelope around the narrative report
 
 **Cited and graded `met` as of
