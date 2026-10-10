@@ -1,0 +1,61 @@
+{
+  "name": "comparator-offset-tran",
+  "description": "Total input-referred offset of the whole comparator (preamp + StrongARM latch + SR latch) by transient Monte Carlo over the full 45-point PVT grid, with the same-draw preamp-only offset measured in the same run so the decision-stage (latch) contribution is quantified, plus a derived (not simulated) hand budget for the ppolyf_u_1k load-pair mismatch this PDK does not model.",
+  "claim": "REFERENCE against the ratified Offset 3-sigma row (README.md#target-specification-ratified-via-dr-0002; <= 15 mV target, <= 8 mV stretch): adds the two contributors the DC-sweep bench sim/comparator-offset-mc/ cannot see (latch offset, measured; load-resistor mismatch, derived by hand). It is additive -- the DC bench stays as the preamp-only number -- and it does not alter any ratified bound; a miss, if any, is recorded as a miss. Scope: 5 process corners (tt, ss, ff, fs, sf) x 3 temperatures (-40/27/125 C) x 3 supplies (2.97/3.30/3.63 V) = 45 PVT points, N = 200 draws each (9,000 transients); extends the nine-point tt/ss/ff nominal-supply reference record, which stays as committed.",
+  "netlist": "tb_offset_tran.spice",
+  "nominal_supply_v": 3.3,
+  "supply_tolerance": 0.1,
+  "temperatures_c": [
+    -40,
+    27,
+    125
+  ],
+  "corners": [
+    "tt",
+    "ss",
+    "ff",
+    "fs",
+    "sf"
+  ],
+  "analyses": [
+    "tran 300p 1636n 0 300p",
+    "meas tran t_trip when v(dn)=0.5 rise=1 td=71n",
+    "meas tran dn_start find v(dn) at=27n",
+    "meas tran dn_end find v(dn) at=1635n",
+    "meas tran dd_start find v(dd) at=27.5n",
+    "meas tran dd_end find v(dd) at=1635.5n",
+    "meas tran ap_start find v(apo) at=27.5n"
+  ],
+  "params": {
+    "stair_t0_ns": 4.0,
+    "stair_period_ns": 24.0,
+    "stair_clk_high_ns": 8.0,
+    "stair_v0_mv": -5.04,
+    "stair_step_mv": 0.16,
+    "stair_levels": 64,
+    "stair_lead_cycles": 2,
+    "rmis_a_r_um": 0.021,
+    "rmis_w_um": 1.0,
+    "rmis_l_um": 120.0,
+    "rmis_conservative_factor": 3.0
+  },
+  "measure": {
+    "n_samples": "n",
+    "sig_vos_tran_mv": "sqrt(max(s_trip**2 - q2, 0))*1e3",
+    "vos_3sig_tran_mv": "3*sqrt(max(s_trip**2 - q2, 0))*1e3",
+    "sig_vos_tran_raw_mv": "s_trip*1e3",
+    "mean_vos_tran_uv": "m_trip*1e6",
+    "sig_vos_pre_mv": "s_pre*1e3",
+    "mean_vos_pre_uv": "m_pre*1e6",
+    "sig_latch_mv": "sqrt(max(s_lat**2 - q2, 0))*1e3",
+    "mean_latch_uv": "m_lat*1e6",
+    "av_mean": "m_av",
+    "vdrop_over_av_mv": "vdrop_over_av*1e3",
+    "sig_rload_mv": "vdrop_over_av*rmis_a_r_um/sqrt(rmis_w_um*rmis_l_um)*1e3",
+    "sig_rload_cons_mv": "vdrop_over_av*rmis_conservative_factor*rmis_a_r_um/sqrt(rmis_w_um*rmis_l_um)*1e3",
+    "sig_vos_total_mv": "sqrt(max(s_trip**2 - q2, 0) + (vdrop_over_av*rmis_a_r_um/sqrt(rmis_w_um*rmis_l_um))**2)*1e3",
+    "vos_3sig_total_mv": "3*sqrt(max(s_trip**2 - q2, 0) + (vdrop_over_av*rmis_a_r_um/sqrt(rmis_w_um*rmis_l_um))**2)*1e3",
+    "vos_3sig_total_cons_mv": "3*sqrt(max(s_trip**2 - q2, 0) + (vdrop_over_av*rmis_conservative_factor*rmis_a_r_um/sqrt(rmis_w_um*rmis_l_um))**2)*1e3"
+  },
+  "evidence": {}
+}
