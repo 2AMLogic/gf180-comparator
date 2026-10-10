@@ -359,6 +359,20 @@ class MkKltRequest(unittest.TestCase):
         self.assertEqual(len(req["measurements"]), len(tb.analyses) - 1)
         self.assertTrue(all(m["spice"].startswith(".meas tran ") for m in req["measurements"]))
         self.assertEqual(req["batch"]["capacity_wait_s"], mk.BATCH_CAPACITY_WAIT_S)
+        # One OpenMP thread per unit (issue #157): the `.control` block sits
+        # AFTER both includes so it precedes klt's own `.control ... tran`.
+        lines = bodies["body-v3.30.spice"].splitlines()
+        i = lines.index(".control")
+        self.assertEqual(lines[i:i + 3], mk.SINGLE_THREAD_CONTROL)
+        self.assertTrue(lines[i - 1].startswith(".include") and "tb_offset_tran" in lines[i - 1])
+
+    def test_single_thread_pin_scoped_to_offset_tran(self):
+        # Other benches' bodies (and so their existing records' bundles) are unchanged.
+        for bench in ("comparator-offset-mc", "comparator-regeneration"):
+            _, _, bodies = self._mk(bench, "--mc-n", "2")
+            for body in bodies.values():
+                self.assertNotIn(".control", body)
+                self.assertNotIn("num_threads", body)
 
     def test_noise_bench_refused(self):
         with self.assertRaises(SystemExit):

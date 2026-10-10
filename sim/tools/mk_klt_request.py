@@ -78,6 +78,19 @@ BATCH_CAPACITY_WAIT_S = 1800
 #: Benches whose requests carry a `monte_carlo` block.
 MC_BENCHES = ("comparator-offset-mc", "comparator-offset-tran")
 
+#: Pin ngspice to ONE OpenMP device-evaluation thread per unit (issue #157).
+#: The batch job runs one ngspice per physical core, so any extra threads
+#: per process oversubscribe the instance. A same-deck fleet probe ran
+#: ~422 s/unit at 8 concurrent units against ~5 s for one local unit
+#: (2AMLogic/klayout-tools#2970). The request has no thread knob (the 0.5.0
+#: runner drops `options.ngspice_init`, klt #2917), so the body netlist carries
+#: its own `.control` block. ngspice runs every `.control` block in deck order,
+#: and the body is `.include`d ahead of klt's own `.control ... tran`, so the
+#: `set` lands before CKTsetup reads `num_threads`. It is not a circuit element
+#: and does not change what is simulated, only how many threads simulate it.
+SINGLE_THREAD_BENCHES = ("comparator-offset-tran",)
+SINGLE_THREAD_CONTROL = [".control", "set num_threads=1", ".endc"]
+
 #: The source bundle written beside the requests (issue #151).
 BUNDLE_NAME = "source-bundle.json"
 BUNDLE_SCHEMA = "gf180-comparator/klt-source-bundle"
@@ -316,6 +329,7 @@ def main() -> int:
         # checkout path that can change before the record is minted.
         f'.include "{staged["dut"]}"',
         f'.include "{staged["testbench_netlist"]}"',
+        *(SINGLE_THREAD_CONTROL if a.bench in SINGLE_THREAD_BENCHES else []),
         "",
     ]
     (out / "design.ngspice").write_text(Path(pdk.design_include).read_text())
