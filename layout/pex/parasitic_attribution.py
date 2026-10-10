@@ -741,6 +741,521 @@ def cmd_plan(args) -> int:
     return 0
 
 
+# --------------------------------------------------------------------------- #
+# Finite ground-C budget study (issue #243)
+# --------------------------------------------------------------------------- #
+#
+# #229 removed ground C entirely, which is a diagnostic endpoint and not a
+# realizable layout. #243 asks what FINITE retained fraction of the dominant
+# nets' ground C clears the ratified td_od50_ns <= 1.5 ns. Only the ground-C
+# cards (`C<net> <net> vsubs <F>`) of the chosen nets are scaled, jointly, by
+# one factor; series R, coupling C, device geometry and every other net are
+# left byte-for-byte alone. Each variant is centred on its OWN probed trip
+# point. DIAGNOSTIC ONLY: a passing point is not PVT closure and not proof
+# that a layout can realize the budget; no spec row is scored.
+
+BUDGET_ISSUE = 243
+
+#: Starting set: the four nets #229 found to carry ~71 % of the gap
+#: (verified against attribution.json: sum of mean shares 0.7099).
+BUDGET_NETS = ("sn", "doutb", "qn", "dout")
+
+#: Stage 1 retained-C fractions (1.0 is the unchanged extracted control).
+BUDGET_FRACTIONS = (0.75, 0.5, 0.25, 0.0)
+
+
+def validate_fraction(f) -> float:
+    """A retained-C factor must be a finite real number in [0, 1]. Anything
+    else (negative, >1, NaN, inf, bool, non-number) is refused: this study is
+    a bounded reduction sweep, never an increase and never an extrapolation."""
+    if isinstance(f, bool) or not isinstance(f, (int, float)):
+        raise ValueError(f"retained-C factor must be a real number, got {f!r}")
+    f = float(f)
+    if not (f == f) or f in (float("inf"), float("-inf")) or f < 0.0 or f > 1.0:
+        raise ValueError(f"retained-C factor must be finite and within [0, 1], got {f!r}")
+    return f
+
+
+def scale_cg(text: str, nets, factor) -> str:
+    """Multiply the ground-C card of each net in `nets` by `factor`; touch
+    nothing else. factor == 1.0 returns `text` unchanged (byte-identical);
+    factor == 0.0 drops the cards exactly like `drop_cg` (the #229 endpoint)."""
+    factor = validate_fraction(factor)
+    nets = set(nets)
+    if not nets:
+        raise ValueError("no nets to scale")
+    have = set(parse(text)["cg"])
+    unknown = sorted(nets - have)
+    if unknown:
+        raise ValueError(f"nets with no ground-C card: {unknown}")
+    if factor == 1.0:
+        return text
+    if factor == 0.0:
+        return drop_cg(text, nets)
+    out = []
+    for line in text.splitlines():
+        m = _CG_RE.match(line)
+        if m and m["net"] in nets:
+            line = f"C{m['net']} {m['net']} vsubs {si(m['val']) * factor:.9g}"
+        out.append(line)
+    return "\n".join(out) + ("\n" if text.endswith("\n") else "")
+
+
+def fraction_id(f: float) -> str:
+    return f"cgs-{round(validate_fraction(f) * 1000):04d}"
+
+
+def retained_ff(text: str, nets) -> dict[str, float]:
+    """Actual per-net ground C (fF) present in a variant netlist."""
+    cg = parse(text)["cg"]
+    return {n: cg.get(n, 0.0) * 1e15 for n in nets}
+
+
+def budget_variants(text: str, fractions, nets=BUDGET_NETS) -> list[dict]:
+    """ctrl (== factor 1.0, byte-identical), the scaled variants, and the
+    schematic control. Duplicate or out-of-range factors are refused."""
+    fr = [validate_fraction(f) for f in fractions]
+    if len(set(fr)) != len(fr):
+        raise ValueError(f"duplicate factors: {fractions}")
+    if 1.0 in fr:
+        raise ValueError("1.0 is the unchanged control `ctrl`; do not list it")
+    v = [{"id": "ctrl", "side": "extracted", "centre": "probed", "group": "control",
+          "fraction": 1.0, "dut": text, "removes": "nothing (cited extracted DUT)"}]
+    for f in fr:
+        v.append({"id": fraction_id(f), "side": "extracted", "centre": "probed",
+                  "group": "scaled", "fraction": f, "dut": scale_cg(text, nets, f),
+                  "removes": f"ground C of {'+'.join(nets)} scaled to {f:g} of extracted"})
+    v.append({"id": "sch", "side": "schematic", "centre": "zero", "group": "control",
+              "fraction": None, "dut": SCHEMATIC_DUT.read_text(),
+              "removes": "schematic leg as cited (ladder at 0 V)"})
+    return v
+
+
+_CID_RE = re.compile(r"^(?P<p>[a-z]+)_(?P<t>-?[0-9.]+)c_(?P<v>[0-9.]+)v$")
+
+
+def parse_corner_id(cid: str) -> tuple[str, float, float]:
+    m = _CID_RE.match(cid)
+    if not m:
+        raise ValueError(f"unparseable corner id {cid!r}")
+    return m["p"], float(m["t"]), float(m["v"])
+
+
+def failing_points() -> list[tuple[str, float, float]]:
+    """The cited report's td_od50_ns delta rows over 1.5 ns (expected: 7)."""
+    rep = json.loads(CITED_REPORT.read_text())
+    pts = [parse_corner_id(r["corner_id"]) for r in rep["delta"]
+           if r["spec_row"] == "td_od50_ns" and r["extracted_value"] > pm.SPEC_TD_OD50_NS_MAX]
+    return sorted(pts)
+
+
+def budget_points(which: str) -> list[tuple[str, float, float]]:
+    if which == "two":
+        return [(p, TEMP_C, VDD_V) for p in PROCESSES]
+    if which == "seven":
+        pts = failing_points()
+        if len(pts) != 7:
+            raise ValueError(f"expected 7 failing delay corners in the cited report, found {len(pts)}")
+        return pts
+    raise ValueError(which)
+
+
+def pid(pt) -> str:
+    return pm.corner_id(*pt)
+
+
+def _narrow_to(req: dict, temp_c: float, vdd: float) -> dict:
+    req["corners"]["temperature_c"] = [temp_c]
+    req["corners"]["supply_v"] = {k: [vdd] for k in req["corners"]["supply_v"]}
+    return req
+
+
+def tv_groups(points) -> dict[tuple[float, float], list[str]]:
+    g: dict[tuple[float, float], list[str]] = {}
+    for p, t, v in points:
+        g.setdefault((t, v), []).append(p)
+    return g
+
+
+def tv_tag(t: float, v: float) -> str:
+    return f"{t:g}c_{v:.2f}v"
+
+
+def budget_probe_request(tag: str, processes, t: float, v: float) -> dict:
+    return _narrow_to(pm._request(f"{tag}.spice", list(processes), pm.PROBE_MEAS,
+                                  "100n 80u 0 100n", pm.TIMEOUT_PROBE_S, ["vsup"]), t, v)
+
+
+def budget_ladder_request(tag: str, pt) -> dict:
+    p, t, v = pt
+    return _narrow_to(pm._request(f"{tag}.spice", [p], pm.MAIN_MEAS, "5p 60n",
+                                  pm.TIMEOUT_MAIN_S, ["vsup", "vsupa"]), t, v)
+
+
+def budget_ladder_deck(dut: str, side: str, process: str, centre: str,
+                       vos_at: dict[tuple[float, float], float | None]) -> str:
+    """The cited ladder deck; the (T, V) points in `vos_at` carry this
+    variant's centring (probed trip point, or 0 V), every other point keeps
+    the cited value. For the two #229 points this is `ladder_deck` exactly."""
+    keys = [(t, v) for t in pm.TEMPERATURES_C for v in pm.SUPPLIES_V]
+    if side == "extracted":
+        base = cited_vos("extracted")
+        table = {k: base[(process, *k)] for k in keys}
+    else:
+        table = {k: 0.0 for k in keys}
+    for k, x in vos_at.items():
+        if centre == "zero":
+            table[k] = 0.0
+        else:
+            if x is None:
+                raise ValueError("probed centring needs a probed trip point")
+            table[k] = x
+    return pm._flatten(dut, pm._main_body(), [pm._vos_source(table)])
+
+
+def _trip_from_probe(rep: dict) -> dict[tuple[str, float, float], float | None]:
+    out = {}
+    for c in rep["corners"]:
+        t = pm._values(c).get("t_flip")
+        out[pm._point_key(c)] = (None if t is None else
+                                 -pm.PROBE_VSPAN + 2 * pm.PROBE_VSPAN * t / pm.PROBE_TRAMP)
+    return out
+
+
+def _probe_tag(t, v):
+    return f"probe-{tv_tag(t, v)}"
+
+
+def run_budget_variant(v: dict, outdir: Path, backend: str, points) -> dict:
+    vdir = outdir / v["id"]
+    vdir.mkdir(parents=True, exist_ok=True)
+    log = {"id": v["id"], "jobs": {}}
+    trips: dict[tuple[str, float, float], float | None] = {}
+    if v["centre"] == "probed":
+        for (t, vv), procs in tv_groups(points).items():
+            tag = _probe_tag(t, vv)
+            r = submit(vdir, tag, probe_deck(v["dut"]), budget_probe_request(tag, procs, t, vv),
+                       backend)
+            log["jobs"][tag] = {k: r[k] for k in ("ok", "rc", "stderr", "attempts") if k in r}
+            if r["ok"]:
+                trips.update(_trip_from_probe(r["report"]))
+        if any(not j.get("ok") for j in log["jobs"].values()):
+            return log
+    for pt in points:
+        tag = f"ladder-{pid(pt)}"
+        if v["centre"] == "probed" and trips.get(pt) is None:
+            log["jobs"][tag] = {"ok": False, "stderr": "probe found no trip point"}
+            continue
+        vos_at = {(t, vv): trips.get((p, t, vv)) for (p, t, vv) in points if p == pt[0]}
+        deck = budget_ladder_deck(v["dut"], v["side"], pt[0], v["centre"], vos_at)
+        r = submit(vdir, tag, deck, budget_ladder_request(tag, pt), backend)
+        log["jobs"][tag] = {k: r[k] for k in ("ok", "rc", "stderr", "attempts") if k in r}
+    return log
+
+
+def file_sha(path: Path) -> str:
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def budget_manifest(text: str, plan: list[dict], points, nets) -> dict:
+    """Everything the stage depends on, hashed, plus the variant manifest."""
+    return {
+        "issue": BUDGET_ISSUE,
+        "generated_by": "layout/pex/parasitic_attribution.py budget-run",
+        "scope": ("diagnostic only: joint ground-C scaling of " + ", ".join(nets)
+                  + "; series R, coupling C, device geometry fixed; each variant centred on its "
+                    "own probed trip point; no spec row scored, T1 item 7 unchanged"),
+        "nets": list(nets),
+        "points": [pid(p) for p in points],
+        "source_sha256": {
+            "extracted_dut": sha(text),
+            "schematic_dut": file_sha(SCHEMATIC_DUT),
+            "cited_report": file_sha(CITED_REPORT),
+            "attribution_json_229": file_sha(
+                HERE / "artifacts" / "parasitic-attribution" / "20261010-120720-230574b"
+                / "attribution.json"),
+            "tb_json_consumed_fields": TB_JSON_CONSUMED_SHA256,
+            "pex_measure_py": file_sha(HERE / "pex_measure.py"),
+            "parasitic_attribution_py": file_sha(Path(__file__).resolve()),
+        },
+        "variants": [{
+            "id": x["id"], "side": x["side"], "centre": x["centre"], "fraction": x["fraction"],
+            "dut_sha256": sha(x["dut"]), "probe_deck_sha256": sha(probe_deck(x["dut"])),
+            "retained_ground_c_ff": retained_ff(x["dut"], nets) if x["side"] == "extracted" else None,
+        } for x in plan],
+    }
+
+
+def _budget_args(args):
+    nets = tuple(args.nets.split(",")) if args.nets else BUDGET_NETS
+    fractions = [float(x) for x in args.fractions.split(",")] if args.fractions else \
+        list(BUDGET_FRACTIONS)
+    return nets, fractions
+
+
+def cmd_budget_run(args) -> int:
+    check_bench()
+    text = load_extracted()
+    nets, fractions = _budget_args(args)
+    plan = budget_variants(text, fractions, nets)
+    points = budget_points(args.points)
+    if args.backend == "local" and (len(plan) * len(points) != 1):
+        sys.exit("--backend local is a single-request debug probe only")
+    outdir = Path(args.outdir).resolve()
+    outdir.mkdir(parents=True, exist_ok=True)
+    man = budget_manifest(text, plan, points, nets)
+    mpath = outdir / "stage.json"
+    if mpath.exists():
+        # append-only: a stage directory is never re-planned; resuming is fine
+        # only for the identical plan (ignoring the script's own hash).
+        old = json.loads(mpath.read_text())
+        a, b = json.loads(json.dumps(man)), old
+        for d in (a, b):
+            d["source_sha256"].pop("parasitic_attribution_py", None)
+        if a != b:
+            sys.exit(f"{mpath} exists with a different plan; stage directories are append-only")
+    else:
+        mpath.write_text(json.dumps(man, indent=2, sort_keys=True) + "\n")
+    client = pm._klt_identity()
+    started = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    with concurrent.futures.ThreadPoolExecutor(max_workers=args.jobs) as pool:
+        logs = list(pool.map(lambda x: run_budget_variant(x, outdir, args.backend, points), plan))
+    failed = [(l["id"], t) for l in logs for t, j in l["jobs"].items() if not j.get("ok")]
+    (outdir / "run-log.json").write_text(json.dumps({
+        "issue": BUDGET_ISSUE, "backend": args.backend, "klt_sim_client": client,
+        "started_utc": started,
+        "finished_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "variants": [l["id"] for l in logs], "failed_jobs": failed,
+        "job_errors": {f"{l['id']}/{t}": j.get("stderr") for l in logs
+                       for t, j in l["jobs"].items() if not j.get("ok")},
+    }, indent=2, sort_keys=True) + "\n")
+    print(f"{len(logs)} variants, {len(failed)} failed jobs -> {outdir}")
+    for vid, tag in failed:
+        print(f"  FAILED {vid}/{tag}")
+    return 1 if failed else 0
+
+
+def cmd_budget_plan(args) -> int:
+    text = load_extracted()
+    nets, fractions = _budget_args(args)
+    points = budget_points(args.points)
+    print("points:", ", ".join(pid(p) for p in points))
+    for x in budget_variants(text, fractions, nets):
+        rf = retained_ff(x["dut"], nets) if x["side"] == "extracted" else {}
+        print(f"{x['id']:<10} f={x['fraction']} " + " ".join(f"{n}={c:.3f}fF" for n, c in rf.items()))
+    return 0
+
+
+def _budget_values(vdir: Path, points) -> dict:
+    out = {}
+    probes = {}
+    for f in sorted(vdir.glob("probe-*.report.json")):
+        if f.read_text().strip():
+            probes.update(_trip_from_probe(json.loads(f.read_text())))
+    for pt in points:
+        path = vdir / f"ladder-{pid(pt)}.report.json"
+        if not path.exists() or not path.read_text().strip():
+            continue
+        rep = json.loads(path.read_text())
+        (corner,) = [c for c in rep["corners"] if c["process"] == pt[0]]
+        d = pm._derive(pm._values(corner))
+        d["dut_vos_v"] = probes.get(pt)
+        d["job_ids"] = sorted({(rep.get("environment") or {}).get("remote", {}).get("job_id")}
+                              - {None})
+        d["ladder_netlist_sha256"] = rep["environment"]["netlist_sha256"]
+        out[pt] = d
+    return out
+
+
+def _plan_from_manifest(man: dict, text: str) -> list[dict]:
+    fr = [x["fraction"] for x in man["variants"] if x["id"] not in ("ctrl", "sch")]
+    return budget_variants(text, fr, man["nets"])
+
+
+def budget_analyze(outdir: Path) -> dict:
+    man = json.loads((outdir / "stage.json").read_text())
+    text = load_extracted()
+    points = [parse_corner_id(c) for c in man["points"]]
+    nets = man["nets"]
+    plan = {x["id"]: x for x in _plan_from_manifest(man, text)}
+    cited = {(r["corner_id"], r["spec_row"]): r
+             for r in json.loads(CITED_REPORT.read_text())["delta"]}
+    res = {vid: _budget_values(outdir / vid, points) for vid in plan if (outdir / vid).is_dir()}
+    missing = [(vid, pid(p)) for vid in plan for p in points if p not in res.get(vid, {})]
+
+    controls = {}
+    for pt in points:
+        cid = pid(pt)
+        for vid, key in (("ctrl", "extracted_value"), ("sch", "schematic_value")):
+            want = cited[(cid, "td_od50_ns")][key]
+            got = res.get(vid, {}).get(pt, {}).get("td_od50_ns")
+            controls[f"{vid}@{cid}"] = {
+                "cited_td_od50_ns": want, "rerun_td_od50_ns": got,
+                "abs_diff_ns": None if got is None else abs(got - want),
+                "reproduces": got is not None and abs(got - want) <= CONTROL_TOL_NS}
+        want_vos = cited[(cid, "dut_vos_v")]["extracted_value"]
+        controls[f"ctrl@{cid}"]["cited_dut_vos_v"] = want_vos
+        controls[f"ctrl@{cid}"]["rerun_dut_vos_v"] = res.get("ctrl", {}).get(pt, {}).get("dut_vos_v")
+    valid = bool(controls) and all(c["reproduces"] for c in controls.values())
+
+    rows = []
+    for vid, x in plan.items():
+        if vid == "sch":
+            continue
+        row = {"id": vid, "fraction": x["fraction"],
+               "retained_ground_c_ff": retained_ff(x["dut"], nets), "corners": {}}
+        for pt in points:
+            r, c = res.get(vid, {}).get(pt), res.get("ctrl", {}).get(pt)
+            if not r or r["td_od50_ns"] is None:
+                row["corners"][pid(pt)] = {"td_od50_ns": None, "unresolved": True,
+                                           "job_ids": (r or {}).get("job_ids")}
+                continue
+            row["corners"][pid(pt)] = {
+                "td_od50_ns": r["td_od50_ns"], "td_od1_ns": r["td_od1_ns"],
+                "td_od01_ns": r["td_od01_ns"], "tau_ps": r["tau_ps"],
+                "dout_od50_end": r["dout_od50_end"],
+                "unresolved": any(r[k] is None for k in ("td_od50_ns", "td_od1_ns", "td_od01_ns")),
+                "dut_vos_v": r["dut_vos_v"],
+                "dut_vos_shift_v": (None if not c or None in (r["dut_vos_v"], c["dut_vos_v"])
+                                    else r["dut_vos_v"] - c["dut_vos_v"]),
+                "margin_to_1p5ns_ns": pm.SPEC_TD_OD50_NS_MAX - r["td_od50_ns"],
+                "meets_1p5ns": r["td_od50_ns"] <= pm.SPEC_TD_OD50_NS_MAX,
+                "job_ids": r["job_ids"],
+                "ladder_netlist_sha256": r["ladder_netlist_sha256"]}
+        rows.append(row)
+    rows.sort(key=lambda r: -r["fraction"])
+
+    # Outcome. Only TESTED points are evidence: no interpolation between
+    # fractions, no monotonicity assumption. Adjacent tested fractions where
+    # a corner flips from failing to meeting are reported as brackets.
+    cids = [pid(p) for p in points]
+
+    def ok(row, cid):
+        x = row["corners"].get(cid)
+        return bool(x and x["td_od50_ns"] is not None and x["meets_1p5ns"])
+    all_pass = [r["fraction"] for r in rows if all(ok(r, c) for c in cids)]
+    brackets, nonmono = {}, {}
+    for cid in cids:
+        seq = [(r["fraction"], r["corners"].get(cid)) for r in rows]
+        seq = [(f, x["td_od50_ns"]) for f, x in seq if x and x["td_od50_ns"] is not None]
+        brackets[cid] = [{"fails_at": a[0], "meets_at": b[0]}
+                         for a, b in zip(seq, seq[1:])
+                         if a[1] > pm.SPEC_TD_OD50_NS_MAX >= b[1]]
+        nonmono[cid] = any(b[1] > a[1] for a, b in zip(seq, seq[1:]))
+    finite = [f for f in all_pass if f > 0.0]
+    if not valid:
+        outcome = "refused: controls do not reproduce the cited decision times or are missing"
+    elif finite:
+        outcome = (f"largest tested finite fraction meeting 1.5 ns at every stage point: "
+                   f"{max(finite):g} (tested points only; not a minimum, not an extrapolation)")
+    elif 0.0 in all_pass:
+        outcome = "no finite tested fraction clears the bound at every stage point; only zero-C does"
+    else:
+        outcome = "no-crossing: no tested fraction, including zero ground C, clears every stage point"
+    return {
+        "issue": BUDGET_ISSUE, "generated_by": "layout/pex/parasitic_attribution.py budget-analyze",
+        "scope": man["scope"], "nets": nets, "points": cids,
+        "source_sha256": man["source_sha256"],
+        "controls": controls, "study_valid": valid, "missing": missing,
+        "outcome": outcome, "fractions_meeting_all_points": all_pass,
+        "brackets_per_corner": brackets, "non_monotonic_per_corner": nonmono,
+        "variants": rows,
+    }
+
+
+def budget_table_md(a: dict) -> str:
+    cids = a["points"]
+    head = ("| variant | retained C fF (" + ", ".join(a["nets"]) + ") | "
+            + " | ".join(f"{c}: td_od50 ns / margin ns / vos shift mV" for c in cids) + " |")
+    lines = [head, "|---|---|" + "---|" * len(cids)]
+    for r in a["variants"]:
+        ff = ", ".join(f"{r['retained_ground_c_ff'][n]:.2f}" for n in a["nets"])
+        cells = []
+        for c in cids:
+            x = r["corners"].get(c)
+            if not x or x["td_od50_ns"] is None:
+                cells.append("UNRESOLVED")
+                continue
+            sh = x["dut_vos_shift_v"]
+            cells.append(f"{x['td_od50_ns']:.4f} / {x['margin_to_1p5ns_ns']:+.4f} / "
+                         + ("n/a" if sh is None else f"{sh * 1e3:+.2f}")
+                         + (" PASS" if x["meets_1p5ns"] else " fail")
+                         + (" (rung unresolved)" if x["unresolved"] else ""))
+        lines.append(f"| `{r['id']}` (f={r['fraction']:g}) | {ff} | " + " | ".join(cells) + " |")
+    return "\n".join(lines) + "\n"
+
+
+def cmd_budget_analyze(args) -> int:
+    outdir = Path(args.outdir).resolve()
+    a = budget_analyze(outdir)
+    (outdir / "budget.json").write_text(json.dumps(a, indent=2, sort_keys=True) + "\n")
+    (outdir / "budget-table.md").write_text(
+        "<!-- GENERATED by layout/pex/parasitic_attribution.py budget-analyze -- do not edit -->\n"
+        + budget_table_md(a))
+    print(f"study_valid={a['study_valid']} missing={len(a['missing'])}\n{a['outcome']}")
+    return 0 if a["study_valid"] and not a["missing"] else 1
+
+
+def cmd_budget_verify(args) -> int:
+    """PDK-free: stage.json is what the code regenerates (ignoring the script
+    hash), every report ran the deck regenerated here, and budget.json is
+    what `budget-analyze` derives."""
+    outdir = Path(args.outdir).resolve()
+    check_bench()
+    text = load_extracted()
+    man = json.loads((outdir / "stage.json").read_text())
+    points = [parse_corner_id(c) for c in man["points"]]
+    plan = _plan_from_manifest(man, text)
+    errors = []
+    want = json.loads(json.dumps(budget_manifest(text, plan, points, man["nets"])))
+    got_m = json.loads(json.dumps(man))
+    for d in (want, got_m):
+        d["source_sha256"].pop("parasitic_attribution_py", None)
+    if want != got_m:
+        errors.append("stage.json differs from the regenerated manifest")
+    for v in plan:
+        vdir = outdir / v["id"]
+        if not vdir.is_dir():
+            errors.append(f"{v['id']}: no evidence directory")
+            continue
+        vals = _budget_values(vdir, points)
+        if v["centre"] == "probed":
+            for (t, vv), procs in tv_groups(points).items():
+                tag = _probe_tag(t, vv)
+                rp = vdir / f"{tag}.report.json"
+                if not rp.exists():
+                    errors.append(f"{v['id']}/{tag}: no report")
+                    continue
+                if json.loads(rp.read_text())["environment"]["netlist_sha256"] != \
+                        sha(probe_deck(v["dut"])):
+                    errors.append(f"{v['id']}/{tag}: report ran a different deck")
+                if json.loads((vdir / f"{tag}.request.json").read_text()) != \
+                        budget_probe_request(tag, procs, t, vv):
+                    errors.append(f"{v['id']}/{tag}: request differs from the generated one")
+        for pt in points:
+            tag = f"ladder-{pid(pt)}"
+            if pt not in vals:
+                errors.append(f"{v['id']}/{tag}: no report")
+                continue
+            vos_at = {(t, vv): vals.get((p, t, vv), {}).get("dut_vos_v")
+                      for (p, t, vv) in points if p == pt[0]}
+            deck = budget_ladder_deck(v["dut"], v["side"], pt[0], v["centre"], vos_at)
+            if vals[pt]["ladder_netlist_sha256"] != sha(deck):
+                errors.append(f"{v['id']}/{tag}: report ran a different deck")
+            if json.loads((vdir / f"{tag}.request.json").read_text()) != \
+                    budget_ladder_request(tag, pt):
+                errors.append(f"{v['id']}/{tag}: request differs from the generated one")
+    committed = outdir / "budget.json"
+    if not committed.exists():
+        errors.append("budget.json missing")
+    elif json.loads(committed.read_text()) != json.loads(json.dumps(budget_analyze(outdir))):
+        errors.append("budget.json is not what `budget-analyze` derives from the reports")
+    for e in errors:
+        print(f"FAIL {e}")
+    print(f"budget-verify: {len(errors)} error(s)")
+    return 1 if errors else 0
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -757,9 +1272,25 @@ def main(argv=None) -> int:
     for name in ("analyze", "verify"):
         s = sub.add_parser(name)
         s.add_argument("outdir")
+    for name in ("budget-plan", "budget-run"):
+        b = sub.add_parser(name, help="finite ground-C budget sweep (issue #243)")
+        if name == "budget-run":
+            b.add_argument("outdir")
+            b.add_argument("--backend", default="batch", choices=("batch", "local"))
+            b.add_argument("--jobs", type=int, default=2)
+        b.add_argument("--points", default="two", choices=("two", "seven"),
+                       help="two: the #229 corners; seven: every failing delay corner")
+        b.add_argument("--fractions", help="comma list of retained-C fractions in [0,1), "
+                                           "default 0.75,0.5,0.25,0")
+        b.add_argument("--nets", help="comma list (default sn,doutb,qn,dout)")
+    for name in ("budget-analyze", "budget-verify"):
+        s = sub.add_parser(name)
+        s.add_argument("outdir")
     args = ap.parse_args(argv)
     return {"plan": cmd_plan, "run": cmd_run, "analyze": cmd_analyze,
-            "verify": cmd_verify}[args.cmd](args)
+            "verify": cmd_verify, "budget-plan": cmd_budget_plan,
+            "budget-run": cmd_budget_run, "budget-analyze": cmd_budget_analyze,
+            "budget-verify": cmd_budget_verify}[args.cmd](args)
 
 
 if __name__ == "__main__":

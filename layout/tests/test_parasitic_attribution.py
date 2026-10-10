@@ -184,5 +184,117 @@ class CommittedEvidence(unittest.TestCase):
             self.assertEqual(rc, 0, f"{run.name}:\n{out.getvalue()}")
 
 
+class BudgetScaling(unittest.TestCase):
+    """Finite ground-C scaling (#243), on the synthetic netlist."""
+
+    def changed(self, a, b):
+        return {x for x, y in zip(a.splitlines(), b.splitlines()) if x != y}
+
+    def test_scaling_changes_only_the_intended_c_cards(self):
+        out = pa.scale_cg(SYN, {"x", "y"}, 0.5)
+        self.assertEqual(len(out.splitlines()), len(SYN.splitlines()))
+        self.assertEqual(self.changed(SYN, out), {"Cx x vsubs 1e-14", "Cy y vsubs 2e-15"})
+        p = pa.parse(out)
+        self.assertAlmostEqual(p["cg"]["x"], 5e-15)
+        self.assertAlmostEqual(p["cg"]["y"], 1e-15)
+        # every other card, R legs, coupling C, tie and devices untouched
+        q = pa.parse(SYN)
+        self.assertEqual(p["legs"], q["legs"])
+        self.assertEqual(p["cc"], q["cc"])
+        self.assertEqual(p["vsubs_tie_ohm"], q["vsubs_tie_ohm"])
+        for n in ("a", "b", "vdd", "vss"):
+            self.assertEqual(p["cg"].get(n), q["cg"].get(n))
+
+    def test_unit_factor_reproduces_exactly(self):
+        self.assertIs(pa.scale_cg(SYN, {"x", "y"}, 1.0), SYN)
+        self.assertEqual(pa.scale_cg(SYN, {"x"}, 1), SYN)
+
+    def test_zero_factor_is_the_229_endpoint(self):
+        self.assertEqual(pa.scale_cg(SYN, {"x", "y"}, 0.0), pa.drop_cg(SYN, {"x", "y"}))
+
+    def test_invalid_factors_rejected(self):
+        for bad in (-0.1, 1.0001, 2, float("nan"), float("inf"), float("-inf"), True, "0.5", None):
+            with self.assertRaises(ValueError, msg=repr(bad)):
+                pa.scale_cg(SYN, {"x"}, bad)
+            with self.assertRaises(ValueError, msg=repr(bad)):
+                pa.validate_fraction(bad)
+
+    def test_invalid_nets_rejected(self):
+        with self.assertRaises(ValueError):
+            pa.scale_cg(SYN, set(), 0.5)
+        with self.assertRaises(ValueError):
+            pa.scale_cg(SYN, {"nosuch"}, 0.5)
+
+    def test_variant_plan_refuses_duplicates_and_unit(self):
+        with self.assertRaises(ValueError):
+            pa.budget_variants(SYN, [0.5, 0.5], ("x",))
+        with self.assertRaises(ValueError):
+            pa.budget_variants(SYN, [1.0], ("x",))
+
+    def test_retained_ff_reports_actual_card_values(self):
+        out = pa.scale_cg(SYN, {"x"}, 0.25)
+        self.assertAlmostEqual(pa.retained_ff(out, ["x", "y"])["x"], 2.5)
+        self.assertAlmostEqual(pa.retained_ff(out, ["x", "y"])["y"], 2.0)
+
+
+class BudgetCommitted(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.text = pa.load_extracted()
+
+    def test_starting_nets_match_the_229_attribution(self):
+        d = json.loads((pa.HERE / "artifacts" / "parasitic-attribution"
+                        / "20261010-120720-230574b" / "attribution.json").read_text())
+        top = [r["id"] for r in d["ranking_single_net"] if r["id"].startswith("cg0-")][:4]
+        self.assertEqual(set(top), {f"cg0-{n}" for n in pa.BUDGET_NETS})
+        share = sum(r["mean_share"] for r in d["ranking_single_net"]
+                    if r["id"] in {f"cg0-{n}" for n in pa.BUDGET_NETS})
+        self.assertAlmostEqual(share, 0.71, delta=0.01)
+
+    def test_unit_scaling_of_committed_dut_is_the_control(self):
+        self.assertEqual(pa.scale_cg(self.text, pa.BUDGET_NETS, 1.0), self.text)
+        plan = pa.budget_variants(self.text, pa.BUDGET_FRACTIONS)
+        self.assertEqual(plan[0]["id"], "ctrl")
+        self.assertEqual(plan[0]["dut"], self.text)
+
+    def test_committed_dut_scaling_touches_four_cards_only(self):
+        out = pa.scale_cg(self.text, pa.BUDGET_NETS, 0.5)
+        a, b = self.text.splitlines(), out.splitlines()
+        self.assertEqual(len(a), len(b))
+        diff = [x for x, y in zip(a, b) if x != y]
+        self.assertEqual(sorted(l.split()[0] for l in diff), sorted(f"C{n}" for n in pa.BUDGET_NETS))
+
+    def test_failing_points_are_the_seven_cited_corners(self):
+        pts = pa.budget_points("seven")
+        self.assertEqual(len(pts), 7)
+        self.assertIn(("ss", 125.0, 2.97), pts)
+        self.assertIn(("tt", 125.0, 2.97), pts)
+
+    def test_two_point_control_ladder_deck_is_the_cited_deck(self):
+        vos = pa.cited_vos("extracted")
+        for p in pa.PROCESSES:
+            cited = json.loads((pa.CITED_MEASURE / "extracted" / f"ladder-{p}.report.json")
+                               .read_text())["environment"]["netlist_sha256"]
+            deck = pa.budget_ladder_deck(self.text, "extracted", p, "probed",
+                                         {(pa.TEMP_C, pa.VDD_V): vos[(p, pa.TEMP_C, pa.VDD_V)]})
+            self.assertEqual(pa.sha(deck), cited, p)
+
+    def test_requests_match_229_shape_at_the_same_point(self):
+        for p in pa.PROCESSES:
+            r = pa.budget_ladder_request("ladder-x", (p, pa.TEMP_C, pa.VDD_V))
+            old = pa.ladder_request(p)
+            r["netlist"] = old["netlist"]
+            self.assertEqual(r, old)
+
+
+class BudgetCommittedEvidence(unittest.TestCase):
+    def test_verify_every_committed_budget_stage(self):
+        stages = sorted((pa.HERE / "artifacts" / "ground-c-budget").glob("*/stage*/stage.json"))
+        for st in stages:
+            with contextlib.redirect_stdout(io.StringIO()) as out:
+                rc = pa.main(["budget-verify", str(st.parent)])
+            self.assertEqual(rc, 0, f"{st.parent}:\n{out.getvalue()}")
+
+
 if __name__ == "__main__":
     unittest.main()
