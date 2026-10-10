@@ -1,0 +1,2430 @@
+{
+  "controls": {
+    "ctrl@ss_125c_2.97v": {
+      "abs_diff_ns": 0.0,
+      "cited_dut_vos_v": -0.005186500000000004,
+      "cited_td_od50_ns": 2.02956,
+      "deck_sha256_matches_cited": true,
+      "reproduces": true,
+      "rerun_dut_vos_v": -0.005186500000000004,
+      "rerun_td_od50_ns": 2.02956
+    },
+    "ctrl@tt_125c_2.97v": {
+      "abs_diff_ns": 0.0,
+      "cited_dut_vos_v": -0.0089074,
+      "cited_td_od50_ns": 1.58774,
+      "deck_sha256_matches_cited": true,
+      "reproduces": true,
+      "rerun_dut_vos_v": -0.0089074,
+      "rerun_td_od50_ns": 1.58774
+    },
+    "sch@ss_125c_2.97v": {
+      "abs_diff_ns": 0.0,
+      "cited_td_od50_ns": 1.23747,
+      "reproduces": true,
+      "rerun_td_od50_ns": 1.23747
+    },
+    "sch@tt_125c_2.97v": {
+      "abs_diff_ns": 0.0,
+      "cited_td_od50_ns": 0.986719,
+      "reproduces": true,
+      "rerun_td_od50_ns": 0.986719
+    }
+  },
+  "extracted_dut": {
+    "path": "layout/pex/artifacts/preamp-noise/comparator.dut-layout.cir",
+    "sha256": "a7ca3c00ea4db8a2b00cad69f2edc2d9320738499049cfa9c7faec517b7b5f45"
+  },
+  "generated_by": "layout/pex/parasitic_attribution.py analyze",
+  "issue": 229,
+  "missing": [],
+  "net_parasitics": {
+    "aon": {
+      "c_coupling_ff": 0.084621,
+      "c_ground_ff": 34.901998,
+      "legs": 3,
+      "r_max_leg_ohm": 88.8787919753,
+      "r_sum_ohm": 178.40640000000002
+    },
+    "aop": {
+      "c_coupling_ff": 0.04231,
+      "c_ground_ff": 39.739262,
+      "legs": 3,
+      "r_max_leg_ohm": 100.101867998,
+      "r_sum_ohm": 201.0099999997
+    },
+    "atail": {
+      "c_coupling_ff": 0.036266,
+      "c_ground_ff": 19.890749,
+      "legs": 3,
+      "r_max_leg_ohm": 33.2631338703,
+      "r_sum_ohm": 67.8741
+    },
+    "clk": {
+      "c_coupling_ff": 0.205509,
+      "c_ground_ff": 24.137591,
+      "legs": 5,
+      "r_max_leg_ohm": 123.878367253,
+      "r_sum_ohm": 272.8203000002
+    },
+    "dout": {
+      "c_coupling_ff": 0.10879899999999999,
+      "c_ground_ff": 22.656011,
+      "legs": 5,
+      "r_max_leg_ohm": 56.6931377353,
+      "r_sum_ohm": 158.0119000001
+    },
+    "doutb": {
+      "c_coupling_ff": 0.09671,
+      "c_ground_ff": 27.305946,
+      "legs": 5,
+      "r_max_leg_ohm": 64.8888975734,
+      "r_sum_ohm": 175.66499999987002
+    },
+    "ibias": {
+      "c_coupling_ff": 0.012088000000000002,
+      "c_ground_ff": 16.296018,
+      "legs": 3,
+      "r_max_leg_ohm": 240.01465,
+      "r_sum_ohm": 480.0293
+    },
+    "ltail": {
+      "c_coupling_ff": 0.15111,
+      "c_ground_ff": 19.360854,
+      "legs": 3,
+      "r_max_leg_ohm": 28.3678236506,
+      "r_sum_ohm": 71.31909999999999
+    },
+    "mn": {
+      "c_coupling_ff": 0.090665,
+      "c_ground_ff": 5.334222,
+      "legs": 3,
+      "r_max_leg_ohm": 9.26840967839,
+      "r_sum_ohm": 18.5401
+    },
+    "mp": {
+      "c_coupling_ff": 0.09671,
+      "c_ground_ff": 16.26848,
+      "legs": 3,
+      "r_max_leg_ohm": 30.7710607039,
+      "r_sum_ohm": 61.616700000070004
+    },
+    "na": {
+      "c_coupling_ff": 0.024177999999999998,
+      "c_ground_ff": 4.536991,
+      "legs": 2,
+      "r_max_leg_ohm": 7.20555,
+      "r_sum_ohm": 14.4111
+    },
+    "nb": {
+      "c_coupling_ff": 0.036267,
+      "c_ground_ff": 10.491625,
+      "legs": 2,
+      "r_max_leg_ohm": 18.9394,
+      "r_sum_ohm": 37.8788
+    },
+    "qn": {
+      "c_coupling_ff": 0.241774,
+      "c_ground_ff": 30.94521,
+      "legs": 7,
+      "r_max_leg_ohm": 65.2871820535,
+      "r_sum_ohm": 260.9397
+    },
+    "qp": {
+      "c_coupling_ff": 0.22364099999999998,
+      "c_ground_ff": 30.113504,
+      "legs": 7,
+      "r_max_leg_ohm": 68.1780849217,
+      "r_sum_ohm": 258.10940000019
+    },
+    "sn": {
+      "c_coupling_ff": 0.090665,
+      "c_ground_ff": 20.83313,
+      "legs": 4,
+      "r_max_leg_ohm": 53.0123517252,
+      "r_sum_ohm": 151.6998999999
+    },
+    "sp": {
+      "c_coupling_ff": 0.078577,
+      "c_ground_ff": 7.052933,
+      "legs": 4,
+      "r_max_leg_ohm": 40.909223169,
+      "r_sum_ohm": 97.407
+    },
+    "vdd": {
+      "c_coupling_ff": 0.344529,
+      "c_ground_ff": 81.824544,
+      "legs": 24,
+      "r_max_leg_ohm": 109.113626231,
+      "r_sum_ohm": 320.7128999995
+    },
+    "vinn": {
+      "c_coupling_ff": 0.0,
+      "c_ground_ff": 0.784455,
+      "legs": 1,
+      "r_max_leg_ohm": 113.1535,
+      "r_sum_ohm": 113.1535
+    },
+    "vinp": {
+      "c_coupling_ff": 0.0,
+      "c_ground_ff": 0.784455,
+      "legs": 1,
+      "r_max_leg_ohm": 113.1535,
+      "r_sum_ohm": 113.1535
+    },
+    "vss": {
+      "c_coupling_ff": 0.429149,
+      "c_ground_ff": 80.25356699999999,
+      "legs": 26,
+      "r_max_leg_ohm": 25.1620438968,
+      "r_sum_ohm": 327.36299999979
+    }
+  },
+  "ranking_single_net": [
+    {
+      "id": "cg0-sn",
+      "mean_share": 0.21814398922356254
+    },
+    {
+      "id": "cg0-doutb",
+      "mean_share": 0.19213446924093722
+    },
+    {
+      "id": "cg0-qn",
+      "mean_share": 0.15212921089098785
+    },
+    {
+      "id": "cg0-dout",
+      "mean_share": 0.14746109772337626
+    },
+    {
+      "id": "cg0-mp",
+      "mean_share": 0.06706321156406467
+    },
+    {
+      "id": "cg0-qp",
+      "mean_share": 0.04692447755090729
+    },
+    {
+      "id": "cg0-nb",
+      "mean_share": 0.037841028158639406
+    },
+    {
+      "id": "cg0-aop",
+      "mean_share": 0.03318884353283404
+    },
+    {
+      "id": "r0-ltail",
+      "mean_share": 0.026137038315722182
+    },
+    {
+      "id": "cg0-ltail",
+      "mean_share": 0.01907015771118778
+    },
+    {
+      "id": "cg0-mn",
+      "mean_share": 0.01483174659697046
+    },
+    {
+      "id": "r0-vss",
+      "mean_share": 0.007467293366202308
+    },
+    {
+      "id": "r0-clk",
+      "mean_share": 0.00608991706242038
+    },
+    {
+      "id": "r0-vdd",
+      "mean_share": 0.004222255459481001
+    },
+    {
+      "id": "cg0-vdd",
+      "mean_share": 0.003793748017577027
+    },
+    {
+      "id": "cg0-vss",
+      "mean_share": 0.0037182911750278463
+    },
+    {
+      "id": "r0-qn",
+      "mean_share": 0.003240516359681376
+    },
+    {
+      "id": "cg0-ibias",
+      "mean_share": 0.00237528385074999
+    },
+    {
+      "id": "r0-na",
+      "mean_share": 0.0023698096981450405
+    },
+    {
+      "id": "r0-sn",
+      "mean_share": 0.002369517572773789
+    },
+    {
+      "id": "r0-doutb",
+      "mean_share": 0.0009611634497679205
+    },
+    {
+      "id": "r0-dout",
+      "mean_share": 0.0008715830376501856
+    },
+    {
+      "id": "r0-atail",
+      "mean_share": 0.000836629807403514
+    },
+    {
+      "id": "r0-mn",
+      "mean_share": 0.0008127645488355615
+    },
+    {
+      "id": "r0-aop",
+      "mean_share": 0.0008059059988249614
+    },
+    {
+      "id": "r0-aon",
+      "mean_share": 0.0007760585663610046
+    },
+    {
+      "id": "r0-mp",
+      "mean_share": 0.0007622652368889166
+    },
+    {
+      "id": "cg0-sp",
+      "mean_share": 0.0007178624430148437
+    },
+    {
+      "id": "r0-vinp",
+      "mean_share": 0.0003546255703881791
+    },
+    {
+      "id": "r0-vinn",
+      "mean_share": 0.0003236477511637744
+    },
+    {
+      "id": "r0-qp",
+      "mean_share": 8.31917686736312e-05
+    },
+    {
+      "id": "r0-ibias",
+      "mean_share": 4.188800970825513e-05
+    },
+    {
+      "id": "cg0-vinn",
+      "mean_share": 3.55755957145741e-05
+    },
+    {
+      "id": "cg0-vinp",
+      "mean_share": 3.55755957145741e-05
+    },
+    {
+      "id": "r0-sp",
+      "mean_share": -8.319176867418538e-06
+    },
+    {
+      "id": "r0-nb",
+      "mean_share": -0.0005161192058732752
+    },
+    {
+      "id": "cg0-atail",
+      "mean_share": -0.0007913125226900066
+    },
+    {
+      "id": "cg0-na",
+      "mean_share": -0.0023752076212994718
+    },
+    {
+      "id": "cg0-aon",
+      "mean_share": -0.031572839440529535
+    },
+    {
+      "id": "cg0-clk",
+      "mean_share": -0.03604089842363821
+    }
+  ],
+  "scope": "diagnostic only: td_od50_ns at tt_125c_2.97v, ss_125c_2.97v; no spec row is scored and T1 item 7 stays unmet",
+  "share_definition": "share_of_gap = (td_ctrl - td_variant) / (td_ctrl - td_sch) at the same corner; 1.0 = the variant closes the whole post-layout gap",
+  "study_valid": true,
+  "sum_of_single_net_shares": {
+    "net-Cg": 0.8686843108631092,
+    "net-R": 0.058001633197351285
+  },
+  "variants": [
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": 0.0,
+          "dout_od50_end": 0.999968,
+          "dut_vos_v": -0.005186500000000004,
+          "e_dec_fj": 1492.591914,
+          "job_ids": [
+            "klt-sim-26061ba84b14",
+            "klt-sim-a26f11357d22"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.0,
+          "tau_ps": 222.15465632797049,
+          "td_od01_ns": 3.2256,
+          "td_od1_ns": 2.71407,
+          "td_od50_ns": 2.02956
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": 0.0,
+          "dout_od50_end": 0.999951,
+          "dut_vos_v": -0.0089074,
+          "e_dec_fj": 1572.7631436000001,
+          "job_ids": [
+            "klt-sim-a26f11357d22",
+            "klt-sim-b821dd75240c"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.0,
+          "tau_ps": 130.07988321966207,
+          "td_od01_ns": 2.35539,
+          "td_od1_ns": 2.0558699999999996,
+          "td_od50_ns": 1.58774
+        }
+      },
+      "group": "control",
+      "id": "ctrl",
+      "mean_share": 0.0,
+      "removes": "nothing (cited extracted DUT, byte-identical decks)"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.03559000000000023,
+          "dout_od50_end": 0.99997,
+          "dut_vos_v": null,
+          "e_dec_fj": 1470.3835608000004,
+          "job_ids": [
+            "klt-sim-a9bc7b90978a"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.04493176280473208,
+          "tau_ps": null,
+          "td_od01_ns": null,
+          "td_od1_ns": null,
+          "td_od50_ns": 1.9939699999999998
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.021319999999999784,
+          "dout_od50_end": 0.999954,
+          "dut_vos_v": null,
+          "e_dec_fj": 1532.3422455000002,
+          "job_ids": [
+            "klt-sim-51cd6e0a6d9a"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.035472970162439894,
+          "tau_ps": null,
+          "td_od01_ns": null,
+          "td_od1_ns": null,
+          "td_od50_ns": 1.5664200000000001
+        }
+      },
+      "group": "centring",
+      "id": "ctrl-ctr0",
+      "mean_share": 0.04020236648358599,
+      "removes": "nothing; ladder centred at 0 V instead of the probed trip point"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.0006099999999999994,
+          "dout_od50_end": 0.999968,
+          "dut_vos_v": -0.005096500000000004,
+          "e_dec_fj": 1492.5815784000004,
+          "job_ids": [
+            "klt-sim-36afd12de928",
+            "klt-sim-76506aa4fb3f"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.0007701145071898389,
+          "tau_ps": 213.0648728217353,
+          "td_od01_ns": 3.20234,
+          "td_od1_ns": 2.71174,
+          "td_od50_ns": 2.02895
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.00046999999999997044,
+          "dout_od50_end": 0.999951,
+          "dut_vos_v": -0.008697500000000004,
+          "e_dec_fj": 1572.7669452000002,
+          "job_ids": [
+            "klt-sim-36afd12de928",
+            "klt-sim-b1625210eb31"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.0007820026255321703,
+          "tau_ps": 126.56644086106472,
+          "td_od01_ns": 2.34558,
+          "td_od1_ns": 2.05415,
+          "td_od50_ns": 1.58727
+        }
+      },
+      "group": "net-R",
+      "id": "r0-aon",
+      "mean_share": 0.0007760585663610046,
+      "removes": "series R of net aon"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.0007099999999997664,
+          "dout_od50_end": 0.999968,
+          "dut_vos_v": -0.005276500000000003,
+          "e_dec_fj": 1492.6625109000001,
+          "job_ids": [
+            "klt-sim-bd421330db60",
+            "klt-sim-d7b426e2fd3d"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.0008963627870567315,
+          "tau_ps": 216.44802683576165,
+          "td_od01_ns": 3.2110700000000003,
+          "td_od1_ns": 2.71268,
+          "td_od50_ns": 2.0288500000000003
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.00042999999999993044,
+          "dout_od50_end": 0.999951,
+          "dut_vos_v": -0.0091175,
+          "e_dec_fj": 1572.9580647000003,
+          "job_ids": [
+            "klt-sim-d7b426e2fd3d",
+            "klt-sim-f2569c2f4afa"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.0007154492105931914,
+          "tau_ps": 128.0517279891738,
+          "td_od01_ns": 2.34979,
+          "td_od1_ns": 2.0549399999999998,
+          "td_od50_ns": 1.58731
+        }
+      },
+      "group": "net-R",
+      "id": "r0-aop",
+      "mean_share": 0.0008059059988249614,
+      "removes": "series R of net aop"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.0009300000000003195,
+          "dout_od50_end": 0.999968,
+          "dut_vos_v": -0.004856600000000003,
+          "e_dec_fj": 1492.5863897999998,
+          "job_ids": [
+            "klt-sim-77c7a23167c4",
+            "klt-sim-f8cfb5fd7ef1"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.0011741090027652407,
+          "tau_ps": 202.56797519413374,
+          "td_od01_ns": 3.17641,
+          "td_od1_ns": 2.7099800000000003,
+          "td_od50_ns": 2.0286299999999997
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.00029999999999996696,
+          "dout_od50_end": 0.999951,
+          "dut_vos_v": -0.008607200000000002,
+          "e_dec_fj": 1572.3644508,
+          "job_ids": [
+            "klt-sim-46e0663a2173",
+            "klt-sim-77c7a23167c4"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.0004991506120417872,
+          "tau_ps": 144.36817167427893,
+          "td_od01_ns": 2.3918,
+          "td_od1_ns": 2.05938,
+          "td_od50_ns": 1.58744
+        }
+      },
+      "group": "net-R",
+      "id": "r0-atail",
+      "mean_share": 0.000836629807403514,
+      "removes": "series R of net atail"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.004310000000000258,
+          "dout_od50_end": 0.999968,
+          "dut_vos_v": -0.0051865999999999995,
+          "e_dec_fj": 1492.6074767999999,
+          "job_ids": [
+            "klt-sim-01870621451b",
+            "klt-sim-5c98867579ff"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.005441300862276077,
+          "tau_ps": 214.70650596332968,
+          "td_od01_ns": 3.2030700000000003,
+          "td_od1_ns": 2.7086900000000003,
+          "td_od50_ns": 2.0252499999999998
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.004049999999999887,
+          "dout_od50_end": 0.999951,
+          "dut_vos_v": -0.008937299999999999,
+          "e_dec_fj": 1573.0062678,
+          "job_ids": [
+            "klt-sim-5c98867579ff",
+            "klt-sim-d76b040fe1cf"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.0067385332625646815,
+          "tau_ps": 141.36285385950836,
+          "td_od01_ns": 2.3806599999999998,
+          "td_od1_ns": 2.0551600000000003,
+          "td_od50_ns": 1.58369
+        }
+      },
+      "group": "net-R",
+      "id": "r0-clk",
+      "mean_share": 0.00608991706242038,
+      "removes": "series R of net clk"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.0005900000000003125,
+          "dout_od50_end": 0.999968,
+          "dut_vos_v": -0.005186500000000004,
+          "e_dec_fj": 1492.0222382999998,
+          "job_ids": [
+            "klt-sim-1d344823ce1c",
+            "klt-sim-35188387087c"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.0007448648512167967,
+          "tau_ps": 222.03305387303743,
+          "td_od01_ns": 3.22473,
+          "td_od1_ns": 2.71348,
+          "td_od50_ns": 2.0289699999999997
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.0005999999999999339,
+          "dout_od50_end": 0.999952,
+          "dut_vos_v": -0.008907500000000002,
+          "e_dec_fj": 1573.0424424,
+          "job_ids": [
+            "klt-sim-1d344823ce1c",
+            "klt-sim-aa971aa5aafd"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.0009983012240835744,
+          "tau_ps": 121.80657333940502,
+          "td_od01_ns": 2.33294,
+          "td_od1_ns": 2.05247,
+          "td_od50_ns": 1.58714
+        }
+      },
+      "group": "net-R",
+      "id": "r0-dout",
+      "mean_share": 0.0008715830376501856,
+      "removes": "series R of net dout"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.001180000000000181,
+          "dout_od50_end": 0.999968,
+          "dut_vos_v": -0.005186500000000004,
+          "e_dec_fj": 1493.6131188,
+          "job_ids": [
+            "klt-sim-41ec10a43e73",
+            "klt-sim-9330c5b55880"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.0014897297024330327,
+          "tau_ps": 184.2450910026356,
+          "td_od01_ns": 3.12933,
+          "td_od1_ns": 2.7050899999999998,
+          "td_od50_ns": 2.02838
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.00025999999999992696,
+          "dout_od50_end": 0.999951,
+          "dut_vos_v": -0.0089074,
+          "e_dec_fj": 1572.4872900000003,
+          "job_ids": [
+            "klt-sim-41ec10a43e73",
+            "klt-sim-7e11221113fb"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.00043259719710280836,
+          "tau_ps": 132.13843906388337,
+          "td_od01_ns": 2.36055,
+          "td_od1_ns": 2.05629,
+          "td_od50_ns": 1.58748
+        }
+      },
+      "group": "net-R",
+      "id": "r0-doutb",
+      "mean_share": 0.0009611634497679205,
+      "removes": "series R of net doutb"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -4.000000000026205e-05,
+          "dout_od50_end": 0.999968,
+          "dut_vos_v": -0.005186500000000004,
+          "e_dec_fj": 1492.5650355000005,
+          "job_ids": [
+            "klt-sim-3585ea5338aa",
+            "klt-sim-95e4fab28111"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 5.049931194720556e-05,
+          "tau_ps": 221.6508747289627,
+          "td_od01_ns": 3.22433,
+          "td_od1_ns": 2.71396,
+          "td_od50_ns": 2.0295199999999998
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -1.999999999990898e-05,
+          "dout_od50_end": 0.999951,
+          "dut_vos_v": -0.008907500000000002,
+          "e_dec_fj": 1572.7392351,
+          "job_ids": [
+            "klt-sim-770f51e706c9",
+            "klt-sim-95e4fab28111"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 3.32767074693047e-05,
+          "tau_ps": 129.59347339993022,
+          "td_od01_ns": 2.35411,
+          "td_od1_ns": 2.05571,
+          "td_od50_ns": 1.58772
+        }
+      },
+      "group": "net-R",
+      "id": "r0-ibias",
+      "mean_share": 4.188800970825513e-05,
+      "removes": "series R of net ibias"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.021110000000000184,
+          "dout_od50_end": 0.999968,
+          "dut_vos_v": -0.005156400000000005,
+          "e_dec_fj": 1492.5240495,
+          "job_ids": [
+            "klt-sim-b234480190c2",
+            "klt-sim-ef55f1b497ae"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.02665101187996337,
+          "tau_ps": 230.56259749761736,
+          "td_od01_ns": 3.21415,
+          "td_od1_ns": 2.68326,
+          "td_od50_ns": 2.00845
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.015399999999999858,
+          "dout_od50_end": 0.999951,
+          "dut_vos_v": -0.008847200000000006,
+          "e_dec_fj": 1573.9332048,
+          "job_ids": [
+            "klt-sim-7fbb1c1a46a1",
+            "klt-sim-ef55f1b497ae"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.025623064751480996,
+          "tau_ps": 140.02088391042736,
+          "td_od01_ns": 2.35868,
+          "td_od1_ns": 2.03627,
+          "td_od50_ns": 1.57234
+        }
+      },
+      "group": "net-R",
+      "id": "r0-ltail",
+      "mean_share": 0.026137038315722182,
+      "removes": "series R of net ltail"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.0005099999999997884,
+          "dout_od50_end": 0.999968,
+          "dut_vos_v": -0.005186700000000002,
+          "e_dec_fj": 1492.6156740000001,
+          "job_ids": [
+            "klt-sim-17bcbfe7b2df",
+            "klt-sim-3b2e81b8cbd6"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.0006438662273223856,
+          "tau_ps": 198.7461837533852,
+          "td_od01_ns": 3.16699,
+          "td_od1_ns": 2.7093599999999998,
+          "td_od50_ns": 2.0290500000000002
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.0005899999999998684,
+          "dout_od50_end": 0.999951,
+          "dut_vos_v": -0.008967400000000004,
+          "e_dec_fj": 1572.6823893,
+          "job_ids": [
+            "klt-sim-3b2e81b8cbd6",
+            "klt-sim-5c549a1c4878"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.0009816628703487374,
+          "tau_ps": 133.8712740466774,
+          "td_od01_ns": 2.36456,
+          "td_od1_ns": 2.05631,
+          "td_od50_ns": 1.58715
+        }
+      },
+      "group": "net-R",
+      "id": "r0-mn",
+      "mean_share": 0.0008127645488355615,
+      "removes": "series R of net mn"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.0004300000000001525,
+          "dout_od50_end": 0.999968,
+          "dut_vos_v": -0.0051263,
+          "e_dec_fj": 1492.6078926,
+          "job_ids": [
+            "klt-sim-987fab1ec413",
+            "klt-sim-cbca518d122e"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.0005428676034290958,
+          "tau_ps": 234.47559077956572,
+          "td_od01_ns": 3.25318,
+          "td_od1_ns": 2.71328,
+          "td_od50_ns": 2.02913
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.0005899999999998684,
+          "dout_od50_end": 0.999951,
+          "dut_vos_v": -0.008697300000000005,
+          "e_dec_fj": 1572.2378694000001,
+          "job_ids": [
+            "klt-sim-5d7ea03aa6d8",
+            "klt-sim-cbca518d122e"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.0009816628703487374,
+          "tau_ps": 142.80036859460833,
+          "td_od01_ns": 2.38482,
+          "td_od1_ns": 2.0560099999999997,
+          "td_od50_ns": 1.58715
+        }
+      },
+      "group": "net-R",
+      "id": "r0-mp",
+      "mean_share": 0.0007622652368889166,
+      "removes": "series R of net mp"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.0021199999999996777,
+          "dout_od50_end": 0.999968,
+          "dut_vos_v": -0.005186500000000004,
+          "e_dec_fj": 1493.7200387999999,
+          "job_ids": [
+            "klt-sim-63652ef8636a",
+            "klt-sim-de2ba92d11ad"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.0026764635331839536,
+          "tau_ps": 184.39275112648272,
+          "td_od01_ns": 3.1287700000000003,
+          "td_od1_ns": 2.70419,
+          "td_od50_ns": 2.0274400000000004
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.0012399999999999078,
+          "dout_od50_end": 0.999951,
+          "dut_vos_v": -0.008907500000000002,
+          "e_dec_fj": 1573.7279481,
+          "job_ids": [
+            "klt-sim-7471137b9e5d",
+            "klt-sim-de2ba92d11ad"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.002063155863106128,
+          "tau_ps": 121.86303162205246,
+          "td_od01_ns": 2.33243,
+          "td_od1_ns": 2.05183,
+          "td_od50_ns": 1.5865
+        }
+      },
+      "group": "net-R",
+      "id": "r0-na",
+      "mean_share": 0.0023698096981450405,
+      "removes": "series R of net na"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": 0.00032999999999994145,
+          "dout_od50_end": 0.999968,
+          "dut_vos_v": -0.005186500000000004,
+          "e_dec_fj": 1492.9720740000002,
+          "job_ids": [
+            "klt-sim-a1b42d6bc7dc",
+            "klt-sim-a5ea8589fa9a"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": -0.00041661932356164256,
+          "tau_ps": 222.02002503858031,
+          "td_od01_ns": 3.22554,
+          "td_od1_ns": 2.7143200000000003,
+          "td_od50_ns": 2.02989
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": 0.00036999999999998145,
+          "dout_od50_end": 0.999951,
+          "dut_vos_v": -0.0089074,
+          "e_dec_fj": 1573.1288100000002,
+          "job_ids": [
+            "klt-sim-0d0129c09fd8",
+            "klt-sim-a1b42d6bc7dc"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": -0.0006156190881849078,
+          "tau_ps": 132.233983849902,
+          "td_od01_ns": 2.36135,
+          "td_od1_ns": 2.05687,
+          "td_od50_ns": 1.58811
+        }
+      },
+      "group": "net-R",
+      "id": "r0-nb",
+      "mean_share": -0.0005161192058732752,
+      "removes": "series R of net nb"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.0025900000000000922,
+          "dout_od50_end": 0.999968,
+          "dut_vos_v": -0.0051865999999999995,
+          "e_dec_fj": 1493.7824087999998,
+          "job_ids": [
+            "klt-sim-0755cd46029e",
+            "klt-sim-2f6deb53ec99"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.003269830448560255,
+          "tau_ps": 180.6751903613908,
+          "td_od01_ns": 3.11915,
+          "td_od1_ns": 2.70313,
+          "td_od50_ns": 2.02697
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.0019299999999999873,
+          "dout_od50_end": 0.999951,
+          "dut_vos_v": -0.008937299999999999,
+          "e_dec_fj": 1572.3590156999999,
+          "job_ids": [
+            "klt-sim-0755cd46029e",
+            "klt-sim-84ffe202a3c2"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.003211202270802497,
+          "tau_ps": 142.2227569336768,
+          "td_od01_ns": 2.3852499999999996,
+          "td_od1_ns": 2.05777,
+          "td_od50_ns": 1.58581
+        }
+      },
+      "group": "net-R",
+      "id": "r0-qn",
+      "mean_share": 0.003240516359681376,
+      "removes": "series R of net qn"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": 0.0,
+          "dout_od50_end": 0.999968,
+          "dut_vos_v": -0.005186400000000001,
+          "e_dec_fj": 1492.5776283000002,
+          "job_ids": [
+            "klt-sim-5d77eff9b3cd",
+            "klt-sim-6f2aa6db7120"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.0,
+          "tau_ps": 232.6949834037622,
+          "td_od01_ns": 3.2507699999999997,
+          "td_od1_ns": 2.71497,
+          "td_od50_ns": 2.02956
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -9.999999999998899e-05,
+          "dout_od50_end": 0.999951,
+          "dut_vos_v": -0.008907300000000003,
+          "e_dec_fj": 1573.6221567,
+          "job_ids": [
+            "klt-sim-3ff3632d1b2d",
+            "klt-sim-5d77eff9b3cd"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.0001663835373472624,
+          "tau_ps": 133.02874275178502,
+          "td_od01_ns": 2.36238,
+          "td_od1_ns": 2.05607,
+          "td_od50_ns": 1.58764
+        }
+      },
+      "group": "net-R",
+      "id": "r0-qp",
+      "mean_share": 8.31917686736312e-05,
+      "removes": "series R of net qp"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.0020799999999998597,
+          "dout_od50_end": 0.999968,
+          "dut_vos_v": -0.005186500000000004,
+          "e_dec_fj": 1493.6784587999998,
+          "job_ids": [
+            "klt-sim-727043b58666",
+            "klt-sim-da71cdd425bb"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.0026259642212373086,
+          "tau_ps": 184.34063578865425,
+          "td_od01_ns": 3.1289,
+          "td_od1_ns": 2.70444,
+          "td_od50_ns": 2.02748
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.0012699999999998823,
+          "dout_od50_end": 0.999951,
+          "dut_vos_v": -0.008907500000000002,
+          "e_dec_fj": 1573.6180581,
+          "job_ids": [
+            "klt-sim-328d9bc58247",
+            "klt-sim-727043b58666"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.0021130709243102697,
+          "tau_ps": 121.78920156012873,
+          "td_od01_ns": 2.33241,
+          "td_od1_ns": 2.0519800000000004,
+          "td_od50_ns": 1.58647
+        }
+      },
+      "group": "net-R",
+      "id": "r0-sn",
+      "mean_share": 0.002369517572773789,
+      "removes": "series R of net sn"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": 0.0,
+          "dout_od50_end": 0.999968,
+          "dut_vos_v": -0.005186500000000004,
+          "e_dec_fj": 1492.5835683,
+          "job_ids": [
+            "klt-sim-1d3672f92e52",
+            "klt-sim-b0b511cfd926"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.0,
+          "tau_ps": 222.2675728932652,
+          "td_od01_ns": 3.22588,
+          "td_od1_ns": 2.71409,
+          "td_od50_ns": 2.02956
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": 1.0000000000065512e-05,
+          "dout_od50_end": 0.999951,
+          "dut_vos_v": -0.008907500000000002,
+          "e_dec_fj": 1572.6268800000003,
+          "job_ids": [
+            "klt-sim-1d3672f92e52",
+            "klt-sim-49dcf9eb47a1"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": -1.6638353734837075e-05,
+          "tau_ps": 132.41638753230148,
+          "td_od01_ns": 2.36152,
+          "td_od1_ns": 2.0566199999999997,
+          "td_od50_ns": 1.58775
+        }
+      },
+      "group": "net-R",
+      "id": "r0-sp",
+      "mean_share": -8.319176867418538e-06,
+      "removes": "series R of net sp"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.003169999999999895,
+          "dout_od50_end": 0.999968,
+          "dut_vos_v": -0.005156500000000008,
+          "e_dec_fj": 1492.3637883000004,
+          "job_ids": [
+            "klt-sim-05ec9511186d",
+            "klt-sim-9c44e348b0a2"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.00400207047178969,
+          "tau_ps": 222.4847201342169,
+          "td_od01_ns": 3.22276,
+          "td_od1_ns": 2.71047,
+          "td_od50_ns": 2.02639
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.00266999999999995,
+          "dout_od50_end": 0.999951,
+          "dut_vos_v": -0.008877400000000004,
+          "e_dec_fj": 1572.6217122,
+          "job_ids": [
+            "klt-sim-1ef7e0cd546f",
+            "klt-sim-9c44e348b0a2"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.004442440447172313,
+          "tau_ps": 130.35783168808004,
+          "td_od01_ns": 2.35338,
+          "td_od1_ns": 2.05322,
+          "td_od50_ns": 1.58507
+        }
+      },
+      "group": "net-R",
+      "id": "r0-vdd",
+      "mean_share": 0.004222255459481001,
+      "removes": "series R of net vdd"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.00045999999999990493,
+          "dout_od50_end": 0.999968,
+          "dut_vos_v": -0.005186700000000002,
+          "e_dec_fj": 1492.6054869000002,
+          "job_ids": [
+            "klt-sim-2d42c33c85d0",
+            "klt-sim-ab1346bb8d26"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.0005807420873889394,
+          "tau_ps": 194.6768444579516,
+          "td_od01_ns": 3.1570899999999997,
+          "td_od1_ns": 2.70883,
+          "td_od50_ns": 2.0291
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -3.999999999981796e-05,
+          "dout_od50_end": 0.999951,
+          "dut_vos_v": -0.008967300000000008,
+          "e_dec_fj": 1572.7434822000002,
+          "job_ids": [
+            "klt-sim-1029bdd7b604",
+            "klt-sim-ab1346bb8d26"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 6.65534149386094e-05,
+          "tau_ps": 139.45630108395332,
+          "td_od01_ns": 2.37968,
+          "td_od1_ns": 2.05857,
+          "td_od50_ns": 1.5877000000000001
+        }
+      },
+      "group": "net-R",
+      "id": "r0-vinn",
+      "mean_share": 0.0003236477511637744,
+      "removes": "series R of net vinn"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.0004300000000001525,
+          "dout_od50_end": 0.999968,
+          "dut_vos_v": -0.005156600000000004,
+          "e_dec_fj": 1492.5871026,
+          "job_ids": [
+            "klt-sim-58ebb4e2b75c",
+            "klt-sim-f2e781f45f71"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.0005428676034290958,
+          "tau_ps": 201.31286414143327,
+          "td_od01_ns": 3.17364,
+          "td_od1_ns": 2.7101,
+          "td_od50_ns": 2.02913
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -9.999999999998899e-05,
+          "dout_od50_end": 0.999951,
+          "dut_vos_v": -0.008877300000000005,
+          "e_dec_fj": 1572.7340079,
+          "job_ids": [
+            "klt-sim-33d11da190b2",
+            "klt-sim-58ebb4e2b75c"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.0001663835373472624,
+          "tau_ps": 137.9970716247583,
+          "td_od01_ns": 2.3758600000000003,
+          "td_od1_ns": 2.05811,
+          "td_od50_ns": 1.58764
+        }
+      },
+      "group": "net-R",
+      "id": "r0-vinp",
+      "mean_share": 0.0003546255703881791,
+      "removes": "series R of net vinp"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.0052400000000001334,
+          "dout_od50_end": 0.999968,
+          "dut_vos_v": -0.0051865999999999995,
+          "e_dec_fj": 1492.3291580999999,
+          "job_ids": [
+            "klt-sim-595ba2499c09",
+            "klt-sim-e6b36fd05b14"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.006615409865040758,
+          "tau_ps": 214.23312497805512,
+          "td_od01_ns": 3.2005500000000002,
+          "td_od1_ns": 2.70726,
+          "td_od50_ns": 2.02432
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.004999999999999893,
+          "dout_od50_end": 0.999951,
+          "dut_vos_v": -0.008937400000000002,
+          "e_dec_fj": 1573.0708950000003,
+          "job_ids": [
+            "klt-sim-595ba2499c09",
+            "klt-sim-e3204a96c937"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.008319176867363859,
+          "tau_ps": 129.9235372061768,
+          "td_od01_ns": 2.34959,
+          "td_od1_ns": 2.05043,
+          "td_od50_ns": 1.58274
+        }
+      },
+      "group": "net-R",
+      "id": "r0-vss",
+      "mean_share": 0.007467293366202308,
+      "removes": "series R of net vss"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": 0.02499000000000029,
+          "dout_od50_end": 0.999986,
+          "dut_vos_v": -0.010316600000000002,
+          "e_dec_fj": 1494.0463824,
+          "job_ids": [
+            "klt-sim-04e6861d85c3",
+            "klt-sim-65217d7851e1"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": -0.031549445138810354,
+          "tau_ps": 134.39677036978023,
+          "td_od01_ns": 3.02485,
+          "td_od1_ns": 2.71539,
+          "td_od50_ns": 2.0545500000000003
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": 0.018990000000000062,
+          "dout_od50_end": 0.999975,
+          "dut_vos_v": -0.016947200000000003,
+          "e_dec_fj": 1556.1819603000001,
+          "job_ids": [
+            "klt-sim-045217f39fdd",
+            "klt-sim-65217d7851e1"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": -0.031596233742248715,
+          "tau_ps": 113.68092358299508,
+          "td_od01_ns": 2.32718,
+          "td_od1_ns": 2.06542,
+          "td_od50_ns": 1.60673
+        }
+      },
+      "group": "net-Cg",
+      "id": "cg0-aon",
+      "mean_share": -0.031572839440529535,
+      "removes": "ground C of net aon"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.04520999999999997,
+          "dout_od50_end": 0.999983,
+          "dut_vos_v": 0.00048339999999999494,
+          "e_dec_fj": 1485.1750518000003,
+          "job_ids": [
+            "klt-sim-9e5030d2dee8",
+            "klt-sim-daeeac0432bb"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.05707684732795512,
+          "tau_ps": null,
+          "td_od01_ns": null,
+          "td_od1_ns": null,
+          "td_od50_ns": 1.98435
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.005589999999999984,
+          "dout_od50_end": 0.999974,
+          "dut_vos_v": -0.00014750000000000874,
+          "e_dec_fj": 1562.4090702,
+          "job_ids": [
+            "klt-sim-457597d901cd",
+            "klt-sim-daeeac0432bb"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.009300839737712965,
+          "tau_ps": null,
+          "td_od01_ns": null,
+          "td_od1_ns": null,
+          "td_od50_ns": 1.58215
+        }
+      },
+      "group": "net-Cg",
+      "id": "cg0-aop",
+      "mean_share": 0.03318884353283404,
+      "removes": "ground C of net aop"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": 0.0009900000000002684,
+          "dout_od50_end": 0.999967,
+          "dut_vos_v": -0.005126500000000006,
+          "e_dec_fj": 1489.1253597000004,
+          "job_ids": [
+            "klt-sim-1c893a575c6c",
+            "klt-sim-9307495c5b80"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": -0.0012498579706854884,
+          "tau_ps": 211.279922501113,
+          "td_od01_ns": 3.20267,
+          "td_od1_ns": 2.71618,
+          "td_od50_ns": 2.0305500000000003
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": 0.00019999999999997797,
+          "dout_od50_end": 0.999951,
+          "dut_vos_v": -0.00884730000000001,
+          "e_dec_fj": 1566.0141453000003,
+          "job_ids": [
+            "klt-sim-44e76408f486",
+            "klt-sim-9307495c5b80"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": -0.0003327670746945248,
+          "tau_ps": 142.81339742906545,
+          "td_od01_ns": 2.38898,
+          "td_od1_ns": 2.06014,
+          "td_od50_ns": 1.58794
+        }
+      },
+      "group": "net-Cg",
+      "id": "cg0-atail",
+      "mean_share": -0.0007913125226900066,
+      "removes": "ground C of net atail"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": 0.03874999999999984,
+          "dout_od50_end": 0.99994,
+          "dut_vos_v": -0.0042563000000000045,
+          "e_dec_fj": 1592.2626489000004,
+          "job_ids": [
+            "klt-sim-0a36bbeb36f9",
+            "klt-sim-d289830bc789"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": -0.04892120844853469,
+          "tau_ps": 233.45934169191202,
+          "td_od01_ns": 3.35305,
+          "td_od1_ns": 2.81549,
+          "td_od50_ns": 2.06831
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": 0.013920000000000154,
+          "dout_od50_end": 0.999923,
+          "dut_vos_v": -0.007617300000000007,
+          "e_dec_fj": 1667.0683359000002,
+          "job_ids": [
+            "klt-sim-0a36bbeb36f9",
+            "klt-sim-2a17b9de84ae"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": -0.023160588398741737,
+          "tau_ps": 142.24447165777204,
+          "td_od01_ns": 2.41468,
+          "td_od1_ns": 2.0871500000000003,
+          "td_od50_ns": 1.60166
+        }
+      },
+      "group": "net-Cg",
+      "id": "cg0-clk",
+      "mean_share": -0.03604089842363821,
+      "removes": "ground C of net clk"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.11099999999999999,
+          "dout_od50_end": 0.999998,
+          "dut_vos_v": -0.0051865999999999995,
+          "e_dec_fj": 1364.2193664,
+          "job_ids": [
+            "klt-sim-26930377db76",
+            "klt-sim-ad328c83dd2a"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.14013559065257736,
+          "tau_ps": 226.43245697471747,
+          "td_od01_ns": 3.12383,
+          "td_od1_ns": 2.6024499999999997,
+          "td_od50_ns": 1.91856
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.09302999999999995,
+          "dout_od50_end": 0.999996,
+          "dut_vos_v": -0.008907500000000002,
+          "e_dec_fj": 1448.9420022,
+          "job_ids": [
+            "klt-sim-74966634c57c",
+            "klt-sim-ad328c83dd2a"
+          ],
+          "meets_1p5ns": true,
+          "share_of_gap": 0.15478660479417516,
+          "tau_ps": 124.47748440311003,
+          "td_od01_ns": 2.24532,
+          "td_od1_ns": 1.9586999999999999,
+          "td_od50_ns": 1.49471
+        }
+      },
+      "group": "net-Cg",
+      "id": "cg0-dout",
+      "mean_share": 0.14746109772337626,
+      "removes": "ground C of net dout"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.1456599999999999,
+          "dout_od50_end": 0.999955,
+          "dut_vos_v": -0.0051865999999999995,
+          "e_dec_fj": 1384.6281966,
+          "job_ids": [
+            "klt-sim-43d59e26014a",
+            "klt-sim-4cb6daeff370"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.1838932444545442,
+          "tau_ps": 222.13728454869437,
+          "td_od01_ns": 3.07457,
+          "td_od1_ns": 2.56308,
+          "td_od50_ns": 1.8839000000000001
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.12043000000000004,
+          "dout_od50_end": 0.999939,
+          "dut_vos_v": -0.008907599999999998,
+          "e_dec_fj": 1457.5408650000004,
+          "job_ids": [
+            "klt-sim-43d59e26014a",
+            "klt-sim-f5da6507bffc"
+          ],
+          "meets_1p5ns": true,
+          "share_of_gap": 0.20037569402733024,
+          "tau_ps": 158.41759816384922,
+          "td_od01_ns": 2.30377,
+          "td_od1_ns": 1.939,
+          "td_od50_ns": 1.46731
+        }
+      },
+      "group": "net-Cg",
+      "id": "cg0-doutb",
+      "mean_share": 0.19213446924093722,
+      "removes": "ground C of net doutb"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.0022999999999999687,
+          "dout_od50_end": 0.99998,
+          "dut_vos_v": -0.005246300000000009,
+          "e_dec_fj": 1502.9671337999998,
+          "job_ids": [
+            "klt-sim-2819f7600621",
+            "klt-sim-940ff5e4a5e6"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.002903710436945257,
+          "tau_ps": 257.7885185681322,
+          "td_od01_ns": 3.30576,
+          "td_od1_ns": 2.71218,
+          "td_od50_ns": 2.02726
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.0011099999999999444,
+          "dout_od50_end": 0.999962,
+          "dut_vos_v": -0.0089974,
+          "e_dec_fj": 1588.7079153,
+          "job_ids": [
+            "klt-sim-2819f7600621",
+            "klt-sim-2e71c89edf2a"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.0018468572645547235,
+          "tau_ps": 137.9102127283776,
+          "td_od01_ns": 2.37458,
+          "td_od1_ns": 2.0570299999999997,
+          "td_od50_ns": 1.58663
+        }
+      },
+      "group": "net-Cg",
+      "id": "cg0-ibias",
+      "mean_share": 0.00237528385074999,
+      "removes": "ground C of net ibias"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.015449999999999964,
+          "dout_od50_end": 0.999965,
+          "dut_vos_v": -0.0053664,
+          "e_dec_fj": 1471.6869155999998,
+          "job_ids": [
+            "klt-sim-81e198496d13",
+            "klt-sim-bcf10355f2ec"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.019505359239480317,
+          "tau_ps": 184.51001063659646,
+          "td_od01_ns": 3.10913,
+          "td_od1_ns": 2.68428,
+          "td_od50_ns": 2.01411
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.011199999999999877,
+          "dout_od50_end": 0.999953,
+          "dut_vos_v": -0.009267400000000005,
+          "e_dec_fj": 1546.7190651000003,
+          "job_ids": [
+            "klt-sim-af6d588c8943",
+            "klt-sim-bcf10355f2ec"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.01863495618289524,
+          "tau_ps": 114.592941994992,
+          "td_od01_ns": 2.30117,
+          "td_od1_ns": 2.0373099999999997,
+          "td_od50_ns": 1.57654
+        }
+      },
+      "group": "net-Cg",
+      "id": "cg0-ltail",
+      "mean_share": 0.01907015771118778,
+      "removes": "ground C of net ltail"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.01377000000000006,
+          "dout_od50_end": 0.999972,
+          "dut_vos_v": -0.0077666000000000054,
+          "e_dec_fj": 1474.4828439,
+          "job_ids": [
+            "klt-sim-7e5542c912a3",
+            "klt-sim-a955c2af0d11"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.0173843881377117,
+          "tau_ps": 193.24801561248992,
+          "td_od01_ns": 3.13945,
+          "td_od1_ns": 2.69448,
+          "td_od50_ns": 2.01579
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.007379999999999942,
+          "dout_od50_end": 0.999956,
+          "dut_vos_v": -0.013527400000000002,
+          "e_dec_fj": 1561.6383552,
+          "job_ids": [
+            "klt-sim-90931b09bc52",
+            "klt-sim-a955c2af0d11"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.012279105056229221,
+          "tau_ps": 124.22993654842513,
+          "td_od01_ns": 2.33667,
+          "td_od1_ns": 2.05062,
+          "td_od50_ns": 1.58036
+        }
+      },
+      "group": "net-Cg",
+      "id": "cg0-mn",
+      "mean_share": 0.01483174659697046,
+      "removes": "ground C of net mn"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.06353999999999993,
+          "dout_od50_end": 0.999982,
+          "dut_vos_v": 0.0018933999999999965,
+          "e_dec_fj": 1437.0624773999998,
+          "job_ids": [
+            "klt-sim-5e9dbca41509",
+            "klt-sim-7d1f7f381e51"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.08021815702761041,
+          "tau_ps": 197.4215855835803,
+          "td_od01_ns": 3.0868300000000004,
+          "td_od1_ns": 2.63225,
+          "td_od50_ns": 1.96602
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.032399999999999984,
+          "dout_od50_end": 0.999965,
+          "dut_vos_v": 0.0036629999999999996,
+          "e_dec_fj": 1551.1575816000002,
+          "job_ids": [
+            "klt-sim-5e9dbca41509",
+            "klt-sim-e7d136b16500"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.05390826610051893,
+          "tau_ps": 157.11037177332028,
+          "td_od01_ns": 2.3959799999999998,
+          "td_od1_ns": 2.03422,
+          "td_od50_ns": 1.55534
+        }
+      },
+      "group": "net-Cg",
+      "id": "cg0-mp",
+      "mean_share": 0.06706321156406467,
+      "removes": "ground C of net mp"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": 0.0017200000000001658,
+          "dout_od50_end": 0.99997,
+          "dut_vos_v": -0.005186500000000004,
+          "e_dec_fj": 1491.5505726000004,
+          "job_ids": [
+            "klt-sim-69bfc8eafda8",
+            "klt-sim-cbcf317b4d3e"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": -0.0021714704137158224,
+          "tau_ps": 222.10688393496096,
+          "td_od01_ns": 3.22753,
+          "td_od1_ns": 2.71611,
+          "td_od50_ns": 2.03128
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": 0.0015500000000001624,
+          "dout_od50_end": 0.999955,
+          "dut_vos_v": -0.008907500000000002,
+          "e_dec_fj": 1571.6614518000001,
+          "job_ids": [
+            "klt-sim-69bfc8eafda8",
+            "klt-sim-d8568d40280b"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": -0.0025789448288831215,
+          "tau_ps": 130.5619500945746,
+          "td_od01_ns": 2.3583,
+          "td_od1_ns": 2.05767,
+          "td_od50_ns": 1.58929
+        }
+      },
+      "group": "net-Cg",
+      "id": "cg0-na",
+      "mean_share": -0.0023752076212994718,
+      "removes": "ground C of net na"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.028080000000000105,
+          "dout_od50_end": 0.99997,
+          "dut_vos_v": -0.005186500000000004,
+          "e_dec_fj": 1471.853889,
+          "job_ids": [
+            "klt-sim-51a25e85a644",
+            "klt-sim-ce0c71b0a911"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.03545051698670619,
+          "tau_ps": 224.74739438493276,
+          "td_od01_ns": 3.20309,
+          "td_od1_ns": 2.68559,
+          "td_od50_ns": 2.00148
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.02418000000000009,
+          "dout_od50_end": 0.999953,
+          "dut_vos_v": -0.008907500000000002,
+          "e_dec_fj": 1550.6070921000003,
+          "job_ids": [
+            "klt-sim-27bfbbb33566",
+            "klt-sim-ce0c71b0a911"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.04023153933057263,
+          "tau_ps": 131.46093967211422,
+          "td_od01_ns": 2.33459,
+          "td_od1_ns": 2.03189,
+          "td_od50_ns": 1.5635599999999998
+        }
+      },
+      "group": "net-Cg",
+      "id": "cg0-nb",
+      "mean_share": 0.037841028158639406,
+      "removes": "ground C of net nb"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.12993999999999994,
+          "dout_od50_end": 0.999998,
+          "dut_vos_v": -0.012927000000000004,
+          "e_dec_fj": 1386.5033358,
+          "job_ids": [
+            "klt-sim-963748ea7cc4",
+            "klt-sim-aca9f210e6e1"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.16404701485942247,
+          "tau_ps": 57.54836179699989,
+          "td_od01_ns": 2.52824,
+          "td_od1_ns": 2.39573,
+          "td_od50_ns": 1.89962
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.08426999999999985,
+          "dout_od50_end": 0.999981,
+          "dut_vos_v": -0.0216277,
+          "e_dec_fj": 1461.0039147,
+          "job_ids": [
+            "klt-sim-24ef61f94010",
+            "klt-sim-aca9f210e6e1"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.1402114069225532,
+          "tau_ps": 42.03536290341576,
+          "td_od01_ns": 1.93716,
+          "td_od1_ns": 1.8403699999999998,
+          "td_od50_ns": 1.50347
+        }
+      },
+      "group": "net-Cg",
+      "id": "cg0-qn",
+      "mean_share": 0.15212921089098785,
+      "removes": "ground C of net qn"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.0416000000000003,
+          "dout_od50_end": 0.999964,
+          "dut_vos_v": 0.001112999999999996,
+          "e_dec_fj": 1476.2502611999998,
+          "job_ids": [
+            "klt-sim-462cb5b3e148",
+            "klt-sim-fc1f4c62871d"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.052519284424750096,
+          "tau_ps": 121.55468253990114,
+          "td_od01_ns": 2.7833,
+          "td_od1_ns": 2.50341,
+          "td_od50_ns": 1.9879599999999997
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.024839999999999973,
+          "dout_od50_end": 0.999945,
+          "dut_vos_v": 0.0020124999999999935,
+          "e_dec_fj": 1536.4441719000001,
+          "job_ids": [
+            "klt-sim-ef645e3a6091",
+            "klt-sim-fc1f4c62871d"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.04132967067706449,
+          "tau_ps": 83.43231291843374,
+          "td_od01_ns": 2.0990800000000003,
+          "td_od1_ns": 1.90697,
+          "td_od50_ns": 1.5629
+        }
+      },
+      "group": "net-Cg",
+      "id": "cg0-qp",
+      "mean_share": 0.04692447755090729,
+      "removes": "ground C of net qp"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.16782000000000008,
+          "dout_od50_end": 0.999942,
+          "dut_vos_v": -0.005156800000000003,
+          "e_dec_fj": 1373.8935177000003,
+          "job_ids": [
+            "klt-sim-1c667b7687f0",
+            "klt-sim-514cd9609d87"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.21186986327311302,
+          "tau_ps": 243.70869146482886,
+          "td_od01_ns": 3.09785,
+          "td_od1_ns": 2.5366899999999997,
+          "td_od50_ns": 1.86174
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.1348799999999999,
+          "dout_od50_end": 0.999924,
+          "dut_vos_v": -0.008877100000000006,
+          "e_dec_fj": 1456.0856838000004,
+          "job_ids": [
+            "klt-sim-514cd9609d87",
+            "klt-sim-e89286fa8696"
+          ],
+          "meets_1p5ns": true,
+          "share_of_gap": 0.22441811517401206,
+          "tau_ps": 150.12691650431609,
+          "td_od01_ns": 2.26206,
+          "td_od1_ns": 1.91638,
+          "td_od50_ns": 1.45286
+        }
+      },
+      "group": "net-Cg",
+      "id": "cg0-sn",
+      "mean_share": 0.21814398922356254,
+      "removes": "ground C of net sn"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.0009000000000001229,
+          "dout_od50_end": 0.999967,
+          "dut_vos_v": -0.005216300000000007,
+          "e_dec_fj": 1495.1952675,
+          "job_ids": [
+            "klt-sim-418096657576",
+            "klt-sim-a65262ebef64"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.0011362345188048366,
+          "tau_ps": 225.42055083188274,
+          "td_od01_ns": 3.23358,
+          "td_od1_ns": 2.7145300000000003,
+          "td_od50_ns": 2.02866
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.00017999999999984695,
+          "dout_od50_end": 0.99995,
+          "dut_vos_v": -0.008937499999999998,
+          "e_dec_fj": 1575.8791785,
+          "job_ids": [
+            "klt-sim-418096657576",
+            "klt-sim-a129f9f98147"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.00029949036722485065,
+          "tau_ps": 126.84873227430182,
+          "td_od01_ns": 2.34736,
+          "td_od1_ns": 2.0552799999999998,
+          "td_od50_ns": 1.58756
+        }
+      },
+      "group": "net-Cg",
+      "id": "cg0-sp",
+      "mean_share": 0.0007178624430148437,
+      "removes": "ground C of net sp"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.003730000000000011,
+          "dout_od50_end": 0.999954,
+          "dut_vos_v": -0.0051562,
+          "e_dec_fj": 1468.4942844000002,
+          "job_ids": [
+            "klt-sim-0a6db11e3e20",
+            "klt-sim-dca98732de3b"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.004709060839046082,
+          "tau_ps": 239.64369511421438,
+          "td_od01_ns": 3.27339,
+          "td_od1_ns": 2.72159,
+          "td_od50_ns": 2.02583
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.0017300000000000093,
+          "dout_od50_end": 0.999933,
+          "dut_vos_v": -0.008877000000000003,
+          "e_dec_fj": 1547.8043031,
+          "job_ids": [
+            "klt-sim-aaa524c45bd6",
+            "klt-sim-dca98732de3b"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.0028784351961079722,
+          "tau_ps": 145.05869990050502,
+          "td_od01_ns": 2.39539,
+          "td_od1_ns": 2.06138,
+          "td_od50_ns": 1.58601
+        }
+      },
+      "group": "net-Cg",
+      "id": "cg0-vdd",
+      "mean_share": 0.003793748017577027,
+      "removes": "ground C of net vdd"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -2.9999999999752447e-05,
+          "dout_od50_end": 0.999968,
+          "dut_vos_v": -0.005186500000000004,
+          "e_dec_fj": 1492.7266926000002,
+          "job_ids": [
+            "klt-sim-59b491a7afa3",
+            "klt-sim-d6948d48461f"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 3.787448395984351e-05,
+          "tau_ps": 222.6193514236069,
+          "td_od01_ns": 3.2267799999999998,
+          "td_od1_ns": 2.71418,
+          "td_od50_ns": 2.0295300000000003
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -1.999999999990898e-05,
+          "dout_od50_end": 0.999951,
+          "dut_vos_v": -0.0089074,
+          "e_dec_fj": 1572.9133365,
+          "job_ids": [
+            "klt-sim-340b4323f678",
+            "klt-sim-59b491a7afa3"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 3.32767074693047e-05,
+          "tau_ps": 130.28400162615645,
+          "td_od01_ns": 2.35594,
+          "td_od1_ns": 2.05595,
+          "td_od50_ns": 1.58772
+        }
+      },
+      "group": "net-Cg",
+      "id": "cg0-vinn",
+      "mean_share": 3.55755957145741e-05,
+      "removes": "ground C of net vinn"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -2.9999999999752447e-05,
+          "dout_od50_end": 0.999968,
+          "dut_vos_v": -0.005186500000000004,
+          "e_dec_fj": 1492.7183469,
+          "job_ids": [
+            "klt-sim-04bcd904b300",
+            "klt-sim-6055e26ff449"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 3.787448395984351e-05,
+          "tau_ps": 222.7235820992637,
+          "td_od01_ns": 3.22704,
+          "td_od1_ns": 2.7142,
+          "td_od50_ns": 2.0295300000000003
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -1.999999999990898e-05,
+          "dout_od50_end": 0.999951,
+          "dut_vos_v": -0.0089074,
+          "e_dec_fj": 1572.8960808000002,
+          "job_ids": [
+            "klt-sim-6055e26ff449",
+            "klt-sim-f46f20812c1d"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 3.32767074693047e-05,
+          "tau_ps": 130.31005929507072,
+          "td_od01_ns": 2.35601,
+          "td_od1_ns": 2.05596,
+          "td_od50_ns": 1.58772
+        }
+      },
+      "group": "net-Cg",
+      "id": "cg0-vinp",
+      "mean_share": 3.55755957145741e-05,
+      "removes": "ground C of net vinp"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.003649999999999931,
+          "dout_od50_end": 0.999955,
+          "dut_vos_v": -0.0051563000000000025,
+          "e_dec_fj": 1508.9203503,
+          "job_ids": [
+            "klt-sim-1455eec07f41",
+            "klt-sim-8b1df6be71e8"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.0046080622151522315,
+          "tau_ps": 237.79360062130644,
+          "td_od01_ns": 3.26878,
+          "td_od1_ns": 2.72124,
+          "td_od50_ns": 2.02591
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.0016999999999998128,
+          "dout_od50_end": 0.999934,
+          "dut_vos_v": -0.008877100000000006,
+          "e_dec_fj": 1590.3899451000002,
+          "job_ids": [
+            "klt-sim-1455eec07f41",
+            "klt-sim-46fdc47e6b40"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.002828520134903461,
+          "tau_ps": 144.0902232058608,
+          "td_od01_ns": 2.39289,
+          "td_od1_ns": 2.06111,
+          "td_od50_ns": 1.5860400000000001
+        }
+      },
+      "group": "net-Cg",
+      "id": "cg0-vss",
+      "mean_share": 0.0037182911750278463,
+      "removes": "ground C of net vss"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.042300000000000004,
+          "dout_od50_end": 0.999968,
+          "dut_vos_v": -0.0047665,
+          "e_dec_fj": 1492.054938,
+          "job_ids": [
+            "klt-sim-00842027cf5b",
+            "klt-sim-8f1b93cff88b"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.053403022383820026,
+          "tau_ps": 207.14109608857498,
+          "td_od01_ns": 3.1326300000000002,
+          "td_od1_ns": 2.65567,
+          "td_od50_ns": 1.98726
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.03493999999999997,
+          "dout_od50_end": 0.999952,
+          "dut_vos_v": -0.008367300000000001,
+          "e_dec_fj": 1572.6833991,
+          "job_ids": [
+            "klt-sim-8f1b93cff88b",
+            "klt-sim-cfe5de8f606e"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.05813440794913984,
+          "tau_ps": 142.5050483469141,
+          "td_od01_ns": 2.34195,
+          "td_od1_ns": 2.01382,
+          "td_od50_ns": 1.5528
+        }
+      },
+      "group": "aggregate",
+      "id": "r0-all",
+      "mean_share": 0.05576871516647994,
+      "removes": "every series R"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.66222,
+          "dout_od50_end": 1.0,
+          "dut_vos_v": -0.00038760000000000183,
+          "e_dec_fj": 1027.9442349,
+          "job_ids": [
+            "klt-sim-2b6eef03ef9e",
+            "klt-sim-962005ae6269"
+          ],
+          "meets_1p5ns": true,
+          "share_of_gap": 0.8360413589364846,
+          "tau_ps": 117.09013526593584,
+          "td_od01_ns": 2.0993500000000003,
+          "td_od1_ns": 1.82974,
+          "td_od50_ns": 1.36734
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.49632999999999994,
+          "dout_od50_end": 1.0,
+          "dut_vos_v": -0.0005380000000000038,
+          "e_dec_fj": 1083.1705533000002,
+          "job_ids": [
+            "klt-sim-2b6eef03ef9e",
+            "klt-sim-46f746ae4596"
+          ],
+          "meets_1p5ns": true,
+          "share_of_gap": 0.8258114109157584,
+          "tau_ps": 94.62842466189952,
+          "td_od01_ns": 1.61843,
+          "td_od1_ns": 1.40054,
+          "td_od50_ns": 1.09141
+        }
+      },
+      "group": "aggregate",
+      "id": "cg0-all",
+      "mean_share": 0.8309263849261215,
+      "removes": "every ground C"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.004290000000000127,
+          "dout_od50_end": 0.999968,
+          "dut_vos_v": -0.005186700000000002,
+          "e_dec_fj": 1490.0727897000002,
+          "job_ids": [
+            "klt-sim-1f562c43f973",
+            "klt-sim-9fb21c252cca"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.005416051206302475,
+          "tau_ps": 188.40128919444956,
+          "td_od01_ns": 3.13562,
+          "td_od1_ns": 2.70181,
+          "td_od50_ns": 2.02527
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.0029999999999998916,
+          "dout_od50_end": 0.999951,
+          "dut_vos_v": -0.008937499999999998,
+          "e_dec_fj": 1569.9986379000002,
+          "job_ids": [
+            "klt-sim-1f562c43f973",
+            "klt-sim-32f6cea9df6b"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.004991506120418242,
+          "tau_ps": 127.68257767955605,
+          "td_od01_ns": 2.34491,
+          "td_od1_ns": 2.05091,
+          "td_od50_ns": 1.58474
+        }
+      },
+      "group": "aggregate",
+      "id": "cc0-all",
+      "mean_share": 0.005203778663360359,
+      "removes": "every vertical-overlap coupling C"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.66608,
+          "dout_od50_end": 1.0,
+          "dut_vos_v": -0.0004176000000000041,
+          "e_dec_fj": 1025.4060135,
+          "job_ids": [
+            "klt-sim-25833ff490b3",
+            "klt-sim-f0e6ea8f6506"
+          ],
+          "meets_1p5ns": true,
+          "share_of_gap": 0.8409145425393579,
+          "tau_ps": 119.28766534436619,
+          "td_od01_ns": 2.0995600000000003,
+          "td_od1_ns": 1.8248900000000001,
+          "td_od50_ns": 1.36348
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.4992899999999998,
+          "dout_od50_end": 1.0,
+          "dut_vos_v": -0.0005681000000000089,
+          "e_dec_fj": 1080.5418063,
+          "job_ids": [
+            "klt-sim-25833ff490b3",
+            "klt-sim-4d1a45dba030"
+          ],
+          "meets_1p5ns": true,
+          "share_of_gap": 0.8307363636212376,
+          "tau_ps": 94.23755962818656,
+          "td_od01_ns": 1.61327,
+          "td_od1_ns": 1.39628,
+          "td_od50_ns": 1.0884500000000001
+        }
+      },
+      "group": "aggregate",
+      "id": "c0-all",
+      "mean_share": 0.8358254530802978,
+      "removes": "every C (ground + coupling)"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.69486,
+          "dout_od50_end": 1.0,
+          "dut_vos_v": 3.2299999999998996e-05,
+          "e_dec_fj": 1024.4074401,
+          "job_ids": [
+            "klt-sim-3242819f6628",
+            "klt-sim-99a8cfaf019b"
+          ],
+          "meets_1p5ns": true,
+          "share_of_gap": 0.8772487974851344,
+          "tau_ps": 110.76246466460532,
+          "td_od01_ns": 2.03931,
+          "td_od1_ns": 1.78427,
+          "td_od50_ns": 1.3347
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.52443,
+          "dout_od50_end": 1.0,
+          "dut_vos_v": 3.169999999999562e-05,
+          "e_dec_fj": 1079.0748045,
+          "job_ids": [
+            "klt-sim-3242819f6628",
+            "klt-sim-7fc2f151adf8"
+          ],
+          "meets_1p5ns": true,
+          "share_of_gap": 0.8725651849103443,
+          "tau_ps": 84.8263982053431,
+          "td_od01_ns": 1.55717,
+          "td_od1_ns": 1.36185,
+          "td_od50_ns": 1.06331
+        }
+      },
+      "group": "aggregate",
+      "id": "rc0-all",
+      "mean_share": 0.8749069911977394,
+      "removes": "every extracted parasitic (devices only)"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": 0.019280000000000186,
+          "dout_od50_end": 1.0,
+          "dut_vos_v": -0.005246700000000007,
+          "e_dec_fj": 1403.5733514,
+          "job_ids": [
+            "klt-sim-4111d7abe876",
+            "klt-sim-ac499e31be5c"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": -0.024340668358393852,
+          "tau_ps": 176.51030627993856,
+          "td_od01_ns": 3.10004,
+          "td_od1_ns": 2.69361,
+          "td_od50_ns": 2.04884
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": 0.008620000000000072,
+          "dout_od50_end": 1.0,
+          "dut_vos_v": -0.0090275,
+          "e_dec_fj": 1474.0114455,
+          "job_ids": [
+            "klt-sim-2081382b0896",
+            "klt-sim-4111d7abe876"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": -0.01434226091933572,
+          "tau_ps": 129.07666296646548,
+          "td_od01_ns": 2.35044,
+          "td_od1_ns": 2.05323,
+          "td_od50_ns": 1.59636
+        }
+      },
+      "group": "substrate-node",
+      "id": "vsubs-tied",
+      "mean_share": -0.019341464638864787,
+      "removes": "nothing removed; floating global vsubs tied to ground through 1e-3 ohm"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.1159800000000002,
+          "dout_od50_end": 0.999959,
+          "dut_vos_v": -0.005606699999999999,
+          "e_dec_fj": 1407.6534186000004,
+          "job_ids": [
+            "klt-sim-4f7b3df4f23e",
+            "klt-sim-a1c450a2c94e"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.14642275498996352,
+          "tau_ps": 186.6423965427415,
+          "td_od01_ns": 3.00975,
+          "td_od1_ns": 2.57999,
+          "td_od50_ns": 1.9135799999999998
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.08206999999999987,
+          "dout_od50_end": 0.999941,
+          "dut_vos_v": -0.009747500000000003,
+          "e_dec_fj": 1487.0113434000002,
+          "job_ids": [
+            "klt-sim-4f7b3df4f23e",
+            "klt-sim-aa74e471d41a"
+          ],
+          "meets_1p5ns": false,
+          "share_of_gap": 0.13655096910091308,
+          "tau_ps": 130.41428997072748,
+          "td_od01_ns": 2.26254,
+          "td_od1_ns": 1.9622499999999998,
+          "td_od50_ns": 1.50567
+        }
+      },
+      "group": "device-geometry",
+      "id": "devgeom",
+      "mean_share": 0.1414868620454383,
+      "removes": "nothing removed; MOSFET AS/AD/PS/PD/NRS/NRD set to the schematic convention"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.7922,
+          "dout_od50_end": 1.0,
+          "dut_vos_v": 3.2099999999993245e-05,
+          "e_dec_fj": 938.5769646000002,
+          "job_ids": [
+            "klt-sim-c3326c78d334",
+            "klt-sim-d2da65f9496f"
+          ],
+          "meets_1p5ns": true,
+          "share_of_gap": 1.000138873107854,
+          "tau_ps": 108.58230636545107,
+          "td_od01_ns": 1.9190300000000002,
+          "td_od1_ns": 1.66901,
+          "td_od50_ns": 1.23736
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.6010659999999999,
+          "dout_od50_end": 1.0,
+          "dut_vos_v": 3.1599999999992745e-05,
+          "e_dec_fj": 991.3080078000002,
+          "job_ids": [
+            "klt-sim-4b14a1c27aad",
+            "klt-sim-d2da65f9496f"
+          ],
+          "meets_1p5ns": true,
+          "share_of_gap": 1.0000748725918063,
+          "tau_ps": 82.10771474862885,
+          "td_od01_ns": 1.4634200000000002,
+          "td_od1_ns": 1.27436,
+          "td_od50_ns": 0.986674
+        }
+      },
+      "group": "device-geometry",
+      "id": "devgeom-rc0-all",
+      "mean_share": 1.0001068728498301,
+      "removes": "every parasitic AND schematic-convention device geometry (closure)"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.79209,
+          "dout_od50_end": 1.0,
+          "dut_vos_v": null,
+          "e_dec_fj": 938.5775289000001,
+          "job_ids": [
+            "klt-sim-0cb99ad53c78"
+          ],
+          "meets_1p5ns": true,
+          "share_of_gap": 1.0,
+          "tau_ps": 122.92271015789642,
+          "td_od01_ns": 1.95602,
+          "td_od1_ns": 1.67298,
+          "td_od50_ns": 1.23747
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.6010209999999999,
+          "dout_od50_end": 1.0,
+          "dut_vos_v": null,
+          "e_dec_fj": 991.3287978000002,
+          "job_ids": [
+            "klt-sim-2da4a1fc8109"
+          ],
+          "meets_1p5ns": true,
+          "share_of_gap": 1.0,
+          "tau_ps": 92.36140746636458,
+          "td_od01_ns": 1.48984,
+          "td_od1_ns": 1.2771700000000001,
+          "td_od50_ns": 0.986719
+        }
+      },
+      "group": "control",
+      "id": "sch",
+      "mean_share": 1.0,
+      "removes": "schematic leg as cited (ladder at 0 V)"
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.7922,
+          "dout_od50_end": 1.0,
+          "dut_vos_v": 3.2099999999993245e-05,
+          "e_dec_fj": 938.5413245999999,
+          "job_ids": [
+            "klt-sim-7e5682f04c63",
+            "klt-sim-d094680055ab"
+          ],
+          "meets_1p5ns": true,
+          "share_of_gap": 1.000138873107854,
+          "tau_ps": 108.58230636545107,
+          "td_od01_ns": 1.9190300000000002,
+          "td_od1_ns": 1.66901,
+          "td_od50_ns": 1.23736
+        },
+        "tt_125c_2.97v": {
+          "delta_vs_ctrl_ns": -0.6010659999999999,
+          "dout_od50_end": 1.0,
+          "dut_vos_v": 3.1599999999992745e-05,
+          "e_dec_fj": 991.3080078000002,
+          "job_ids": [
+            "klt-sim-d094680055ab",
+            "klt-sim-d579092e8356"
+          ],
+          "meets_1p5ns": true,
+          "share_of_gap": 1.0000748725918063,
+          "tau_ps": 82.10771474862885,
+          "td_od01_ns": 1.4634200000000002,
+          "td_od1_ns": 1.27436,
+          "td_od50_ns": 0.986674
+        }
+      },
+      "group": "centring",
+      "id": "sch-probed",
+      "mean_share": 1.0001068728498301,
+      "removes": "schematic leg, ladder centred at its probed trip point"
+    }
+  ]
+}
