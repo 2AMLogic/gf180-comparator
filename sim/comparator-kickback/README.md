@@ -58,11 +58,17 @@ byte-for-byte as committed, and new records state their coverage in the
 
 **Evidence status (honest ledger).** Bench, scoring and regression tests
 (`sim/harness/tests/test_klt_record.py`, `KickbackBothNodes`) landed in #160.
-The new schematic 45-corner record is **PENDING**: the batch fleet refused
-the submit (`batch_no_capacity`, no capacity in any of the 30 pools) for the
-3.30 V and 3.63 V legs, and a partial grid is not published. Extracted-DUT
-evidence is a further follow-up (coordinate with #112). Mint with
-`KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py comparator-kickback`.
+The schematic both-node 45-corner record is
+[`records/20261010-022609774981-bf851ec.md`](records/20261010-022609774981-bf851ec.md)
+(all three supply legs minted through `klt sim` on the batch fleet; coverage
+`both`). Result: the aggregate is the maximum of the two node peaks at every
+corner; the positive node sets it at 45/45 corners (positive 4.528-10.010 mV,
+negative 4.244-9.905 mV; nominal 7.598 mV), so the aggregate equals the earlier
+positive-only schematic values to the displayed precision. Verdict unchanged
+and not relaxed: within the 5 mV target at 1/45 corners, 0/45 within the 2 mV
+stretch. Extracted-DUT both-node evidence is **PENDING** (follow-up, coordinate
+with #112); the older records above remain partial node coverage. Reproduce
+with `KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py comparator-kickback`.
 
 ### Beating the `meas` resolution floor
 
