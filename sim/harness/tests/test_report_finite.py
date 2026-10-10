@@ -44,6 +44,43 @@ class SummarizeFiniteTest(unittest.TestCase):
         self.assertEqual(s.values, {})
 
 
+class PointCheckOutcomeTest(unittest.TestCase):
+    """#255: the corner table's pass/fail column is the point-local bound verdict."""
+
+    def _checked(self, checks):
+        return types.SimpleNamespace(measure={"vos_mv": "v(out)"}, checks=checks)
+
+    def test_in_bound_point_passes_and_out_of_bound_fails(self):
+        tb = self._checked({"vos_mv": {"min": 0.0, "max": 1.0}})
+        ok = report.point_check_outcome(tb, _result(0, 0.5))
+        hi = report.point_check_outcome(tb, _result(1, 2.0))
+        lo = report.point_check_outcome(tb, _result(2, -1.0))
+        self.assertEqual(ok, {"status": "pass", "failures": []})
+        self.assertEqual(hi["status"], "fail")
+        self.assertIn("2 > allowed max 1", hi["failures"][0])
+        self.assertIn("-1 < required min 0", lo["failures"][0])
+
+    def test_nonfinite_or_absent_measurement_never_passes(self):
+        tb = self._checked({"vos_mv": {"max": 1.0}})
+        self.assertEqual(report.point_check_outcome(tb, _result(0, float("nan")))["status"], "fail")
+        empty = _result(1, 0.0)
+        empty.measurements = {}
+        self.assertEqual(report.point_check_outcome(tb, empty)["status"], "fail")
+
+    def test_grid_only_spread_failure_is_not_a_point_failure(self):
+        tb = self._checked({"vos_mv": {"max_spread_pct": 1.0}})
+        results = [_result(0, 1.0), _result(1, 3.0)]
+        self.assertTrue(report.summarize(tb, results)["vos_mv"].failures)
+        for r in results:
+            self.assertEqual(report.point_check_outcome(tb, r)["status"], "pass")
+
+    def test_failed_simulation_not_evaluated(self):
+        r = _result(0, 1.0)
+        r.status = "failed"
+        out = report.point_check_outcome(self._checked({"vos_mv": {"max": 0.0}}), r)
+        self.assertEqual(out["status"], "not_evaluated")
+
+
 class StrictJsonTest(unittest.TestCase):
     def test_nonfinite_replaced_and_located(self):
         omitted: list[str] = []

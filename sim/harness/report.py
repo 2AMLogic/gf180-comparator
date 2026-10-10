@@ -425,6 +425,30 @@ def _postlayout_delta_lines(
 
 
 
+def point_check_outcome(tb: Testbench, result: PointResult) -> dict:
+    """Point-local min/max verdict for one completed point.
+
+    Only the per-point bounds (`min` / `max`) can be attributed to a single
+    corner; grid spread and per-axis checks stay in the aggregate verdict.
+    A required measurement that is absent or non-finite never passes.
+    """
+    if result.status != "ok":
+        return {"status": "not_evaluated", "failures": []}
+    failures: list[str] = []
+    for name, spec in tb.checks.items():
+        if "min" not in spec and "max" not in spec:
+            continue
+        value = result.measurements.get(name)
+        if value is None or not _is_finite(value):
+            failures.append(f"{name} missing or non-finite")
+            continue
+        if "min" in spec and value < spec["min"]:
+            failures.append(f"{name} {value:g} < required min {spec['min']:g}")
+        if "max" in spec and value > spec["max"]:
+            failures.append(f"{name} {value:g} > allowed max {spec['max']:g}")
+    return {"status": "fail" if failures else "pass", "failures": failures}
+
+
 def _fmt(value: float) -> str:
     return f"{value:.6g}"
 
@@ -541,7 +565,11 @@ def render_record(
             )
             continue
         cells = " | ".join(_fmt(result.measurements[n]) for n in names)
-        verdict = "PASS"
+        outcome = point_check_outcome(tb, result)
+        verdict = (
+            "PASS" if outcome["status"] == "pass"
+            else f"**FAIL**: {'; '.join(outcome['failures'])}"
+        )
         if result.warnings:
             verdict += f" (⚠ {len(result.warnings)} warning(s): {'; '.join(result.warnings)})"
         lines.append(f"  | `{result.point.corner_id}` | {cells} | {verdict} |")
@@ -697,7 +725,10 @@ def write_record(
                 "context": context,
                 "testbench": tb.provenance(),
                 "checks": tb.checks,
-                "points": [r.as_dict() for r in results],
+                "points": [
+                    {**r.as_dict(), "check_outcome": point_check_outcome(tb, r)}
+                    for r in results
+                ],
                 "summary": {
                     name: {
                         "min": s.minimum if s.values else None,
