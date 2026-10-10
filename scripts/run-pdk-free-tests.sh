@@ -104,12 +104,26 @@ CI="${GITHUB_ACTIONS:-}"
 group()    { [ -n "$CI" ] && echo "::group::$1" || echo "=== $1"; }
 endgroup() { [ -n "$CI" ] && echo "::endgroup::"; return 0; }
 
+# Run a command, echo its output, and fail if it exited non-zero or printed a
+# ResourceWarning. One finalizer-time warning is printed but never changes the
+# exit code, so the output is scanned (single-file runs and named steps alike).
+checked() {
+  local out rc=0
+  out="$("$@" 2>&1)" || rc=1
+  printf '%s\n' "$out"
+  if [[ "$out" == *ResourceWarning* ]]; then
+    echo "ResourceWarning in output (unclosed file handle): $*"; rc=1
+  fi
+  return "$rc"
+}
+
 # A path to a single test file: run just that.
 if [ -n "$TARGET" ] && [ -f "$TARGET" ]; then
   case "$TARGET" in
-    sim/harness/tests/*) exec "$PY" -m unittest discover -s sim/harness/tests -p "$(basename "$TARGET")" -v ;;
-    *) exec "$PY" "$TARGET" ;;
+    sim/harness/tests/*) checked "$PY" -m unittest discover -s sim/harness/tests -p "$(basename "$TARGET")" -v ;;
+    *) checked "$PY" "$TARGET" ;;
   esac
+  exit $?
 fi
 
 FAILED=(); SKIPPED=(); RAN=0
