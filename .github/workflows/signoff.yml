@@ -48,16 +48,19 @@ name: Signoff
 #     release whose byte-identical wheel graded the committed report;
 #     same-version snapshots grade differently);
 #   - the rulebook: the vendored signoff/design-evidence-tiers.md, the
-#     11-item checklist including item 11 (Power delivery, structural,
-#     klayout-tools#2025) which shipped after the 0.5.0 release -- the
-#     wheel's bundled copy is the older 10-item one, so grading without the
-#     vendored doc would disagree with the verdict of record on
-#     t1_item_count and the verifier fails it by name. Its bytes are pinned
-#     by signoff/design-evidence-tiers.md.sha256 and checked by
+#     11-item checklist (item 11, Power delivery, structural,
+#     klayout-tools#2025, shipped after the 0.5.0 release) verbatim at
+#     klayout-tools commit 31a3e3c4. The pinned 0.6.0 wheel bundles an
+#     11-item rulebook too, but its bytes differ from the vendored copy (it
+#     is newer), so every grade passes --tiers-doc with the vendored file and
+#     the verifier fails, by name, any grade whose source_doc is the wheel's
+#     bundled copy. The vendored bytes are pinned by
+#     signoff/design-evidence-tiers.md.sha256 and checked by
 #     signoff/check_rulebook_pin.py (issue #168: the `rulebook-pin` step and
 #     check 0 of verify-report.py), so a prose-only edit fails too.
-# When a klayout-tools release carrying the 11-item rulebook ships, move
-# both pins forward and re-grade per signoff/README.md's refresh contract.
+# Re-vendoring the rulebook, or dropping --tiers-doc in favour of the wheel's
+# bundled copy, is a deliberate separate change that re-grades per
+# signoff/README.md ("The two pins" and its refresh contract).
 
 on:
   pull_request:

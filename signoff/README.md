@@ -550,11 +550,41 @@ Tool gap: klayout-tools#2844.
 **Re-audited in #89 (DR-0003); still deliberately uncited.** `README.md`
 (with the target-spec table and reproduction commands), `CLAUDE.md`, `spec/`
 and a LICENSE exist. The item also demands CI that keeps the harness and
-evidence formats valid. The only CI is `signoff.yml` (anti-rot on the signoff
-evidence); it does not run the harness tests (`sim/harness/tests`) or
-`design/netlist.sh --check`, and no CI run evidence is committed. So the CI
-leg is only partly met and unevidenced; the row stays `no_evidence`. Adding
-those CI steps is the path to a citable claim. Tool gap: klayout-tools#2844.
+evidence formats valid. The one workflow, `signoff.yml`, now runs
+`scripts/run-pdk-free-tests.sh`, the single PDK-free entrypoint
+([#129](https://github.com/2AMLogic/gf180-comparator/issues/129)) that
+`npm test` also runs, on every push to `main` and every PR. Its steps
+include the harness unittest suite (`sim/harness/tests`, step `harness`,
+[#110](https://github.com/2AMLogic/gf180-comparator/issues/110)), the
+netlist source-pin check (`design/verify-netlist-pins.py --check`, step
+`netlist-pin`,
+[#120](https://github.com/2AMLogic/gf180-comparator/issues/120)), the
+append-only `sim/` evidence guard (step `evidence`), the grader and rulebook
+pin checks, the re-grade (`verify-report.py`), the integrator manifest
+verifier and the remaining PDK-free unit tests and `--check` verifiers. The
+script's `--list` output is the authoritative step list.
+
+Three limits keep the row uncited:
+
+- **Source pinning is not derivation.** The `netlist-pin` step only re-hashes
+  the committed schematic inputs, generation inputs and
+  `design/comparator.spice` against `design/comparator.sources.json`. It
+  never runs xschem, so it shows that nobody edited one side without
+  re-running `./design/netlist.sh`. It does not show that the netlist is
+  xschem's output for those schematics. Only `./design/netlist.sh --check`
+  (xschem + PDK) proves that, and CI does not run it because the job is
+  PDK-free by design.
+- **CI does not run simulations.** `sim/selftest.sh` and `sim/characterize.sh`
+  need ngspice and the PDK, and they are not CI steps.
+- **No CI-produced evidence envelope exists.** CI passes or fails a commit,
+  but no CI run is committed as an envelope the grader reads (tool gap:
+  klayout-tools#2844). Committing a generic envelope without a supported
+  claim would reverse DR-0003's claim policy.
+
+So the CI execution leg is now largely in place but has no evidence the grader
+can read, and the row deliberately stays `no_evidence`. Adding more CI steps
+would not change that. A citable claim needs a CI-produced envelope that backs
+this item's claim.
 
 ### met — item 11 (Power delivery, structural): ties[] declared (#103)
 
@@ -653,7 +683,9 @@ push and PR (`.github/workflows/signoff.yml`):
    hand-edited envelope fails even though the netlist pin is unchanged.
 4. **The vendored rulebook is what graded.** The fresh
    grade's `source_doc` must be `signoff/design-evidence-tiers.md`; a grade
-   that ran against the wheel's bundled 10-item copy instead fails by name.
+   that ran against the wheel's bundled copy instead fails by name (under
+   0.6.0 that copy is an 11-item rulebook, but its bytes differ from the
+   vendored one; see "The two pins").
    Before any of the above, the rulebook's bytes must match
    `design-evidence-tiers.md.sha256` (`check_rulebook_pin.py`, see "The two
    pins"), so a prose-only rulebook edit cannot pass.
