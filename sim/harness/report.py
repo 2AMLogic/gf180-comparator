@@ -245,6 +245,14 @@ def git_short_sha() -> str:
 _EVIDENCE_DIRS = ("/records/", "/corners/", "/netlist-snapshots/")
 
 
+class GitInspectionError(RuntimeError):
+    """Git could not establish whether the working tree is clean.
+
+    Distinct from a verified clean tree: callers must not treat this as
+    ``[]`` (issue #260).
+    """
+
+
 def dirty_paths() -> list[str]:
     """Working-tree paths that would make a record non-citable.
 
@@ -253,14 +261,25 @@ def dirty_paths() -> list[str]:
     too -- an untracked testbench fragment would be a genuinely uncitable
     record -- EXCEPT under the harness's own evidence directories, which a
     run unavoidably writes into before it can stamp its own header.
+
+    Raises :class:`GitInspectionError` if git is missing, times out, or exits
+    nonzero: an uninspectable tree is not a clean tree.
     """
     try:
         out = subprocess.run(
             ["git", "-C", str(REPO_ROOT), "status", "--porcelain"],
             capture_output=True, text=True, check=False, timeout=60,
         )
-    except (FileNotFoundError, subprocess.TimeoutExpired):  # pragma: no cover
-        return []
+    except FileNotFoundError as exc:
+        raise GitInspectionError(f"git executable not found: {exc}") from exc
+    except subprocess.TimeoutExpired as exc:
+        raise GitInspectionError(
+            f"git status timed out after {exc.timeout}s") from exc
+    except OSError as exc:
+        raise GitInspectionError(f"git status could not run: {exc}") from exc
+    if out.returncode != 0:
+        raise GitInspectionError(
+            f"git status exited {out.returncode}: {(out.stderr or '').strip()}")
     offenders: list[str] = []
     for line in out.stdout.splitlines():
         if not line.strip():

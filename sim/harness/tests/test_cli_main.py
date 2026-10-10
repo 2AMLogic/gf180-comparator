@@ -208,5 +208,39 @@ class SabotageNoWriteTests(_MainBase):
         self.assertNotIn("logs_root", self.reserve.call_args.kwargs)
 
 
+class GitInspectionFailureTests(SabotageNoWriteTests):
+    """#260: a failed cleanliness check must not yield a citable record."""
+
+    # Reuse the SabotageNoWriteTests fixture without re-running its tests.
+    test_sabotage_implies_no_write = None
+    test_sabotage_forces_corners_to_typical = None
+    test_explicit_no_write_is_scratch_only = None
+    test_default_run_writes_evidence = None
+
+    def setUp(self):
+        super().setUp()
+        p = mock.patch.object(
+            cli.report_mod, "dirty_paths",
+            side_effect=cli.report_mod.GitInspectionError("git-broke-msg"))
+        p.start()
+        self.addCleanup(p.stop)
+
+    def test_write_run_refuses_before_reserve(self):
+        rc, _out, err = _run("exp")
+        self.assertEqual(rc, 1)
+        self.assertIn("git-broke-msg", err)
+        self.assertIn("cannot verify source cleanliness", err)
+        self.reserve.assert_not_called()
+        self.run_grid.assert_not_called()
+        self.write_record.assert_not_called()
+
+    def test_no_write_warns_and_continues(self):
+        rc, _out, err = _run("exp", "--no-write")
+        self.assertEqual(rc, 0)
+        self.assertIn("warning: cannot verify source cleanliness", err)
+        self.assertIn("git-broke-msg", err)
+        self.assertScratchOnly()
+
+
 if __name__ == "__main__":
     unittest.main()

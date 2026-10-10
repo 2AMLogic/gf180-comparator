@@ -249,7 +249,20 @@ def main(argv: list[str] | None = None) -> int:
     write = not (args.no_write or sabotaged)
     # Captured BEFORE the run writes anything, so the flag describes the tree
     # this record was produced from rather than the tree the run left behind.
-    dirty_at_start = report_mod.dirty_paths()
+    # Issue #260: an uninspectable tree is NOT a clean tree. Evidence runs
+    # refuse (before reserving any namespace); scratch runs write no record,
+    # so they warn and continue.
+    try:
+        dirty_at_start = report_mod.dirty_paths()
+    except report_mod.GitInspectionError as exc:
+        if write:
+            print(f"cannot verify source cleanliness, refusing to write an "
+                  f"evidence record: {exc}\n"
+                  f"(re-run with --no-write for a scratch run)", file=sys.stderr)
+            return 1
+        print(f"warning: cannot verify source cleanliness ({exc}); "
+              f"continuing as a scratch run", file=sys.stderr)
+        dirty_at_start = []
     # Issue #85: reserve a unique run namespace (exclusive mkdir) before any
     # simulation can write a log. Evidence runs reserve corners/<rid>; scratch
     # runs reserve under WORK_DIR. A collision allocates a fresh id.
