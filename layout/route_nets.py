@@ -76,6 +76,7 @@ from __future__ import annotations
 import json
 import os
 from collections import defaultdict
+from pathlib import Path
 
 import klayout.db as db
 
@@ -410,10 +411,10 @@ def route(gds_path=None, response_path=None, report_path=None, verbose=True):
     response_path = response_path or os.path.join(HERE, "comparator.gen-compose.json")
     report_path = report_path or os.path.join(HERE, "comparator.routing.json")
 
-    response = json.load(open(response_path))
+    response = json.loads(Path(response_path).read_text())
     placement = {b["id"]: b["offset_um"] for b in response["blocks"]}
     placed_bbox = {b["id"]: b["bbox_um"] for b in response["blocks"]}
-    reports = {bid: json.load(open(os.path.join(HERE, "_gen", f"{bid}.json")))
+    reports = {bid: json.loads(Path(os.path.join(HERE, "_gen", f"{bid}.json")).read_text())
                for bid, _, _ in G.BLOCKS}
 
     global _DBU

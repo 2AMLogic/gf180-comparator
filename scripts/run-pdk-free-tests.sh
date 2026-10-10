@@ -20,6 +20,8 @@ set -u
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT" || exit 2
 PY="${PYTHON:-python3}"
+# An unclosed file handle fails the step instead of scrolling past (issue #212).
+export PYTHONWARNINGS="error::ResourceWarning"
 
 # Directories whose test files are run one by one as scripts (each is a
 # stdlib unittest / self-checking script). sim/harness/tests is run through
@@ -125,7 +127,14 @@ for i in "${!STEP_IDS[@]}"; do
   fi
   RAN=$((RAN + 1))
   group "$name"
-  if eval "${STEP_CMDS[$i]}"; then rc=0; else rc=1; fi
+  # A ResourceWarning raised in a finalizer is printed but never changes the
+  # exit code, so scan the step's output for it and fail the step ourselves.
+  OUT="$(eval "${STEP_CMDS[$i]}" 2>&1 && echo "@@rc=0" || echo "@@rc=1")"
+  printf '%s\n' "${OUT%@@rc=*}"
+  if [ "${OUT##*@@rc=}" = 0 ]; then rc=0; else rc=1; fi
+  if [[ "$OUT" == *ResourceWarning* ]]; then
+    echo "ResourceWarning in step output (unclosed file handle): $name"; rc=1
+  fi
   endgroup
   if [ "$rc" != 0 ]; then
     [ -n "$CI" ] && echo "::error title=$name::step failed"

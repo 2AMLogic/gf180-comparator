@@ -872,14 +872,15 @@ def dispatch(work: Path, names: list[str]) -> None:
             f"KLT_SIM_BACKEND={backend!r}: refusing to run a multi-unit grid on a "
             "local backend (shared dispatch worker). Export KLT_SIM_BACKEND=batch."
         )
-    procs = {
-        n: subprocess.Popen(
-            ["klt", "sim", "-o", str(work / f"out-{n}"), str(work / f"request-{n}.json"), "--format", "json"],
-            stdout=(work / f"report-{n}.json").open("w"),
-            stderr=(work / f"stderr-{n}.txt").open("w"),
-        )
-        for n in names
-    }
+    procs = {}
+    for n in names:
+        # The child inherits its own copy of each fd, so the parent closes its handles at once.
+        with (work / f"report-{n}.json").open("w") as out, (work / f"stderr-{n}.txt").open("w") as err:
+            procs[n] = subprocess.Popen(
+                ["klt", "sim", "-o", str(work / f"out-{n}"), str(work / f"request-{n}.json"), "--format", "json"],
+                stdout=out,
+                stderr=err,
+            )
     for n, pr in procs.items():
         rc = pr.wait()
         if not (work / f"report-{n}.json").read_text().strip():
