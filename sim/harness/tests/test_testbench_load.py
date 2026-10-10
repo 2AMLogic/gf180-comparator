@@ -129,6 +129,141 @@ class CheckValidationTests(_Base):
         self.assertIn("m_a", tb.checks)
 
 
+class CheckBoundValueTests(_Base):
+    SCALARS = ("min", "max", "max_spread_pct", "min_spread_pct")
+    AXIS_KEYS = ("min_spread_pct_by_axis", "max_spread_pct_by_axis")
+    BAD = (float("nan"), float("inf"), float("-inf"), True, False, "1", None, [1], {})
+
+    def test_bad_scalar_bounds(self):
+        for key in self.SCALARS:
+            for bad in self.BAD:
+                with self.subTest(key=key, bad=bad):
+                    with self.assertRaisesRegex(ValueError, rf"m_a.*{key}"):
+                        self.load_manifest(checks={"m_a": {key: bad}})
+
+    def test_bad_axis_bounds(self):
+        for key in self.AXIS_KEYS:
+            for bad in self.BAD:
+                with self.subTest(key=key, bad=bad):
+                    with self.assertRaisesRegex(ValueError, rf"m_a.*{key}\[supply\]"):
+                        self.load_manifest(checks={"m_a": {key: {"supply": bad}}})
+
+    def test_error_names_manifest(self):
+        with self.assertRaisesRegex(ValueError, r"tb\.json"):
+            self.load_manifest(checks={"m_a": {"min": "x"}})
+
+    def test_nonstandard_constants_rejected_at_parse(self):
+        for token in ("NaN", "Infinity", "-Infinity"):
+            with self.subTest(token=token):
+                self.write()
+                (self.dir / "tb.json").write_text(
+                    '{"netlist": "frag.spice", "measure": {"m_a": "expr"}, '
+                    f'"checks": {{"m_a": {{"min": {token}}}}}}}'
+                )
+                with self.assertRaisesRegex(ValueError, r"m_a.*min.*nonstandard JSON constant " + token):
+                    tb_mod.load(self.dir)
+
+    def test_nonstandard_constant_outside_checks_rejected(self):
+        self.write()
+        (self.dir / "tb.json").write_text(
+            '{"netlist": "frag.spice", "measure": {"m_a": "expr"}, "nominal_supply_v": NaN}'
+        )
+        with self.assertRaisesRegex(ValueError, "nominal_supply_v.*nonstandard"):
+            tb_mod.load(self.dir)
+
+    def test_nonstandard_constant_in_check_description_rejected(self):
+        # Regression: `description` is an allowed check key but not a bound,
+        # so the marker used to slip through into tb.checks and break
+        # json.dumps in report.py after the simulation had already run.
+        for token in ("NaN", "Infinity", "-Infinity"):
+            with self.subTest(token=token):
+                self.write()
+                (self.dir / "tb.json").write_text(
+                    '{"netlist": "frag.spice", "measure": {"m_a": "expr"}, '
+                    f'"checks": {{"m_a": {{"min": 0, "description": {token}}}}}}}'
+                )
+                with self.assertRaisesRegex(
+                    ValueError, r"checks\.m_a\.description.*nonstandard JSON constant"
+                ):
+                    tb_mod.load(self.dir)
+
+    def test_checks_itself_nonstandard_or_not_object(self):
+        for raw, pat in (("NaN", "nonstandard JSON constant NaN"), ("[1]", "list"), ('"x"', "str")):
+            with self.subTest(raw=raw):
+                self.write()
+                (self.dir / "tb.json").write_text(
+                    '{"netlist": "frag.spice", "measure": {"m_a": "expr"}, '
+                    f'"checks": {raw}}}'
+                )
+                with self.assertRaisesRegex(ValueError, rf"tb\.json: 'checks' must be an object.*{pat}"):
+                    tb_mod.load(self.dir)
+
+    def test_no_marker_survives_load(self):
+        tb = self.load_manifest(
+            checks={"m_a": {"min": -1, "max": 2, "description": "ok",
+                            "max_spread_pct_by_axis": {"supply": 1}}}
+        )
+
+        def walk(node):
+            self.assertNotIsInstance(node, tb_mod._NonstandardConstant)
+            if isinstance(node, dict):
+                for v in node.values():
+                    walk(v)
+            elif isinstance(node, (list, tuple)):
+                for v in node:
+                    walk(v)
+
+        for f in tb_mod.Testbench.__dataclass_fields__:
+            walk(getattr(tb, f))
+        json.dumps(tb.checks)
+
+    def test_reversed_pairs(self):
+        cases = (
+            {"min": 2, "max": 1},
+            {"min_spread_pct": 5, "max_spread_pct": 1},
+            {
+                "min_spread_pct_by_axis": {"supply": 5},
+                "max_spread_pct_by_axis": {"supply": 1},
+            },
+        )
+        for spec in cases:
+            with self.subTest(spec=spec):
+                with self.assertRaisesRegex(ValueError, "reversed"):
+                    self.load_manifest(checks={"m_a": spec})
+
+    def test_negative_spreads(self):
+        for key in self.SCALARS[2:]:
+            with self.subTest(key=key):
+                with self.assertRaisesRegex(ValueError, ">= 0"):
+                    self.load_manifest(checks={"m_a": {key: -1}})
+        for key in self.AXIS_KEYS:
+            with self.subTest(key=key):
+                with self.assertRaisesRegex(ValueError, ">= 0"):
+                    self.load_manifest(checks={"m_a": {key: {"process": -0.5}}})
+
+    def test_valid_bounds_load(self):
+        tb = self.load_manifest(
+            checks={
+                "m_a": {
+                    "min": -1.5, "max": 3,
+                    "min_spread_pct": 0, "max_spread_pct": 2.5,
+                    "min_spread_pct_by_axis": {"supply": 0, "process": 1},
+                    "max_spread_pct_by_axis": {"supply": 0, "process": 4.5},
+                }
+            }
+        )
+        self.assertEqual(tb.checks["m_a"]["min"], -1.5)
+
+    def test_equal_pair_and_negative_min_ok(self):
+        self.load_manifest(checks={"m_a": {"min": -2, "max": -2}})
+
+    def test_existing_manifests_load(self):
+        root = Path(__file__).resolve().parents[2]
+        for tbdir in tb_mod.discover(root):
+            with self.subTest(tb=str(tbdir)):
+                tb_mod.load(tbdir)
+
+
 class NetlistValidationTests(_Base):
     def test_forbidden_directive_lists_line_numbers(self):
         (self.dir / "frag.spice").write_text("* c\nR1 a b 1k\n.temp 27\n\n.INCLUDE foo\n")

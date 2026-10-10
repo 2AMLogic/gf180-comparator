@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -175,6 +176,58 @@ def _require(manifest: dict, key: str, path: Path):
     return manifest[key]
 
 
+class _NonstandardConstant:
+    """Placeholder for a NaN / Infinity / -Infinity token found while parsing.
+
+    ``json`` accepts those tokens by default; ``parse_constant`` swaps them for
+    this marker so validation can report WHERE (measurement / key / axis) the
+    nonstandard constant sat, instead of a context-free parse error.
+    """
+
+    def __init__(self, token: str):
+        self.token = token
+
+    def __repr__(self) -> str:
+        return f"nonstandard JSON constant {self.token}"
+
+
+def _reject_nonstandard(node, where: str, path: Path) -> None:
+    """Raise if a parsed manifest subtree still holds a nonstandard constant."""
+    if isinstance(node, _NonstandardConstant):
+        raise ValueError(f"{path}: {where} is {node!r}; manifest numbers must be finite")
+    if isinstance(node, dict):
+        for k, v in node.items():
+            _reject_nonstandard(v, f"{where}.{k}" if where else str(k), path)
+    elif isinstance(node, list):
+        for i, v in enumerate(node):
+            _reject_nonstandard(v, f"{where}[{i}]", path)
+
+
+def _check_bound(value, where: str, path: Path, *, nonneg: bool = False) -> float:
+    """Return ``value`` if it is a finite real number, else raise ``ValueError``."""
+    if isinstance(value, _NonstandardConstant):
+        raise ValueError(
+            f"{path}: {where} is {value!r}; it must be a finite number"
+        )
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError(
+            f"{path}: {where} must be a finite number, got {type(value).__name__} {value!r}"
+        )
+    if not math.isfinite(value):
+        raise ValueError(f"{path}: {where} must be finite, got {value!r}")
+    if nonneg and value < 0:
+        raise ValueError(f"{path}: {where} must be >= 0, got {value!r}")
+    return value
+
+
+def _check_pair(lo, hi, lo_where: str, hi_where: str, path: Path) -> None:
+    if lo is not None and hi is not None and lo > hi:
+        raise ValueError(
+            f"{path}: {lo_where} ({lo!r}) is greater than {hi_where} ({hi!r}); "
+            "the bounds are reversed"
+        )
+
+
 def _validate_checks(checks: dict[str, dict], measure: dict[str, str], path: Path) -> None:
     for name, spec in checks.items():
         if name not in measure:
@@ -202,6 +255,30 @@ def _validate_checks(checks: dict[str, dict], measure: dict[str, str], path: Pat
                     f"{path}: check {name!r}: unknown axis/axes {', '.join(unknown_axes)} in "
                     f"{axis_key}; known: {', '.join(AXES)}"
                 )
+        # Numeric validity of every bound (scalar and per-axis alike).
+        vals: dict[str, float] = {}
+        for key in ("min", "max", "max_spread_pct", "min_spread_pct"):
+            if key in spec:
+                vals[key] = _check_bound(
+                    spec[key], f"check {name!r}: {key}", path,
+                    nonneg=key.endswith("_spread_pct"),
+                )
+        _check_pair(vals.get("min"), vals.get("max"),
+                    f"check {name!r}: min", "max", path)
+        _check_pair(vals.get("min_spread_pct"), vals.get("max_spread_pct"),
+                    f"check {name!r}: min_spread_pct", "max_spread_pct", path)
+        by_axis: dict[str, dict[str, float]] = {}
+        for axis_key in ("min_spread_pct_by_axis", "max_spread_pct_by_axis"):
+            for axis, bound in (spec.get(axis_key) or {}).items():
+                by_axis.setdefault(axis, {})[axis_key] = _check_bound(
+                    bound, f"check {name!r}: {axis_key}[{axis}]", path, nonneg=True
+                )
+        for axis, b in by_axis.items():
+            _check_pair(
+                b.get("min_spread_pct_by_axis"), b.get("max_spread_pct_by_axis"),
+                f"check {name!r}: min_spread_pct_by_axis[{axis}]",
+                f"max_spread_pct_by_axis[{axis}]", path,
+            )
 
 
 def load(directory: str | Path) -> Testbench:
@@ -219,7 +296,13 @@ def load(directory: str | Path) -> Testbench:
     if not manifest_path.is_file():
         raise FileNotFoundError(f"no {MANIFEST_NAME} in {directory}")
 
-    manifest = json.loads(manifest_path.read_text())
+    manifest = json.loads(
+        manifest_path.read_text(), parse_constant=_NonstandardConstant
+    )
+
+    _reject_nonstandard(
+        {k: v for k, v in manifest.items() if k != "checks"}, "", manifest_path
+    )
 
     netlist = directory / _require(manifest, "netlist", manifest_path)
     if not netlist.is_file():
@@ -246,8 +329,19 @@ def load(directory: str | Path) -> Testbench:
                 f"back as {key.lower()!r} and never matches)"
             )
 
-    checks = dict(manifest.get("checks", {}))
+    raw_checks = manifest.get("checks", {})
+    if not isinstance(raw_checks, dict):
+        raise ValueError(
+            f"{manifest_path}: 'checks' must be an object, got {raw_checks!r}"
+            if isinstance(raw_checks, _NonstandardConstant)
+            else f"{manifest_path}: 'checks' must be an object, got {type(raw_checks).__name__}"
+        )
+    checks = dict(raw_checks)
     _validate_checks(checks, measure, manifest_path)
+    # _validate_checks only inspects the bound keys; sweep the rest of the
+    # subtree (e.g. ``description``) so no _NonstandardConstant marker can
+    # escape load() and break json.dumps of tb.checks in the report later.
+    _reject_nonstandard(checks, "checks", manifest_path)
 
     evidence = dict(manifest.get("evidence", {}))
     unknown_evidence = sorted(set(evidence) - set(EVIDENCE_KEYS))
