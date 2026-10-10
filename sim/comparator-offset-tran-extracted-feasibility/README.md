@@ -90,7 +90,7 @@ Executor notes: the first tt batch submit (attempt 1, rc=1) failed with
 8 instance(s) already running + 1 requested exceeds
 BATCH_MAX_CONCURRENT_INSTANCES=8` (`err-mc-tt.attempt1.txt`); it was resubmitted
 to the **same** batch backend (no local fallback) and succeeded on attempt 2
-(rc=0; see `retry.log`). Reports carry `runner_compatibility: mismatch` (fleet runner klt 0.5.0,
+(rc=0). Reports carry `runner_compatibility: mismatch` (fleet runner klt 0.5.0,
 client 0.7.0), as every batch record in this repository does. Probe-leg
 reports are local single-unit runs (klt 0.7.0 client; no job id). The source
 bundles are marked dirty because the runs preceded the commit of this tool and
