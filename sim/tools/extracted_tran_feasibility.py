@@ -55,6 +55,9 @@ Usage
     extracted_tran_feasibility.py probe     OUTDIR --point tt_27c_3.30v
     extracted_tran_feasibility.py mc        OUTDIR --point P --probe-report R [--mc-n 20]
     extracted_tran_feasibility.py evaluate  OUTDIR --point P
+    # issue #231 experimental 45-point campaign (N=200, seed 20260909):
+    extracted_tran_feasibility.py {probe,mc,evaluate} OUTDIR --point P --campaign
+    extracted_tran_feasibility.py summary   OUTDIR       # exit 3 unless 45/45 complete
 """
 
 from __future__ import annotations
@@ -91,7 +94,14 @@ BENCH = "comparator-offset-tran-extracted-feasibility"
 #: committed extracted regeneration record (-21.57 mV, ff/125 C/3.63 V,
 #: `sim/comparator-regeneration/records/20261002-202641-baeffe5.json`).
 POINTS = {"tt_27c_3.30v": ("tt", 27.0, 3.30), "ff_125c_3.63v": ("ff", 125.0, 3.63)}
-MAX_MC_N = 50          # a feasibility probe, never a campaign
+MAX_MC_N = 50          # a feasibility probe (no --campaign), never a campaign
+#: Issue #231 campaign: the schematic offset-tran bench's 45-point PVT grid
+#: (5 process corners x 3 temperatures x 3 supplies), N mismatch-only draws per
+#: corner, the bench's seed. EXPERIMENTAL: mints no record, repins nothing.
+CAMPAIGN_N = 200
+CAMPAIGN_SEED = 20260909
+CAMPAIGN_POINTS_EXPECTED = 45
+CAMPAIGN_ISSUE = 231
 SEED = mk.OFFSET_MC_SEED
 PROBE_OPTIONS = ["reltol=1e-4", "vntol=1e-9", "abstol=1e-13"]  # as the regeneration probe
 EXTRACT_REPORT = REPO / "layout" / "lvs" / "comparator.extract-rc.json"
@@ -101,6 +111,21 @@ INST_PREFIX = "xa.xlayout_dut"
 MM_NETLIST = "comparator.dut-layout-mm.spice"
 KLT_EXTRACT_ARGS = ["--deck", "gf180mcu", "--top", "COMPARATOR", "--pins",
                     ",".join(pn.INTERFACE_PINS), "--parasitics", "--format", "json"]
+
+
+def campaign_points() -> dict:
+    """{point id: (corner, temp_c, vdd)} for the existing 45-point grid, taken
+    from the schematic transient bench (the grid the headline record uses)."""
+    from harness import corners as hc
+    tb = htb.load(SIM / "comparator-offset-tran")
+    pts = {}
+    for c in hc.resolve_corners(list(tb.corners)):
+        for t in tb.temperatures_c:
+            for v in hc.supply_points(tb.nominal_supply_v, tb.supply_tolerance):
+                pts[f"{c.name}_{float(t):g}c_{v:.2f}v"] = (c.name, float(t), float(v))
+    if len(pts) != CAMPAIGN_POINTS_EXPECTED:
+        raise Refusal("GRID_SIZE", f"expected {CAMPAIGN_POINTS_EXPECTED} PVT points, grid has {len(pts)}")
+    return pts
 
 
 class Refusal(Exception):
@@ -441,10 +466,12 @@ def dut_binding(outdir: Path, netlist: Path) -> Path:
     return p
 
 
-def _require_point(point: str):
-    if point not in POINTS:
-        raise Refusal("POINT_NOT_ALLOWED", f"{point!r}: feasibility points are {sorted(POINTS)}")
-    return POINTS[point]
+def _require_point(point: str, campaign: bool = False):
+    pts = campaign_points() if campaign else POINTS
+    if point not in pts:
+        raise Refusal("POINT_NOT_ALLOWED", f"{point!r}: "
+                      f"{'campaign' if campaign else 'feasibility'} points are {sorted(pts)}")
+    return pts[point]
 
 
 def body_lines(tb, dut, vdd: float, sources: list[str], staged: dict, extra: list[str],
@@ -490,9 +517,13 @@ def make_request(body_name: str, analysis: str, measurements: list[dict], corner
 
 
 def prepare(outdir: Path, point: str, leg: str, centre_mv: float | None = None,
-            mc_n: int | None = None, adapted_netlist: Path | None = None) -> Path:
+            mc_n: int | None = None, adapted_netlist: Path | None = None,
+            campaign: bool = False) -> Path:
     """Write the request/body/bundle for one leg ('probe' or 'mc') of one point."""
-    corner, temp, vdd = _require_point(point)
+    corner, temp, vdd = _require_point(point, campaign)
+    if campaign and leg == "mc" and mc_n != CAMPAIGN_N:
+        raise Refusal("MC_N_OUT_OF_SCOPE", f"campaign draws per corner are exactly {CAMPAIGN_N}, "
+                      f"not {mc_n}")
     outdir.mkdir(parents=True, exist_ok=True)
     tb = htb.load(SIM / BENCH)
     netlist = adapted_netlist or (outdir / "extract" / MM_NETLIST)
@@ -520,7 +551,7 @@ def prepare(outdir: Path, point: str, leg: str, centre_mv: float | None = None,
         options = tb.options
         if centre_mv is None or mc_n is None:
             raise Refusal("MC_ARGS", "mc leg needs a centre and a draw count")
-        if not 1 <= mc_n <= MAX_MC_N:
+        if not campaign and not 1 <= mc_n <= MAX_MC_N:
             raise Refusal("MC_N_OUT_OF_SCOPE", f"mc_n {mc_n}: a feasibility probe is 1..{MAX_MC_N} "
                           "draws; a campaign needs its own proposal")
         # nodes are a function of connectivity, identical in both card forms;
@@ -542,7 +573,8 @@ def prepare(outdir: Path, point: str, leg: str, centre_mv: float | None = None,
     (outdir / body_name).write_text(body)
     cards = [{"name": ln.split()[2], "spice": "." + ln}
              for ln in analyses[1:]]
-    mc = None if leg == "probe" else {"n": mc_n, "seed": SEED, "vary": "mismatch"}
+    mc = None if leg == "probe" else {"n": mc_n, "seed": CAMPAIGN_SEED if campaign else SEED,
+                                      "vary": "mismatch"}
     req = make_request(body_name, analyses[0], cards, corner, temp, mc)
     req_name = f"request-{tag}.json"
     (outdir / req_name).write_text(json.dumps(req, indent=2) + "\n")
@@ -556,13 +588,113 @@ def prepare(outdir: Path, point: str, leg: str, centre_mv: float | None = None,
                      "netlist": body_name, "netlist_sha256": mk.sha256_file(outdir / body_name)}
     mk.write_bundle(outdir, BENCH, tb, dut, binding, str(binding_path), staged, commit, dirty,
                     mk.source_paths(BENCH, binding[0], dut.netlist),
-                    {"point": point, "mc_n": mc_n, "feasibility_only": True,
+                    {"point": point, "mc_n": mc_n, "feasibility_only": not campaign,
+                     "experimental_campaign_issue": CAMPAIGN_ISSUE if campaign else None,
                      "centre_mv": centre_mv}, requests)
     plan = json.loads(plan_path.read_text()) if plan_path.is_file() else {}
     plan.setdefault(point, {})[leg] = {"request": req_name, "centre_mv": centre_mv, "mc_n": mc_n,
                                        "dirty_paths": dirty}
     plan_path.write_text(json.dumps(plan, indent=2) + "\n")
     return outdir / req_name
+
+
+# ---------------------------------------------------------------------------
+# campaign (issue #231): identity, uncertainty and the 45-point summary
+# ---------------------------------------------------------------------------
+
+def check_campaign_contract(contract: dict, report: dict) -> None:
+    """Pin the extraction and source identity the campaign was run against:
+    the contract artifact must record the committed report's klt version, the
+    report's input (layout) hash and raw-netlist sha256, and a passing
+    mismatch-support check. Anything else is refused."""
+    prov = report.get("provenance") or {}
+    ex = contract.get("extraction") or {}
+    ident = (contract.get("contract") or {}).get("identity") or {}
+    in_hash = str((prov.get("input") or {}).get("content_hash", "")).removeprefix("sha256:")
+    if not ident.get("match") or ident.get("raw_netlist_sha256") != report.get("netlist_sha256") \
+            or ex.get("raw_netlist_sha256") != report.get("netlist_sha256"):
+        raise Refusal("EXTRACTION_IDENTITY", "contract's raw netlist sha256 is not the committed "
+                      "extraction report's netlist_sha256")
+    if not in_hash or ex.get("gds_sha256") != in_hash:
+        raise Refusal("EXTRACTION_IDENTITY", "contract's layout sha256 is not the report's input hash")
+    if not prov.get("klt_version") or ex.get("klt_pinned_by_report") != prov.get("klt_version"):
+        raise Refusal("EXTRACTION_IDENTITY", "contract was not extracted with the klt version the "
+                      "committed report names")
+    dm = (contract.get("contract") or {}).get("device_mismatch") or {}
+    if dm.get("card_form") != "subckt call" or not dm.get("geometry_multiset_equals_schematic"):
+        raise Refusal("ADAPTED_MOS_BYPASS_MISMATCH", "simulated netlist is not the verified "
+                      "mismatch-capable (subckt-call) form")
+
+
+def stat_uncertainty(pop: dict) -> dict:
+    """Finite-N uncertainty of one point's statistics (Gaussian-population
+    approximations): SE(mean) = sigma/sqrt(N), SE(sigma) = sigma/sqrt(2(N-1))."""
+    n, sig = pop["n_valid_draws"], pop["sig_trip_mv"]
+    if n < 2 or not finite(sig):
+        raise Refusal("UNCERTAINTY", f"cannot derive finite-N uncertainty from n={n}, sigma={sig!r}")
+    se_sig = sig / math.sqrt(2 * (n - 1))
+    return {"se_mean_mv": sig / math.sqrt(n), "se_sigma_mv": se_sig,
+            "sigma_rel_se": se_sig / sig,
+            "sigma_ci95_mv": [sig - 1.96 * se_sig, sig + 1.96 * se_sig]}
+
+
+def summarize_campaign(expected: dict, results: dict, refusals: dict, n: int = CAMPAIGN_N) -> dict:
+    """Summary over the expected grid. `results` = {point: campaign json},
+    `refusals` = {point: refusal json}. Complete only if EVERY expected point
+    has exactly `n` valid draws; otherwise the failed/missing points are listed
+    and no aggregate claim is made. Absolute systematic offset (= -mean trip,
+    centre NOT subtracted) and random sigma are separate columns."""
+    rows, failed, missing = {}, {}, []
+    for pt in expected:
+        r = results.get(pt)
+        if r is None:
+            if pt in refusals:
+                failed[pt] = {"code": refusals[pt].get("code"), "reason": refusals[pt].get("reason")}
+            else:
+                missing.append(pt)
+            continue
+        pop = r["population"]
+        vals = [pop.get(k) for k in ("trip_abs_mean_mv", "sig_trip_mv", "se_mean_mv", "se_sigma_mv")]
+        if pop.get("n_valid_draws") != n or not all(finite(v) for v in vals) or not pop["sig_trip_mv"] > 0:
+            failed[pt] = {"code": "INVALID_RESULT",
+                          "reason": f"n_valid={pop.get('n_valid_draws')}, values={vals}"}
+            continue
+        rows[pt] = {"n": n, "trip_abs_mean_mv": pop["trip_abs_mean_mv"],
+                    "systematic_offset_mv": -pop["trip_abs_mean_mv"],
+                    "se_mean_mv": pop["se_mean_mv"], "sigma_random_mv": pop["sig_trip_mv"],
+                    "se_sigma_mv": pop["se_sigma_mv"], "random_3sigma_mv": 3 * pop["sig_trip_mv"],
+                    "probe_trip_mv": pop["probe_trip_mv"], "centre_mv": pop["centre_mv"]}
+    complete = len(rows) == len(expected) == CAMPAIGN_POINTS_EXPECTED and not failed and not missing
+    out = {"experimental": True, "issue": CAMPAIGN_ISSUE, "mints_record": False,
+           "complete": complete, "expected_points": len(expected), "valid_points": len(rows),
+           "n_per_point": n, "seed": CAMPAIGN_SEED,
+           "failed_points": failed, "missing_points": missing, "points": rows,
+           "ratified_total_offset_verdict": None,
+           "note": "random 3-sigma alone does not establish a ratified total-offset pass; no signoff "
+                   "item is repinned; preamp/latch decomposition and resistor hand-budget withheld"}
+    if complete:
+        sy = [r["systematic_offset_mv"] for r in rows.values()]
+        sg = [r["sigma_random_mv"] for r in rows.values()]
+        w_sy = max(rows, key=lambda p: abs(rows[p]["systematic_offset_mv"]))
+        w_sg = max(rows, key=lambda p: rows[p]["sigma_random_mv"])
+        out["aggregate"] = {
+            "systematic_offset_mv": {"min": min(sy), "max": max(sy), "worst_abs_point": w_sy},
+            "sigma_random_mv": {"min": min(sg), "max": max(sg), "worst_point": w_sg},
+            "worst_abs_systematic_plus_3sigma_mv_informational": max(
+                abs(r["systematic_offset_mv"]) + r["random_3sigma_mv"] for r in rows.values())}
+    return out
+
+
+def cmd_summary(outdir: Path) -> dict:
+    expected = campaign_points()
+    results, refusals = {}, {}
+    for pt in expected:
+        f, g = outdir / f"campaign-{pt}.json", outdir / f"refusal-{pt}.json"
+        if f.is_file():
+            results[pt] = json.loads(f.read_text())
+        elif g.is_file():
+            refusals[pt] = json.loads(g.read_text())
+    return summarize_campaign(expected, results, refusals)
 
 
 # ---------------------------------------------------------------------------
@@ -623,12 +755,16 @@ def cmd_contract(outdir: Path, klt_cmd: list[str] | None) -> dict:
     return art
 
 
-def cmd_evaluate(outdir: Path, point: str) -> dict:
-    _require_point(point)
+def cmd_evaluate(outdir: Path, point: str, campaign: bool = False) -> dict:
+    _, _, vdd = _require_point(point, campaign)
+    if campaign:
+        check_campaign_contract(json.loads((outdir / "contract.json").read_text()),
+                                json.loads(EXTRACT_REPORT.read_text()))
     plan = json.loads((outdir / "plan.json").read_text())[point]
     tb = htb.load(SIM / BENCH)
-    corner, temp, vdd = POINTS[point]
-    out = {"feasibility_only": True, "point": point, "mints_record": False}
+    out = {"feasibility_only": not campaign, "point": point, "mints_record": False}
+    if campaign:
+        out.update({"experimental": True, "issue": CAMPAIGN_ISSUE})
     probe_req = json.loads((outdir / plan["probe"]["request"]).read_text())
     probe_rep = json.loads((outdir / f"report-probe-{point}.json").read_text())
     pc = centre_from_probe(probe_rep, probe_req, tb.params["centre_resolution_mv"],
@@ -650,8 +786,14 @@ def cmd_evaluate(outdir: Path, point: str) -> dict:
     if issues:
         raise Refusal("REPORT_COVERAGE", "; ".join(issues[:6]))
     cid = point
+    if campaign and (req["monte_carlo"]["n"] != CAMPAIGN_N or req["monte_carlo"]["seed"] != CAMPAIGN_SEED
+                     or req["monte_carlo"].get("vary") != "mismatch"):
+        raise Refusal("CAMPAIGN_REQUEST", f"{point}: request mc block {req['monte_carlo']} is not "
+                      f"N={CAMPAIGN_N}, seed={CAMPAIGN_SEED}, vary=mismatch")
     out["population"] = evaluate_population(tb, cid, collected[cid], pc["centre_mv"],
                                             pc["trip_mv"], req["monte_carlo"]["n"])
+    if campaign:
+        out["population"].update(stat_uncertainty(out["population"]))
     env = rep.get("environment") or {}
     out["executor"] = {"remote": env.get("remote"), "monte_carlo": env.get("monte_carlo"),
                        "engine_version": env.get("engine_version")}
@@ -662,16 +804,18 @@ def cmd_evaluate(outdir: Path, point: str) -> dict:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
-    for name in ("contract", "probe", "mc", "evaluate"):
+    for name in ("contract", "probe", "mc", "evaluate", "summary"):
         s = sub.add_parser(name)
         s.add_argument("outdir")
-        if name != "contract":
+        if name not in ("contract", "summary"):
             s.add_argument("--point", required=True)
+            s.add_argument("--campaign", action="store_true",
+                           help="issue #231 45-point experimental campaign (N=200, seed 20260909)")
         if name == "contract":
             s.add_argument("--klt-cmd", nargs="+", default=None)
         if name == "mc":
             s.add_argument("--probe-report", required=True)
-            s.add_argument("--mc-n", type=int, default=20)
+            s.add_argument("--mc-n", type=int, default=None)
     a = ap.parse_args(argv)
     out = Path(a.outdir).resolve()
     try:
@@ -679,7 +823,7 @@ def main(argv=None) -> int:
             art = cmd_contract(out, a.klt_cmd)
             print(json.dumps(art["contract"], indent=2))
         elif a.cmd == "probe":
-            print(prepare(out, a.point, "probe"))
+            print(prepare(out, a.point, "probe", campaign=a.campaign))
         elif a.cmd == "mc":
             tb = htb.load(SIM / BENCH)
             plan_req = json.loads((out / f"request-probe-{a.point}.json").read_text())
@@ -688,16 +832,23 @@ def main(argv=None) -> int:
                                    tb.params["probe_vspan_mv"])
             (out / f"report-probe-{a.point}.json").write_text(json.dumps(rep, indent=2) + "\n")
             print(f"probe trip {pc['trip_mv']:.4f} mV -> centre {pc['centre_mv']} mV")
-            print(prepare(out, a.point, "mc", centre_mv=pc["centre_mv"], mc_n=a.mc_n))
+            mc_n = a.mc_n if a.mc_n is not None else (CAMPAIGN_N if a.campaign else 20)
+            print(prepare(out, a.point, "mc", centre_mv=pc["centre_mv"], mc_n=mc_n,
+                          campaign=a.campaign))
+        elif a.cmd == "summary":
+            res = cmd_summary(out)
+            (out / "campaign-summary.json").write_text(json.dumps(res, indent=2) + "\n")
+            print(json.dumps({k: v for k, v in res.items() if k != "points"}, indent=2))
+            return 0 if res["complete"] else 3
         else:
             try:
-                res = cmd_evaluate(out, a.point)
+                res = cmd_evaluate(out, a.point, a.campaign)
             except Refusal as e:
                 (out / f"refusal-{a.point}.json").write_text(json.dumps(
-                    {"feasibility_only": True, "point": a.point, "published": False,
+                    {"feasibility_only": not a.campaign, "experimental": a.campaign, "point": a.point, "published": False,
                      "code": e.code, "reason": e.msg}, indent=2) + "\n")
                 raise
-            (out / f"feasibility-{a.point}.json").write_text(json.dumps(res, indent=2) + "\n")
+            (out / f"{'campaign' if a.campaign else 'feasibility'}-{a.point}.json").write_text(json.dumps(res, indent=2) + "\n")
             print(json.dumps(res, indent=2))
     except Refusal as e:
         print(f"REFUSED: {e}", file=sys.stderr)

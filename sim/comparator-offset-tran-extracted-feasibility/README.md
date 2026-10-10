@@ -109,8 +109,9 @@ reference evidence.
   (two `ppolyf_u_1k`, `r_length=120u`, `r_width=1u`, equal to the schematic's)
   but the budget's `vdrop/Av` term depends on the withheld gain. Nothing from
   the schematic bench's `rmis_*` arithmetic is transplanted.
-* A 45-point x 200-draw campaign and any item-7 repinning need a later
-  proposal; this probe sets no ratified-row verdict.
+* Any item-7 repinning needs a later proposal; this probe sets no
+  ratified-row verdict. (The 45-point x 200-draw experiment is the separate
+  section below, issue #231.)
 
 Tool gaps filed: [klayout-tools#3038](https://github.com/2AMLogic/klayout-tools/issues/3038)
 (dependent `.meas` cards), [klayout-tools#3039](https://github.com/2AMLogic/klayout-tools/issues/3039)
@@ -127,3 +128,57 @@ Tool gaps filed: [klayout-tools#3038](https://github.com/2AMLogic/klayout-tools/
     python3 sim/tools/extracted_tran_feasibility.py evaluate OUT --point P
 
 `contract` needs `uvx` (a throwaway environment; no host tool is changed).
+
+## Experimental 45-point campaign (issue #231) -- STATUS: NOT YET RUN
+
+**No campaign results are committed.** The tool, PDK-free tests and fleet
+reproduction recipe below are delivered; the 45 fleet submissions have not been
+run, so there is nothing to score. This is an additive, experimental extension:
+it mints no record, repins no signoff item, and leaves the production adapter,
+the `comparator-dr0001-layout` binding, the committed extracted records and
+every ratified bound untouched. The mismatch-capable netlist is still the
+feasibility-only variant staged under the campaign output directory.
+
+Scope: the schematic offset-tran bench's 45-point grid (5 process corners x
+3 temperatures x 3 supplies), **N = 200 mismatch-only draws per corner**, seed
+20260909, one request per point. `--campaign` refuses any other N or point.
+
+Gates (all reused or extended from the feasibility path): contract identity
+pinned to the committed extraction report (layout sha256 = report input hash,
+raw netlist sha256 = `netlist_sha256`, klt version = the report's, via `uvx`);
+mismatch-capable subckt-call form with the schematic's (model, L, W) multiset;
+per-corner mismatch-free trip probe before centring; finite-value, coverage,
+endpoint-decision, trip-bracket, mismatch-exercised (sigma > 0), 3-step
+edge-margin and probe-bracketed gates; exactly 200 valid draws. A corner that
+fails any gate writes `refusal-<point>.json` and is **listed, never dropped**;
+`summary` reports `complete: true` only with 45/45 valid corners (exit 3
+otherwise, and no aggregate is produced).
+
+Reported per corner, as separate numbers: the absolute mean trip (centre NOT
+subtracted; systematic offset = -mean trip) with SE(mean) = sigma/sqrt(N), and
+the quantisation-corrected random sigma with SE(sigma) = sigma/sqrt(2(N-1)) and
+a 95 % interval. Random 3-sigma alone is not a ratified total-offset pass; the
+summary carries `ratified_total_offset_verdict: null`. Preamp/latch
+decomposition and the resistor hand-budget stay withheld.
+
+Fleet reproduction (run from a clean checkout so the source bundle is not
+marked dirty; each `klt sim` Monte Carlo goes to the batch fleet, with no local
+fallback if a submit fails -- report the error instead):
+
+    OUT=sim/comparator-offset-tran-extracted-feasibility/campaign/<date>
+    python3 sim/tools/extracted_tran_feasibility.py contract $OUT     # uvx klt==report's version
+    for P in $(python3 -c "import sys; sys.path.insert(0,'sim/tools'); import extracted_tran_feasibility as e; print(*e.campaign_points())"); do
+      python3 sim/tools/extracted_tran_feasibility.py probe $OUT --point $P --campaign
+      klt sim $OUT/request-probe-$P.json --backend local --format json -o $OUT/out > $OUT/report-probe-raw.json
+      python3 sim/tools/extracted_tran_feasibility.py mc $OUT --point $P --campaign --probe-report $OUT/report-probe-raw.json
+      KLT_SIM_BACKEND=batch klt sim $OUT/request-mc-$P.json --format json -o $OUT/out-mc > $OUT/report-mc-$P.json
+      python3 sim/tools/extracted_tran_feasibility.py evaluate $OUT --point $P --campaign
+    done
+    python3 sim/tools/extracted_tran_feasibility.py summary $OUT
+
+The loop is orchestration of single `klt sim` submissions (the probes are
+single-unit local runs, the Monte Carlo is fleet-side); it must be driven by
+the fleet-dispatching operator, not as a local ngspice grid. Fleet cost
+(45 x 200 transient units) and staircase bracketing at the extreme corners are
+the known risks: a point whose trips leave the +-5.04 mV range fails
+`EDGE_MARGIN` / `PROBE_NOT_BRACKETED` and is reported, not widened.

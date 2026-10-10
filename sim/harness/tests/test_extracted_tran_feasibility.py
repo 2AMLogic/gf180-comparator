@@ -317,6 +317,140 @@ class Contract(unittest.TestCase):
             self.assertEqual(cm.exception.code, "EXTRACTION_IDENTITY")
 
 
+class Campaign(unittest.TestCase):
+    """Issue #231: 45-point x N=200 experimental campaign (PDK-free)."""
+    REPORT = json.loads((REPO / "layout/lvs/comparator.extract-rc.json").read_text())
+
+    def contract(self):
+        rep = self.REPORT
+        raw = rep["netlist_sha256"]
+        return {"extraction": {"gds_sha256": rep["provenance"]["input"]["content_hash"][7:],
+                               "raw_netlist_sha256": raw,
+                               "klt_pinned_by_report": rep["provenance"]["klt_version"]},
+                "contract": {"identity": {"match": True, "raw_netlist_sha256": raw},
+                             "device_mismatch": {"card_form": "subckt call",
+                                                 "geometry_multiset_equals_schematic": True}}}
+
+    def pop(self, mean=-8.1, sig=1.2, n=200):
+        d = {"n_valid_draws": n, "trip_abs_mean_mv": mean, "sig_trip_mv": sig,
+             "probe_trip_mv": mean, "centre_mv": round(mean, 2)}
+        d.update(ef.stat_uncertainty(d))
+        return {"population": d}
+
+    def grid(self):
+        return ef.campaign_points()
+
+    def test_grid_is_exactly_45_points(self):
+        g = self.grid()
+        self.assertEqual(len(g), 45)
+        self.assertIn("ss_-40c_2.97v", g)
+        self.assertIn("tt_27c_3.30v", g)
+        self.assertEqual((ef.CAMPAIGN_N, ef.CAMPAIGN_SEED), (200, 20260909))
+
+    def test_campaign_point_allowed_only_with_flag(self):
+        ef._require_point("ss_-40c_2.97v", campaign=True)
+        with self.assertRaises(ef.Refusal):
+            ef._require_point("ss_-40c_2.97v")
+        with self.assertRaises(ef.Refusal):
+            ef._require_point("tt_27c_3.31v", campaign=True)
+
+    def test_campaign_n_is_exactly_200(self):
+        for n in (20, 199, 201):
+            with self.assertRaises(ef.Refusal) as cm:
+                ef.prepare(Path("/nonexistent-camp"), "tt_27c_3.30v", "mc", centre_mv=0.0, mc_n=n,
+                           campaign=True)
+            self.assertEqual(cm.exception.code, "MC_N_OUT_OF_SCOPE")
+
+    def test_identity_accepts_matching_and_rejects_wrong_extraction(self):
+        ef.check_campaign_contract(self.contract(), self.REPORT)
+        for path, val in (("raw", "0" * 64), ("gds", "1" * 64), ("klt", "0.7.0")):
+            c = self.contract()
+            if path == "raw":
+                c["extraction"]["raw_netlist_sha256"] = val
+                c["contract"]["identity"]["raw_netlist_sha256"] = val
+            elif path == "gds":
+                c["extraction"]["gds_sha256"] = val
+            else:
+                c["extraction"]["klt_pinned_by_report"] = val
+            with self.assertRaises(ef.Refusal) as cm:
+                ef.check_campaign_contract(c, self.REPORT)
+            self.assertEqual(cm.exception.code, "EXTRACTION_IDENTITY", path)
+
+    def test_identity_rejects_mismatch_bypassing_netlist(self):
+        c = self.contract()
+        c["contract"]["device_mismatch"]["card_form"] = "model instance"
+        with self.assertRaises(ef.Refusal) as cm:
+            ef.check_campaign_contract(c, self.REPORT)
+        self.assertEqual(cm.exception.code, "ADAPTED_MOS_BYPASS_MISMATCH")
+
+    def test_zero_dispersion_missing_draws_and_nonfinite_are_refused(self):
+        centre = -8.22
+        flat = population([32] * 8)
+        with self.assertRaises(ef.Refusal) as cm:
+            ef.evaluate_population(TB, "tt_27c_3.30v", flat, centre, trip_mv(centre, 32), 8)
+        self.assertEqual(cm.exception.code, "MISMATCH_NOT_EXERCISED")
+        with self.assertRaises(ef.Refusal) as cm:
+            ef.evaluate_population(TB, "tt_27c_3.30v", population(LEVELS), centre,
+                                   trip_mv(centre, 32), 200)
+        self.assertEqual(cm.exception.code, "SAMPLE_COUNT")
+        bad = population(LEVELS)
+        bad["mc0"]["t_trip"] = float("nan")
+        with self.assertRaises(ef.Refusal):
+            ef.evaluate_population(TB, "tt_27c_3.30v", bad, centre, trip_mv(centre, 32), 8)
+
+    def test_out_of_bracket_trips_and_probe_are_refused(self):
+        centre = -8.22
+        with self.assertRaises(ef.Refusal) as cm:
+            ef.evaluate_population(TB, "tt_27c_3.30v", population([28, 30, 70]), centre,
+                                   trip_mv(centre, 30), 3)
+        self.assertEqual(cm.exception.code, "DRAW_VALIDATION")
+        with self.assertRaises(ef.Refusal) as cm:
+            ef.evaluate_population(TB, "tt_27c_3.30v", population(LEVELS), centre,
+                                   trip_mv(centre, 32) + 3.0, 8)
+        self.assertEqual(cm.exception.code, "PROBE_NOT_BRACKETED")
+
+    def test_uncertainty_formulas(self):
+        u = ef.stat_uncertainty({"n_valid_draws": 200, "sig_trip_mv": 1.0})
+        self.assertAlmostEqual(u["se_mean_mv"], 1 / math.sqrt(200))
+        self.assertAlmostEqual(u["se_sigma_mv"], 1 / math.sqrt(398))
+        with self.assertRaises(ef.Refusal):
+            ef.stat_uncertainty({"n_valid_draws": 200, "sig_trip_mv": float("nan")})
+
+    def test_complete_summary_keeps_systematic_and_random_separate(self):
+        g = self.grid()
+        res = {pt: self.pop(mean=-8.0 - i * 0.3, sig=1.1 + i * 0.01) for i, pt in enumerate(g)}
+        s = ef.summarize_campaign(g, res, {})
+        self.assertTrue(s["complete"])
+        self.assertEqual(s["valid_points"], 45)
+        r = s["points"]["tt_27c_3.30v"]
+        self.assertAlmostEqual(r["systematic_offset_mv"], -r["trip_abs_mean_mv"])
+        self.assertNotAlmostEqual(r["systematic_offset_mv"], r["sigma_random_mv"])
+        self.assertIsNone(s["ratified_total_offset_verdict"])
+        self.assertFalse(s["mints_record"])
+
+    def test_incomplete_summary_lists_failures_and_has_no_aggregate(self):
+        g = self.grid()
+        pts = list(g)
+        res = {pt: self.pop() for pt in pts[2:]}
+        res[pts[2]] = self.pop(n=199)             # wrong draw count: failed, not dropped
+        s = ef.summarize_campaign(g, res, {pts[0]: {"code": "EDGE_MARGIN", "reason": "x"}})
+        self.assertFalse(s["complete"])
+        self.assertEqual(s["failed_points"][pts[0]]["code"], "EDGE_MARGIN")
+        self.assertEqual(s["failed_points"][pts[2]]["code"], "INVALID_RESULT")
+        self.assertEqual(s["missing_points"], [pts[1]])
+        self.assertNotIn("aggregate", s)
+
+    def test_summary_rejects_zero_sigma_and_nonfinite(self):
+        g = self.grid()
+        res = {pt: self.pop() for pt in g}
+        pt = next(iter(g))
+        res[pt]["population"]["sig_trip_mv"] = 0.0
+        res[list(g)[1]]["population"]["trip_abs_mean_mv"] = float("nan")
+        s = ef.summarize_campaign(g, res, {})
+        self.assertFalse(s["complete"])
+        self.assertEqual(len(s["failed_points"]), 2)
+
+
 class Scope(unittest.TestCase):
     def test_points_and_campaign_size_are_bounded(self):
         with self.assertRaises(ef.Refusal) as cm:
