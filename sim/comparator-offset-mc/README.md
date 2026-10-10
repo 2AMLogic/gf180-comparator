@@ -52,6 +52,21 @@ raw sample set is in the evidence trail and not only its summary statistics.
   turns `mis_r` on fails here instead of silently changing every offset
   record in this repo.
 
+### Scope of the ±50 mV band
+
+The ±50 mV band is this bench's own standalone choice. It is not the
+consumer's ±100 mV window (`spec/consumers.md`). Two further limits apply.
+First, the fleet path (`sim/tools/mk_klt_request.py`) requests only the
+`vcmd = 0` points, so fleet records carry no common-mode term. Second, the
+records listed below are the historical evidence for this band and stay as
+they are.
+
+The consumer window is covered by the separate supplemental bench
+[`comparator-offset-cm-window/`](../comparator-offset-cm-window/) (issue #182).
+It is at the feasibility stage only: the fleet runner cannot yet address a
+nested sweep's points, no record exists, and the consumer verdict stays
+Unknown.
+
 ## Provenance
 
 Methodology ported from

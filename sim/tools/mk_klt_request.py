@@ -18,6 +18,11 @@ One `klt sim` request carries ONE analysis, so a bench becomes one or more
     comparator-offset-mc    leg `main`  (monte_carlo, one dc sweep per draw)
     comparator-offset-tran  leg `main`  (monte_carlo, one clocked staircase
                             transient per draw; issue #157)
+    comparator-offset-cm-window
+                            REFUSED (UNSUPPORTED_EXECUTOR_CAPABILITY, issue
+                            #182): the six-point same-draw request is
+                            specified by `cm_window_leg`, but the fleet
+                            runner cannot address the nested sweep's points
 
 Derived quantities (`tb.json` "measure") are computed from the raw per-leg
 values by `sim/tools/klt_record.py`; the `.meas` cards / expressions below
@@ -76,7 +81,76 @@ OFFSET_MC_N = 200
 #: `batch_no_capacity` refusal (request.batch.capacity_wait_s).
 BATCH_CAPACITY_WAIT_S = 1800
 #: Benches whose requests carry a `monte_carlo` block.
-MC_BENCHES = ("comparator-offset-mc", "comparator-offset-tran")
+MC_BENCHES = ("comparator-offset-mc", "comparator-offset-tran", "comparator-offset-cm-window")
+
+#: Supplemental consumer-window common-mode bench (issue #182). Separately
+#: named: comparator-offset-mc's +-50 mV bench and records are untouched.
+CM_WINDOW_BENCH = "comparator-offset-cm-window"
+#: ONE nested dc analysis per draw: `vd` is the inner (fast) sweep, `vcmd`
+#: the outer one, so ngspice's flattened vectors are ordered 2*j + i.
+CM_WINDOW_DC_ARGS = "vd 0 2m 2m vcmd -100m 100m 100m"
+CM_WINDOW_VD_STEP_V = 2e-3
+#: label -> (common-mode delta vcmd [V], differential stimulus vd [V], index
+#: into the nested sweep's vectors). The identity of every reported value.
+CM_WINDOW_POINTS = {
+    "dn_0": (-0.1, 0.0, 0), "dn_2m": (-0.1, 2e-3, 1),
+    "mid_0": (0.0, 0.0, 2), "mid_2m": (0.0, 2e-3, 3),
+    "up_0": (0.1, 0.0, 4), "up_2m": (0.1, 2e-3, 5),
+}
+#: Per point: the differential output and BOTH coordinates read back from the
+#: same solve, so a report's labels can be checked against what was simulated.
+CM_WINDOW_QUANTITIES = {"dv": "v(dd)[{k}]", "xcm": "v(cm)[{k}]-v(cmb)[{k}]", "xvd": "v(vd)[{k}]"}
+#: `measurements[].expr` (klt #2533) first shipped in klt 0.7.0; a `.meas dc
+#: ... at=` card can only search the inner sweep's scale and so cannot name
+#: the outer coordinate (it returns the first outer slice).
+CM_WINDOW_MIN_RUNNER_KLT = (0, 7, 0)
+#: The fleet runner's klt as reported in environment.remote.runner_klt_version
+#: by every batch record in this repository through 2026-10-10.
+FLEET_RUNNER_KLT_OBSERVED = "0.5.0"
+
+
+def parse_klt_version(text) -> tuple[int, int, int] | None:
+    """'0.7.0+g5e5b55' / 'klt 0.5.0' -> (0, 7, 0); None when unparseable."""
+    if not isinstance(text, str):
+        return None
+    for tok in text.replace("klt", " ").split():
+        parts = tok.split("+", 1)[0].split(".")
+        if len(parts) == 3 and all(p.isdigit() for p in parts):
+            return tuple(int(p) for p in parts)
+    return None
+
+
+def cm_window_capability_gap(runner_version) -> str | None:
+    """None when a fleet runner at `runner_version` can execute the six-point
+    request, else the exact missing capability (issue #182)."""
+    v = parse_klt_version(runner_version)
+    if v is not None and v >= CM_WINDOW_MIN_RUNNER_KLT:
+        return None
+    return (f"fleet runner klt {runner_version!r} cannot address the six points of the nested sweep "
+            f"`dc {CM_WINDOW_DC_ARGS}`: it accepts only `.meas` cards (`measurements[].spice`; an "
+            "`expr` entry is refused with \"each request.measurements[] entry requires 'name' and "
+            "'spice'\"), and `.meas dc ... at=` searches only the inner `vd` scale, so it cannot "
+            "select the outer `vcmd` coordinate. Needs a runner with `measurements[].expr` (klt >= "
+            f"{'.'.join(map(str, CM_WINDOW_MIN_RUNNER_KLT))}, klt #2533). Full consumer-window "
+            "coverage stays pending; see sim/comparator-offset-cm-window/README.md")
+
+
+def cm_window_measurements() -> list[dict]:
+    """The 18 `expr` entries of the six-point request, label-major."""
+    return [{"name": f"{q}_{label}", "expr": tmpl.format(k=k)}
+            for label, (_, _, k) in CM_WINDOW_POINTS.items()
+            for q, tmpl in CM_WINDOW_QUANTITIES.items()]
+
+
+def cm_window_leg(mc_n: int) -> dict:
+    """The supported-path leg (issue #182): ONE dc analysis per draw whose
+    six points are all read from the same solve. Used only once a runner
+    with `expr` is established; until then `main` refuses."""
+    return {
+        "analysis": {"kind": "dc", "args": CM_WINDOW_DC_ARGS},
+        "measurements": cm_window_measurements(),
+        "monte_carlo": {"n": mc_n, "seed": OFFSET_MC_SEED, "vary": "mismatch"},
+    }
 
 #: Pin ngspice to ONE OpenMP device-evaluation thread per unit (issue #157).
 #: The batch job runs one ngspice per physical core, so any extra threads
@@ -268,6 +342,11 @@ def legs_for(bench: str, tb, mc_n: int) -> dict[str, dict]:
             "measurements": m,
             "monte_carlo": {"n": mc_n, "seed": OFFSET_MC_SEED, "vary": "mismatch"},
         }}
+    if bench == CM_WINDOW_BENCH:
+        gap = cm_window_capability_gap(FLEET_RUNNER_KLT_OBSERVED)
+        if gap:
+            raise SystemExit(f"UNSUPPORTED_EXECUTOR_CAPABILITY: {gap}")
+        return {"main": cm_window_leg(mc_n)}
     raise SystemExit(f"unknown bench {bench!r}")
 
 
@@ -282,6 +361,12 @@ def main() -> int:
     ap.add_argument("--dut", default=None)
     a = ap.parse_args()
 
+    if a.bench == CM_WINDOW_BENCH:
+        # Refused BEFORE anything is staged (issue #182): no request set,
+        # bundle or body is written for a capability the fleet lacks.
+        gap = cm_window_capability_gap(FLEET_RUNNER_KLT_OBSERVED)
+        if gap:
+            raise SystemExit(f"UNSUPPORTED_EXECUTOR_CAPABILITY: {gap}")
     tb = htb.load(SIM / a.bench)
     pdk = hpdk.find_pdk()
     dut = hdut.load(path=a.dut) if a.dut and Path(a.dut).is_file() else hdut.load(select=a.dut)
@@ -357,7 +442,11 @@ def main() -> int:
                 # A Spot capacity refusal is retried with the client's own
                 # backoff for up to BATCH_CAPACITY_WAIT_S instead of being
                 # terminal on the first refusal (issue #157; klt #2721).
-                "batch": {"runner_version_check": "warn", "capacity_wait_s": BATCH_CAPACITY_WAIT_S},
+                # The six-point request depends on `expr`, which an older
+                # runner may not honour: it must be refused BEFORE simulating
+                # (`enforce`), never detected after the fact (issue #182).
+                "batch": {"runner_version_check": "enforce" if a.bench == CM_WINDOW_BENCH else "warn",
+                          "capacity_wait_s": BATCH_CAPACITY_WAIT_S},
                 "analysis": spec["analysis"],
                 "measurements": spec["measurements"],
                 "options": {

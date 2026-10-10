@@ -43,6 +43,11 @@ diagnostic on failure:
     SOURCE_COMMIT_MISMATCH     the bundle claims a clean commit whose files
                                differ from the staged bytes
 
+`comparator-offset-cm-window` (issue #182) is refused outright with
+UNSUPPORTED_EXECUTOR_CAPABILITY: the fleet runner cannot address its nested
+sweep's six points. `collect_cm_window` / `derive_cm_window` validate the
+specified same-draw contract against synthetic reports only.
+
 Differences between the bundle and today's checkout (fragment, manifest,
 binding entry, selected DUT, DUT netlist) are reported as source drift; the
 record still cites the bundle's (originating) sources, never today's.
@@ -310,6 +315,195 @@ def derive_offset_tran(tb, raw: dict, ids: list[str], problems: list[str]) -> di
         if d is not None:
             res[cid] = d
     return res
+
+
+# ---------------------------------------------------------------------------
+# Consumer-window common-mode feasibility adapter (issue #182). PDK-free
+# validation of the six-point same-draw contract specified by
+# mk_klt_request.cm_window_leg. It mints nothing: `main` refuses the bench
+# (UNSUPPORTED_EXECUTOR_CAPABILITY) until a fleet runner with
+# `measurements[].expr` is established, and full 45-point coverage is pending.
+# ---------------------------------------------------------------------------
+
+CM_WINDOW_COMMON_MODES = ("dn", "mid", "up")
+#: Coordinate read-back tolerance (V): the stimulus sources are ideal, so a
+#: read-back off by more than this names a different sweep point.
+CM_COORD_TOL_V = 1e-6
+
+
+def check_cm_window_request(req: dict) -> list[str]:
+    """REQUEST_SHAPE_INVALID issues; [] only for ONE dc analysis per draw whose
+    18 values all index that one solve with the fixed label -> point mapping."""
+    issues = []
+    if req.get("analysis") != {"kind": "dc", "args": mk.CM_WINDOW_DC_ARGS}:
+        issues.append(f"REQUEST_SHAPE_INVALID: analysis {req.get('analysis')!r} is not the one nested "
+                      f"sweep `dc {mk.CM_WINDOW_DC_ARGS}`")
+    mc = req.get("monte_carlo") or {}
+    if mc.get("vary") != "mismatch" or not isinstance(mc.get("n"), int) or mc["n"] < 1:
+        issues.append(f"REQUEST_SHAPE_INVALID: monte_carlo {req.get('monte_carlo')!r} is not a mismatch draw set")
+    want = {m["name"]: m["expr"] for m in mk.cm_window_measurements()}
+    got = req.get("measurements") or []
+    names = [m.get("name") for m in got]
+    if sorted(map(str, names)) != sorted(want):
+        issues.append(f"REQUEST_SHAPE_INVALID: measurements {sorted(map(str, names))} != the six-point set")
+    for m in got:
+        if "spice" in m:
+            issues.append(f"REQUEST_SHAPE_INVALID: {m.get('name')!r} is a `.meas` card; `at=` on the nested "
+                          "sweep cannot select the outer common-mode coordinate")
+        elif m.get("name") in want and m.get("expr") != want[m["name"]]:
+            issues.append(f"REQUEST_SHAPE_INVALID: {m['name']!r} reads {m.get('expr')!r}, its point is "
+                          f"{want[m['name']]!r}")
+    if (req.get("batch") or {}).get("runner_version_check") != "enforce":
+        issues.append("REQUEST_SHAPE_INVALID: batch.runner_version_check must be 'enforce' (an older runner "
+                      "must refuse before simulating, not be detected afterwards)")
+    return issues
+
+
+def check_cm_window_executor(report: dict) -> list[str]:
+    """UNSUPPORTED_EXECUTOR_CAPABILITY unless every runner that produced the
+    report is a version-matched klt with `expr` (environment.remote)."""
+    remote = (report.get("environment") or {}).get("remote")
+    runners = (remote.get("fleet") or [remote]) if isinstance(remote, dict) else remote
+    if not isinstance(runners, list) or not runners:
+        return ["UNSUPPORTED_EXECUTOR_CAPABILITY: report names no fleet runner (environment.remote)"]
+    issues = []
+    for r in runners:
+        r = r if isinstance(r, dict) else {}
+        gap = mk.cm_window_capability_gap(r.get("runner_klt_version"))
+        if gap:
+            issues.append(f"UNSUPPORTED_EXECUTOR_CAPABILITY: {gap}")
+        elif r.get("runner_compatibility") != "match":
+            issues.append(f"UNSUPPORTED_EXECUTOR_CAPABILITY: runner_compatibility "
+                          f"{r.get('runner_compatibility')!r}, not 'match'")
+    return issues
+
+
+def pair_cm_window_reports(reports: list[dict]) -> dict:
+    """The ONE report that may carry a supply point's draws.
+
+    A draw's six points must come from one analysis of one instance. Values
+    pooled from separate requests are refused even when their monte_carlo
+    seeds are equal: a shared seed reproduces a sequence of separately
+    randomized decks; it does not make two decks the same draw."""
+    if len(reports) != 1:
+        seeds = {json.dumps(((r.get("environment") or {}).get("monte_carlo") or {}).get("seed")) for r in reports}
+        refuse("SEPARATE_REQUEST_PAIRING",
+               f"{len(reports)} reports offered for one supply point"
+               + (" (all with the same monte_carlo seed)" if len(seeds) == 1 and reports else "")
+               + "; seed equality across requests is not draw identity")
+    return reports[0]
+
+
+def collect_cm_window(report: dict, request: dict, vdd: float) -> tuple[dict, list[str]]:
+    """-> ({corner_id: {mcN: {label: dv}}}, issues), keyed by identity, never
+    by position. A sample contributes only when it carries every one of the
+    18 named values, finite, with both coordinate read-backs matching its
+    labels; anything else is a named issue and the sample is excluded."""
+    issues = check_cm_window_request(request) + check_cm_window_executor(report)
+    declared, got_mc = request.get("monte_carlo") or {}, (report.get("environment") or {}).get("monte_carlo") or {}
+    for k in ("n", "seed", "vary"):
+        if got_mc.get(k) != declared.get(k):
+            issues.append(f"MC_DECLARATION_MISMATCH: {k} requested {declared.get(k)!r}, report says {got_mc.get(k)!r}")
+    want = expected_units(request, vdd)
+    names = {m["name"] for m in mk.cm_window_measurements()}
+    out: dict = {}
+    seen: set = set()
+    for c in report.get("corners", []):
+        raw = c.get("corner_id")
+        cid, sample = corner_id(raw, vdd)
+        if (cid, sample) in seen:
+            issues.append(f"DUPLICATE_SAMPLE: {raw} appears more than once")
+            out.get(cid, {}).pop(sample, None)  # neither copy is trusted
+            continue
+        seen.add((cid, sample))
+        if not sample.startswith("mc") or cid not in want or sample not in want[cid]:
+            issues.append(f"UNEXPECTED_SAMPLE: {raw} is not a requested draw")
+            continue
+        if (c.get("monte_carlo") or {}).get("sample_index") != int(sample[2:]):
+            issues.append(f"SAMPLE_IDENTITY_MISMATCH: {raw} carries monte_carlo {c.get('monte_carlo')!r}")
+            continue
+        if c.get("status") != "pass":
+            issues.append(f"FAILED_SAMPLE: {raw} -> {c.get('status')}")
+            continue
+        vals: dict = {}
+        bad = []
+        for m in c.get("measurements", []):
+            if m.get("name") in vals:
+                bad.append(f"DUPLICATE_VALUE: {raw} {m.get('name')}")
+            vals[m.get("name")] = m.get("value")
+        bad += [f"UNEXPECTED_VALUE: {raw} {n!r} is not a six-point label" for n in sorted(set(vals) - names, key=str)]
+        bad += [f"INCOMPLETE_SAMPLE: {raw} has no {n}" for n in sorted(names - set(vals))]
+        bad += [f"NONFINITE_VALUE: {raw} {n} = {vals[n]!r}" for n in sorted(names & set(vals)) if not _finite(vals[n])]
+        if not bad:
+            for label, (vcmd, vd, _) in mk.CM_WINDOW_POINTS.items():
+                if abs(vals[f"xcm_{label}"] - vcmd) > CM_COORD_TOL_V or abs(vals[f"xvd_{label}"] - vd) > CM_COORD_TOL_V:
+                    bad.append(f"COORDINATE_MISMATCH: {raw} {label} read back vcmd={vals[f'xcm_{label}']!r} "
+                               f"vd={vals[f'xvd_{label}']!r}, labelled vcmd={vcmd!r} vd={vd!r}")
+        if bad:
+            issues += bad
+            continue
+        out.setdefault(cid, {})[sample] = {label: vals[f"dv_{label}"] for label in mk.CM_WINDOW_POINTS}
+    for cid, smp in want.items():
+        for s in sorted(smp):
+            if (cid, s) not in seen:
+                issues.append(f"MISSING_SAMPLE: {cid}/{s} has no result")
+    return out, issues
+
+
+def derive_cm_window_draw(dv: dict) -> dict:
+    """ONE draw's six differential outputs -> per common mode p the gain
+    A_p = (dv_p(2m) - dv_p(0))/0.002 and offset V_os,p = -dv_p(0)/A_p, plus
+    the paired deltas V_os,dn - V_os,mid and V_os,up - V_os,mid of that same
+    draw. Raises ValueError(code, detail) on a non-positive/non-finite gain."""
+    d: dict = {}
+    for p in CM_WINDOW_COMMON_MODES:
+        v0, v1 = dv[f"{p}_0"], dv[f"{p}_2m"]
+        gain = (v1 - v0) / mk.CM_WINDOW_VD_STEP_V
+        if not _finite(gain) or gain <= 0:
+            raise ValueError("INVALID_GAIN", f"{p} gain = {gain!r}")
+        vos = -v0 / gain
+        if not _finite(vos):
+            raise ValueError("NONFINITE_DERIVED", f"{p} offset = {vos!r}")
+        d[f"av_{p}"], d[f"vos_{p}"] = gain, vos
+    d["dvos_dn"] = d["vos_dn"] - d["vos_mid"]
+    d["dvos_up"] = d["vos_up"] - d["vos_mid"]
+    return d
+
+
+def derive_cm_window(samples: dict) -> tuple[dict, list[str]]:
+    """Population statistics per PVT point, named as the bench's tb.json
+    `measure` (population sigma, as everywhere in this tool). Any invalid
+    draw drops its whole PVT point with a named problem."""
+    pstd, mean = statistics.pstdev, statistics.fmean
+    res: dict = {}
+    problems: list[str] = []
+    for cid in sorted(samples):
+        draws, bad = [], []
+        for key in sorted(samples[cid], key=lambda s: int(s[2:])):
+            try:
+                draws.append(derive_cm_window_draw(samples[cid][key]))
+            except ValueError as e:
+                bad.append(f"{e.args[0]}: {cid}/{key} {e.args[1]}")
+        if bad or not draws:
+            problems += bad or [f"EMPTY_POINT: {cid} has no draws"]
+            continue
+        col = {k: [d[k] for d in draws] for k in draws[0]}
+        out = _eval_outputs(cid, {
+            "n_samples": lambda: len(draws),
+            "sig_vos_mid_mv": lambda: pstd(col["vos_mid"]) * 1e3,
+            "mean_vos_mid_uv": lambda: mean(col["vos_mid"]) * 1e6,
+            "mean_dvos_dn_uv": lambda: mean(col["dvos_dn"]) * 1e6,
+            "sig_dvos_dn_uv": lambda: pstd(col["dvos_dn"]) * 1e6,
+            "mean_dvos_up_uv": lambda: mean(col["dvos_up"]) * 1e6,
+            "sig_dvos_up_uv": lambda: pstd(col["dvos_up"]) * 1e6,
+            "av_dn_mean": lambda: mean(col["av_dn"]),
+            "av_mid_mean": lambda: mean(col["av_mid"]),
+            "av_up_mean": lambda: mean(col["av_up"]),
+            "av_sigma_pct": lambda: pstd(col["av_mid"]) / mean(col["av_mid"]) * 100,
+        }, problems)
+        if out is not None:
+            res[cid] = out
+    return res, problems
 
 
 def derive(bench: str, tb, legs: dict[str, dict]) -> tuple[dict, list]:
@@ -743,7 +937,7 @@ def legacy_diagnostic(bench: str, work: Path) -> int:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("bench", choices=sorted(LEGS))
+    ap.add_argument("bench", choices=sorted(LEGS) + [mk.CM_WINDOW_BENCH])
     ap.add_argument("--work", default=None, help="scratch dir for requests/reports")
     ap.add_argument("--from-report", default=None, help="ingest a finished work dir, skip dispatch")
     ap.add_argument("--mc-n", type=int, default=200)
@@ -753,6 +947,13 @@ def main() -> int:
                     help="for a --from-report dir with no source bundle: print a NON-CITABLE table, write nothing")
     a = ap.parse_args()
 
+    if a.bench == mk.CM_WINDOW_BENCH:
+        # Issue #182: refused before any dispatch or ingest, so no evidence
+        # record can be minted for it. Even with a capable runner there is no
+        # record path yet: full 45-point consumer-window coverage is pending.
+        refuse("UNSUPPORTED_EXECUTOR_CAPABILITY",
+               mk.cm_window_capability_gap(mk.FLEET_RUNNER_KLT_OBSERVED)
+               or f"{a.bench} has no record-minting path yet (full 45-point coverage pending, issue #182)")
     work = Path(a.from_report or a.work or f"/tmp/klt-{a.bench}").resolve()
     if not a.from_report:
         work.mkdir(parents=True, exist_ok=True)

@@ -23,6 +23,13 @@ terms `comparator-offset-mc/` cannot see (issue #157). It is fleet-only (`sim/to
 45-point record `comparator-offset-tran/records/20261010-021500046481-d84e59d` (total 3σ
 2.994–3.795 mV, 45/45 within target and stretch, issue #200).
 
+A supplemental, unscored bench, [`comparator-offset-cm-window/`](comparator-offset-cm-window/)
+(issue #182), specifies paired same-draw preamp offset/gain at the consumer's
+±100 mV common-mode window. It is a **feasibility stage with no record**. Its
+fleet path is refused with `UNSUPPORTED_EXECUTOR_CAPABILITY`, because the fleet
+runner (klt 0.5.0) cannot address a nested sweep's points. Full 45-point
+coverage is pending.
+
 Metastability and kickback are first-class rows here, not appendices, per
 [`CLAUDE.md`](../CLAUDE.md).
 

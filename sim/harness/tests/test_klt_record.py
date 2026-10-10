@@ -1256,3 +1256,347 @@ class DerivedValidation(unittest.TestCase):
         self.assertTrue(problems or len(res) < 1)
         self.assertEqual(len(res), 0)
 
+
+# ---------------------------------------------------------------------------
+# Consumer-window common-mode feasibility contract (issue #182). Synthetic
+# CONTRACT VALIDATION only: every value below is a hand-chosen fixture, not
+# simulation evidence, and nothing here can mint a record -- the bench is
+# refused with UNSUPPORTED_EXECUTOR_CAPABILITY on the real paths.
+# ---------------------------------------------------------------------------
+
+CMW = mk.CM_WINDOW_BENCH
+
+#: Two deliberately asymmetric draws, given as (gain, offset) per common mode
+#: so every expected number below is hand-derivable:
+#:   draw 0: dn (20, -50 uV)  mid (25, +40 uV)   up (16, +125 uV)
+#:           -> dvos_dn = -90 uV, dvos_up = +85 uV
+#:   draw 1: dn (10, +200 uV) mid (20, -100 uV)  up (40, -25 uV)
+#:           -> dvos_dn = +300 uV, dvos_up = +75 uV
+CMW_DRAWS = [
+    {"dn": (20.0, -50e-6), "mid": (25.0, 40e-6), "up": (16.0, 125e-6)},
+    {"dn": (10.0, 200e-6), "mid": (20.0, -100e-6), "up": (40.0, -25e-6)},
+]
+
+
+def _cmw_dv(draw: dict) -> dict:
+    """(gain, offset) per common mode -> the six dv values (dv0 = -vos*gain)."""
+    out = {}
+    for p, (g, vos) in draw.items():
+        out[f"{p}_0"] = -vos * g
+        out[f"{p}_2m"] = -vos * g + g * mk.CM_WINDOW_VD_STEP_V
+    return out
+
+
+def _cmw_request(n: int = 2) -> dict:
+    req = dict(mk.cm_window_leg(n))
+    req["corners"] = {"process": [{"name": "tt", "sections": ["typical"]}], "temperature_c": [27.0]}
+    req["batch"] = {"runner_version_check": "enforce"}
+    return req
+
+
+def _cmw_report(draws=CMW_DRAWS, runner="0.7.0", compat="match", seed=mk.OFFSET_MC_SEED) -> dict:
+    """A synthetic report of the six-point request: one corners[] entry per
+    draw, carrying all 18 named values and the draw's monte_carlo identity."""
+    corners = []
+    for i, draw in enumerate(draws):
+        dv = _cmw_dv(draw)
+        meas = []
+        for label, (vcmd, vd, _) in mk.CM_WINDOW_POINTS.items():
+            meas += [{"name": f"dv_{label}", "value": dv[label]},
+                     {"name": f"xcm_{label}", "value": vcmd},
+                     {"name": f"xvd_{label}", "value": vd}]
+        corners.append({"corner_id": f"tt/27C/mc{i}", "status": "pass", "measurements": meas,
+                        "monte_carlo": {"sample_index": i, "seed": 1000 + i}})
+    return {"corners": corners, "environment": {
+        "monte_carlo": {"n": len(draws), "seed": seed, "vary": "mismatch"},
+        "remote": {"provider": "aws-batch-fleet", "runner_klt_version": runner,
+                   "client_klt_version": runner, "runner_compatibility": compat}}}
+
+
+def _cmw_codes(issues):
+    return {i.split(":", 1)[0] for i in issues}
+
+
+class CmWindowRequestContract(unittest.TestCase):
+    def test_one_analysis_one_draw_set_all_points_index_the_same_solve(self):
+        leg = mk.cm_window_leg(7)
+        self.assertEqual(leg["analysis"], {"kind": "dc", "args": "vd 0 2m 2m vcmd -100m 100m 100m"})
+        self.assertEqual(leg["monte_carlo"], {"n": 7, "seed": mk.OFFSET_MC_SEED, "vary": "mismatch"})
+        ms = leg["measurements"]
+        self.assertEqual(len(ms), 18)
+        self.assertTrue(all(set(m) == {"name", "expr"} for m in ms))  # no `.meas` card at all
+        # Each label reads dv and both coordinates at ONE index of the one solve.
+        for label, (_, _, k) in mk.CM_WINDOW_POINTS.items():
+            got = {m["name"]: m["expr"] for m in ms if m["name"].endswith("_" + label)}
+            self.assertEqual(got, {f"dv_{label}": f"v(dd)[{k}]", f"xcm_{label}": f"v(cm)[{k}]-v(cmb)[{k}]",
+                                   f"xvd_{label}": f"v(vd)[{k}]"})
+        self.assertEqual(kr.check_cm_window_request(_cmw_request()), [])
+
+    def test_point_map_matches_ngspice_nested_order(self):
+        # `dc A a0 a1 da B b0 b1 db`: A is the inner (fast) source, so the
+        # flattened index of (vcmd_j, vd_i) is 2*j + i.
+        vds, vcmds = (0.0, 2e-3), (-0.1, 0.0, 0.1)
+        flat = [(c, d) for c in vcmds for d in vds]
+        for label, (vcmd, vd, k) in mk.CM_WINDOW_POINTS.items():
+            self.assertEqual(flat[k], (vcmd, vd), label)
+        self.assertEqual(sorted(k for _, _, k in mk.CM_WINDOW_POINTS.values()), list(range(6)))
+
+    def test_bad_request_shapes_refused(self):
+        def issues(edit):
+            req = json.loads(json.dumps(_cmw_request()))
+            edit(req)
+            return kr.check_cm_window_request(req)
+        self.assertTrue(issues(lambda r: r["analysis"].update(args="vd 0 2m 2m")))
+        self.assertTrue(issues(lambda r: r.pop("monte_carlo")))
+        self.assertTrue(issues(lambda r: r["batch"].update(runner_version_check="warn")))
+        # A `.meas` card cannot name the outer coordinate.
+        self.assertTrue(any("`.meas` card" in i for i in issues(lambda r: r["measurements"][0].update(
+            spice=".meas dc dv_dn_0 find v(dd) at=0"))))
+        # Swapped point mapping: dn's dv reads up's index.
+        def swap(r):
+            for m in r["measurements"]:
+                if m["name"] == "dv_dn_0":
+                    m["expr"] = "v(dd)[4]"
+        self.assertTrue(any("dv_dn_0" in i for i in issues(swap)))
+        self.assertTrue(issues(lambda r: r["measurements"].pop()))
+
+    def test_capability_gap_by_runner_version(self):
+        gap = mk.cm_window_capability_gap("0.5.0")
+        self.assertIn("'spice'", gap)
+        self.assertIn("expr", gap)
+        self.assertIn("klt >= 0.7.0", gap)
+        for ok in ("0.7.0", "0.7.0+g5e5b55992a7f", "klt 0.8.1"):
+            self.assertIsNone(mk.cm_window_capability_gap(ok), ok)
+        for bad in (None, "", "unknown", "0.6.9"):
+            self.assertIsNotNone(mk.cm_window_capability_gap(bad), bad)
+        # The observed fleet runner is the unsupported one: the real paths refuse.
+        self.assertIsNotNone(mk.cm_window_capability_gap(mk.FLEET_RUNNER_KLT_OBSERVED))
+
+    def test_mk_request_refused_before_anything_is_staged(self):
+        with tempfile.TemporaryDirectory() as td:
+            out = Path(td) / "out"
+            with mock.patch.object(sys, "argv", ["mk_klt_request.py", CMW, str(out)]), \
+                    mock.patch.object(mk.hpdk, "find_pdk") as pdk, \
+                    self.assertRaises(SystemExit) as cm:
+                mk.main()
+            self.assertTrue(str(cm.exception.code).startswith("UNSUPPORTED_EXECUTOR_CAPABILITY: "))
+            self.assertFalse(out.exists())
+            pdk.assert_not_called()
+        with self.assertRaises(SystemExit) as cm:
+            mk.legs_for(CMW, None, 3)
+        self.assertIn("UNSUPPORTED_EXECUTOR_CAPABILITY", str(cm.exception.code))
+
+    def test_record_path_refused_and_nothing_minted(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            rc, rec, _ = _ingest(td, td / "work", bench=CMW)
+            self.assertIn("UNSUPPORTED_EXECUTOR_CAPABILITY", str(rc))
+            self.assertIsNone(rec)
+            self.assertFalse(any((td / "evidence" / CMW).iterdir()))
+            # Even with a capable runner there is no minting path yet.
+            with mock.patch.object(mk, "FLEET_RUNNER_KLT_OBSERVED", "0.7.0"):
+                rc, rec, _ = _ingest(td, td / "work", bench=CMW)
+            self.assertIn("full 45-point coverage pending", str(rc))
+            self.assertIsNone(rec)
+
+    def test_bench_is_separate_and_historical_bench_untouched(self):
+        tb = htb.load(SIM / CMW)
+        self.assertIn("  dc vd 0 2m 2m vcmd -100m 100m 100m", tb.analyses)
+        old = htb.load(SIM / "comparator-offset-mc")
+        self.assertIn("  dc vd 0 2m 2m vcmd -50m 50m 50m", old.analyses)
+        self.assertNotEqual(tb.netlist, old.netlist)
+        # The adapter's outputs are the manifest's measure names.
+        res, _ = kr.derive_cm_window({"c": {f"mc{i}": _cmw_dv(d) for i, d in enumerate(CMW_DRAWS)}})
+        self.assertEqual(set(res["c"]), set(tb.measure))
+        self.assertNotIn(CMW, kr.SPEC)  # no ratified row, no score
+
+
+class CmWindowDerivation(unittest.TestCase):
+    CID = "tt_27c_3.30v"
+
+    def _collect(self, rep, req=None):
+        return kr.collect_cm_window(rep, req or _cmw_request(), 3.3)
+
+    def test_hand_calculated_two_draw_fixture(self):
+        samples, issues = self._collect(_cmw_report())
+        self.assertEqual(issues, [])
+        d0 = kr.derive_cm_window_draw(samples[self.CID]["mc0"])
+        self.assertAlmostEqual(d0["av_dn"], 20.0, places=9)
+        self.assertAlmostEqual(d0["av_mid"], 25.0, places=9)
+        self.assertAlmostEqual(d0["av_up"], 16.0, places=9)
+        self.assertAlmostEqual(d0["vos_mid"] * 1e6, 40.0, places=6)
+        self.assertAlmostEqual(d0["dvos_dn"] * 1e6, -90.0, places=6)
+        self.assertAlmostEqual(d0["dvos_up"] * 1e6, 85.0, places=6)
+        d1 = kr.derive_cm_window_draw(samples[self.CID]["mc1"])
+        self.assertAlmostEqual(d1["av_mid"], 20.0, places=9)
+        self.assertAlmostEqual(d1["dvos_dn"] * 1e6, 300.0, places=6)
+        self.assertAlmostEqual(d1["dvos_up"] * 1e6, 75.0, places=6)
+        res, problems = kr.derive_cm_window(samples)
+        self.assertEqual(problems, [])
+        r = res[self.CID]
+        self.assertEqual(r["n_samples"], 2)
+        self.assertAlmostEqual(r["mean_vos_mid_uv"], -30.0, places=6)
+        self.assertAlmostEqual(r["sig_vos_mid_mv"], 0.070, places=9)   # population: |40-(-100)|/2 uV
+        self.assertAlmostEqual(r["mean_dvos_dn_uv"], 105.0, places=6)
+        self.assertAlmostEqual(r["sig_dvos_dn_uv"], 195.0, places=6)
+        self.assertAlmostEqual(r["mean_dvos_up_uv"], 80.0, places=6)
+        self.assertAlmostEqual(r["sig_dvos_up_uv"], 5.0, places=6)
+        self.assertAlmostEqual(r["av_dn_mean"], 15.0, places=9)
+        self.assertAlmostEqual(r["av_mid_mean"], 22.5, places=9)
+        self.assertAlmostEqual(r["av_up_mean"], 28.0, places=9)
+        self.assertAlmostEqual(r["av_sigma_pct"], 2.5 / 22.5 * 100, places=9)
+        # Population, not sample, sigma (n = 2: they differ by sqrt(2)).
+        self.assertNotAlmostEqual(r["sig_dvos_dn_uv"], 195.0 * math.sqrt(2), places=3)
+
+    def test_paired_delta_is_within_draw_not_across_populations(self):
+        # The same marginal populations, re-paired across draws, give a
+        # different delta sigma: the pairing is what is being measured.
+        samples, _ = self._collect(_cmw_report())
+        res, _ = kr.derive_cm_window(samples)
+        crossed = [dict(CMW_DRAWS[0], mid=CMW_DRAWS[1]["mid"]), dict(CMW_DRAWS[1], mid=CMW_DRAWS[0]["mid"])]
+        res_x, _ = kr.derive_cm_window(self._collect(_cmw_report(crossed))[0])
+        self.assertAlmostEqual(res_x[self.CID]["sig_vos_mid_mv"], res[self.CID]["sig_vos_mid_mv"], places=12)
+        self.assertNotAlmostEqual(res_x[self.CID]["sig_dvos_dn_uv"], res[self.CID]["sig_dvos_dn_uv"], places=3)
+
+    def test_shuffled_order_is_correct_by_identity(self):
+        import random
+        rep = _cmw_report()
+        rng = random.Random(182)
+        rng.shuffle(rep["corners"])
+        for c in rep["corners"]:
+            rng.shuffle(c["measurements"])
+        a, ia = self._collect(_cmw_report())
+        b, ib = self._collect(rep)
+        self.assertEqual((ia, ib), ([], []))
+        self.assertEqual(a, b)
+        self.assertEqual(kr.derive_cm_window(a), kr.derive_cm_window(b))
+
+    def test_duplicate_missing_and_misidentified_samples(self):
+        rep = _cmw_report()
+        rep["corners"].append(json.loads(json.dumps(rep["corners"][0])))
+        out, issues = self._collect(rep)
+        self.assertIn("DUPLICATE_SAMPLE", _cmw_codes(issues))
+        self.assertNotIn("mc0", out[self.CID])  # neither copy is trusted
+        rep = _cmw_report()
+        rep["corners"].pop()
+        _, issues = self._collect(rep)
+        self.assertIn("MISSING_SAMPLE: tt_27c_3.30v/mc1 has no result", issues)
+        rep = _cmw_report()
+        rep["corners"][1]["monte_carlo"]["sample_index"] = 0
+        _, issues = self._collect(rep)
+        self.assertIn("SAMPLE_IDENTITY_MISMATCH", _cmw_codes(issues))
+        rep = _cmw_report()
+        rep["corners"][1]["corner_id"] = "tt/27C/mc9"
+        _, issues = self._collect(rep)
+        self.assertTrue({"UNEXPECTED_SAMPLE", "MISSING_SAMPLE"} <= _cmw_codes(issues))
+        rep = _cmw_report()
+        rep["corners"][0]["status"] = "error"
+        _, issues = self._collect(rep)
+        self.assertIn("FAILED_SAMPLE", _cmw_codes(issues))
+
+    def test_wrong_endpoint_labels_fail_on_coordinate_readback(self):
+        # A writer that swaps the dn/up labels (values intact, labels wrong):
+        # the read-back coordinates name the other endpoint.
+        rep = _cmw_report()
+        for m in rep["corners"][0]["measurements"]:
+            n = m["name"]
+            m["name"] = n.replace("_dn_", "_UP_").replace("_up_", "_dn_").replace("_UP_", "_up_")
+        out, issues = self._collect(rep)
+        self.assertIn("COORDINATE_MISMATCH", _cmw_codes(issues))
+        self.assertNotIn("mc0", out.get(self.CID, {}))
+        # vd swapped within one common mode is caught the same way.
+        rep = _cmw_report()
+        for m in rep["corners"][1]["measurements"]:
+            if m["name"] in ("xvd_mid_0", "xvd_mid_2m"):
+                m["value"] = 2e-3 if m["name"].endswith("_0") else 0.0
+        _, issues = self._collect(rep)
+        self.assertTrue(any(i.startswith("COORDINATE_MISMATCH: tt/27C/mc1 mid_0") for i in issues))
+
+    def test_unknown_label_and_incomplete_sample(self):
+        rep = _cmw_report()
+        for m in rep["corners"][0]["measurements"]:
+            if m["name"] == "dv_up_2m":
+                m["name"] = "dv_hi_2m"
+        _, issues = self._collect(rep)
+        self.assertTrue({"UNEXPECTED_VALUE", "INCOMPLETE_SAMPLE"} <= _cmw_codes(issues))
+        rep = _cmw_report()
+        rep["corners"][1]["measurements"] = rep["corners"][1]["measurements"][:-1]
+        out, issues = self._collect(rep)
+        self.assertEqual(_cmw_codes(issues), {"INCOMPLETE_SAMPLE"})
+        self.assertEqual(sorted(out[self.CID]), ["mc0"])
+        rep = _cmw_report()
+        rep["corners"][0]["measurements"].append({"name": "dv_mid_0", "value": 0.0})
+        _, issues = self._collect(rep)
+        self.assertIn("DUPLICATE_VALUE", _cmw_codes(issues))
+
+    def test_six_values_split_across_two_samples_are_not_a_draw(self):
+        # Half the points under mc0, half under mc1: neither is a complete
+        # draw of one analysis, so neither contributes.
+        rep = _cmw_report()
+        a, b = rep["corners"]
+        a["measurements"] = [m for m in a["measurements"] if "_up_" not in m["name"]]
+        b["measurements"] = [m for m in b["measurements"] if "_up_" in m["name"]]
+        out, issues = self._collect(rep)
+        self.assertEqual(out, {})
+        self.assertEqual(_cmw_codes(issues), {"INCOMPLETE_SAMPLE"})
+
+    def test_nonfinite_values_refused(self):
+        for bad in (float("nan"), float("inf"), None, "1e-3", True):
+            rep = _cmw_report()
+            rep["corners"][0]["measurements"][0]["value"] = bad
+            out, issues = self._collect(rep)
+            self.assertIn("NONFINITE_VALUE", _cmw_codes(issues), bad)
+            self.assertNotIn("mc0", out[self.CID])
+
+    def test_zero_negative_and_overflowing_gain_drop_the_point(self):
+        for edit in ({"mid_2m": None}, {"up_2m": "neg"}):
+            dv = [_cmw_dv(d) for d in CMW_DRAWS]
+            if "mid_2m" in edit:
+                dv[1]["mid_2m"] = dv[1]["mid_0"]                 # zero gain
+            else:
+                dv[0]["up_2m"] = dv[0]["up_0"] - 1e-3            # negative gain
+            res, problems = kr.derive_cm_window({self.CID: {f"mc{i}": v for i, v in enumerate(dv)}})
+            self.assertEqual(res, {})
+            self.assertTrue(problems and all(p.startswith("INVALID_GAIN: tt_27c_3.30v/mc") for p in problems))
+        dv = _cmw_dv(CMW_DRAWS[0])
+        dv["dn_0"], dv["dn_2m"] = -1e308, 1e308                  # (dv1 - dv0) overflows
+        with self.assertRaises(ValueError) as cm:
+            kr.derive_cm_window_draw(dv)
+        self.assertEqual(cm.exception.args[0], "INVALID_GAIN")
+
+    def test_executor_without_expr_or_version_match_is_unsupported(self):
+        for runner, compat in (("0.5.0", "mismatch"), ("0.7.0", "mismatch"), (None, "unknown")):
+            _, issues = self._collect(_cmw_report(runner=runner, compat=compat))
+            self.assertIn("UNSUPPORTED_EXECUTOR_CAPABILITY", _cmw_codes(issues), runner)
+        rep = _cmw_report()
+        del rep["environment"]["remote"]
+        _, issues = self._collect(rep)
+        self.assertIn("UNSUPPORTED_EXECUTOR_CAPABILITY", _cmw_codes(issues))
+        rep = _cmw_report()
+        rep["environment"]["remote"]["fleet"] = [{"runner_klt_version": "0.7.0", "runner_compatibility": "match"},
+                                                 {"runner_klt_version": "0.5.0", "runner_compatibility": "mismatch"}]
+        _, issues = self._collect(rep)
+        self.assertIn("UNSUPPORTED_EXECUTOR_CAPABILITY", _cmw_codes(issues))  # every shard must qualify
+
+    def test_mc_declaration_and_request_shape_checked_at_collection(self):
+        _, issues = self._collect(_cmw_report(seed=1))
+        self.assertIn("MC_DECLARATION_MISMATCH", _cmw_codes(issues))
+        req = _cmw_request()
+        req["batch"]["runner_version_check"] = "warn"
+        _, issues = self._collect(_cmw_report(), req)
+        self.assertIn("REQUEST_SHAPE_INVALID", _cmw_codes(issues))
+
+    def test_separate_request_seed_equality_is_not_pairing(self):
+        # Three requests, one per common mode, all seeded identically: the
+        # seed reproduces a sequence of separately randomized decks, not one
+        # instance. Refused regardless of how well the seeds line up.
+        reps = [_cmw_report(), _cmw_report(), _cmw_report()]
+        for r in reps:
+            self.assertEqual(r["environment"]["monte_carlo"]["seed"], mk.OFFSET_MC_SEED)
+        with self.assertRaises(SystemExit) as cm:
+            kr.pair_cm_window_reports(reps)
+        self.assertTrue(str(cm.exception.code).startswith("SEPARATE_REQUEST_PAIRING: 3 reports"))
+        self.assertIn("same monte_carlo seed", str(cm.exception.code))
+        with self.assertRaises(SystemExit):
+            kr.pair_cm_window_reports([])
+        self.assertIs(kr.pair_cm_window_reports(reps[:1]), reps[0])
