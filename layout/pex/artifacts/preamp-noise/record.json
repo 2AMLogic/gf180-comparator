@@ -1,0 +1,227 @@
+{
+ "identity": {
+  "bench_reference_sha256": {
+   "tb.json": "bd847cf431f1a779457794b2012bfc55f5f6de8c4bf590426db93b08940a4c69",
+   "tb_preamp_noise.spice": "0aeaf85d9364b3e687f2f91c772c0f31d0dca1b7b46f9f768a8e7cfad8d98aa9"
+  },
+  "extract_netlist_sha256_raw": "dc52d612c6ac36fe5815c1a5491451897bd884fdd2de1b4eb0b1c97fb7c52db6",
+  "extract_report": {
+   "klayout_version": "0.30.12",
+   "klt_version": "0.7.0+g5e5b55992a7f",
+   "netlist_sha256": "dc52d612c6ac36fe5815c1a5491451897bd884fdd2de1b4eb0b1c97fb7c52db6",
+   "parasitics": {
+    "c_count": 20,
+    "cc_count": 60,
+    "distributed_rc": false,
+    "r_count": 114,
+    "total_capacitance_ff": 493.511545,
+    "total_resistance_ohm": 3380.1217
+   }
+  },
+  "gds_sha256": "d668ccb543c4ec6482ee78fb00805a7472955944fce07022c505e78eeec6b8ed",
+  "git_commit": "424f03f2260a91ba4f5942417ab066daea91a346",
+  "invocation": "python3 layout/pex/preamp_noise_probe.py --outdir layout/pex/artifacts/preamp-noise",
+  "klt": "klt 0.7.0+g5e5b55992a7f",
+  "ngspice": "** ngspice-42 : Circuit level simulation program",
+  "pdk": {
+   "discovered_via": "search_root:~/.volare",
+   "open_pdks_version": "c6d73a35f524070e85faff4a6a9eef49553ebc2b",
+   "path": "/home/ubuntu/.volare/gf180mcuD",
+   "variant": "gf180mcuD"
+  },
+  "schematic_netlist_sha256": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a"
+ },
+ "issue": 202,
+ "mapping": {
+  "aon": {
+   "drain_leg": "aon__t1",
+   "gate": "vinp",
+   "hub": "aon",
+   "input_device": "M$14",
+   "latch_gate": "M$13",
+   "load_leg": "aon__t2",
+   "load_resistor": "X$28",
+   "terminal_devices": [
+    "M$13",
+    "M$14",
+    "X$28"
+   ]
+  },
+  "aop": {
+   "drain_leg": "aop__t1",
+   "gate": "vinn",
+   "hub": "aop",
+   "input_device": "M$15",
+   "latch_gate": "M$9",
+   "load_leg": "aop__t0",
+   "load_resistor": "X$29",
+   "terminal_devices": [
+    "M$15",
+    "M$9",
+    "X$29"
+   ]
+  },
+  "tail_device": "M$10",
+  "tail_hub": "atail"
+ },
+ "observation_nodes_extracted": {
+  "aon": {
+   "drain_leg": "xdut.xlayout_dut.aon__t1",
+   "hub": "xdut.xlayout_dut.aon"
+  },
+  "aop": {
+   "drain_leg": "xdut.xlayout_dut.aop__t1",
+   "hub": "xdut.xlayout_dut.aop"
+  }
+ },
+ "point": {
+  "clk": "held low (reset)",
+  "dut_params": {
+   "dut_ib": 1e-05,
+   "dut_vcm": 1.65
+  },
+  "fnoicor": 0,
+  "mismatch": "off",
+  "process": "tt",
+  "temperature_c": 27.0,
+  "vdd_v": 3.3
+ },
+ "results": {
+  "extracted": {
+   "c_route": "0",
+   "deck_sha256": "57bfbee2c59582989298b77428fd7b9807f71c76341289a37fd7fd5c100b4eda",
+   "dut_netlist": "comparator.dut-layout.cir",
+   "dut_sha256": "a7ca3c00ea4db8a2b00cad69f2edc2d9320738499049cfa9c7faec517b7b5f45",
+   "invalid": [],
+   "observation_nodes": {
+    "drain_leg": [
+     "xdut.xlayout_dut.aop__t1",
+     "xdut.xlayout_dut.aon__t1"
+    ],
+    "hub": [
+     "xdut.xlayout_dut.aop",
+     "xdut.xlayout_dut.aon"
+    ]
+   },
+   "values": {
+    "dc_drain_leg_n": 2.0436880475,
+    "dc_drain_leg_p": 2.0493683283,
+    "dc_hub_n": 2.0443369232,
+    "dc_hub_p": 2.0503797713,
+    "i_vsup_ua": 371.37653441,
+    "m_drain_leg_av_dc": 17.941892923,
+    "m_drain_leg_enbw_mhz": 25.433143206,
+    "m_drain_leg_inoise_band_uv": 341.35537903,
+    "m_drain_leg_onoise_hf_uv": 1265.7023236,
+    "m_drain_leg_onoise_uv": 1272.2915693,
+    "m_drain_leg_vn_in_hf_uv": 70.544525546,
+    "m_drain_leg_vn_in_uv": 70.91178031,
+    "m_drain_leg_white_nv_rthz": 252.28221249,
+    "m_hub_av_dc": 17.930004575,
+    "m_hub_enbw_mhz": 25.423286815,
+    "m_hub_inoise_band_uv": 340.1149753,
+    "m_hub_onoise_hf_uv": 1264.5913876,
+    "m_hub_onoise_uv": 1271.177692,
+    "m_hub_vn_in_hf_uv": 70.529339926,
+    "m_hub_vn_in_uv": 70.896674158,
+    "m_hub_white_nv_rthz": 252.11019847,
+    "vbias_anchor_mv": 1001.6669448
+   }
+  },
+  "extracted_vsubs_tied": {
+   "c_route": "0",
+   "deck_sha256": "e50ab3b1067985af6ef8b1d17e02b359ded0d530f97344110ffe073fcf91f116",
+   "dut_netlist": "comparator.dut-layout.cir",
+   "dut_sha256": "a7ca3c00ea4db8a2b00cad69f2edc2d9320738499049cfa9c7faec517b7b5f45",
+   "invalid": [],
+   "observation_nodes": {
+    "drain_leg": [
+     "xdut.xlayout_dut.aop__t1",
+     "xdut.xlayout_dut.aon__t1"
+    ],
+    "hub": [
+     "xdut.xlayout_dut.aop",
+     "xdut.xlayout_dut.aon"
+    ]
+   },
+   "values": {
+    "dc_drain_leg_n": 2.0436880475,
+    "dc_drain_leg_p": 2.0493683283,
+    "dc_hub_n": 2.0443369232,
+    "dc_hub_p": 2.0503797713,
+    "i_vsup_ua": 371.37653441,
+    "m_drain_leg_av_dc": 17.941892923,
+    "m_drain_leg_enbw_mhz": 25.431208992,
+    "m_drain_leg_inoise_band_uv": 341.38874554,
+    "m_drain_leg_onoise_hf_uv": 1265.6520723,
+    "m_drain_leg_onoise_uv": 1272.2415783,
+    "m_drain_leg_vn_in_hf_uv": 70.541724765,
+    "m_drain_leg_vn_in_uv": 70.908994035,
+    "m_drain_leg_white_nv_rthz": 252.28189311,
+    "m_hub_av_dc": 17.930004575,
+    "m_hub_enbw_mhz": 25.421349657,
+    "m_hub_inoise_band_uv": 340.14576167,
+    "m_hub_onoise_hf_uv": 1264.541096,
+    "m_hub_onoise_uv": 1271.1276611,
+    "m_hub_vn_in_hf_uv": 70.526535046,
+    "m_hub_vn_in_uv": 70.893883811,
+    "m_hub_white_nv_rthz": 252.10988102,
+    "vbias_anchor_mv": 1001.6669448
+   }
+  },
+  "schematic_bench_croute": {
+   "c_route": "10f",
+   "deck_sha256": "146d49109fce13899bfc11cf5877edd208e5c50e60dbe29106dfb7f662d29c77",
+   "dut_netlist": "design/comparator.spice",
+   "dut_sha256": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a",
+   "invalid": [],
+   "observation_nodes": {
+    "hub": [
+     "xdut.aop",
+     "xdut.aon"
+    ]
+   },
+   "values": {
+    "dc_hub_n": 2.046180057,
+    "dc_hub_p": 2.046180057,
+    "i_vsup_ua": 375.05478029,
+    "m_hub_av_dc": 18.012264932,
+    "m_hub_enbw_mhz": 43.177052656,
+    "m_hub_inoise_band_uv": 329.91213175,
+    "m_hub_onoise_hf_uv": 1638.5710304,
+    "m_hub_onoise_uv": 1643.7068425,
+    "m_hub_vn_in_hf_uv": 90.969738484,
+    "m_hub_vn_in_uv": 91.254867093,
+    "m_hub_white_nv_rthz": 250.14847892,
+    "vbias_anchor_mv": 1001.3196457
+   }
+  },
+  "schematic_croute0": {
+   "c_route": "0",
+   "deck_sha256": "03afbfbeaf29aaec34dfd31c847c1660fd091ebc056e07179e15cbe783e0f9bf",
+   "dut_netlist": "design/comparator.spice",
+   "dut_sha256": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a",
+   "invalid": [],
+   "observation_nodes": {
+    "hub": [
+     "xdut.aop",
+     "xdut.aon"
+    ]
+   },
+   "values": {
+    "dc_hub_n": 2.046180057,
+    "dc_hub_p": 2.046180057,
+    "i_vsup_ua": 375.05478029,
+    "m_hub_av_dc": 18.012264932,
+    "m_hub_enbw_mhz": 54.885564198,
+    "m_hub_inoise_band_uv": 329.51715214,
+    "m_hub_onoise_hf_uv": 1849.0909045,
+    "m_hub_onoise_uv": 1853.6435298,
+    "m_hub_vn_in_hf_uv": 102.6573233,
+    "m_hub_vn_in_uv": 102.9100747,
+    "m_hub_white_nv_rthz": 250.20567344,
+    "vbias_anchor_mv": 1001.3196457
+   }
+  }
+ }
+}
