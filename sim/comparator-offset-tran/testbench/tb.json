@@ -1,10 +1,10 @@
 {
   "name": "comparator-offset-tran",
-  "description": "Total input-referred offset of the whole comparator (preamp + StrongARM latch + SR latch) by transient Monte Carlo over a reduced PVT set, with the same-draw preamp-only offset measured in the same run so the decision-stage (latch) contribution is quantified, plus a derived (not simulated) hand budget for the ppolyf_u_1k load-pair mismatch this PDK does not model.",
-  "claim": "REFERENCE against the ratified Offset 3-sigma row (README.md#target-specification-ratified-via-dr-0002; <= 15 mV target, <= 8 mV stretch): adds the two contributors the DC-sweep bench sim/comparator-offset-mc/ cannot see (latch offset, measured; load-resistor mismatch, derived by hand). It is additive -- the DC bench stays as the preamp-only number -- and it does not alter any ratified bound; a miss, if any, is recorded as a miss. Scope: 3 process corners (tt, ss, ff) x 3 temperatures at the nominal 3.3 V supply only (9 PVT points), N = 200 draws each; NOT the 45-point grid.",
+  "description": "Total input-referred offset of the whole comparator (preamp + StrongARM latch + SR latch) by transient Monte Carlo over the full 45-point PVT grid, with the same-draw preamp-only offset measured in the same run so the decision-stage (latch) contribution is quantified, plus a derived (not simulated) hand budget for the ppolyf_u_1k load-pair mismatch this PDK does not model.",
+  "claim": "REFERENCE against the ratified Offset 3-sigma row (README.md#target-specification-ratified-via-dr-0002; <= 15 mV target, <= 8 mV stretch): adds the two contributors the DC-sweep bench sim/comparator-offset-mc/ cannot see (latch offset, measured; load-resistor mismatch, derived by hand). It is additive -- the DC bench stays as the preamp-only number -- and it does not alter any ratified bound; a miss, if any, is recorded as a miss. Scope: 5 process corners (tt, ss, ff, fs, sf) x 3 temperatures (-40/27/125 C) x 3 supplies (2.97/3.30/3.63 V) = 45 PVT points, N = 200 draws each (9,000 transients); extends the nine-point tt/ss/ff nominal-supply reference record, which stays as committed.",
   "netlist": "tb_offset_tran.spice",
   "nominal_supply_v": 3.3,
-  "supply_tolerance": 0.0,
+  "supply_tolerance": 0.1,
   "temperatures_c": [
     -40,
     27,
@@ -13,7 +13,9 @@
   "corners": [
     "tt",
     "ss",
-    "ff"
+    "ff",
+    "fs",
+    "sf"
   ],
   "analyses": [
     "tran 300p 1636n 0 300p",
