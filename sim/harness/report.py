@@ -564,7 +564,10 @@ def render_record(
                 + " |"
             )
             continue
-        cells = " | ".join(_fmt(result.measurements[n]) for n in names)
+        cells = " | ".join(
+            _fmt(result.measurements[n]) if n in result.measurements else "—"
+            for n in names
+        )
         outcome = point_check_outcome(tb, result)
         verdict = (
             "PASS" if outcome["status"] == "pass"
@@ -574,7 +577,16 @@ def render_record(
             verdict += f" (⚠ {len(result.warnings)} warning(s): {'; '.join(result.warnings)})"
         lines.append(f"  | `{result.point.corner_id}` | {cells} | {verdict} |")
 
-    lines += ["", "  Spread across the grid:", ""]
+    lines += [
+        "",
+        "  The pass/fail column is the point-local `min`/`max` verdict for that",
+        "  corner only. Grid-spread and per-axis checks are aggregate checks over",
+        "  the whole grid, not per-corner verdicts; they are reported under",
+        "  **Check failures** below.",
+        "",
+        "  Spread across the grid:",
+        "",
+    ]
     lines += [
         "  | measurement | min | max | mean | spread % | limits |",
         "  |---|---|---|---|---|---|",
