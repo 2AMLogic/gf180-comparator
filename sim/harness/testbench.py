@@ -34,6 +34,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -51,6 +52,49 @@ MANIFEST_NAME = "tb.json"
 TESTBENCH_DIRNAME = "testbench"
 
 FORBIDDEN_DIRECTIVES = (".control", ".endc", ".end", ".lib", ".temp", ".include")
+
+# Parameters the harness owns: the PVT point and the measured offset referral.
+# A bench may reference them but never define them (ngspice is case-insensitive
+# and the last ``.param`` wins, so a bench redefinition would silently
+# supersede the labelled corner / probed offset).
+RESERVED_PARAMS = frozenset({"vdd_nom", "vdd_val", "temp_c", "dut_vos"})
+
+_PARAM_NAME_RE = re.compile(r"(?:^|[\s,])([A-Za-z_][\w.$]*)\s*=")
+
+
+def check_reserved_params(names, where: str) -> None:
+    """Raise ``ValueError`` if any of ``names`` is a harness-owned parameter."""
+    bad = sorted({str(n) for n in names if str(n).strip().lower() in RESERVED_PARAMS})
+    if bad:
+        raise ValueError(
+            f"{where}: parameter(s) {', '.join(bad)} are owned by the harness "
+            f"(reserved: {', '.join(sorted(RESERVED_PARAMS))}); a testbench may "
+            "reference them but must not define them"
+        )
+
+
+def _param_assignments(text: str):
+    """Yield ``(physical_lineno, name)`` for every ``.param`` assignment.
+
+    Handles ``+`` continuation lines, several assignments per line and any
+    case; quoted/braced expression bodies and trailing comments are ignored.
+    """
+    in_param = False
+    for lineno, raw in enumerate(text.splitlines(), start=1):
+        line = raw.strip()
+        if line.startswith("+"):
+            body = line[1:]
+        else:
+            body = line[len(".param"):]
+            in_param = line.lower().startswith(".param") and (
+                not body or body[0].isspace()
+            )
+        if not in_param:
+            continue
+        body = re.split(r"[;$]", body, maxsplit=1)[0]
+        body = re.sub(r"'[^']*'|\{[^}]*\}", "0", body)
+        for match in _PARAM_NAME_RE.finditer(body):
+            yield lineno, match.group(1)
 
 #: Keys a ``checks`` entry may carry. Anything else is a typo that would
 #: otherwise be silently ignored -- and a silently-ignored ``min_spread_pct``
@@ -371,6 +415,7 @@ def load(directory: str | Path) -> Testbench:
         evidence=evidence,
         offset_probe=dict(manifest.get("offset_probe", {})),
     )
+    check_reserved_params(tb.params, f"{manifest_path}: params")
     validate_netlist(tb)
     probe = tb.offset_probe_testbench()
     if probe is not None:
@@ -386,7 +431,18 @@ def validate_netlist(tb: Testbench) -> None:
     room temperature.
     """
     problems: list[str] = []
-    for lineno, raw in enumerate(tb.netlist.read_text().splitlines(), start=1):
+    text = tb.netlist.read_text()
+    owned = [
+        f"  line {lineno}: .param {name} (harness-owned)"
+        for lineno, name in _param_assignments(text)
+        if name.lower() in RESERVED_PARAMS
+    ]
+    if owned:
+        raise ValueError(
+            f"{tb.netlist}: netlist fragments must not define harness-owned "
+            f"parameters ({', '.join(sorted(RESERVED_PARAMS))}):\n" + "\n".join(owned)
+        )
+    for lineno, raw in enumerate(text.splitlines(), start=1):
         line = raw.strip().lower()
         if not line.startswith("."):
             continue
