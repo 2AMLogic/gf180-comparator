@@ -371,6 +371,40 @@ class ComposeDeckExtraParamsTest(_Fixture):
         self.assertIn(".param dut_vos=0.0081", deck)
         self.assertLess(deck.index(".param dut_vos"), deck.index(".param dv=1"))
 
+    def _compose(self, params, extra=None):
+        from harness.corners import CORNERS, PvtPoint
+        from harness.runner import compose_deck
+        from harness.testbench import Testbench
+
+        netlist = self.root / "tb.spice"
+        netlist.write_text("* tb\nXa v v c i d db vdd 0 comparator_dut\n")
+        tb = Testbench(
+            directory=self.root, name="fixture", netlist=netlist,
+            measure={"td": "t*1e9"}, params=params,
+        )
+        pdk = types.SimpleNamespace(
+            variant="gf180mcuD", version="deadbeefdeadbeef",
+            design_include=self.root / "design.ngspice",
+            model_lib=self.root / "models.ngspice",
+        )
+        point = PvtPoint(corner=CORNERS["tt"], temp_c=27.0, vdd=3.3, index=0)
+        return compose_deck(tb, pdk, self._dut(), point, extra_params=extra)
+
+    def test_dut_vos_has_exactly_one_definition(self):
+        deck = self._compose({"dv": 1}, {"dut_vos": 8.1e-3})
+        defs = [ln for ln in deck.splitlines() if ln.lower().startswith(".param dut_vos=")]
+        self.assertEqual(defs, [".param dut_vos=0.0081"])
+
+    def test_tb_param_cannot_override_harness_owned_names(self):
+        for name in ("dut_vos", "DUT_VOS", "vdd_val", "Temp_C", "vdd_nom"):
+            with self.assertRaises(ValueError, msg=name) as cm:
+                self._compose({name: 1}, {"dut_vos": 8.1e-3})
+            self.assertIn(name, str(cm.exception))
+
+    def test_extra_params_cannot_override_pvt_names(self):
+        with self.assertRaises(ValueError):
+            self._compose({}, {"VDD_VAL": 1.0})
+
     def test_offset_probe_testbench_requires_dut_vos_measure(self):
         from harness.testbench import Testbench
 

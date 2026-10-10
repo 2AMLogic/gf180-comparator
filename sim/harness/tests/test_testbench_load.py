@@ -54,6 +54,50 @@ class LoadSuccessTests(_Base):
         self.assertIsNone(tb.offset_probe_testbench())
 
 
+class ReservedParamTests(_Base):
+    def frag(self, text):
+        (self.dir / "frag.spice").write_text(text)
+        return self.load_manifest()
+
+    def test_manifest_params_reserved_any_case(self):
+        for name in ("vdd_nom", "vdd_val", "temp_c", "dut_vos", "VDD_VAL", "Dut_Vos"):
+            with self.assertRaises(ValueError, msg=name) as cm:
+                self.load_manifest(params={name: 1})
+            self.assertIn(name, str(cm.exception))
+
+    def test_fragment_param_rejected_with_line_number(self):
+        for text in (
+            "* c\n.param dut_vos=0\n",
+            "* c\n.PARAM VDD_VAL=3.3\n",
+            "* c\n.param a=1 temp_c=27\n",
+            "* c\n.param a=1\n+ b=2\n+ vdd_nom=3\n",
+            "* c\n.param a = 1, DUT_VOS = 2\n",
+            "* c\n.param dut_vos={1+2} ; why\n",
+        ):
+            with self.assertRaises(ValueError, msg=text) as cm:
+                self.frag(text)
+            self.assertIn("line", str(cm.exception))
+        with self.assertRaises(ValueError) as cm:
+            self.frag("* c\n.param a=1\n+ b=2\n+ vdd_nom=3\n")
+        self.assertIn("line 4", str(cm.exception))
+
+    def test_bench_local_and_stat_overrides_accepted(self):
+        self.frag(
+            "* c\n.param sw_stat_mismatch=1\n.param c_route=1f rsrc='dut_vos+1'\n"
+            "+ cin=2f\n* .param dut_vos=1 in a comment\n"
+            "R1 a b {dut_vos}\n.meas op x param='vdd_val=3'\n"
+        )
+        self.load_manifest(params={"dv_small": 1})
+
+    def test_shipped_testbenches_load(self):
+        sim = Path(__file__).resolve().parents[2]
+        dirs = tb_mod.discover(sim)
+        self.assertTrue(dirs)
+        for d in dirs:
+            with self.subTest(d=d.name):
+                tb_mod.load(d)
+
+
 class LoadRaiseTests(_Base):
     def test_missing_manifest(self):
         with self.assertRaises(FileNotFoundError):
