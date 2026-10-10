@@ -14,7 +14,7 @@ NOT_RUN_BY_CHARACTERIZE = {
         "fleet path refused (nested sweep), no record",
     "comparator-offset-cm-index": "supplemental, unscored monotonic-index "
         "variant of the cm-window bench (issue #218); fleet-only via "
-        "sim/tools/mk_klt_request.py, see its README for coverage status",
+        "sim/tools/klt_record.py (45-point record committed), see its README",
     "comparator-offset-tran-extracted-feasibility": "bounded feasibility "
         "probe, not a campaign; fleet-only, mints_record: false, no record",
 }

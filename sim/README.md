@@ -28,10 +28,11 @@ A supplemental, unscored bench, [`comparator-offset-cm-window/`](comparator-offs
 ±100 mV common-mode window. It is a **feasibility stage with no record**. Its
 fleet path is refused with `UNSUPPORTED_EXECUTOR_CAPABILITY`, because the fleet
 runner (klt 0.5.0) cannot address a nested sweep's points. Full 45-point
-coverage is pending. Its monotonic-index variant,
+coverage is not available from this bench. Its monotonic-index variant,
 [`comparator-offset-cm-index/`](comparator-offset-cm-index/) (issue #218), is
-executable on the 0.5.0 runner (nominal fleet probe done); the 45-point campaign
-and its record are still pending, so measured coverage remains none.
+executable on the 0.5.0 runner and has a complete unscored 45-point x N=200
+record ([`20261010-130605300890-d8e9253`](comparator-offset-cm-index/records/20261010-130605300890-d8e9253.md)); the
+consumer's rejection verdict stays Unknown.
 
 A further supplemental feasibility stage,
 [`comparator-offset-tran-extracted-feasibility/`](comparator-offset-tran-extracted-feasibility/)

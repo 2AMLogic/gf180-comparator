@@ -67,7 +67,7 @@ It is at the feasibility stage only: the fleet runner cannot yet address a
 nested sweep's points, no record exists, and the consumer verdict stays
 Unknown. Its monotonic-index variant
 [`comparator-offset-cm-index/`](../comparator-offset-cm-index/) (issue #218) has
-only a nominal fleet probe so far.
+a complete unscored 45-point record (offset change vs midpoint is sub-microvolt; verdict Unknown).
 
 ## Provenance
 
