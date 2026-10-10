@@ -20,6 +20,8 @@ set -u
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT" || exit 2
 PY="${PYTHON:-python3}"
+# An unclosed file handle fails the step instead of scrolling past (issue #212).
+export PYTHONWARNINGS="error::ResourceWarning"
 
 # Directories whose test files are run one by one as scripts (each is a
 # stdlib unittest / self-checking script). sim/harness/tests is run through
@@ -102,12 +104,26 @@ CI="${GITHUB_ACTIONS:-}"
 group()    { [ -n "$CI" ] && echo "::group::$1" || echo "=== $1"; }
 endgroup() { [ -n "$CI" ] && echo "::endgroup::"; return 0; }
 
+# Run a command, echo its output, and fail if it exited non-zero or printed a
+# ResourceWarning. One finalizer-time warning is printed but never changes the
+# exit code, so the output is scanned (single-file runs and named steps alike).
+checked() {
+  local out rc=0
+  out="$("$@" 2>&1)" || rc=1
+  printf '%s\n' "$out"
+  if [[ "$out" == *ResourceWarning* ]]; then
+    echo "ResourceWarning in output (unclosed file handle): $*"; rc=1
+  fi
+  return "$rc"
+}
+
 # A path to a single test file: run just that.
 if [ -n "$TARGET" ] && [ -f "$TARGET" ]; then
   case "$TARGET" in
-    sim/harness/tests/*) exec "$PY" -m unittest discover -s sim/harness/tests -p "$(basename "$TARGET")" -v ;;
-    *) exec "$PY" "$TARGET" ;;
+    sim/harness/tests/*) checked "$PY" -m unittest discover -s sim/harness/tests -p "$(basename "$TARGET")" -v ;;
+    *) checked "$PY" "$TARGET" ;;
   esac
+  exit $?
 fi
 
 FAILED=(); SKIPPED=(); RAN=0
@@ -125,7 +141,14 @@ for i in "${!STEP_IDS[@]}"; do
   fi
   RAN=$((RAN + 1))
   group "$name"
-  if eval "${STEP_CMDS[$i]}"; then rc=0; else rc=1; fi
+  # A ResourceWarning raised in a finalizer is printed but never changes the
+  # exit code, so scan the step's output for it and fail the step ourselves.
+  OUT="$(eval "${STEP_CMDS[$i]}" 2>&1 && echo "@@rc=0" || echo "@@rc=1")"
+  printf '%s\n' "${OUT%@@rc=*}"
+  if [ "${OUT##*@@rc=}" = 0 ]; then rc=0; else rc=1; fi
+  if [[ "$OUT" == *ResourceWarning* ]]; then
+    echo "ResourceWarning in step output (unclosed file handle): $name"; rc=1
+  fi
   endgroup
   if [ "$rc" != 0 ]; then
     [ -n "$CI" ] && echo "::error title=$name::step failed"

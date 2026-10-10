@@ -42,6 +42,7 @@ import re
 import subprocess
 import sys
 import tempfile
+from pathlib import Path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(os.path.dirname(HERE))
@@ -67,7 +68,7 @@ C_ROUTE_BENCH = "10f"  # the committed bench's stated routing allowance
 
 
 def sha256(path: str) -> str:
-    return hashlib.sha256(open(path, "rb").read()).hexdigest()
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
 def _load_extract_sim():
@@ -166,10 +167,10 @@ def parse_measures(text: str) -> dict[str, float]:
 
 
 def run_ngspice(deck: str, deck_path: str, log_path: str) -> dict[str, float]:
-    open(deck_path, "w").write(deck)
+    Path(deck_path).write_text(deck)
     proc = subprocess.run(["ngspice", "-b", "-o", log_path, deck_path],
                           capture_output=True, text=True, timeout=900)
-    text = open(log_path).read() if os.path.exists(log_path) else proc.stdout
+    text = Path(log_path).read_text() if os.path.exists(log_path) else proc.stdout
     return parse_measures(text)
 
 
@@ -194,7 +195,7 @@ def main() -> int:
 
     from harness.pdk import find_pdk
     pdk = find_pdk()
-    duts = json.load(open(DUT_JSON))["duts"]
+    duts = json.loads(Path(DUT_JSON).read_text())["duts"]
     params = duts["comparator-dr0001"]["params"]
     if params != duts["comparator-dr0001-layout"]["params"]:
         sys.exit("sim/dut.json: schematic and layout entries no longer share params")
@@ -210,7 +211,7 @@ def main() -> int:
     res._check_interface_contract(dut_layout)
 
     # --- observation mapping (fail closed) -----------------------------------
-    text = open(dut_layout).read()
+    text = Path(dut_layout).read_text()
     try:
         mapping = preamp_nodes.derive(text)
         preamp_nodes.crosscheck_labels(mapping)
