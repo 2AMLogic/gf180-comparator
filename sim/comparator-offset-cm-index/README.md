@@ -20,7 +20,7 @@ extracted-layout result.
 | Stimulus bench, request generation, ingest checks | Done (this directory, `sim/tools/mk_klt_request.py`, `sim/tools/klt_record.py`) |
 | PDK-free asymmetric semantics fixture and unit tests | Done (`sim/harness/tests/test_cm_index_semantics.py`) |
 | Bounded nominal fleet probe | **Done, executor supports the stimulus** ([`probes/20261010-nominal-fleet-probe/`](probes/20261010-nominal-fleet-probe/)) |
-| 45-point PVT x N=200 campaign and append-only record | **Done: 45 of 45 points, 200 of 200 draws each** ([`records/20261010-130605300890-d8e9253.md`](records/20261010-130605300890-d8e9253.md)). Unscored; verdict stays Unknown. |
+| 45-point PVT x N=200 campaign and append-only record | **Done: 45 of 45 points, 200 of 200 draws each** ([`records/20261011-210628443577-7e20c78.md`](records/20261011-210628443577-7e20c78.md)). Unscored; verdict stays Unknown. |
 
 ## Stimulus
 
@@ -87,15 +87,16 @@ here characterizes the window; the per-point outputs are plumbing only.
 
 ## Full-grid record (measured coverage: complete, 45 of 45 points)
 
-> **Evidence pending re-qualification (#288).** The `d8e9253` record's reports
-> show `open_pdks f6eeac7`, not the `sim/toolchain.json` pin `c6d73a35`, so it is
-> not qualified under the exact-revision policy. It stays unscored; the
-> tolerance-probe plan's `selection_record` is kept as history. See
+> **Re-qualified (#288).** The earlier `d8e9253` record (`20261010-130605300890-d8e9253`) ran on
+> `open_pdks f6eeac7`, not the `sim/toolchain.json` pin `c6d73a35`, so it is NOT
+> qualified and is superseded by `20261011-210628443577-7e20c78` (fleet-reported pin `c6d73a35...`; the
+> result tables are identical). It stays unscored; the tolerance-probe plan's
+> `selection_record` still names the superseded record and is kept as history. See
 > [`../qualification-notes/20261011-288-open-pdks-requalification.md`](../qualification-notes/20261011-288-open-pdks-requalification.md).
 
-Record [`20261010-130605300890-d8e9253`](records/20261010-130605300890-d8e9253.md) (JSON beside it), minted by
+Record [`20261011-210628443577-7e20c78`](records/20261011-210628443577-7e20c78.md) (JSON beside it; supersedes `20261010-130605300890-d8e9253`), minted by
 `python3 sim/tools/klt_record.py comparator-offset-cm-index` at clean commit
-`d8e9253` (`mint_cm_index`: scoring-free, append-only). Three requests, one per
+`7e20c78` (`mint_cm_index`: scoring-free, append-only). Three requests, one per
 supply (2.97 / 3.30 / 3.63 V), each 5 processes x 3 temperatures x 200 draws =
 3000 units; `monte_carlo {n: 200, seed: 20260909, vary: mismatch}`. Every
 point returned 200 of 200 draws, all 18 finite values per draw, coordinate
@@ -104,7 +105,7 @@ read-backs within 1 uV, identity by `monte_carlo.sample_index`. Fleet jobs
 `klt-sim-b86615e15b95` (3.63 V); executor `aws-batch-fleet` spot `c7i.4xlarge`,
 runner klt 0.5.0 (client 0.7.0, warn-mode `mismatch`, harmless: no `expr`).
 DUT `comparator-dr0001` (`design/comparator.spice`, sha256 `0df618e7...`),
-source bundle and request/report/body files are under `corners/20261010-130605300890-d8e9253/`.
+source bundle and request/report/body files are under `corners/20261011-210628443577-7e20c78/`.
 
 What it shows (schematic preamp DC, `dut_vcm` = 1.65 V, window 1.55/1.65/1.75 V):
 

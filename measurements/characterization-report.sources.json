@@ -243,9 +243,9 @@
       }
     },
     {
-      "id": "20261010-022609774981-bf851ec",
-      "path": "sim/comparator-kickback/records/20261010-022609774981-bf851ec.json",
-      "sha256": "sha256:ae67c7a92d2294c6286c190deb4e78ac0c65388f6c25c68eae7d24afffe28df4",
+      "id": "20261011-195826615490-7e20c78",
+      "path": "sim/comparator-kickback/records/20261011-195826615490-7e20c78.json",
+      "sha256": "sha256:967de5fee4fc272a0c8aeb14ec797b9ce198da294b6edd7776cc5061f36ff59d",
       "bench": "comparator-kickback",
       "dut_provenance": "schematic",
       "role": "current",
@@ -283,7 +283,7 @@
         "20261002-202641-baeffe5",
         "20261002-211343-6346fad",
         "20261010-021500046481-d84e59d",
-        "20261010-022609774981-bf851ec"
+        "20261011-195826615490-7e20c78"
       ]
     },
     {
@@ -316,7 +316,7 @@
       "cites": [
         "20260910-125341-4805118",
         "20261002-211343-6346fad",
-        "20261010-022609774981-bf851ec"
+        "20261011-195826615490-7e20c78"
       ]
     },
     {

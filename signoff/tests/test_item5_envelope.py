@@ -613,17 +613,18 @@ class BothNodeKickbackScoring(unittest.TestCase):
         self.assertIn(f"{self.mod.KICKBACK_BOTH_RECORD_ID}.json", " ".join(s["path"] for s in env["source_records"]))
 
     def test_revision_suffix_and_name(self) -> None:
-        self.assertEqual(self.mod.SCORING_REVISION, 5)
+        self.assertEqual(self.mod.SCORING_REVISION, 6)
         out = self.mod.output_path()
-        self.assertTrue(out.name.endswith("-r5.json"))
+        self.assertTrue(out.name.endswith("-r6.json"))
         self.assertIn(self.mod.KICKBACK_BOTH_RECORD_ID, out.name)
-        self.assertEqual(self.mod.build_envelope()["scoring_revision"], 5)
+        self.assertEqual(self.mod.build_envelope()["scoring_revision"], 6)
 
     def test_older_envelopes_remain_committed(self) -> None:
         real = load_wrapper(REPO_ROOT)
         self.assertTrue(real.predecessor_path().is_file())
         self.assertTrue(real.supersedes_path().is_file())
-        self.assertTrue(real.supersedes_path().name.endswith("-r4.json"))
+        self.assertTrue(real.supersedes_path().name.endswith("-r5.json"))
+        self.assertIn(real.KICKBACK_BOTH_SUPERSEDED_RECORD_ID, real.supersedes_path().name)
 
     def test_shuffled_corner_keys_still_valid(self) -> None:
         self.mutate(lambda r: r.update(derived=dict(reversed(list(r["derived"].items())))))
