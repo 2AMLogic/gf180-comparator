@@ -46,7 +46,7 @@ class Base(unittest.TestCase):
         self._tmp = tempfile.TemporaryDirectory()
         self.root = Path(self._tmp.name)
         man = json.loads((REPO_ROOT / SOURCES).read_text())
-        rels = [REPORT, SOURCES, ENVELOPE, "signoff/make_item8_envelope.py"]
+        rels = [REPORT, SOURCES, ENVELOPE, "signoff/make_item8_envelope.py", "sim/harness/corners.py"]
         rels += [e["path"] for e in man["records"]]
         for rel in rels:
             (self.root / rel).parent.mkdir(parents=True, exist_ok=True)
@@ -189,6 +189,106 @@ class RecordsRejected(Base):
         man["sections"][1]["cites"] = [c for c in man["sections"][1]["cites"] if c != man["records"][0]["id"]]
         self.write_manifest(man)
         self.assertRejected("required by no section")
+
+
+class CoverageRejected(Base):
+    """#289: distinct expected PVT corners, not just a point count."""
+
+    def repin(self, rid_or_key: str, mutate) -> None:
+        man = self.manifest()
+        ent = next(e for e in man["records"] if rid_or_key in (e["id"], e.get("summary_key")))
+        path = self.root / ent["path"]
+        rec = json.loads(path.read_text())
+        mutate(rec)
+        path.write_text(json.dumps(rec))
+        ent["sha256"] = _sha(path)
+        self.write_manifest(man)
+
+    def test_current_records_cover_declared_grids(self) -> None:
+        self.assertEqual(self.problems(), [])
+        reduced = next(e for e in self.manifest()["records"] if e["points"] == 9)
+        self.assertEqual(len(reduced["expected_grid"]["corner_ids"]), 9)
+        self.assertTrue(set(reduced["expected_grid"]["corner_ids"]) <= set(M8.authoritative_grid()))
+        self.assertEqual(len(M8.authoritative_grid()), 45)
+
+    def test_45_repeats_of_one_noise_point_rejected(self) -> None:
+        def m(rec):
+            rec["points"] = [json.loads(json.dumps(rec["points"][0])) for _ in range(45)]
+        self.repin("noise", m)
+        self.assertRejected("duplicate corner tt_-40c_2.97v (45x)")
+        self.assertRejected("missing expected corner")
+        self.assertEqual(self.cli().returncode, 1)
+
+    def test_missing_corner_replaced_by_duplicate_rejected(self) -> None:
+        def m(rec):
+            rec["points"][5] = json.loads(json.dumps(rec["points"][0]))
+        self.repin("noise", m)
+        self.assertRejected("duplicate corner tt_-40c_2.97v (2x)")
+
+    def test_missing_corner_replaced_by_unexpected_rejected(self) -> None:
+        def m(rec):
+            pt = rec["points"][5]
+            pt.update(corner="tt", temp_c=85.0, vdd=3.3, corner_id="tt_85c_3.30v")
+        self.repin("noise", m)
+        self.assertRejected("unexpected corner tt_85c_3.30v")
+        self.assertRejected("missing expected corner")
+
+    def test_derived_key_substitution_rejected(self) -> None:
+        def m(rec):
+            d = rec["derived"]
+            d["tt_85c_3.30v"] = d.pop("ff_-40c_2.97v")
+        self.repin("offset", m)
+        self.assertRejected("unexpected corner tt_85c_3.30v")
+        self.assertRejected("missing expected corner ff_-40c_2.97v")
+
+    def test_reduced_record_not_widened_and_checked(self) -> None:
+        def m(rec):
+            d = rec["derived"]
+            d["tt_27c_2.97v"] = d.pop("tt_27c_3.30v")
+        self.repin("20261010-013540611508-4a4df37", m)
+        self.assertRejected("unexpected corner tt_27c_2.97v")
+
+    def test_malformed_identity_rejected(self) -> None:
+        def m(rec):
+            rec["points"][3]["corner_id"] = "garbage"
+        self.repin("noise", m)
+        self.assertRejected("malformed identity 'garbage'")
+        self.assertEqual(self.cli().returncode, 1)
+
+    def test_malformed_derived_key_rejected(self) -> None:
+        def m(rec):
+            rec["derived"]["tt_27c_3.3v"] = rec["derived"].pop("tt_27c_3.30v")
+        self.repin("offset", m)
+        self.assertRejected("malformed identity 'tt_27c_3.3v'")
+
+    def test_identity_field_disagreement_rejected(self) -> None:
+        def m(rec):
+            rec["points"][3]["vdd"] = 3.3 if rec["points"][3]["vdd"] != 3.3 else 2.97
+        self.repin("noise", m)
+        self.assertRejected("disagrees with explicit fields")
+
+    def test_expected_grid_must_be_authoritative(self) -> None:
+        man = self.manifest()
+        ent = next(e for e in man["records"] if e.get("summary_key") == "noise")
+        ent["expected_grid"]["temps_c"] = [-40, 27, 85]  # right size, wrong grid
+        self.write_manifest(man)
+        self.assertRejected("do not equal the authoritative full grid")
+
+    def test_expected_grid_size_must_match_points_and_exist(self) -> None:
+        man = self.manifest()
+        reduced = next(e for e in man["records"] if e["points"] == 9)
+        reduced["expected_grid"]["corner_ids"].append("fs_27c_3.30v")
+        self.write_manifest(man)
+        self.assertRejected("expected_grid has 10 points, manifest points is 9")
+        man = self.manifest()
+        reduced = next(e for e in man["records"] if e["points"] == 9)
+        reduced["expected_grid"]["corner_ids"][0] = "zz_27c_3.30v"
+        self.write_manifest(man)
+        self.assertRejected("not in the authoritative grid")
+        man = self.manifest()
+        del man["records"][0]["expected_grid"]
+        self.write_manifest(man)
+        self.assertRejected("declares no expected_grid")
 
 
 class StaleSummary(Base):

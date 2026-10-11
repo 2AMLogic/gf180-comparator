@@ -52,7 +52,9 @@ unchanged report must reproduce the committed envelope byte-for-byte.
 from __future__ import annotations
 
 import hashlib
+import importlib.util
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -80,6 +82,111 @@ SCORED = {
     "kickback_extracted": ("points", "kick_1k_peak_mv", 5.0, 2.0),
 }
 EXPECTED_POINTS = 45
+
+_ID_RE = re.compile(r"^(?P<corner>[a-z][a-z_]*)_(?P<temp>-?\d+(?:\.\d+)?)c_(?P<vdd>\d+\.\d\d)v$")
+
+
+def _load_corners():
+    """Import the authoritative PVT definitions (sim/harness/corners.py, stdlib only)."""
+    path = REPO_ROOT / "sim" / "harness" / "corners.py"
+    spec = importlib.util.spec_from_file_location("_item8_corners", path)
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = mod  # dataclasses needs the module registered
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def authoritative_grid() -> dict[str, tuple[str, float, float]]:
+    """corner_id -> (corner, temp_c, vdd) of the ratified full grid: the default
+    ``mos`` corner set x default temperatures x ``supply_points()``."""
+    c = _load_corners()
+    pts = c.build_grid(c.resolve_corners([c.DEFAULT_CORNER_SET]), c.DEFAULT_TEMPERATURES_C, c.supply_points())
+    return {p.corner_id: (p.corner.name, p.temp_c, p.vdd) for p in pts}
+
+
+def expected_grid(ent: dict, rid: str) -> tuple[set[str] | None, list[str]]:
+    """Resolve a manifest entry's ``expected_grid`` against the authoritative grid.
+
+    Either ``{"corners": [...], "temps_c": [...], "supplies_v": [...]}`` (must
+    be exactly the authoritative full grid) or ``{"corner_ids": [...]}`` (a
+    declared reduced subset of it). Its size must equal the entry's ``points``.
+    """
+    probs: list[str] = []
+    decl = ent.get("expected_grid")
+    if not isinstance(decl, dict):
+        return None, [f"record {rid}: manifest declares no expected_grid"]
+    auth = authoritative_grid()
+    if "corner_ids" in decl:
+        ids = decl["corner_ids"]
+        if not (isinstance(ids, list) and all(isinstance(i, str) for i in ids)):
+            return None, [f"record {rid}: expected_grid.corner_ids malformed"]
+        if len(set(ids)) != len(ids):
+            probs.append(f"record {rid}: expected_grid declares duplicate corner ids")
+        for i in sorted(set(ids) - set(auth)):
+            probs.append(f"record {rid}: expected_grid id {i!r} is not in the authoritative grid (sim/harness/corners.py)")
+        want = set(ids)
+    else:
+        try:
+            cn, tc, sv = decl["corners"], decl["temps_c"], decl["supplies_v"]
+            want = {f"{c}_{float(t):g}c_{float(v):.2f}v" for c in cn for t in tc for v in sv}
+            n = len(cn) * len(tc) * len(sv)
+        except (KeyError, TypeError, ValueError):
+            return None, [f"record {rid}: expected_grid malformed"]
+        if len(want) != n:
+            probs.append(f"record {rid}: expected_grid axes contain duplicates")
+        if want != set(auth):
+            probs.append(f"record {rid}: expected_grid axes do not equal the authoritative full grid "
+                         f"({len(auth)} points, sim/harness/corners.py)")
+    if len(want) != ent.get("points"):
+        probs.append(f"record {rid}: expected_grid has {len(want)} points, manifest points is {ent.get('points')!r}")
+    return want, probs
+
+
+def _norm_id(cid: object, fields: dict | None, where: str) -> tuple[str | None, str | None]:
+    """Normalize one identity; returns (id, problem)."""
+    if not isinstance(cid, str) or not (m := _ID_RE.match(cid)):
+        return None, f"malformed identity {cid!r} at {where}"
+    corner, temp, vdd = m["corner"], float(m["temp"]), float(m["vdd"])
+    if f"{corner}_{temp:g}c_{vdd:.2f}v" != cid:
+        return None, f"malformed identity {cid!r} at {where} (non-canonical formatting)"
+    if fields is not None:
+        fc, ft, fv = fields.get("corner"), fields.get("temp_c"), fields.get("vdd")
+        num = lambda x: isinstance(x, (int, float)) and not isinstance(x, bool)  # noqa: E731
+        if not (fc == corner and num(ft) and num(fv)
+                and f"{float(ft):g}" == f"{temp:g}" and f"{float(fv):.2f}" == f"{vdd:.2f}"):
+            return None, (f"identity {cid!r} at {where} disagrees with explicit fields "
+                          f"corner={fc!r} temp_c={ft!r} vdd={fv!r}")
+    return cid, None
+
+
+def check_coverage(rec: dict, want: set[str], rid: str) -> list[str]:
+    """Duplicate / missing / unexpected / malformed / inconsistent identities."""
+    probs: list[str] = []
+    ids: list[str] = []
+    malformed = False
+    pts = rec.get("points")
+    if isinstance(pts, list):  # list-based point record
+        raw = [(pt.get("corner_id") if isinstance(pt, dict) else None, pt if isinstance(pt, dict) else {},
+                f"points[{i}]") for i, pt in enumerate(pts)]
+    elif isinstance(rec.get("derived"), dict):  # keyed derived record
+        raw = [(k, None, f"derived key {k!r}") for k in rec["derived"]]
+    else:
+        return [f"record {rid}: no corner identities found ('points' list or 'derived' dict)"]
+    for cid, fields, where in raw:
+        n, prob = _norm_id(cid, fields, where)
+        if prob:
+            malformed = True
+            probs.append(f"record {rid}: {prob}")
+        else:
+            ids.append(n)
+    for cid in sorted({i for i in ids if ids.count(i) > 1}):
+        probs.append(f"record {rid}: duplicate corner {cid} ({ids.count(cid)}x)")
+    if not malformed:  # only report set differences once identities are well-formed
+        for cid in sorted(want - set(ids)):
+            probs.append(f"record {rid}: missing expected corner {cid}")
+        for cid in sorted(set(ids) - want):
+            probs.append(f"record {rid}: unexpected corner {cid}")
+    return probs
 
 
 class EvidenceChainError(Exception):
@@ -205,11 +312,18 @@ def validate_chain(root: Path = REPO_ROOT) -> tuple[dict, dict[str, tuple[int, i
                                 ("dirty", dirty, False)):
             if got != want:
                 problems.append(f"record {rid}: scope {what} is {got!r}, expected {want!r}")
+        # Coverage (distinct expected PVT corners) before any summary is derived.
+        want, gprobs = expected_grid(ent, rid)
+        problems.extend(gprobs)
+        cprobs = check_coverage(rec, want, rid) if want is not None else []
+        problems.extend(cprobs)
         key = ent.get("summary_key")
         if key is None:
             continue
         if key not in SCORED:
             problems.append(f"record {rid}: unknown summary_key {key!r}")
+            continue
+        if want is None or cprobs:
             continue
         vals = _record_values(rec, key)
         if isinstance(vals, str):
