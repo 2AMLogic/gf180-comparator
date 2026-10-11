@@ -68,3 +68,43 @@ follow-up on #288: when capacity is available, run the single-unit probe, then
 (`KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py comparator-kickback`
 and `... comparator-offset-cm-index`), re-point the consumers above, and cut a
 new item-5 revision; if it reports anything else, file DR-0007.
+
+## Stage A result (second probe, 2026-10-11 ~19:38Z) and Stage B1 re-mint
+
+Append-only addendum; nothing above is edited.
+
+- **Stage A, fleet probe**: the single-unit `klt sim --backend batch` probe
+  (trivial resistor-divider netlist, same models/lib as the committed fleet
+  probes) first failed again with the verbatim capacity error
+  `8 instance(s) already running + 1 requested exceeds BATCH_MAX_CONCURRENT_INSTANCES=8`
+  (19:3x Z attempt 1), then was accepted on attempt 2. The fleet job
+  (`klt-sim-db984e84e0ee`, AMI `ami-0e40e3245f1923ac8`, runner klt 0.5.0,
+  `aws-batch-fleet`) reported **`provenance.pdk.version = "open_pdks c6d73a35f524070e85faff4a6a9eef49553ebc2b"`**,
+  i.e. the `sim/toolchain.json` pin. (The probe's own measurement errored by
+  construction of the trivial netlist; only the reported provenance is used.)
+  Conclusion: the pin is suppliable; the earlier `f6eeac7` jobs were a
+  differently provisioned volare tree. DR-0007 is therefore **not** filed and
+  the pin is unchanged.
+- **Stage B1, re-mint through the fleet** (`KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py <bench>` at clean commit `7e20c78`);
+  `check_pdk_identity` accepted both, every leg reporting `c6d73a35...`:
+
+| superseded (NOT qualified, kept as history) | replacement (qualified, pin `c6d73a35...`) |
+|---|---|
+| `sim/comparator-kickback/records/20261010-022609774981-bf851ec` | `sim/comparator-kickback/records/20261011-195826615490-7e20c78` |
+| `sim/comparator-offset-cm-index/records/20261010-130605300890-d8e9253` | `sim/comparator-offset-cm-index/records/20261011-210628443577-7e20c78` |
+
+  Result tables are identical row for row (45 of 45 rows each; the rendered
+  `Result` tables diff empty): the PDK-revision difference did not move any
+  scored or reported number. The kickback verdict is unchanged and not
+  relaxed: 1/45 within the 5 mV target, 0/45 within the 2 mV stretch, worst
+  10.0098 mV at `sf_-40c_3.63v`. The cm-index record stays unscored.
+  The cm-index fleet submit hit the same capacity error on its first attempt
+  and succeeded on the second; no local fallback was run.
+- **Re-pointing**: item-5 envelope revision 6 (same semantics as r5, new
+  kickback record id; r4/r5 files untouched), `signoff/block-manifest.json`,
+  `signoff/verify-report.py` pin, `spec/claim-registry.json`,
+  `measurements/characterization-report.{md,sources.json,item8.json}`,
+  `spec/evidence-ledger.md`, `spec/consumers.md` and the bench READMEs.
+  Left as history (cite the superseded record on purpose):
+  the r4/r5 envelopes, the probe plan's `selection_record`, and
+  `sim/harness/tests/test_cm_index_semantics.py::test_committed_record_selects_ss_125c_2p97`.

@@ -17,7 +17,8 @@
   `tt/ff/ss/fs/sf` × −40/27/125 °C × 2.97/3.30/3.63 V). The later records
   cited below differ: the whole-comparator offset records
   (`20261010-013540611508-4a4df37`, `20261010-021500046481-d84e59d`) and the
-  both-node kickback record (`20261010-022609774981-bf851ec`) were produced
+  both-node kickback record (`20261011-195826615490-7e20c78`, re-minted on the pinned
+  open_pdks, #288) were produced
   by `klt sim` (client 0.7.0, fleet runner klt 0.5.0, ngspice 46, backend
   `batch`, AWS Spot fleet) at their own recorded commits, and the extracted
   (post-layout) records (`20261002-202641-baeffe5`, `20261002-211343-6346fad`)
@@ -93,7 +94,7 @@ split of labor is:
 | Offset sigma | ≤ 15 mV 3σ | ≤ 8 mV 3σ | whole comparator + conservative load-R budget: 3σ ≈ 3.15 mV (`tt_27c_3.30v`, 9-point record); preamp-only DC bench 2.80063 mV | whole comparator (schematic, scored): 2.994–3.795 mV 3σ, binding `ff_125c_3.63v` (`20261010-021500046481-d84e59d`); preamp-only DC bench 2.796–2.807 mV (diagnostic) | **meets target and stretch at 45/45 corners** (schematic, one seed, N = 200 per point) |
 | Input-referred noise | ≤ 1.0 mV rms | ≤ 0.6 mV rms | 91.25 µV rms | 66.82–128.83 µV rms | **meets target and stretch at every corner** |
 | Decision time (50 mV overdrive) | ≤ 1.5 ns | ≤ 0.8 ns | schematic 0.708 ns; extracted 1.158 ns | schematic 0.464–1.237 ns; extracted 1.553–2.034 ns at the 7 failing corners (`20260910-125206-4805118`, `20261002-202641-baeffe5`) | **schematic: meets target 45/45, misses stretch 16/45** (worst 1.237 ns at `ss_125c_2.97v`); **extracted: misses target at 7/45, stretch at 44/45** (worst 2.034 ns at `ss_125c_2.97v`) |
-| Kickback into 1 kΩ | ≤ 5 mV | ≤ 2 mV | schematic 7.60 mV (positive node); extracted 10.03 mV | schematic 4.53–10.01 mV positive node (`20260910-125341-4805118`); both-node schematic aggregate sets at the positive node 45/45 (`20261010-022609774981-bf851ec`); extracted 8.49–14.58 mV (`20261002-211343-6346fad`, positive node only) | **schematic: misses target 44/45 (both-node record: 1/45 within target), stretch 45/45; extracted: misses target 45/45, stretch 45/45** |
+| Kickback into 1 kΩ | ≤ 5 mV | ≤ 2 mV | schematic 7.60 mV (positive node); extracted 10.03 mV | schematic 4.53–10.01 mV positive node (`20260910-125341-4805118`); both-node schematic aggregate sets at the positive node 45/45 (`20261011-195826615490-7e20c78`); extracted 8.49–14.58 mV (`20261002-211343-6346fad`, positive node only) | **schematic: misses target 44/45 (both-node record: 1/45 within target), stretch 45/45; extracted: misses target 45/45, stretch 45/45** |
 | Supply / power | ≤ 1 mW avg, one decision per clock edge at a stated clock rate (TBD) | ≤ 500 µW avg | static current 28.4 µA ≈ 94 µW (diagnostic) | static current 27.7–29.7 µA ≈ 82–108 µW (diagnostic) | **average power UNSCORED** — no clock rate is ratified (TBD, pending [#125](https://github.com/2AMLogic/gf180-comparator/issues/125)); static power is a diagnostic only and is not a pass |
 
 Two rows (offset, noise) clear both bounds at every corner of their
@@ -321,8 +322,9 @@ records used.
 **Result (schematic).** 7.60 mV peak at nominal (`tt_27c_3.30v`), positive input node only; grid 4.53–10.01 mV.
 Scored against the ratified row: **misses the ≤ 5 mV target at 44/45 corners
 and the ≤ 2 mV stretch at 45/45**. The later both-node schematic record
-[`20261010-022609774981-bf851ec`](../sim/comparator-kickback/records/20261010-022609774981-bf851ec.md)
-(fleet) scores the row-facing peak as the maximum of both nodes: the positive
+[`20261011-195826615490-7e20c78`](../sim/comparator-kickback/records/20261011-195826615490-7e20c78.md)
+(fleet; re-minted for #288 on the pinned open_pdks after the first
+both-node record `20261010-022609774981-bf851ec` was found to have run on a non-pinned revision, with identical per-corner values) scores the row-facing peak as the maximum of both nodes: the positive
 node sets it at 45/45 corners (negative node 4.24–9.91 mV vs positive
 4.53–10.01 mV), 1/45 within target, 0/45 within stretch. Which source feeds
 item-5 scoring is a separate decision (#204) and is not changed here.

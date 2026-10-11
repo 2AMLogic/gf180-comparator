@@ -163,10 +163,10 @@ PINNED_ARTIFACTS = {
     # Item 5: the klt-sim-shaped corner-matrix envelope wraps committed
     # records (signoff/make_item5_envelope.py; its --check also re-hashes the
     # four source records). Its provenance.input pins the DUT netlist.
-    # Cites scoring revision 5 (issue #303: positive-node-only kickback fallback recorded as incomplete coverage; rev 4, issue #204: kickback scored on the both-node record; rev 3, issue #200: offset scored on the whole-comparator record; rev 2, issue #108: average power recorded as
+    # Cites scoring revision 6 (issue #288: kickback record re-minted on the pinned open_pdks; rev 5, issue #303: positive-node-only kickback fallback recorded as incomplete coverage; rev 4, issue #204: kickback scored on the both-node record; rev 3, issue #200: offset scored on the whole-comparator record; rev 2, issue #108: average power recorded as
     # incomplete coverage); the revision-1 file stays committed as history.
     "5": (
-        REPO_ROOT / "sim/corner-matrix/item5-corner-matrix-20260910-124917-4805118-20260910-125200-4805118-20260910-125206-4805118-20261010-022609774981-bf851ec-20261010-021500046481-d84e59d-r5.json",
+        REPO_ROOT / "sim/corner-matrix/item5-corner-matrix-20260910-124917-4805118-20260910-125200-4805118-20260910-125206-4805118-20261011-195826615490-7e20c78-20261010-021500046481-d84e59d-r6.json",
         REPO_ROOT / "design" / "comparator.spice",
         ("provenance", "input", "content_hash"),
     ),

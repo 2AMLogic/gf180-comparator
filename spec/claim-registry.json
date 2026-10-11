@@ -734,7 +734,7 @@
    "doc": "measurements/characterization-report.md",
    "scope": "scored",
    "literal": "**schematic: misses target 44/45 (both-node record: 1/45 within target), stretch 45/45;",
-   "record": "sim/comparator-kickback/records/20261010-022609774981-bf851ec.json",
+   "record": "sim/comparator-kickback/records/20261011-195826615490-7e20c78.json",
    "pointer": "/derived/*/kick_1k_peak_mv",
    "decimals": 0,
    "agg": "count_le",

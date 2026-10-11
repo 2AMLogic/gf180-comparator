@@ -69,13 +69,19 @@ included) plus a DERIVED, hand-budgeted load-resistor term the PDK does not
 model; both parts are disclosed per corner and in the row.
 
 Revision 4 (issue #204) scores the kickback row on the both-node schematic
-record (``sim/comparator-kickback/records/20261010-022609774981-bf851ec``,
+record (``sim/comparator-kickback/records/20261010-022609774981-bf851ec``, superseded by ``20261011-195826615490-7e20c78`` at revision 6,
 klt-record format, ``input_node_coverage`` = ``both``) -- but ONLY when
 ``validate_kickback_both`` finds 45 points, citable, current schematic DUT,
 unchanged 5 / 2 mV bounds, coverage ``both`` and finite values. Otherwise the
 row falls back to the positive-node-only record, disclosed as partial node
 coverage (``KICKBACK_FALLBACK_REASON``) in the row, per corner and in
 ``kickback_source``. Bounds are untouched; verdict counts are unchanged.
+
+Revision 6 (issue #288) changes no scoring semantics: it re-points revision
+5's both-node kickback record from ``20261010-022609774981-bf851ec`` (executor
+reported open_pdks f6eeac7..., not the ``sim/toolchain.json`` pin) to the
+re-minted ``20261011-195826615490-7e20c78`` (fleet-reported pin
+c6d73a35...). The measured kick_1k_peak_mv values are identical, point for point.
 
 Revision 5 (issue #303) makes that fallback's machine-readable coverage
 consistent with its disclosure: when ``validate_kickback_both`` fails, the
@@ -109,7 +115,10 @@ NETLIST = "design/comparator.spice"
 #: Revision 4 = issue #204 (kickback scored on the both-node klt-record when valid).
 #: Revision 5 = issue #303 (positive-node-only kickback fallback recorded as
 #: incomplete coverage, not merely disclosed).
-SCORING_REVISION = 5
+#: Revision 6 = issue #288 (same scoring semantics as revision 5; the
+#: both-node kickback record is re-minted on the pinned open_pdks revision
+#: because the revision-5 record's executor reported a different one).
+SCORING_REVISION = 6
 
 # (bench, record id) -- the four records DR-0002 ratified and the
 # characterization report scores. The kickback entry is the positive-node-only
@@ -138,7 +147,10 @@ OFFSET_ROW = "offset_3sigma_mv"
 #: an invalid or absent record degrades the row to the positive-node-only
 #: record with an explicit partial-node-coverage disclosure.
 KICKBACK_BENCH = "comparator-kickback"
-KICKBACK_BOTH_RECORD_ID = "20261010-022609774981-bf851ec"
+KICKBACK_BOTH_RECORD_ID = "20261011-195826615490-7e20c78"
+#: The revision-4/5 both-node record (executor reported a non-pinned
+#: open_pdks revision; not qualified, issue #288). Kept byte-for-byte as history.
+KICKBACK_BOTH_SUPERSEDED_RECORD_ID = "20261010-022609774981-bf851ec"
 KICKBACK_FIELD = "kick_1k_peak_mv"
 KICKBACK_COVERAGE = "both"
 KICKBACK_FALLBACK_REASON = "kickback_partial_node_coverage"
@@ -220,8 +232,11 @@ def predecessor_path() -> Path:
 
 
 def supersedes_path() -> Path:
-    """The revision-4 (issue #204) envelope this one supersedes."""
-    return REPO_ROOT / "sim" / "corner-matrix" / f"item5-corner-matrix-{_tag()}-r4.json"
+    """The revision-5 (issue #303) envelope this one supersedes (it scored
+    the kickback row on the non-qualified record, issue #288)."""
+    ids = [KICKBACK_BOTH_SUPERSEDED_RECORD_ID if b == KICKBACK_BENCH else rid for b, rid in RECORDS]
+    tag = "-".join(ids + [OFFSET_TRAN_RECORD_ID])
+    return REPO_ROOT / "sim" / "corner-matrix" / f"item5-corner-matrix-{tag}-r5.json"
 
 
 #: Key under which the both-node kickback record rides in ``recs`` (its bench
