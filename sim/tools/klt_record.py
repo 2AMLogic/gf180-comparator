@@ -658,12 +658,16 @@ def power_uw(bench: str, cid: str, d: dict) -> float | None:
 
 
 def git_state() -> tuple[str, bool]:
-    """INGEST-time checkout: (short commit, derivation tooling dirty?).
+    """INGEST-time checkout: (full 40-char commit, derivation tooling dirty?).
+
+    Full SHA so it compares like-for-like with the bundle's origin commit
+    (mk_klt_request.git_state, `rev-parse HEAD`); callers abbreviate it for
+    the record's existing short-SHA fields (issue #272).
 
     Only the code that turns raw values into the record (sim/tools,
     sim/harness) matters here; the simulated sources' identity and dirty
     state come from the source bundle (see mk_klt_request.git_state)."""
-    sha = subprocess.check_output(["git", "-C", str(REPO), "rev-parse", "--short=7", "HEAD"], text=True).strip()
+    sha = subprocess.check_output(["git", "-C", str(REPO), "rev-parse", "HEAD"], text=True).strip()
     dirty = bool(subprocess.check_output(["git", "-C", str(REPO), "status", "--porcelain", "--untracked-files=all", "--", "sim/tools", "sim/harness"], text=True).strip())
     return sha, dirty
 
@@ -988,7 +992,8 @@ def _archive_record(bench: str, work: Path, b: dict, tb, vdds, names: dict, unve
     requests, reports and staged-source tree, plus the netlist snapshot."""
     origin = b["origin"]
     ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S%f")
-    ingest_sha, tools_dirty = git_state()
+    ingest_full, tools_dirty = git_state()
+    ingest_sha = ingest_full[:7]  # existing fields stay short, matching historical records
     noncite = []
     if origin["dirty"]:
         noncite.append(f"sources uncommitted at request generation: {', '.join(origin['dirty_paths'])}")
@@ -997,7 +1002,7 @@ def _archive_record(bench: str, work: Path, b: dict, tb, vdds, names: dict, unve
         noncite.append(f"derivation tooling (sim/tools, sim/harness) dirty at ingest commit {ingest_sha}")
     sha = origin["commit"][:7]
     r = {"rid": f"{ts}-{sha}", "sha": sha, "exp": SIM / bench, "bundle_sha": mk.sha256_file(work / mk.BUNDLE_NAME),
-         "ingest_sha": ingest_sha, "tools_dirty": tools_dirty, "noncite": noncite,
+         "ingest_sha": ingest_sha, "ingest_commit_full": ingest_full, "tools_dirty": tools_dirty, "noncite": noncite,
          "citable": not noncite}  # == not (origin dirty or origin unverified or tooling dirty)
     for sub in ("records", "corners", "netlist-snapshots"):
         (r["exp"] / sub).mkdir(exist_ok=True)
@@ -1031,9 +1036,65 @@ def _provenance(r: dict, bench: str, b: dict, drift: list[str], link_notes: list
         "source_bundle": {"file": f"corners/{r['rid']}/{mk.BUNDLE_NAME}", "sha256": r["bundle_sha"],
                           "schema": b["schema"], "version": b["version"],
                           "origin_commit": origin["commit"], "origin_dirty_paths": origin["dirty_paths"]},
-        "ingest": {"commit": r["ingest_sha"], "tools_dirty": r["tools_dirty"], "source_drift": drift,
+        "ingest": {"commit": r["ingest_sha"], "commit_full": r.get("ingest_commit_full"), "tools_dirty": r["tools_dirty"], "source_drift": drift,
                    "linkage_notes": link_notes},
     }
+
+
+def _same_commit(a: str, b: str) -> bool:
+    """Full SHAs compare exactly; if one side is abbreviated (a record without
+    a full ingest SHA), it matches when it is a prefix of the other."""
+    if not a or not b:
+        return False
+    if len(a) == len(b):
+        return a == b
+    short, full = sorted((a, b), key=len)
+    return len(short) >= 7 and full.startswith(short)
+
+
+def reproduce_line(bench: str, b: dict, r: dict, tb) -> str:
+    """Shared `Reproduce` bullet for both record writers (issue #272).
+
+    Built from the verified source bundle (MC count, DUT selector, grid) and
+    the ingestion identity -- never from today's CLI defaults, so a non-default
+    N or DUT cannot silently regenerate as N=200 / the default DUT. Names the
+    full origin and ingest commits; when they differ, explains that the request
+    set is regenerated from the origin sources while the derivation runs on
+    the ingest tooling. A bundled grid that differs from the CLI defaults is
+    replayed from the archived requests rather than by a default command."""
+    origin_commit = b["origin"]["commit"]
+    ingest_commit = r.get("ingest_commit_full") or r["ingest_sha"]  # full SHA; short only if unavailable
+    params, sel = b.get("parameters") or {}, b["dut"].get("selector")
+    args = bench
+    if params.get("mc_n") is not None:
+        args += f" --mc-n {params['mc_n']}"
+    if sel:
+        args += f" --dut {sel}"
+    cmd = f"KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py {args}"
+    try:
+        default_grid = {"corners": [c.name for c in hc.resolve_corners(list(tb.corners))],
+                        "temperatures_c": [float(t) for t in tb.temperatures_c],
+                        "supply_tolerance": tb.supply_tolerance}
+    except Exception:  # unresolvable defaults: do not claim a default command reproduces it
+        default_grid = None
+    bundled = {k: params.get(k) for k in ("corners", "temperatures_c", "supply_tolerance")}
+    bundled["temperatures_c"] = [float(t) for t in bundled["temperatures_c"] or []]
+    rid = r["rid"]
+    out = f"- **Reproduce**: origin commit `{origin_commit}`; ingested at commit `{ingest_commit}`. "
+    if default_grid is not None and bundled == default_grid:
+        out += f"At the origin commit: `{cmd}`."
+    else:
+        out += (f"The bundled grid ({json.dumps(bundled, sort_keys=True)}) differs from the CLI defaults, so no default "
+                f"command reproduces it: replay the archived requests `corners/{rid}/request-*.json` (with their "
+                f"`body-*.spice` and `{mk.SOURCES_DIR}/`) through `klt sim`, then ingest with "
+                f"`python3 sim/tools/klt_record.py {args} --from-report <workdir>`; copy the whole "
+                f"`corners/{rid}/` directory as `<workdir>`, since `--from-report` also needs its "
+                f"`{mk.BUNDLE_NAME}` and `design.ngspice`.")
+    if not _same_commit(origin_commit, ingest_commit):
+        out += (f" The origin commit (`{origin_commit}`) produced the requests and sources; the derivation tooling ran at "
+                f"the ingest commit (`{ingest_commit}`). To replay, check out the origin commit for the simulation sources "
+                f"(or use the archived requests above), then derive with the ingest-commit `sim/tools` and `sim/harness`.")
+    return out
 
 
 def mint_cm_index(a) -> int:
@@ -1124,7 +1185,7 @@ def mint_cm_index(a) -> int:
         lines.append(f"  | `{cid}` | " + " | ".join(fmt(dd[n]) for n in cols) + " |")
     lines += [
         "",
-        f"- **Reproduce**: at commit `{sha}`: `KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py {bench}`",
+        reproduce_line(bench, b, r, tb),
         "",
     ]
     (exp / "records" / f"{rid}.md").write_text("\n".join(lines))
@@ -1271,7 +1332,6 @@ def main() -> int:
         bad_end = [cid for cid, dd in derived.items() if min(dd["dout_1k_end"], dd["dout_float_small_end"], dd["dout_float_big_end"]) < 0.9]
         lines.append(f"- **Decision correctness while kicked** (`dout_*_end` >= 0.9): failing corners: {bad_end or 'none'}.")
         lines.append(f"- **Input-node coverage** (issue #160): {node_coverage_line(derived)}")
-    sel = d.get("selector")
     lines += [
         "- **Not computed by this executor** (single-analysis `klt sim` requests): "
         + {
@@ -1281,7 +1341,7 @@ def main() -> int:
             "comparator-kickback": "nothing (all `.meas` ingredients are requested; `.meas` precision is the executor's `measureprec=12`).",
             "comparator-regeneration": "nothing.",
         }[a.bench],
-        f"- **Reproduce**: at commit `{sha}`: `KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py {a.bench}" + (f" --dut {sel}" if sel else "") + "`",
+        reproduce_line(a.bench, b, r, tb),
         "",
     ]
     (exp / "records" / f"{rid}.md").write_text("\n".join(lines))

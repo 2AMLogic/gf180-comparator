@@ -395,6 +395,7 @@ class MkKltRequest(unittest.TestCase):
 BENCH = "comparator-kickback"
 REPO = SIM.parent
 ORIGIN = "a1b2c3d" + "0" * 33
+INGEST = "1ngest0" + "f" * 33  # full SHA, the form klt_record.git_state returns
 
 
 def _sha(path: Path) -> str:
@@ -466,7 +467,8 @@ def _committed_blob(commit, path):
     return p.read_bytes() if p.is_file() else None
 
 
-def _ingest(td: Path, work: Path, *extra, blob=_committed_blob, ingest_dirty=False, repo=None, bench=BENCH):
+def _ingest(td: Path, work: Path, *extra, blob=_committed_blob, ingest_dirty=False, repo=None, bench=BENCH,
+            ingest_sha=INGEST):
     """-> (exit code or SystemExit message, record json or None, stdout)."""
     root = td / "evidence"
     (root / bench).mkdir(parents=True, exist_ok=True)
@@ -475,7 +477,7 @@ def _ingest(td: Path, work: Path, *extra, blob=_committed_blob, ingest_dirty=Fal
     with mock.patch.object(sys, "argv", argv), \
             mock.patch.object(kr, "SIM", root), \
             mock.patch.object(kr, "REPO", repo or REPO), \
-            mock.patch.object(kr, "git_state", return_value=("1ngest0", ingest_dirty)), \
+            mock.patch.object(kr, "git_state", return_value=(ingest_sha, ingest_dirty)), \
             mock.patch.object(kr, "git_blob", side_effect=blob), \
             mock.patch.object(kr, "klt_version", return_value="klt 0.0"), \
             redirect_stdout(out):
@@ -593,7 +595,8 @@ class ReplayIngest(unittest.TestCase):
             self.assertTrue(rec["citable"], rec["not_citable_reasons"])
             self.assertEqual(rec["source_bundle"]["origin_commit"], ORIGIN)
             self.assertEqual(rec["source_bundle"]["sha256"], _sha(work / mk.BUNDLE_NAME))
-            self.assertEqual(rec["ingest"]["commit"], "1ngest0")
+            self.assertEqual(rec["ingest"]["commit"], "1ngest0")  # existing short field unchanged
+            self.assertEqual(rec["ingest"]["commit_full"], INGEST)
             self.assertEqual(rec["ingest"]["source_drift"], [])
             self.assertEqual(rec["dut"]["dut_netlist_sha256"], b["dut"]["netlist_sha256"])
             self.assertEqual(rec["testbench"]["netlist_sha256"], b["testbench"]["netlist_sha256"])
@@ -1206,6 +1209,114 @@ class CmIndexReplay(unittest.TestCase):
             self.assertFalse(rec["citable"] or rec["reference"])
             self.assertEqual(rec["not_citable_reasons"],
                              ["derivation tooling (sim/tools, sim/harness) dirty at ingest commit 1ngest0"])
+
+
+class ReproduceGuidance(unittest.TestCase):
+    """Issue #272: both record writers share one bundle-derived formatter, so a
+    non-default MC count / DUT selector survives into the Reproduce bullet."""
+
+    DUT = "comparator-dr0004-cascode-exp"
+
+    def _md(self, td, rec, bench):
+        return (td / "evidence" / bench / "records" / f"{rec['record_id']}.md").read_text()
+
+    def _line(self, md):
+        return next(l for l in md.splitlines() if l.startswith("- **Reproduce**"))
+
+    def test_common_mode_writer_preserves_n_and_custom_dut(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work = _generate(td, "--mc-n", "3", "--dut", self.DUT, bench=mk.CM_INDEX_BENCH)
+            self.assertEqual(_bundle(work)["parameters"]["mc_n"], 3)
+            # reuse the synthetic reports of the default-DUT helper for N=3
+            tmp = td / "other"
+            tmp.mkdir()
+            ref = _cm_index_work(tmp, n=3)
+            for f in ref.glob("report-*.json"):
+                req = json.loads((work / f.name.replace("report-", "request-")).read_text())
+                rep = json.loads(f.read_text())
+                rep["environment"] = _link_env(work, _bundle(work), _bundle(work)["requests"][f.stem[7:]])
+                rep["environment"]["monte_carlo"] = dict(req["monte_carlo"])
+                rep["environment"]["remote"] = {"runner_klt_version": "0.5.0", "runner_compatibility": "match"}
+                (work / f.name).write_text(json.dumps(rep))
+            rc, rec, _ = _ingest(td, work, bench=mk.CM_INDEX_BENCH)
+            self.assertEqual(rc, 0)
+            line = self._line(self._md(td, rec, mk.CM_INDEX_BENCH))
+            self.assertIn("--mc-n 3", line)
+            self.assertNotIn("200", line)
+            self.assertIn(f"--dut {self.DUT}", line)
+            self.assertIn(ORIGIN, line)
+            self.assertIn(INGEST, line)
+            self.assertIn("derivation tooling ran at the ingest commit", line)
+
+    def test_scored_writer_preserves_custom_dut_and_both_commits(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work = _generate(td, "--dut", self.DUT)
+            _write_reports(work)
+            rc, rec, _ = _ingest(td, work)
+            self.assertEqual(rc, 0)
+            line = self._line(self._md(td, rec, BENCH))
+            self.assertIn(f"--dut {self.DUT}", line)
+            self.assertIn(ORIGIN, line)
+            self.assertIn(INGEST, line)
+            self.assertIn("derivation tooling ran at the ingest commit", line)
+
+    def test_same_commit_has_no_replay_split(self):
+        """Origin and ingest at one commit (git_state mocked in production form,
+        full SHA): both writers print it in full and omit the split note."""
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work = _generate(td, "--dut", self.DUT)
+            _write_reports(work)
+            rc, rec, _ = _ingest(td, work, ingest_sha=ORIGIN)
+            self.assertEqual(rc, 0)
+            self.assertEqual(rec["ingest"]["commit"], ORIGIN[:7])
+            self.assertEqual(rec["ingest"]["commit_full"], ORIGIN)
+            line = self._line(self._md(td, rec, BENCH))
+            self.assertIn(f"origin commit `{ORIGIN}`; ingested at commit `{ORIGIN}`", line)
+            self.assertNotIn("derivation tooling ran", line)
+            self.assertNotIn("check out the origin commit", line)
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            rc, rec, _ = _ingest(td, _cm_index_work(td), bench=mk.CM_INDEX_BENCH, ingest_sha=ORIGIN)
+            self.assertEqual(rc, 0)
+            line = self._line(self._md(td, rec, mk.CM_INDEX_BENCH))
+            self.assertIn(f"ingested at commit `{ORIGIN}`", line)
+            self.assertNotIn("derivation tooling ran", line)
+
+    def test_formatter_legacy_short_ingest_sha(self):
+        """A record dict without the full ingest SHA falls back to the short one,
+        matched by prefix rather than always reported as a split."""
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work = _generate(td, "--mc-n", "3", bench="comparator-offset-mc")
+            b = _bundle(work)
+            tb = htb.load(work / b["testbench"]["staged_dir"])
+            line = kr.reproduce_line("comparator-offset-mc", b, {"rid": "RID", "ingest_sha": ORIGIN[:7]}, tb)
+            self.assertNotIn("derivation tooling ran", line)
+            line = kr.reproduce_line("comparator-offset-mc", b, {"rid": "RID", "ingest_sha": "1ngest0"}, tb)
+            self.assertIn("derivation tooling ran", line)
+
+    def test_formatter_preserves_n3_and_flags_nondefault_grid(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work = _generate(td, "--mc-n", "3", bench="comparator-offset-mc")
+            b = _bundle(work)
+            tb = htb.load(work / b["testbench"]["staged_dir"])
+            r = {"rid": "RID", "ingest_sha": ORIGIN[:7], "ingest_commit_full": ORIGIN}
+            line = kr.reproduce_line("comparator-offset-mc", b, r, tb)
+            self.assertIn("--mc-n 3", line)
+            self.assertNotIn("--mc-n 200", line)
+            self.assertNotIn("differs", line)
+            self.assertNotIn("derivation tooling ran", line)  # same commit: no replay split
+            b["parameters"]["temperatures_c"] = [27.0]
+            line = kr.reproduce_line("comparator-offset-mc", b, r, tb)
+            self.assertIn("differs from the CLI defaults", line)
+            self.assertIn("corners/RID/request-*.json", line)
+            self.assertIn(mk.BUNDLE_NAME, line)
+            self.assertIn("design.ngspice", line)
+            self.assertIn("--mc-n 3", line)
 
 
 class ExistingRecordRefused(unittest.TestCase):
