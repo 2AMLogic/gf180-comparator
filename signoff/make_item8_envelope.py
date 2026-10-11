@@ -34,7 +34,14 @@ registered record must exist, match its pinned sha256 and declared scope
 (bench, DUT provenance, point count, clean tree). The envelope's numeric
 summary is derived from those records, so a changed record cannot leave a
 stale summary. This is not an all-targets-met gate: disclosed misses pass.
-On failure it prints named ``evidence-chain:`` diagnostics and writes nothing.
+Narrative numbers (issue #293): the report's principal scored table claims
+(nominals, extrema, binding corners, target/stretch counts) are registered in
+``spec/claim-registry.json`` and checked by ``scripts/check_claim_drift.py``
+against the same pinned records, so a narrative whose numbers disagree with
+its records is refused even when its envelope hash is refreshed. Every scored
+summary record must be covered by at least one ``scored`` claim; ``scored``
+claims stay distinct from ``diagnostic`` and ``historical`` ones. Average
+power is not registered and stays UNSCORED. On failure it prints named ``evidence-chain:`` diagnostics and writes nothing.
 
 Usage (from the repo root):
 
@@ -197,6 +204,42 @@ class EvidenceChainError(Exception):
         super().__init__("; ".join(problems))
 
 
+def _load_claim_checker():
+    """Import scripts/check_claim_drift.py (stdlib only) next to this script."""
+    path = Path(__file__).resolve().parent.parent / "scripts" / "check_claim_drift.py"
+    spec = importlib.util.spec_from_file_location("_item8_claim_drift", path)
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def check_narrative_claims(root: Path, records: dict) -> list[str]:
+    """Registered report claims vs the manifest's pinned records (named diagnostics)."""
+    ccd = _load_claim_checker()
+    reg = root / ccd.REGISTRY
+    try:
+        claims = json.loads(reg.read_text())["claims"]
+        mine = [c for c in claims if isinstance(c, dict) and c.get("doc") == ccd.REPORT_DOC]
+    except (OSError, ValueError, KeyError, TypeError):
+        return [f"narrative claim registry {ccd.REGISTRY} missing or unreadable"]
+    probs: list[str] = []
+    by_path = {e.get("path"): rid for rid, e in records.items()}
+    covered: set[str] = set()
+    for c in mine:
+        rid = by_path.get(c.get("record"))
+        if rid is None:
+            probs.append(f"narrative claim {c.get('id')}: record {c.get('record')} is not in the source manifest")
+        elif c.get("scope") == "scored":
+            covered.add(rid)
+    for rid, ent in records.items():
+        if ent.get("summary_key") and rid not in covered:
+            probs.append(f"narrative claims: no scored claim registered against summary record {rid} "
+                         f"({ent['summary_key']})")
+    probs += [f"narrative {e}" for e in ccd.check_claims(root, mine)]
+    return probs
+
+
 def _sha_file(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -336,6 +379,8 @@ def validate_chain(root: Path = REPO_ROOT) -> tuple[dict, dict[str, tuple[int, i
     for key in SCORED:
         if key not in counts and not any(p.startswith("record ") for p in problems):
             problems.append(f"no record registered for summary_key {key!r}")
+    if not problems:  # claims are checked against records already proven pinned
+        problems.extend(check_narrative_claims(root, records))
     if problems:
         raise EvidenceChainError(problems)
     return man, counts
