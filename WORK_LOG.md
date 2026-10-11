@@ -2,8 +2,30 @@
 
 Chronological record of merged pull requests and closed issues. Newest entries appear first.
 
+### 2026-10-11
+
+- **PR #274**: Preserve bundled campaign parameters in fleet record reproduction guidance
+- **Issue #272** (closed): Preserve bundled campaign parameters in fleet record reproduction guidance
+
 ### 2026-10-10
 
+- **PR #270**: Measure combined finite ground-C x series-R budgets (negative result, #264)
+- **PR #267**: Require comparable committed schematic baseline for post-layout deltas
+- **PR #265**: fix: fail closed when git cleanliness cannot be inspected
+- **PR #263**: Reserve harness-owned PVT and dut_vos parameter names (#261)
+- **PR #258**: Render actual per-corner bound verdicts in harness evidence tables
+- **PR #259**: refactor(klt_record): share evidence archiving and provenance assembly
+- **PR #257**: Reject invalid numeric check bounds when loading testbench manifests
+- **PR #244**: feat(sim): extracted offset 45-point N=200 campaign results (experimental) (#231)
+- **PR #253**: Guard published headline claims against drift from committed records (#245)
+- **Issue #264** (closed): Measure combined finite parasitic budgets after the four-net ground-C study failed
+- **Issue #262** (closed): Require a comparable committed schematic baseline for post-layout deltas
+- **Issue #260** (closed): Fail closed when simulation source cleanliness cannot be verified
+- **Issue #261** (closed): Prevent testbench redefinition of harness-owned PVT and offset parameters
+- **Issue #255** (closed): Render actual per-corner bound verdicts in harness evidence tables
+- **Issue #254** (closed): Simplify klt_record: share evidence archiving and provenance assembly
+- **Issue #256** (closed): Reject invalid numeric check bounds when loading testbench manifests
+- **Issue #245** (closed): Guard published headline claims against drift from committed evidence records
 - **PR #250**: feat(signoff): size budget guard for protected sim/ evidence
 - **PR #249**: Finite ground-C budget sweep for the post-layout delay gap (#243)
 - **PR #248**: fix(pex): narrow pex_measure tb.json pin to deck fields + graded bounds (#241)
