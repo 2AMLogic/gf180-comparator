@@ -1523,6 +1523,83 @@ class PdkQualificationIngest(_IngestMatrix):
         self.assertEqual(kr.report_pdk_identity(rep), ("gf180mcuD", PDK_REV, []))
 
 
+def _edit_snapshot(work: Path, **kw) -> None:
+    b = _bundle(work)
+    b["toolchain"].update(kw)
+    (work / mk.BUNDLE_NAME).write_text(json.dumps(b, indent=1) + "\n")
+
+
+class ToolchainSnapshotIdentity(_IngestMatrix):
+    """Issue #283 review: the bundle's toolchain snapshot is verified against
+    sim/toolchain.json at the clean origin commit, never merely trusted."""
+
+    def _refused(self, td, bench, rc, rec, code, needle=""):
+        self.assertIn(code, str(rc))
+        self.assertIn(needle, str(rc))
+        self.assertIsNone(rec)
+        self.assertTrue(self._no_evidence(td, bench))
+
+    def test_untampered_snapshot_is_verified_and_citable(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                rc, rec, _ = _ingest(td, work, bench=bench)
+                self.assertEqual(rc, 0)
+                self.assertTrue(rec["citable"], rec["not_citable_reasons"])
+
+    def test_tampered_open_pdks_refused(self):
+        # Executor reports agree with the tampered pin, so only the origin
+        # binding can catch it.
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                _edit_snapshot(work, open_pdks="f" * 40)
+                _set_pdk(work, rev="f" * 40)
+                rc, rec, _ = _ingest(td, work, bench=bench)
+                self._refused(td, bench, rc, rec, "SOURCE_COMMIT_MISMATCH", "open_pdks")
+
+    def test_tampered_ngspice_floor_refused(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                _edit_snapshot(work, ngspice_min_major=40)
+                rc, rec, _ = _ingest(td, work, bench=bench)
+                self._refused(td, bench, rc, rec, "SOURCE_COMMIT_MISMATCH", "ngspice_min_major")
+
+    def test_tampered_snapshot_commit_refused(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                _edit_snapshot(work, commit="0" * 40)
+                rc, rec, _ = _ingest(td, work, bench=bench)
+                self._refused(td, bench, rc, rec, "SOURCE_COMMIT_MISMATCH", "snapshot was taken")
+
+    def test_pin_file_hash_mismatch_at_origin_refused(self):
+        def blob(commit, path):
+            data = _committed_blob(commit, path)
+            return data + b"\n" if path == "sim/toolchain.json" else data
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                rc, rec, _ = _ingest(td, work, blob=blob, bench=bench)
+                self._refused(td, bench, rc, rec, "SOURCE_COMMIT_MISMATCH", "sim/toolchain.json")
+
+    def test_pin_file_unreadable_at_origin_is_non_citable(self):
+        def blob(commit, path):
+            return None if path == "sim/toolchain.json" else _committed_blob(commit, path)
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                rc, rec, _ = _ingest(td, work, blob=blob, bench=bench)
+                self.assertFalse(rec["citable"] or rec["reference"])
+                self.assertTrue(any("sim/toolchain.json" in r and "not readable" in r
+                                    for r in rec["not_citable_reasons"]), rec["not_citable_reasons"])
+
+    def test_snapshot_variant_contradicting_requests_refused(self):
+        # Reports agree with the tampered snapshot; the requests (hash-verified)
+        # still select gf180mcuD, so the bundle contradicts itself.
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                _edit_snapshot(work, pdk_variant="gf180mcuC")
+                _set_pdk(work, name="gf180mcuC")
+                rc, rec, _ = _ingest(td, work, "--allow-pdk-drift", bench=bench)
+                self._refused(td, bench, rc, rec, "SOURCE_BUNDLE_INCONSISTENT", "models.pdk")
+
+
 class ReproduceGuidance(unittest.TestCase):
     """Issue #272: both record writers share one bundle-derived formatter, so a
     non-default MC count / DUT selector survives into the Reproduce bullet."""

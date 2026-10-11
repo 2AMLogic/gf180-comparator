@@ -80,6 +80,10 @@ from harness import toolchain as htc  # noqa: E402
 #: widen so sub-microvolt kickback differences are not quantised away.
 NGSPICE_INIT = ["set measureprec=12", "set numdgt=12"]
 
+#: The gf180mcu variant every generated request selects (`models.pdk`). Also
+#: snapshotted into the bundle as the variant fleet reports must confirm (#283).
+PDK_VARIANT = "gf180mcuD"
+
 OFFSET_MC_SEED = 20260909
 OFFSET_MC_N = 200
 #: Seconds `klt sim --backend batch` keeps re-launching after a
@@ -516,11 +520,6 @@ def main() -> int:
     print(f"wrote {out}/{BUNDLE_NAME} (commit {commit[:7]}"
           + (f", DIRTY: {', '.join(dirty_paths)})" if dirty_paths else ", clean)"))
     return 0
-
-
-#: The gf180mcu variant every generated request selects (`models.pdk`). Also
-#: snapshotted into the bundle as the variant fleet reports must confirm (#283).
-PDK_VARIANT = "gf180mcuD"
 
 
 def toolchain_snapshot(commit: str, path: Path | None = None) -> dict:

@@ -75,6 +75,11 @@ them as NON-CITABLE diagnostics with the override in `ingest.pdk_qualification`.
 The submitting host's PDK is never taken as proof. Bundles without
 `toolchain.open_pdks` (legacy) are qualified against the ingest checkout's pin
 and the request-selected variant, stamped `ingest-checkout (legacy bundle)`.
+The snapshot itself is source identity: for a clean origin, the pin file at
+the origin commit must hash to the snapshot's sha256 and carry the same
+`open_pdks` / `ngspice_min_major` (else SOURCE_COMMIT_MISMATCH; unreadable ->
+non-citable), and the snapshot variant must equal every bundled request's
+`models.pdk` (else SOURCE_BUNDLE_INCONSISTENT).
 """
 
 from __future__ import annotations
@@ -946,6 +951,18 @@ def check_pdk_identity(work: Path, b: dict, reports: dict, allow_drift: bool = F
     else:
         pin = htc.load_pins().get("open_pdks")
         req_rev, req_var, source = (str(pin).lower() if pin else None), None, "ingest-checkout (legacy bundle)"
+    if req_var is not None:
+        # The snapshot variant and the variant each bundled (hash-verified)
+        # request selects are both the bundle's own claims: a disagreement is
+        # a contradiction, not executor drift, so no override applies.
+        for n, r in sorted((b.get("requests") or {}).items()):
+            try:
+                got = (json.loads((work / r["request"]).read_text()).get("models") or {}).get("pdk")
+            except (OSError, ValueError, KeyError, TypeError, AttributeError):
+                got = None
+            if got != req_var:
+                refuse("SOURCE_BUNDLE_INCONSISTENT",
+                       f"toolchain snapshot pdk_variant {req_var!r}, but request {n} selects models.pdk {got!r}")
     if req_var is None:
         variants = set()
         for r in (b.get("requests") or {}).values():
@@ -974,6 +991,9 @@ def check_pdk_identity(work: Path, b: dict, reports: dict, allow_drift: bool = F
         if dm and em and dm.group(1).lower() != em.group(1).lower():
             v.append(f"report-{n}.json: contradictory model hashes (provenance.deck {dm.group(1)[:12]} vs "
                      f"environment.models_lib_sha256 {em.group(1)[:12]})")
+        # provenance.deck.content_hash is the MODEL-LIBRARY hash (sm141064.ngspice),
+        # not the netlist hash: verified equal to environment.models_lib_sha256
+        # in committed fleet reports (e.g. report-main-v3.30.json).
         hashes[n] = (em or dm).group(1).lower() if (em or dm) else None
         seen[n] = (name, rev)
         violations += v
@@ -1076,7 +1096,50 @@ def verify_origin_commit(b: dict) -> list[str]:
             refuse("SOURCE_COMMIT_MISMATCH",
                    f"bundle claims clean commit {o['commit'][:7]}, but its {d['binding_config']} "
                    f"entry {d['key']!r} differs from the staged binding")
+    unverified += _verify_toolchain_snapshot(o["commit"], b.get("toolchain"))
     return unverified
+
+
+# Snapshot fields that must equal the pin file at the origin commit. Each is
+# only compared when the snapshot carries it (pre-#283 bundles lack open_pdks).
+_SNAPSHOT_PINS = ("open_pdks", "ngspice_min_major")
+
+
+def _verify_toolchain_snapshot(commit: str, snap) -> list[str]:
+    """The toolchain snapshot (ngspice floor #269, open_pdks pin #283) is
+    bound to the CLEAN origin commit: its pin file there must hash to the
+    recorded sha256 and parse to the recorded pins. Unreadable -> a reason the
+    record is non-citable; a contradiction refuses SOURCE_COMMIT_MISMATCH.
+    Legacy bundles without a snapshot are qualified against the ingest
+    checkout instead (stamped so), so there is nothing to bind here."""
+    if not isinstance(snap, dict):
+        return []
+    path, want = snap.get("file"), snap.get("sha256")
+    if not path or not want:
+        return [f"toolchain snapshot names no pin file/sha256 to verify at {commit[:7]}"]
+    if snap.get("commit") and not _same_commit(str(snap["commit"]), commit):
+        refuse("SOURCE_COMMIT_MISMATCH",
+               f"toolchain snapshot was taken at {str(snap['commit'])[:7]}, but the bundle claims "
+               f"clean commit {commit[:7]}")
+    blob = git_blob(commit, path)
+    if blob is None:
+        return [f"{path} @ {commit[:7]} not readable from this clone"]
+    got = mk.sha256_bytes(blob)
+    if got != want:
+        refuse("SOURCE_COMMIT_MISMATCH",
+               f"bundle claims clean commit {commit[:7]}, but {path} there is {got[:16]}, "
+               f"toolchain snapshot {str(want)[:16]}")
+    try:
+        pins = json.loads(blob)
+    except ValueError:
+        pins = None
+    if not isinstance(pins, dict):
+        refuse("SOURCE_COMMIT_MISMATCH", f"{path} @ {commit[:7]} is not a pin object")
+    for k in _SNAPSHOT_PINS:
+        if k in snap and snap[k] != pins.get(k):
+            refuse("SOURCE_COMMIT_MISMATCH",
+                   f"toolchain snapshot {k} = {snap[k]!r}, but {path} @ {commit[:7]} pins {pins.get(k)!r}")
+    return []
 
 
 def checkout_drift(b: dict, repo: Path | None = None) -> list[str]:
