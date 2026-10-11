@@ -384,15 +384,5 @@
    "agg": "max"
   }
  ],
- "known_drift": [
-  {
-   "doc": "spec/evidence-ledger.md",
-   "cited": "20260910-125341-4805118",
-   "newer": [
-    "20261008-224115765170-7e61c52",
-    "20261010-022609774981-bf851ec"
-   ],
-   "issue": "#252"
-  }
- ]
+ "known_drift": []
 }
