@@ -70,6 +70,12 @@ stretch. Extracted-DUT both-node evidence is **PENDING** (follow-up, coordinate
 with #112); the older records above remain partial node coverage. Reproduce
 with `KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py comparator-kickback`.
 
+> **Evidence pending re-qualification (#288).** The `bf851ec` record's reports
+> show `open_pdks f6eeac7`, not the `sim/toolchain.json` pin `c6d73a35`, so it is
+> not qualified under the exact-revision policy and must not be cited as
+> reference evidence until re-minted on the pin. See
+> [`../qualification-notes/20261011-288-open-pdks-requalification.md`](../qualification-notes/20261011-288-open-pdks-requalification.md).
+
 ### Beating the `meas` resolution floor
 
 ngspice's `meas` returns roughly six significant digits, so differencing two

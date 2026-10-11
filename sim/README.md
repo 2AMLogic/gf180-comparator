@@ -32,7 +32,7 @@ coverage is not available from this bench. Its monotonic-index variant,
 [`comparator-offset-cm-index/`](comparator-offset-cm-index/) (issue #218), is
 executable on the 0.5.0 runner and has a complete unscored 45-point x N=200
 record ([`20261010-130605300890-d8e9253`](comparator-offset-cm-index/records/20261010-130605300890-d8e9253.md)); the
-consumer's rejection verdict stays Unknown.
+consumer's rejection verdict stays Unknown. **Evidence pending re-qualification (#288):** that record's reports show `open_pdks f6eeac7`, not the `sim/toolchain.json` pin, so it is not citable as reference evidence; see [`qualification-notes/20261011-288-open-pdks-requalification.md`](qualification-notes/20261011-288-open-pdks-requalification.md).
 
 A further supplemental feasibility stage,
 [`comparator-offset-tran-extracted-feasibility/`](comparator-offset-tran-extracted-feasibility/)

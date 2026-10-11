@@ -87,6 +87,12 @@ here characterizes the window; the per-point outputs are plumbing only.
 
 ## Full-grid record (measured coverage: complete, 45 of 45 points)
 
+> **Evidence pending re-qualification (#288).** The `d8e9253` record's reports
+> show `open_pdks f6eeac7`, not the `sim/toolchain.json` pin `c6d73a35`, so it is
+> not qualified under the exact-revision policy. It stays unscored; the
+> tolerance-probe plan's `selection_record` is kept as history. See
+> [`../qualification-notes/20261011-288-open-pdks-requalification.md`](../qualification-notes/20261011-288-open-pdks-requalification.md).
+
 Record [`20261010-130605300890-d8e9253`](records/20261010-130605300890-d8e9253.md) (JSON beside it), minted by
 `python3 sim/tools/klt_record.py comparator-offset-cm-index` at clean commit
 `d8e9253` (`mint_cm_index`: scoring-free, append-only). Three requests, one per
