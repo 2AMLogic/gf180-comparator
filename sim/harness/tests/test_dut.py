@@ -252,7 +252,9 @@ class CompatibilityCheckTest(_Fixture):
             )
 
 
-_CTX = {"dut_provenance": "extracted", "schematic_baseline_id": "fixture-dut"}
+_CTX = {"dut_provenance": "extracted", "schematic_baseline_id": "fixture-dut",
+        "pdk": {"variant": "gf180mcuD", "open_pdks_version": "a" * 40},
+        "toolchain": {"pins": {}, "observed": {}, "drift": []}}
 
 
 class PostlayoutDeltaTest(_Fixture):
@@ -287,6 +289,9 @@ class PostlayoutDeltaTest(_Fixture):
                         "dut_provenance": provenance,
                         "dut_id": "fixture-dut",
                         "dirty": False,
+                        "pdk": {"variant": "gf180mcuD",
+                                "open_pdks_version": "a" * 40},
+                        "toolchain": {"pins": {}, "observed": {}, "drift": []},
                     },
                     "testbench": {"manifest_sha256": "m", "netlist_sha256": "n"},
                     "points": [

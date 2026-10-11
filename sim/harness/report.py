@@ -383,6 +383,60 @@ def _methodology_mismatch(tb: Testbench, doc: dict) -> str | None:
     return None
 
 
+def _pdk_provenance(ctx: dict) -> tuple[str | None, str | None]:
+    """``(variant, open_pdks_version)`` a context records, either side
+    ``None`` when absent."""
+    pdk = ctx.get("pdk") or {}
+    return pdk.get("variant") or None, pdk.get("open_pdks_version") or None
+
+
+def _comparison_unqualified(context: dict) -> str | None:
+    """Why THIS run's context cannot host a qualified schematic-baseline
+    comparison (None = qualified). A run that accepted toolchain drift, or
+    whose own PDK provenance is missing, keeps its diagnostics -- but its
+    deltas against a pinned-toolchain baseline would not be like-for-like
+    (see toolchain.py: a different open_pdks hash is a different set of
+    device models, and nothing in the numbers would look wrong)."""
+    variant, version = _pdk_provenance(context)
+    if not variant or not version:
+        return ("comparison run lacks its own PDK provenance "
+                "(variant/open_pdks_version) -- a qualified baseline "
+                "comparison cannot be stated")
+    if (context.get("toolchain") or {}).get("drift"):
+        return ("comparison run itself was taken under accepted toolchain "
+                "drift (`--allow-toolchain-drift`) -- its delta against a "
+                "pinned-toolchain baseline would not be like-for-like")
+    return None
+
+
+def _baseline_unqualified(context: dict, doc: dict) -> str | None:
+    """Why a candidate baseline record's recorded provenance does not qualify
+    against the comparison run's (None = qualified). The PDK variant and the
+    EXACT open_pdks revision must match this run's, and the record must not
+    carry accepted toolchain drift. Missing qualification metadata is
+    unqualified with the miss named -- never assumed fine."""
+    want_variant, want_version = _pdk_provenance(context)
+    have = doc.get("context") or {}
+    have_variant, have_version = _pdk_provenance(have)
+    if not have_variant or not have_version:
+        return ("record lacks PDK provenance (variant/open_pdks_version) -- "
+                "cannot qualify it as a baseline")
+    if have_variant != want_variant:
+        return (f"record PDK variant `{have_variant}` differs from this "
+                f"run's `{want_variant}`")
+    if have_version != want_version:
+        return (f"record open_pdks revision `{have_version}` differs from "
+                f"this run's `{want_version}` -- the hash IS the device "
+                "models (toolchain.py)")
+    chain = have.get("toolchain")
+    if not isinstance(chain, dict) or "drift" not in chain:
+        return "record lacks toolchain provenance (cannot check for accepted drift)"
+    if chain.get("drift"):
+        return ("record was taken under accepted toolchain drift "
+                "(`--allow-toolchain-drift`)")
+    return None
+
+
 def _schematic_baseline(
     tb: Testbench, context: dict
 ) -> tuple[tuple[str, dict, str] | None, list[str]]:
@@ -393,12 +447,21 @@ def _schematic_baseline(
     skipped. A candidate must: be schematic-provenance; carry the declared
     baseline DUT identity (``context['schematic_baseline_id']`` -- extracted
     and schematic netlist hashes legitimately differ, so identity is by
-    declared id, never hash); be non-dirty; be tracked in git; and share the
-    testbench manifest/fragment hashes. ``context['schematic_baseline_record']``
-    pins an exact record id (still validated). Never "newest file wins".
+    declared id, never hash); be non-dirty; be tracked in git; share the
+    testbench manifest/fragment hashes; and be qualified against this run's
+    recorded PDK variant and exact open_pdks revision with no accepted
+    toolchain drift (#301 -- displaying drift is not refusing it). The
+    comparison run's own context must be qualified the same way: a drifted
+    run keeps its diagnostics but presents no baseline delta.
+    ``context['schematic_baseline_record']`` pins an exact record id (still
+    validated -- a pin cannot bypass qualification). Never "newest file
+    wins" among qualifying candidates only.
     """
     want_id = context.get("schematic_baseline_id")
     pinned = context.get("schematic_baseline_record")
+    run_unqualified = _comparison_unqualified(context)
+    if run_unqualified:
+        return None, [run_unqualified]
     if not want_id:
         return None, ["no schematic baseline identity declared for this DUT "
                       "binding (set 'schematic_baseline' in sim/dut.json)"]
@@ -428,12 +491,17 @@ def _schematic_baseline(
         if why:
             rejections.append(f"`{rid}`: {why}")
             continue
+        why = _baseline_unqualified(context, doc)
+        if why:
+            rejections.append(f"`{rid}`: {why}")
+            continue
         if best is None or rid > best[0]:
             best = (rid, doc, path)
     if best is None:
         return None, rejections
     basis = (f"declared baseline DUT `{want_id}`, clean, committed, "
-             "same testbench manifest and fragment hashes"
+             "same testbench manifest and fragment hashes, same PDK variant "
+             "and open_pdks revision, no accepted toolchain drift"
              + ("; pinned by schematic_baseline_record" if pinned else
                 "; newest of the qualifying records"))
     return (best[0], best[1], basis), rejections
@@ -474,10 +542,11 @@ def _postlayout_delta_lines(
             "- **Post-layout delta**: UNAVAILABLE -- NO comparable "
             "schematic-provenance counterpart record exists under records/ "
             "(must be the declared baseline DUT, clean, committed, same "
-            "testbench). The delta this section exists to document cannot be "
-            "computed; this record stands alone, which is weaker evidence than "
-            "the convention asks for."
-            + (" Rejected candidates: " + "; ".join(rejections) + "."
+            "testbench, matching PDK variant and open_pdks revision, and "
+            "carry no accepted toolchain drift). The delta this section "
+            "exists to document cannot be computed; this record stands "
+            "alone, which is weaker evidence than the convention asks for."
+            + (" Disqualifications: " + "; ".join(rejections) + "."
                if rejections else ""),
         ]
     rid, doc, basis = counterpart
