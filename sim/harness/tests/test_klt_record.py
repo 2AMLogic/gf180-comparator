@@ -431,9 +431,18 @@ def _bundle(work: Path) -> dict:
     return json.loads((work / mk.BUNDLE_NAME).read_text())
 
 
+PDK_REV = json.loads((SIM / "toolchain.json").read_text())["open_pdks"]
+
+
+def _prov(rev=PDK_REV, name="gf180mcuD") -> dict:
+    """The executor's provenance.pdk/deck shape, as in committed fleet reports."""
+    return {"pdk": {"name": name, "source": "search root: ~/.volare", "version": f"open_pdks {rev}"},
+            "deck": {"name": "sm141064.ngspice", "content_hash": "sha256:" + "6" * 64}}
+
+
 def _link_env(work: Path, b: dict, r: dict, closure=True, netlist_sha=True) -> dict:
     """The executor's report-to-input linkage for bundled request `r`."""
-    env = {"engine_version": "46", "remote": {"job_id": f"job-{r['request']}"}}
+    env = {"engine_version": "46", "models_lib_sha256": "6" * 64, "remote": {"job_id": f"job-{r['request']}"}}
     if netlist_sha:
         env["netlist_sha256"] = r["netlist_sha256"]
     if closure:
@@ -459,7 +468,8 @@ def _write_reports(work: Path, closure=True, netlist_sha=True) -> None:
                    for p in req["corners"]["process"] for t in req["corners"]["temperature_c"]]
         env = _link_env(work, b, r, closure, netlist_sha)
         (work / f"report-{n}.json").write_text(json.dumps(
-            {"corners": corners, "measurements": [{"name": m} for m in meas], "environment": env}))
+            {"corners": corners, "measurements": [{"name": m} for m in meas], "environment": env,
+             "provenance": _prov()}))
 
 
 def _committed_blob(commit, path):
@@ -1137,6 +1147,7 @@ class MainCoverageGate(unittest.TestCase):
                     rep["corners"].append(dict(rep["corners"][0]))
                 rep["measurements"] = [{"name": x["name"]} for x in req["measurements"]]
                 rep["environment"].update(_link_env(work, b, r))
+                rep["provenance"] = _prov()
                 (work / f"report-{n}.json").write_text(json.dumps(rep))
             err = io.StringIO()
             with mock.patch.object(sys, "stderr", err):
@@ -1216,7 +1227,7 @@ def _cm_index_work(td: Path, n: int = 2) -> Path:
         env["remote"] = {"runner_klt_version": "0.5.0", "runner_compatibility": "match"}
         (work / f"report-{name}.json").write_text(json.dumps(
             {"corners": corners, "measurements": [{"name": m["name"]} for m in req["measurements"]],
-             "environment": env}))
+             "environment": env, "provenance": _prov()}))
     return work
 
 
@@ -1273,8 +1284,9 @@ def _set_engine(work: Path, version, engine="ngspice", only=None, drop=False) ->
         f.write_text(json.dumps(rep))
 
 
-class EngineFloorIngest(unittest.TestCase):
-    """Issue #269: the ngspice floor is enforced on ingested fleet reports."""
+class _IngestMatrix(unittest.TestCase):
+    """Runs a case over both record writers (ordinary and common-mode index)."""
+
 
     def _cases(self):
         yield "ordinary", BENCH, _generate, lambda td, w: _write_reports(w)
@@ -1292,6 +1304,10 @@ class EngineFloorIngest(unittest.TestCase):
     def _no_evidence(self, td, bench):
         ev = td / "evidence" / bench
         return not any((ev / s).exists() and any((ev / s).iterdir()) for s in ("records", "corners", "netlist-snapshots"))
+
+
+class EngineFloorIngest(_IngestMatrix):
+    """Issue #269: the ngspice floor is enforced on ingested fleet reports."""
 
     def test_bundle_snapshots_floor_bound_to_commit(self):
         with tempfile.TemporaryDirectory() as td:
@@ -1383,6 +1399,128 @@ class EngineFloorIngest(unittest.TestCase):
     def test_engine_major_parsing(self):
         self.assertEqual([htc.engine_major(v) for v in ("46", "ngspice-46", "46.1", "ngspice 45")], [46, 46, 46, 45])
         self.assertEqual([htc.engine_major(v) for v in (None, "", "x46", "46x", 46)], [None] * 5)
+
+
+def _set_pdk(work: Path, only=None, drop=False, **kw) -> None:
+    for f in sorted(work.glob("report-*.json")):
+        if only and only not in f.name:
+            continue
+        rep = json.loads(f.read_text())
+        if drop:
+            rep.pop("provenance", None)
+        else:
+            rep["provenance"] = _prov(**kw)
+        f.write_text(json.dumps(rep))
+
+
+class PdkQualificationIngest(_IngestMatrix):
+    """Issue #283: executor-reported open_pdks revision / variant is enforced."""
+
+    def test_bundle_snapshots_pdk_requirement(self):
+        with tempfile.TemporaryDirectory() as td:
+            t = _bundle(_generate(Path(td)))["toolchain"]
+            self.assertEqual((t["open_pdks"], t["pdk_variant"]), (PDK_REV, "gf180mcuD"))
+
+    def test_matching_report_is_citable_and_recorded(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                rc, rec, _ = _ingest(td, work, bench=bench)
+                self.assertEqual(rc, 0)
+                self.assertTrue(rec["citable"], rec["not_citable_reasons"])
+                q = rec["ingest"]["pdk_qualification"]
+                self.assertEqual(q["required"], {"open_pdks": PDK_REV, "pdk_variant": "gf180mcuD"})
+                self.assertEqual(q["observed"], [{"pdk_variant": "gf180mcuD", "open_pdks": PDK_REV}])
+                self.assertEqual((q["required_source"], q["override"], q["model_lib_sha256"]),
+                                 ("source-bundle", False, ["6" * 64]))
+
+    def test_violations_refused_before_any_write(self):
+        cases = {"wrong-revision": dict(rev="f" * 40), "wrong-variant": dict(name="gf180mcuC"),
+                 "malformed": dict(rev="c6d73a"), "absent": dict(drop=True)}
+        for name, kw in cases.items():
+            for label, td, work, bench in self._each():
+                with self.subTest(case=name, writer=label):
+                    _set_pdk(work, **kw)
+                    rc, rec, _ = _ingest(td, work, bench=bench)
+                    self.assertIn("PDK_QUALIFICATION_FAILED", str(rc))
+                    self.assertIsNone(rec)
+                    self.assertTrue(self._no_evidence(td, bench))
+
+    def test_mixed_identities_refused(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                _set_pdk(work, only="v3.30", rev="f" * 40)
+                rc, rec, _ = _ingest(td, work, bench=bench)
+                self.assertIn("PDK_QUALIFICATION_FAILED", str(rc))
+                self.assertIn("mixed PDK identities", str(rc))
+                self.assertIsNone(rec)
+
+    def test_contradictory_model_hashes_refused(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                for f in work.glob("report-*.json"):
+                    rep = json.loads(f.read_text())
+                    rep["environment"]["models_lib_sha256"] = "7" * 64
+                    f.write_text(json.dumps(rep))
+                rc, rec, _ = _ingest(td, work, bench=bench)
+                self.assertIn("contradictory model hashes", str(rc))
+
+    def test_override_retains_non_citable_and_documents_it(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                _set_pdk(work, rev="f" * 40)
+                rc, rec, out = _ingest(td, work, "--allow-pdk-drift", bench=bench)
+                self.assertEqual(rc, 0)
+                self.assertFalse(rec["citable"] or rec["reference"])
+                q = rec["ingest"]["pdk_qualification"]
+                self.assertTrue(q["override"] and q["violations"])
+                self.assertTrue(any("PDK qualification override" in r for r in rec["not_citable_reasons"]))
+
+    def test_override_does_not_degrade_matching_set(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                rc, rec, _ = _ingest(td, work, "--allow-pdk-drift", bench=bench)
+                self.assertTrue(rec["citable"])
+
+    def test_later_pin_change_does_not_alter_bundle_requirement(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                with mock.patch.object(htc, "load_pins", return_value={"open_pdks": "e" * 40, "ngspice_min_major": 46}):
+                    rc, rec, _ = _ingest(td, work, bench=bench)
+                self.assertEqual(rc, 0)
+                self.assertEqual(rec["ingest"]["pdk_qualification"]["required"]["open_pdks"], PDK_REV)
+
+    def test_legacy_bundle_uses_checkout_pin_and_says_so(self):
+        for legacy in ("no-toolchain", "pre-283-toolchain"):
+            for label, td, work, bench in self._each():
+                with self.subTest(legacy=legacy, writer=label):
+                    b = _bundle(work)
+                    if legacy == "no-toolchain":
+                        b.pop("toolchain")
+                    else:
+                        b["toolchain"].pop("open_pdks")
+                        b["toolchain"].pop("pdk_variant")
+                    (work / mk.BUNDLE_NAME).write_text(json.dumps(b, indent=1) + "\n")
+                    rc, rec, _ = _ingest(td, work, bench=bench)
+                    self.assertEqual(rc, 0)
+                    q = rec["ingest"]["pdk_qualification"]
+                    self.assertEqual((q["required_source"], q["required"]["open_pdks"], q["required"]["pdk_variant"]),
+                                     ("ingest-checkout (legacy bundle)", PDK_REV, "gf180mcuD"))
+                    _set_pdk(work, rev="f" * 40)
+                    rc, rec, _ = _ingest(td, work, bench=bench)
+                    self.assertIn("PDK_QUALIFICATION_FAILED", str(rc))
+
+    def test_reproduce_guidance_names_qualification(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                _, rec, _ = _ingest(td, work, bench=bench)
+                md = (td / "evidence" / bench / "records" / f"{rec['record_id']}.md").read_text()
+                line = next(l for l in md.splitlines() if l.startswith("- **Reproduce**"))
+                self.assertIn(f"PDK qualification: required `gf180mcuD` / open_pdks `{PDK_REV}`", line)
+                self.assertIn("every leg matched", line)
+
+    def test_committed_fleet_report_shape_parses(self):
+        rep = json.loads(next((SIM / "comparator-offset-tran/corners").glob("*/report-main-v3.30.json")).read_text())
+        self.assertEqual(kr.report_pdk_identity(rep), ("gf180mcuD", PDK_REV, []))
 
 
 class ReproduceGuidance(unittest.TestCase):
