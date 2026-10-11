@@ -4,6 +4,10 @@ Chronological record of merged pull requests and closed issues. Newest entries a
 
 ### 2026-10-11
 
+- **PR #310**: feat(sim): mismatch-on guard floors for transient offset benches (#309)
+- **PR #308**: feat(sim): re-qualify kickback and cm-index records on the pinned open_pdks via the fleet (#288)
+- **Issue #309** (closed): Add a collapsed-population (mismatch-on) guard to the whole-comparator transient offset bench
+- **Issue #288** (closed): Two citable reference records were simulated with a non-pinned open_pdks revision
 - **PR #306**: docs(sim): mark two records non-qualified under exact open_pdks pin; fleet probe evidence (#288)
 - **PR #304**: fix(signoff): mark positive-node-only kickback fallback as incomplete item-5 coverage
 - **PR #302**: fix: qualify schematic baselines against PDK revision and toolchain drift
