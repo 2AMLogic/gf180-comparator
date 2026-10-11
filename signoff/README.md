@@ -564,8 +564,22 @@ evidence record, is the report's own
 narrative report and its evidence chain are unchanged by this citation
 (read-only wrap, per #80's scope).
 
+**Evidence-chain validation ([#275](https://github.com/2AMLogic/gf180-comparator/issues/275)).**
+Before emitting `pass`, `make_item8_envelope.py` validates
+`measurements/characterization-report.sources.json`: the report must be
+non-empty, contain each required section heading, cite each section's
+declared `sim/*/records/` ids and keep average power explicitly `UNSCORED`;
+every registered record must exist, match its pinned sha256 and declared
+scope (bench, DUT provenance, point count, clean tree). Failures print named
+`evidence-chain:` diagnostics and write nothing, even if the report hash was
+refreshed. The envelope `summary`'s per-row counts are derived from the pinned
+records, so a changed record cannot leave a stale summary. This does not
+require all targets met: disclosed misses still pass. CI runs it as the
+`item8` step of `scripts/run-pdk-free-tests.sh`; regressions are in
+`signoff/tests/test_item8_evidence_chain.py`.
+
 Refresh contract for this citation: the report is the artifact — if it
-changes, re-run `python3 signoff/make_item8_envelope.py` (or its `--check`
+changes (or a registered record is re-pinned in the sources manifest), re-run `python3 signoff/make_item8_envelope.py` (or its `--check`
 mode to detect drift), re-pin the item-8 `content_hash` in
 `block-manifest.json`, and re-grade via `./signoff/regenerate.sh` in one
 change.

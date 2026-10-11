@@ -2,7 +2,7 @@
   "schema_version": 1,
   "kind": "generic",
   "status": "pass",
-  "summary": "T1 item 8: aggregated narrative characterization report, scored against the DR-0002 target-spec table (ratified by the two-key PR #74), every verdict citing its committed sim/ evidence record. The pass asserts the record's existence, currency and evidence chain -- not all-rows-met: offset (whole comparator, 45/45) and noise meet both bounds; decision time misses the stretch at 16/45 schematic corners and, extracted, the target at 7/45; kickback misses target and stretch (schematic and extracted); average power is UNSCORED (clock rate TBD, #125; static power is diagnostic only). Misses stand as recorded, not absorbed.",
+  "summary": "T1 item 8: aggregated narrative characterization report, scored against the DR-0002 target-spec table (ratified by the two-key PR #74), every verdict citing its committed sim/ evidence record. The pass asserts the record's existence, currency and evidence chain (validated against measurements/characterization-report.sources.json: required sections, pinned records and scope) -- not all-rows-met. Rows within bounds, derived from the pinned records: offset (whole comparator, schematic) target 45/45, stretch 45/45; noise target 45/45, stretch 45/45; decision time schematic target 45/45, stretch 29/45, extracted target 38/45, stretch 1/45; kickback schematic both-node target 1/45, stretch 0/45 (positive-node record target 1/45, stretch 0/45), extracted target 0/45, stretch 0/45; average power is UNSCORED (clock rate TBD, #125; static power is diagnostic only). Misses stand as recorded, not absorbed.",
   "source": "measurements/characterization-report.md",
   "provenance": {
     "input": {

@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "comment": "Source manifest for the item-8 characterization narrative (issue #275). signoff/make_item8_envelope.py validates it before writing the envelope. Each record is pinned by sha256 and scope; each required section must exist in the report and cite its declared records by id. summary_key marks the record the envelope's numeric summary is derived from.",
+  "report": "measurements/characterization-report.md",
+  "required_text": {
+    "scored-summary": [
+      "UNSCORED"
+    ]
+  },
+  "records": [
+    {
+      "id": "20260910-124917-4805118",
+      "path": "sim/comparator-offset-mc/records/20260910-124917-4805118.json",
+      "sha256": "sha256:eaae9c29ceae363ad4959498d5638c3287edb0ceb146d66907360d0c3fe24bac",
+      "bench": "comparator-offset-mc",
+      "dut_provenance": "schematic",
+      "points": 45
+    },
+    {
+      "id": "20261010-013540611508-4a4df37",
+      "path": "sim/comparator-offset-tran/records/20261010-013540611508-4a4df37.json",
+      "sha256": "sha256:71d2accea22f666fe08a07cb320918b1f4caa844fb57a7da518a6d89eb8a1a59",
+      "bench": "comparator-offset-tran",
+      "dut_provenance": "schematic",
+      "points": 9
+    },
+    {
+      "id": "20261010-021500046481-d84e59d",
+      "path": "sim/comparator-offset-tran/records/20261010-021500046481-d84e59d.json",
+      "sha256": "sha256:0b865ea0dfab16a3cdbf459f0904c92b7b3455e66c40e89ad6a69240acb871d0",
+      "bench": "comparator-offset-tran",
+      "dut_provenance": "schematic",
+      "points": 45,
+      "summary_key": "offset"
+    },
+    {
+      "id": "20260910-125200-4805118",
+      "path": "sim/comparator-preamp-noise/records/20260910-125200-4805118.json",
+      "sha256": "sha256:fa69eedc19ba736b36d62285494749103499b8ace0fa8fbec43385354687f989",
+      "bench": "comparator-preamp-noise",
+      "dut_provenance": "schematic",
+      "points": 45,
+      "summary_key": "noise"
+    },
+    {
+      "id": "20260910-125206-4805118",
+      "path": "sim/comparator-regeneration/records/20260910-125206-4805118.json",
+      "sha256": "sha256:f3d343e67e21646196c16838d514fae78b91b79d1fdc7ff1f035ee6f2b18cafb",
+      "bench": "comparator-regeneration",
+      "dut_provenance": "schematic",
+      "points": 45,
+      "summary_key": "decision_schematic"
+    },
+    {
+      "id": "20261002-202641-baeffe5",
+      "path": "sim/comparator-regeneration/records/20261002-202641-baeffe5.json",
+      "sha256": "sha256:9dea66adacf01e1d3fb65535a74b14fa07ea146316255a177e6c980a96b9da4a",
+      "bench": "comparator-regeneration",
+      "dut_provenance": "extracted",
+      "points": 45,
+      "summary_key": "decision_extracted"
+    },
+    {
+      "id": "20260910-125341-4805118",
+      "path": "sim/comparator-kickback/records/20260910-125341-4805118.json",
+      "sha256": "sha256:ef9296d627f242286d4f92c94f151ab822087fd15e80bdcb1d92ddd5bcd24d88",
+      "bench": "comparator-kickback",
+      "dut_provenance": "schematic",
+      "points": 45,
+      "summary_key": "kickback_schematic_pnode"
+    },
+    {
+      "id": "20261002-211343-6346fad",
+      "path": "sim/comparator-kickback/records/20261002-211343-6346fad.json",
+      "sha256": "sha256:7b1dcdcfddf1cc6b5c45831f47d13841b2677b21de95b1b4931220f6154214a8",
+      "bench": "comparator-kickback",
+      "dut_provenance": "extracted",
+      "points": 45,
+      "summary_key": "kickback_extracted"
+    },
+    {
+      "id": "20261010-022609774981-bf851ec",
+      "path": "sim/comparator-kickback/records/20261010-022609774981-bf851ec.json",
+      "sha256": "sha256:ae67c7a92d2294c6286c190deb4e78ac0c65388f6c25c68eae7d24afffe28df4",
+      "bench": "comparator-kickback",
+      "dut_provenance": "schematic",
+      "points": 45,
+      "summary_key": "kickback_schematic_both"
+    }
+  ],
+  "sections": [
+    {
+      "id": "scored-summary",
+      "heading": "## Scored summary — five ratified rows",
+      "cites": [
+        "20260910-125206-4805118",
+        "20260910-125341-4805118",
+        "20261002-202641-baeffe5",
+        "20261002-211343-6346fad",
+        "20261010-021500046481-d84e59d",
+        "20261010-022609774981-bf851ec"
+      ]
+    },
+    {
+      "id": "offset",
+      "heading": "### Offset sigma — Monte Carlo on local mismatch",
+      "cites": [
+        "20260910-124917-4805118",
+        "20261010-013540611508-4a4df37",
+        "20261010-021500046481-d84e59d"
+      ]
+    },
+    {
+      "id": "noise",
+      "heading": "### Input-referred noise — preamplifier `.noise`",
+      "cites": [
+        "20260910-125200-4805118"
+      ]
+    },
+    {
+      "id": "decision-time",
+      "heading": "### Decision time vs. overdrive — regeneration bench (and metastability)",
+      "cites": [
+        "20260910-125206-4805118",
+        "20261002-202641-baeffe5"
+      ]
+    },
+    {
+      "id": "kickback",
+      "heading": "### Kickback — decision-edge disturbance into the input",
+      "cites": [
+        "20260910-125341-4805118",
+        "20261002-211343-6346fad",
+        "20261010-022609774981-bf851ec"
+      ]
+    },
+    {
+      "id": "known-gaps",
+      "heading": "## Known gaps (scored as misses, not dropped)",
+      "cites": []
+    },
+    {
+      "id": "not-claimed",
+      "heading": "## What this report does not claim",
+      "cites": []
+    }
+  ]
+}

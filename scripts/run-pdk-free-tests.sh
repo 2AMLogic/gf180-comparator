@@ -89,6 +89,7 @@ step sim-size   "Protected sim/ evidence size budget"            0 "$PY signoff/
 step integrator  "Verify integrator manifest (maturity, paths, ports, area)" 0 "$PY manifests/verify-integrator.py"
 step regrade     "Re-grade the manifest and verify the committed pins" 1 "$PY signoff/verify-report.py"
 step item5       "Item-5 corner-matrix wrapper freshness check"      0 "$PY signoff/make_item5_envelope.py --check"
+step item8       "Item-8 characterization evidence chain + envelope check" 0 "$PY signoff/make_item8_envelope.py --check"
 step routing-tbl "Layout README routing table freshness check"      0 "$PY layout/routing_table.py --check"
 step bench-inventory "sim bench inventory vs characterize.sh coverage" 0 "$PY scripts/check_bench_inventory.py"
 step claim-drift "Published headline claims vs committed records (registry)" 0 "$PY scripts/check_claim_drift.py"
