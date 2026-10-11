@@ -189,7 +189,8 @@ them, regenerated on change". The only candidate, the item-4 LVS envelope,
 pins `design/comparator.spice` (`environment.reference_sha256`) but shows
 layout-vs-netlist equivalence, not that the netlist derives from the
 schematic. `./design/netlist.sh --check` does check that, but it is a script
-whose result is not an envelope and CI does not run it. Citing the LVS report
+whose result is not an envelope; the PDK-free merge gate does not run it
+(a separate non-gating weekly/manual workflow, `selftest.yml`, does). Citing the LVS report
 would flip the grade on a claim it does not show, so the row stays
 `no_evidence`. Tool gap filed:
 [klayout-tools#2844](https://github.com/2AMLogic/klayout-tools/issues/2844).
@@ -627,11 +628,15 @@ Three limits keep the row uncited:
   never runs xschem, so it shows that nobody edited one side without
   re-running `./design/netlist.sh`. It does not show that the netlist is
   xschem's output for those schematics. Only `./design/netlist.sh --check`
-  (xschem + PDK) proves that, and CI does not run it because the job is
-  PDK-free by design.
-- **CI does not run simulations.** `sim/selftest.sh` and `sim/characterize.sh`
-  need ngspice and the PDK, and they are not CI steps.
-- **No CI-produced evidence envelope exists.** CI passes or fails a commit,
+  (xschem + PDK) proves that. The merge-gating job does not run it because it
+  is PDK-free by design; the separate non-gating weekly/manual workflow
+  `.github/workflows/selftest.yml` (#280) does run it, but as a log-only check.
+- **The merge gate runs no simulations.** `sim/selftest.sh` (nominal points
+  plus the sabotage negative control) runs only in that scheduled/manual,
+  non-required workflow. Full characterization (`sim/characterize.sh`, the PVT
+  grids) is not run in CI at all.
+- **No CI-produced evidence envelope exists.** CI (including the scheduled
+  runtime checks, whose output stays in workflow logs) passes or fails a run,
   but no CI run is committed as an envelope the grader reads (tool gap:
   klayout-tools#2844). Committing a generic envelope without a supported
   claim would reverse DR-0003's claim policy.
