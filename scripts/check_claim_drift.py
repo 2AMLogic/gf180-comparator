@@ -181,9 +181,9 @@ def has_token(literal, shown):
     for m in re.finditer(re.escape(shown), literal):
         a, b = m.start(), m.end()
         before, after = literal[:a], literal[b:]
-        if re.search(r"\d$|\d\.$|\.$|\d[eE][+-]?$", before):
+        if re.search(r"\d$|\d\.$|\.$|\d\.?[eE][+-]?$", before):
             continue
-        if re.match(r"\d|\.\d|[eE][+-]?\d", after):
+        if re.match(r"\d|\.\d|\.?[eE][+-]?\d", after):
             continue
         if not shown.startswith("-") and re.search(r"(?<!\d)[-\u2212]$", before):
             continue

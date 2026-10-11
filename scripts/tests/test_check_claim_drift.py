@@ -134,7 +134,8 @@ class ClaimDrift(unittest.TestCase):
         return run(t)
 
     def test_exponent_on_the_left_fails(self):
-        for lit in ("1e3 mV worst ff", "1E+3 mV worst ff", "2.5e-3 mV worst ff"):
+        for lit in ("1e3 mV worst ff", "1E+3 mV worst ff", "2.5e-3 mV worst ff",
+                    "3.e3 mV worst ff", "1.e3 mV worst ff", "1.E-3 mV worst ff"):
             rc, out = self._set_decimals(lit, '"decimals": 0')
             self.assertEqual(rc, 1, lit)
             self.assertIn("claim c1", out)
