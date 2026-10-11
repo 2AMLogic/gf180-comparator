@@ -391,6 +391,13 @@ cover an omitted corner, missing draws, a saturation/incomplete record,
 non-finite derivation, dirty/uncitable provenance, stale DUT, a relaxed bound
 and a missing record. The r2 file stays committed unchanged.
 
+> **Evidence pending re-qualification (#288):** the kickback record named below
+> (`...-bf851ec`) was simulated on `open_pdks f6eeac7`, not the pinned
+> `c6d73a35`. The kickback score in every envelope revision that uses it rests
+> on a non-qualifying revision until re-minted; see
+> `sim/qualification-notes/20261011-288-open-pdks-requalification.md`. No
+> re-scoring or new revision is made by #288's stage-A increment.
+
 **Revision 4 (issue #204): the kickback row is scored on the both-node
 record.** `item5-corner-matrix-<offset-mc id>-<noise id>-<regen id>-<kickback id>-<offset-tran id>-r4.json`
 scores `kickback_1k_peak_mv` on
