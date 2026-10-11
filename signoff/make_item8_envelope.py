@@ -36,12 +36,14 @@ registered record must exist, match its pinned sha256 and declared scope
 or ``historical``/``diagnostic`` context -- and only a ``current`` record may
 carry the ``summary_key`` a scored summary row is derived from; each record
 binds an expected DUT identity (``dut_id``) through the live ``sim/dut.json``
-registry: a schematic record must carry the current bytes of the netlist that
-entry binds (refresh contract: the design changed -- re-run, register the new
-record, re-role the old one), and an extracted record binds through its
-declared committed ``extraction_report`` whose pinned input hash must still
-match the committed layout bytes (the scratch adapted netlist is never
-required to exist or be regenerated); and a current record whose bytes carry
+registry (every role); a ``current`` schematic record must carry the current
+bytes of the netlist that entry binds, and a ``current`` extracted record
+binds through its declared committed ``extraction_report`` whose pinned input
+hash must still match the committed layout bytes (the scratch adapted netlist
+is never required to exist or be regenerated). ``historical``/``diagnostic``
+records keep the identity checks but are not compared with today's bytes, so
+the refresh contract is satisfiable: the design changed -- re-run, register
+the new record as ``current``, re-role the old one; and a current record whose bytes carry
 fleet provenance fields must be explicitly citable reference evidence with no
 refusal reasons (legacy local records carry no fleet fields and qualify
 through their committed context instead). A SHA pin proves which record bytes
@@ -260,11 +262,14 @@ def _record_dut_fields(rec: dict) -> dict:
             for k in ("dut_id", "dut_provenance", "dut_netlist", "dut_netlist_sha256")}
 
 
-def extraction_problems(root: Path, ent: dict, rid: str) -> list[str]:
+def extraction_problems(root: Path, ent: dict, rid: str, current_role: bool = True) -> list[str]:
     """Bind an extracted record through its declared committed extraction
     report (#296). The scratch adapted netlist is never required to exist or
     be regenerated: the report pins the extraction's input layout hash, and
-    that hash must still match the committed layout bytes. If the committed
+    for a ``current`` record that hash must still match the committed layout
+    bytes (freshness). A ``historical``/``diagnostic`` record must still
+    declare a report that pins an input, but is not held to today's layout
+    bytes -- it is context for the design it ran against. If the committed
     metadata cannot establish the identity, a named diagnostic says so --
     identity is never inferred from the word "extracted"."""
     rep_rel = ent.get("extraction_report")
@@ -288,6 +293,8 @@ def extraction_problems(root: Path, ent: dict, rid: str) -> list[str]:
     if not isinstance(pinned, str) or not pinned:
         return [f"record {rid}: declared extraction report {rep_rel} pins no input "
                 "content_hash; committed metadata cannot establish the DUT identity"]
+    if not current_role:
+        return []
     layout = root / layout_rel
     if not layout.is_file():
         return [f"record {rid}: extracted layout {layout_rel} is missing; "
@@ -300,16 +307,25 @@ def extraction_problems(root: Path, ent: dict, rid: str) -> list[str]:
     return []
 
 
-def dut_binding_problems(root: Path, rec: dict, ent: dict, want: str, rid: str) -> list[str]:
+def dut_binding_problems(root: Path, rec: dict, ent: dict, want: str, rid: str,
+                         current_role: bool = True) -> list[str]:
     """Bind a record to the DUT the manifest declares it characterizes (#296).
 
-    The record's own identity metadata must name that DUT, the id must resolve
-    in the live ``sim/dut.json`` registry with the declared provenance, and the
-    record's stamped netlist must be the bytes that entry binds today: a
-    schematic record is checked against the current committed netlist bytes
-    (refresh contract: the design changed -- re-run, register the new record,
-    re-role the old one), an extracted record through
-    ``extraction_problems``."""
+    Every role: the record's own identity metadata must name that DUT, the id
+    must resolve in the live ``sim/dut.json`` registry with the declared
+    provenance, and the record's stamped netlist path must be the one that
+    entry binds. A schematic record must stamp a ``dut_netlist_sha256``.
+
+    Freshness (``current`` role only): the stamped netlist must be the bytes
+    that entry binds *today* -- a schematic record is checked against the
+    current committed netlist bytes, an extracted record through
+    ``extraction_problems``' layout-hash check. ``historical``/``diagnostic``
+    records are context for the design they ran against and are not compared
+    with today's bytes; that is what makes the refresh contract satisfiable
+    (the design changed -- re-run, register the new record as ``current``,
+    re-role the old one ``historical``/``diagnostic``). They still cannot
+    back a scored summary row (``validate_chain`` refuses their
+    ``summary_key``)."""
     probs: list[str] = []
     f = _record_dut_fields(rec)
     if not f["dut_id"]:
@@ -342,20 +358,23 @@ def dut_binding_problems(root: Path, rec: dict, ent: dict, want: str, rid: str) 
         probs.append(f"record {rid}: DUT netlist {f['dut_netlist']!r} != the netlist "
                      f"declared DUT {want!r} binds ({netlist_rel})")
     if entry.get("provenance") == "extracted":
-        return probs + extraction_problems(root, ent, rid)
+        return probs + extraction_problems(root, ent, rid, current_role)
+    if not f["dut_netlist_sha256"]:
+        return probs + [f"record {rid}: bytes declare no dut_netlist_sha256; cannot bind "
+                        f"them to the {netlist_rel} bytes they ran against"]
+    if not current_role:
+        return probs
     if not netlist.is_file():
         return probs + [f"record {rid}: declared DUT netlist {netlist_rel} is missing; "
                         "cannot verify the schematic refresh contract"]
     # Records stamp the bare hex digest (the same convention
     # make_item5_envelope.py's validate_offset_tran compares against).
     current = _sha_file(netlist).split(":", 1)[1]
-    if not f["dut_netlist_sha256"]:
-        probs.append(f"record {rid}: bytes declare no dut_netlist_sha256; cannot bind "
-                     f"them to the current {netlist_rel} bytes")
-    elif f["dut_netlist_sha256"] != current:
+    if f["dut_netlist_sha256"] != current:
         probs.append(f"record {rid}: dut_netlist_sha256 {f['dut_netlist_sha256']} != "
                      f"the current {netlist_rel} bytes (sha256:{current}) -- refresh contract: "
-                     "the design changed; re-run, register the new record, re-role this one")
+                     "the design changed; re-run, register the new record as current, "
+                     "re-role this one historical/diagnostic")
     return probs
 
 
@@ -540,8 +559,11 @@ def validate_chain(root: Path = REPO_ROOT) -> tuple[dict, dict[str, tuple[int, i
         # reasons; every record is bound to the DUT identity its entry declares.
         if role == "current" and _fleet_schema(rec):
             problems.extend(fleet_problems(rec, rid))
+        # Freshness against today's bytes applies to current records only; a
+        # malformed role (None) is held to the strict current checks.
         if want_dut is not None:
-            problems.extend(dut_binding_problems(root, rec, ent, want_dut, rid))
+            problems.extend(dut_binding_problems(root, rec, ent, want_dut, rid,
+                                                 current_role=role in ("current", None)))
         # Coverage (distinct expected PVT corners) before any summary is derived.
         want, gprobs = expected_grid(ent, rid)
         problems.extend(gprobs)

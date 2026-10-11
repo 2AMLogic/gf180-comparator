@@ -576,12 +576,19 @@ scope (bench, DUT provenance, point count, clean tree). Source qualification
 registered record also declares a `role` — `current` scored evidence, or
 `historical`/`diagnostic` context (only a `current` record may carry a
 `summary_key`) — and the `dut_id` it is expected to characterize, resolved
-against the live `sim/dut.json` registry: a schematic record must stamp the
-current bytes of that entry's netlist (the refresh contract: the design
-changed — re-run, register the new record, re-role the old one), an extracted
-record binds through its committed `extraction_report` whose pinned input
-hash must still match the committed layout bytes (the regenerated scratch
-netlist is never required), and a `current` record whose bytes carry fleet
+against the live `sim/dut.json` registry. Every role must name that DUT, its
+registry provenance and netlist path (schematic records also stamp a
+`dut_netlist_sha256`; extracted records declare a committed
+`extraction_report` that pins an input layout hash). Freshness against
+today's bytes is checked on `current` records only: a `current` schematic
+record must stamp the current bytes of that entry's netlist, and a `current`
+extracted record's `extraction_report` input hash must still match the
+committed layout bytes (the regenerated scratch netlist is never required).
+`historical`/`diagnostic` records are context for the design they ran
+against and are not compared with today's bytes — that is what makes the
+refresh contract satisfiable: the design changed — re-run, register the new
+record as `current`, re-role the old one `historical`/`diagnostic` (it stays
+citable as context but can never back a scored summary row). A `current` record whose bytes carry fleet
 provenance fields must be citable reference evidence with no refusal reasons
 (legacy local records carry no fleet fields and qualify through their
 committed context). A SHA pin proves which record bytes were read; these

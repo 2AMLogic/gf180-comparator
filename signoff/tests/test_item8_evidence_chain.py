@@ -474,6 +474,102 @@ class SourceQualification(Base):
         # ...while the not-re-run schematic records are still rejected
         self.assertTrue(any("refresh contract" in p for p in probs), probs)
 
+    def _restamp_current_schematic(self, man: dict, new_hex: str) -> list[str]:
+        """Model re-running every current schematic record against new design
+        bytes: stamp the new netlist hash (fleet `dut` or legacy `context`)
+        and re-pin. Returns the re-stamped record ids."""
+        done = []
+        for ent in man["records"]:
+            if ent["role"] != "current" or ent["dut_provenance"] != "schematic":
+                continue
+            path = self.root / ent["path"]
+            rec = json.loads(path.read_text())
+            holder = rec["dut"] if isinstance(rec.get("dut"), dict) and \
+                "dut_netlist_sha256" in rec["dut"] else rec["context"]
+            holder["dut_netlist_sha256"] = new_hex
+            path.write_text(json.dumps(rec))
+            ent["sha256"] = _sha(path)
+            done.append(ent["id"])
+        self.write_manifest(man)
+        return done
+
+    def test_full_refresh_procedure_passes(self) -> None:
+        # The whole contract the diagnostics name: the design changes, every
+        # current schematic record is re-run (new hash stamped, re-pinned),
+        # and the historical/diagnostic context records are left exactly as
+        # they were -- still stamping the OLD netlist hash. The chain passes:
+        # context records are not held to today's bytes.
+        man = self.manifest()
+        ctx = {e["id"]: (self.root / e["path"]).read_bytes()
+               for e in man["records"] if e["role"] != "current"}
+        self.assertEqual(set(ctx), {"20260910-124917-4805118", "20261010-013540611508-4a4df37"})
+        (self.root / "design/comparator.spice").write_text("* changed design bytes\n")
+        new = hashlib.sha256((self.root / "design/comparator.spice").read_bytes()).hexdigest()
+        done = self._restamp_current_schematic(man, new)
+        self.assertEqual(len(done), 5, done)
+        self.assertEqual(self.problems(), [])
+        for rid, raw in ctx.items():  # untouched, and still stale vs today's design
+            ent = self.find(self.manifest(), rid)
+            self.assertEqual((self.root / ent["path"]).read_bytes(), raw)
+            self.assertNotEqual(M8._record_dut_fields(json.loads(raw))["dut_netlist_sha256"], new)
+        self.assertEqual(self.cli("--check").returncode, 0)
+
+    def test_stale_current_record_still_rejected_in_refresh(self) -> None:
+        # same refresh, but one current record is NOT re-run: only it fails,
+        # and only its diagnostic tells the author to re-role it.
+        man = self.manifest()
+        (self.root / "design/comparator.spice").write_text("* changed design bytes\n")
+        new = hashlib.sha256((self.root / "design/comparator.spice").read_bytes()).hexdigest()
+        self._restamp_current_schematic(man, new)
+        man = self.manifest()
+        ent = self.find(man, "noise")
+        shutil.copyfile(REPO_ROOT / ent["path"], self.root / ent["path"])  # the stale bytes
+        ent["sha256"] = _sha(self.root / ent["path"])
+        self.write_manifest(man)
+        probs = self.problems()
+        self.assertEqual(len(probs), 1, probs)
+        self.assertTrue(probs[0].startswith(f"record {ent['id']}: dut_netlist_sha256"), probs)
+        self.assertIn("re-role this one historical/diagnostic", probs[0])
+
+    def test_rerolled_record_exempt_from_freshness_only(self) -> None:
+        # re-roling a stale record exempts it from today's-bytes freshness and
+        # nothing else: identity is still checked for every role.
+        (self.root / "design/comparator.spice").write_text("* changed design bytes\n")
+        man = self.manifest()
+        ent = self.find(man, "noise")
+        rec = json.loads((self.root / ent["path"]).read_text())
+        cur = M8.dut_binding_problems(self.root, rec, ent, "comparator-dr0001", ent["id"])
+        self.assertTrue(any("refresh contract" in p for p in cur), cur)
+        hist = M8.dut_binding_problems(self.root, rec, ent, "comparator-dr0001", ent["id"],
+                                       current_role=False)
+        self.assertEqual(hist, [])
+        wrong = M8.dut_binding_problems(self.root, rec, ent, "comparator-dr0004-cascode-exp",
+                                        ent["id"], current_role=False)
+        self.assertTrue(any("manifest-declared 'comparator-dr0004-cascode-exp'" in p
+                            for p in wrong), wrong)
+        del rec["context"]["dut_netlist_sha256"]
+        unstamped = M8.dut_binding_problems(self.root, rec, ent, "comparator-dr0001", ent["id"],
+                                            current_role=False)
+        self.assertTrue(any("declare no dut_netlist_sha256" in p for p in unstamped), unstamped)
+
+    def test_context_record_identity_still_checked(self) -> None:
+        # a historical record bound to the wrong DUT is rejected in the chain.
+        man = self.manifest()
+        ent = self.find(man, "20261010-013540611508-4a4df37")
+        ent["dut_id"] = "comparator-dr0004-cascode-exp"
+        self.write_manifest(man)
+        self.assertRejected("record 20261010-013540611508-4a4df37: dut id")
+
+    def test_extracted_context_record_exempt_from_layout_freshness(self) -> None:
+        # an extracted record re-roled historical keeps its extraction-report
+        # declaration check but is not held to today's layout bytes.
+        (self.root / "layout/comparator.gds").write_bytes(b"resynthesized layout")
+        ent = self.find(self.manifest(), "decision_extracted")
+        self.assertTrue(M8.extraction_problems(self.root, ent, ent["id"]))
+        self.assertEqual(M8.extraction_problems(self.root, ent, ent["id"], current_role=False), [])
+        bare = {k: v for k, v in ent.items() if k != "extraction_report"}
+        self.assertTrue(M8.extraction_problems(self.root, bare, ent["id"], current_role=False))
+
     # -- extracted DUT binding (committed extraction provenance)
 
     def test_extracted_checked_without_scratch_netlist(self) -> None:

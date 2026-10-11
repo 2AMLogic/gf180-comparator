@@ -45,9 +45,6 @@ def make_tree(root: Path) -> None:
                 WRAP5.NETLIST, "measurements/characterization-report.md",
                 "measurements/characterization-report.item8.json",
                 "measurements/characterization-report.sources.json",  # #275
-                # everything make_item8_envelope.py's validation reads:
-                "sim/harness/corners.py",  # #289: authoritative PVT grid
-                "scripts/check_claim_drift.py", "spec/claim-registry.json",  # #293
                 "sim/dut.json", "layout/comparator.gds",  # #296: DUT identity
                 "layout/lvs/comparator.extract-rc.json"):  # #296: extracted binding
         dst = root / rel
