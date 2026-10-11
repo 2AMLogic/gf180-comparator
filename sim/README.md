@@ -292,6 +292,8 @@ covered automatically:
 | `sim/<experiment>/yield/**` | Monte-Carlo yield evidence |
 | `sim/<experiment>/probes/**` | committed feasibility probe artifacts (reports, logs, refusals, and the `sources/` / `extract/` copies bundled into each probe) |
 | `sim/corner-matrix/**/*.json` | item-5 corner-matrix revision envelopes |
+| `layout/pex/artifacts/parasitic-attribution/<run-id>/**` | committed parasitic-attribution run archives (whole subtree, issue [#266](https://github.com/2AMLogic/gf180-comparator/issues/266)) |
+| `layout/pex/artifacts/ground-c-budget/<run-id>/**` | committed ground-C budget run archives (whole subtree) |
 
 Not protected: testbenches, `sim/harness/` and other tooling, experiment
 `README.md` files, DUT and configuration sources, mutable `layout/` reports,
@@ -307,6 +309,13 @@ signoff evidence: probes mint no reference record, are not in the signoff
 manifest, and signoff eligibility is unchanged. Editable testbench and DUT
 sources stay outside `probes/`; correct a probe by adding a new probe
 identifier and updating citations.
+
+**Parasitic-study archives.** `<run-id>` is `YYYYMMDD-HHMMSS-<hex sha>`; only
+those run directories under the two roots above are immutable, so the family
+`README.md`, the study code, current `layout/` reports and other artifact
+families stay editable. The size budget (`signoff/check_sim_size_budget.py`)
+enumerates these roots too, with the same thresholds and allowlist. Correct an
+archived run by adding a new run identifier, never by overwriting.
 
 **Correcting evidence.** There is no allowlist or exception file. A wrong or
 superseded result is corrected by adding a NEW run (a fresh `<record-id>`) or a

@@ -14,9 +14,11 @@ import importlib.util
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -64,7 +66,33 @@ def base_env() -> dict[str, str]:
         "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@example.invalid",
         "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@example.invalid",
     })
+    env.update(GIT_QUIET_MAINTENANCE)
     return env
+
+
+# Newer git can spawn detached auto-gc/maintenance after `git commit`; that
+# background process keeps writing into .git and races TemporaryDirectory
+# teardown (CI: OSError ENOTEMPTY on <tmp>/.git). Keep the fixtures synchronous.
+GIT_QUIET_MAINTENANCE = {
+    "GIT_CONFIG_COUNT": "3",
+    "GIT_CONFIG_KEY_0": "gc.auto", "GIT_CONFIG_VALUE_0": "0",
+    "GIT_CONFIG_KEY_1": "maintenance.auto", "GIT_CONFIG_VALUE_1": "false",
+    "GIT_CONFIG_KEY_2": "gc.autoDetach", "GIT_CONFIG_VALUE_2": "false",
+}
+
+
+def rmtree_retry(path: str, attempts: int = 5) -> None:
+    """rmtree that tolerates a transient writer (retry, then raise)."""
+    for i in range(attempts):
+        try:
+            shutil.rmtree(path)
+            return
+        except FileNotFoundError:
+            return
+        except OSError:
+            if i == attempts - 1:
+                raise
+            time.sleep(0.2 * (i + 1))
 
 
 class Repo:
@@ -98,9 +126,9 @@ class Repo:
 
 class Base(unittest.TestCase):
     def setUp(self):
-        self._tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(self._tmp.cleanup)
-        self.r = Repo(Path(self._tmp.name))
+        tmp = tempfile.mkdtemp()
+        self.addCleanup(rmtree_retry, tmp)
+        self.r = Repo(Path(tmp))
         for rel in PROTECTED + UNPROTECTED:
             self.r.write(rel, f"original {rel}\n")
         self.base = self.r.commit("baseline")
@@ -494,6 +522,88 @@ class CiBaselineTests(Base):
         rc, out = self.ci(GITHUB_EVENT_NAME="push",
                           GITHUB_EVENT_PATH=str(self.r.root / "missing-event.json"))
         self.assertEqual(rc, 2, out)
+
+
+ARCH_PA = "layout/pex/artifacts/parasitic-attribution/20261010-120720-230574b"
+ARCH_GC = "layout/pex/artifacts/ground-c-budget/20261010-154019-b9fff0f"
+ARCHIVED = [
+    ARCH_PA + "/attribution.json",
+    ARCH_PA + "/ctrl-ctr0/ladder-tt.report.json",
+    ARCH_PA + "/README.md",
+    ARCH_PA + "/sources/netlist.cir",
+    ARCH_GC + "/README.md",
+    ARCH_GC + "/stage1/manifest.txt",
+]
+ARCH_EDITABLE = [
+    "layout/pex/artifacts/parasitic-attribution/README.md",
+    "layout/pex/artifacts/ground-c-budget/README.md",
+    "layout/pex/parasitic_attribution.py",
+    "layout/reports/drc-summary.json",
+    "layout/pex/artifacts/measure/schematic/summary.json",
+    "layout/pex/artifacts/preamp-noise/record.json",
+    "layout/pex/artifacts/combined-budget/20261010-233444-c49a3f1/README.md",
+    "layout/pex/artifacts/parasitic-attribution/notes/x.json",
+]
+
+
+class ArchiveRootTests(Base):
+    """Parasitic-study run archives are immutable (issue #266)."""
+
+    def setUp(self):
+        super().setUp()
+        for rel in ARCHIVED + ARCH_EDITABLE:
+            self.r.write(rel, f"original {rel}\n")
+        self.base = self.r.commit("archives")
+
+    def test_policy(self):
+        for p in ARCHIVED:
+            self.assertTrue(CHECK.is_protected(p), p)
+        for p in ARCH_EDITABLE:
+            self.assertFalse(CHECK.is_protected(p), p)
+        self.assertFalse(CHECK.is_protected(ARCH_PA))
+        self.assertFalse(CHECK.is_protected(
+            "layout/pex/artifacts/ground-c-budget/20261011-000000-abc/x.json"))
+        self.assertTrue(CHECK.is_protected(
+            "layout/pex/artifacts/ground-c-budget/20261011-000000-abcdef0/a/b/c.bin"))
+
+    def test_modification_deletion_fail(self):
+        for rel in ARCHIVED:
+            with self.subTest(rel=rel):
+                self.r.git("checkout", "-q", "-B", "w1", self.base)
+                self.r.write(rel, "rewritten\n")
+                self.r.commit()
+                self.assertFailsNaming(self.check(), rel, "modified")
+                self.r.git("checkout", "-q", "-B", "w2", self.base)
+                self.r.git("rm", "-q", rel)
+                self.r.commit()
+                self.assertFailsNaming(self.check(), rel, "deleted")
+
+    def test_rename_fails(self):
+        rel = ARCHIVED[0]
+        self.r.git("mv", rel, rel + ".moved")
+        self.r.commit()
+        self.assertFailsNaming(self.check(), rel, "moved/renamed")
+
+    def test_mode_change_fails(self):
+        os.chmod(self.r.root / ARCHIVED[1], 0o755)
+        self.r.commit()
+        self.assertFailsNaming(self.check(), ARCHIVED[1], "mode changed")
+
+    def test_symlink_replacement_fails(self):
+        (self.r.root / ARCHIVED[0]).unlink()
+        os.symlink("elsewhere.json", self.r.root / ARCHIVED[0])
+        self.r.commit()
+        self.assertFailsNaming(self.check(), ARCHIVED[0], "type changed (file -> symlink)")
+
+    def test_new_run_and_editable_edits_pass(self):
+        self.r.write("layout/pex/artifacts/parasitic-attribution/20261011-090000-1234567/a.json")
+        self.r.write("layout/pex/artifacts/ground-c-budget/20261011-090000-1234567/r/b.json")
+        for rel in ARCH_EDITABLE:
+            self.r.write(rel, "edited\n")
+        self.r.commit()
+        rc, out = self.check()
+        self.assertEqual(rc, 0, out)
+        self.assertIn("2 protected path(s) added", out)
 
 
 class WorkflowWiringTests(unittest.TestCase):
