@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Size budget for protected sim/ evidence (issue #246). Stdlib only, PDK-free.
+"""Size budget for protected evidence (issue #246; archives #266). Stdlib only, PDK-free.
 
 Protected `sim/` evidence is append-only (sim/README.md), so every committed
 byte is permanent and is paid for by every clone. This guard reads the sizes of
@@ -10,13 +10,16 @@ to *protected* paths (same path policy as check_append_only_evidence.py):
     5 .. 25 MiB     WARN  (listed; exit 0)
     > 25 MiB        FAIL  unless the path has an allowlist entry with a reason
 
+Protected roots are sim/ plus the parasitic-study archive run directories
+(layout/pex/artifacts/{parasitic-attribution,ground-c-budget}/<run-id>/**).
+
 Allowlist: signoff/sim_size_allowlist.json, {"<path>": "<reason>"}. An entry
 with an empty reason fails. An allowlisted file is exempt from WARN and FAIL
 and is reported as grandfathered. An entry naming a path that is not a tracked
 protected file is stale and fails (keeps the list honest). Existing large
 files are grandfathered by listing them; none are ever modified or moved.
 
-The largest tracked sim/** files are always listed (top 10).
+The largest tracked protected-root files are always listed (top 10).
 
 Usage:
     python3 signoff/check_sim_size_budget.py [--rev REV] [--allowlist FILE]
@@ -40,18 +43,22 @@ HERE = Path(__file__).resolve().parent
 DEFAULT_ALLOWLIST = HERE / "sim_size_allowlist.json"
 
 
-def _is_protected():
+def _load_policy():
     spec = importlib.util.spec_from_file_location(
         "_append_only_policy", HERE / "check_append_only_evidence.py")
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
-    return mod.is_protected
+    return mod.is_protected, tuple(mod.PROTECTED_PATHSPECS)
 
 
-def tree_sizes(repo: Path, rev: str) -> dict[str, int]:
-    """{path: size in bytes} for every blob under sim/ in `rev`."""
+def tree_sizes(repo: Path, rev: str, pathspecs=("sim",)) -> dict[str, int]:
+    """{path: size in bytes} for every blob under `pathspecs` in `rev`.
+
+    Defaults to sim/; main() passes every protected root (sim/ plus the
+    parasitic-study archive families, issue #266).
+    """
     proc = subprocess.run(
-        ["git", "ls-tree", "-r", "-l", "-z", "--full-tree", rev, "--", "sim"],
+        ["git", "ls-tree", "-r", "-l", "-z", "--full-tree", rev, "--", *pathspecs],
         cwd=repo, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if proc.returncode != 0:
         raise RuntimeError(proc.stderr.decode(errors="replace").strip())
@@ -113,12 +120,13 @@ def main(argv: list[str] | None = None) -> int:
         top = subprocess.run(["git", "rev-parse", "--show-toplevel"], cwd=args.repo,
                              check=True, stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE).stdout.decode().strip()
-        sizes = tree_sizes(Path(top), args.rev)
+        is_protected, pathspecs = _load_policy()
+        sizes = tree_sizes(Path(top), args.rev, pathspecs)
         allow = load_allowlist(Path(args.allowlist))
     except (RuntimeError, ValueError, OSError, subprocess.CalledProcessError) as exc:
         print(f"ERROR: sim size budget cannot run: {exc}", file=sys.stderr)
         return 2
-    failures, warnings, grand = evaluate(sizes, allow, _is_protected())
+    failures, warnings, grand = evaluate(sizes, allow, is_protected)
 
     print(f"sim size budget: warn > {WARN_BYTES // MIB} MiB, fail > {FAIL_BYTES // MIB} MiB "
           f"(protected paths; {args.rev})")

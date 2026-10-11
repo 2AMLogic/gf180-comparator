@@ -44,6 +44,10 @@ def run_repo(size: int, allow: dict | None, path: str = BIG):
         return rc, out.getvalue()
 
 
+ARCH = "layout/pex/artifacts/ground-c-budget/20261010-154019-b9fff0f/big.json"
+ARCH_EDITABLE = "layout/pex/artifacts/ground-c-budget/README.md"
+
+
 class SizeBudget(unittest.TestCase):
     def test_under_budget(self):
         rc, out = run_repo(1 * MIB, None)
@@ -78,6 +82,22 @@ class SizeBudget(unittest.TestCase):
 
     def test_unprotected_path_not_budgeted(self):
         rc, _ = run_repo(26 * MIB, None, path="sim/comparator-x/testbench/big.spice")
+        self.assertEqual(rc, 0)
+
+    def test_archive_oversized_blob_fails(self):
+        rc, out = run_repo(26 * MIB, None, path=ARCH)
+        self.assertEqual(rc, 1)
+        self.assertIn(ARCH, out)
+
+    def test_archive_warn_and_grandfather(self):
+        rc, out = run_repo(6 * MIB, None, path=ARCH)
+        self.assertEqual((rc, "WARN" in out), (0, True))
+        rc, out = run_repo(26 * MIB, {ARCH: "diagnostic grid, cited by study"}, path=ARCH)
+        self.assertEqual(rc, 0)
+        self.assertIn("GRANDFATHERED", out)
+
+    def test_archive_unprotected_sibling_not_budgeted(self):
+        rc, _ = run_repo(26 * MIB, None, path=ARCH_EDITABLE)
         self.assertEqual(rc, 0)
 
     def test_committed_allowlist_passes_on_repo(self):

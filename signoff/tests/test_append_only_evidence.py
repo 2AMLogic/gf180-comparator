@@ -496,6 +496,88 @@ class CiBaselineTests(Base):
         self.assertEqual(rc, 2, out)
 
 
+ARCH_PA = "layout/pex/artifacts/parasitic-attribution/20261010-120720-230574b"
+ARCH_GC = "layout/pex/artifacts/ground-c-budget/20261010-154019-b9fff0f"
+ARCHIVED = [
+    ARCH_PA + "/attribution.json",
+    ARCH_PA + "/ctrl-ctr0/ladder-tt.report.json",
+    ARCH_PA + "/README.md",
+    ARCH_PA + "/sources/netlist.cir",
+    ARCH_GC + "/README.md",
+    ARCH_GC + "/stage1/manifest.txt",
+]
+ARCH_EDITABLE = [
+    "layout/pex/artifacts/parasitic-attribution/README.md",
+    "layout/pex/artifacts/ground-c-budget/README.md",
+    "layout/pex/parasitic_attribution.py",
+    "layout/reports/drc-summary.json",
+    "layout/pex/artifacts/measure/schematic/summary.json",
+    "layout/pex/artifacts/preamp-noise/record.json",
+    "layout/pex/artifacts/combined-budget/20261010-233444-c49a3f1/README.md",
+    "layout/pex/artifacts/parasitic-attribution/notes/x.json",
+]
+
+
+class ArchiveRootTests(Base):
+    """Parasitic-study run archives are immutable (issue #266)."""
+
+    def setUp(self):
+        super().setUp()
+        for rel in ARCHIVED + ARCH_EDITABLE:
+            self.r.write(rel, f"original {rel}\n")
+        self.base = self.r.commit("archives")
+
+    def test_policy(self):
+        for p in ARCHIVED:
+            self.assertTrue(CHECK.is_protected(p), p)
+        for p in ARCH_EDITABLE:
+            self.assertFalse(CHECK.is_protected(p), p)
+        self.assertFalse(CHECK.is_protected(ARCH_PA))
+        self.assertFalse(CHECK.is_protected(
+            "layout/pex/artifacts/ground-c-budget/20261011-000000-abc/x.json"))
+        self.assertTrue(CHECK.is_protected(
+            "layout/pex/artifacts/ground-c-budget/20261011-000000-abcdef0/a/b/c.bin"))
+
+    def test_modification_deletion_fail(self):
+        for rel in ARCHIVED:
+            with self.subTest(rel=rel):
+                self.r.git("checkout", "-q", "-B", "w1", self.base)
+                self.r.write(rel, "rewritten\n")
+                self.r.commit()
+                self.assertFailsNaming(self.check(), rel, "modified")
+                self.r.git("checkout", "-q", "-B", "w2", self.base)
+                self.r.git("rm", "-q", rel)
+                self.r.commit()
+                self.assertFailsNaming(self.check(), rel, "deleted")
+
+    def test_rename_fails(self):
+        rel = ARCHIVED[0]
+        self.r.git("mv", rel, rel + ".moved")
+        self.r.commit()
+        self.assertFailsNaming(self.check(), rel, "moved/renamed")
+
+    def test_mode_change_fails(self):
+        os.chmod(self.r.root / ARCHIVED[1], 0o755)
+        self.r.commit()
+        self.assertFailsNaming(self.check(), ARCHIVED[1], "mode changed")
+
+    def test_symlink_replacement_fails(self):
+        (self.r.root / ARCHIVED[0]).unlink()
+        os.symlink("elsewhere.json", self.r.root / ARCHIVED[0])
+        self.r.commit()
+        self.assertFailsNaming(self.check(), ARCHIVED[0], "type changed (file -> symlink)")
+
+    def test_new_run_and_editable_edits_pass(self):
+        self.r.write("layout/pex/artifacts/parasitic-attribution/20261011-090000-1234567/a.json")
+        self.r.write("layout/pex/artifacts/ground-c-budget/20261011-090000-1234567/r/b.json")
+        for rel in ARCH_EDITABLE:
+            self.r.write(rel, "edited\n")
+        self.r.commit()
+        rc, out = self.check()
+        self.assertEqual(rc, 0, out)
+        self.assertIn("2 protected path(s) added", out)
+
+
 class WorkflowWiringTests(unittest.TestCase):
     """The Signoff workflow passes event SHAs via env and fetches full history."""
 
