@@ -4,6 +4,40 @@ Chronological record of merged pull requests and closed issues. Newest entries a
 
 ### 2026-10-11
 
+- **PR #304**: fix(signoff): mark positive-node-only kickback fallback as incomplete item-5 coverage
+- **PR #302**: fix: qualify schematic baselines against PDK revision and toolchain drift
+- **PR #300**: signoff: require qualified DUT-bound sources for item-8 characterization claims
+- **PR #299**: Fix wrapper fixture missing corners.py and claim-check deps (#295)
+- **PR #298**: Validate characterization narrative numbers before issuing item-8 evidence
+- **PR #297**: Bind extracted-offset campaign summaries to point and run identity
+- **PR #294**: Validate distinct PVT corner coverage in item-8 source records
+- **PR #291**: Clean-source 20261011 rerun of the 45-corner N=200 campaign (#247)
+- **PR #290**: Quantify solver-tolerance sensitivity of the common-mode offset window (#240)
+- **PR #287**: Qualify fleet reference evidence against the exact open_pdks revision
+- **PR #286**: Mark September kickback record historical, drop #252 waiver
+- **PR #284**: Enforce ngspice version floor on fleet record ingestion
+- **PR #282**: ci: scheduled non-gating selftest + netlist --check workflow
+- **PR #281**: feat(signoff): protect parasitic-study run archives as append-only (#266)
+- **PR #279**: Reject ambiguous fleet units and duplicate ingredients (#278)
+- **PR #277**: Validate characterization evidence chain before issuing item-8 pass (#275)
+- **PR #271**: fix: match complete numeric tokens in claim drift guard (#268)
+- **Issue #303** (closed): Mark positive-node-only kickback fallback as incomplete item-5 coverage
+- **Issue #301** (closed): Qualify local schematic baselines against recorded PDK and toolchain provenance
+- **Issue #296** (closed): Require qualified DUT-bound sources for current item-8 characterization claims
+- **Issue #295** (closed): Build/runtime failure on main: wrapper fixtures omit corners.py after item-8 grid validation
+- **Issue #293** (closed): Validate characterization narrative numbers before issuing item-8 evidence
+- **Issue #292** (closed): Bind extracted-offset campaign summaries to point and run identity
+- **Issue #289** (closed): Validate distinct PVT corner coverage in characterization source records
+- **Issue #283** (closed): Qualify fleet reference evidence against the exact open_pdks revision
+- **Issue #280** (closed): Run the harness selftest and netlist regeneration check in a non-gating scheduled CI workflow
+- **Issue #278** (closed): Reject ambiguous normalized fleet units and duplicate measurement ingredients
+- **Issue #275** (closed): Validate the characterization evidence chain before issuing item-8 pass
+- **Issue #269** (closed): Enforce the ngspice version floor when ingesting fleet reference records
+- **Issue #268** (closed): Match complete numeric values in the headline claim drift guard
+- **Issue #266** (closed): Protect committed parasitic study run archives from evidence rewrites
+- **Issue #252** (closed): Ledger kickback section cites schematic record 20260910-125341 as current although newer same-DUT records exist
+- **Issue #247** (closed): Regenerate the extracted-offset 45x200 campaign from a clean committed source (follow-up to PR #244)
+- **Issue #240** (closed): Quantify solver-tolerance sensitivity of the common-mode offset window
 - **PR #274**: Preserve bundled campaign parameters in fleet record reproduction guidance
 - **Issue #272** (closed): Preserve bundled campaign parameters in fleet record reproduction guidance
 
