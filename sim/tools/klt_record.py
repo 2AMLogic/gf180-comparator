@@ -658,12 +658,16 @@ def power_uw(bench: str, cid: str, d: dict) -> float | None:
 
 
 def git_state() -> tuple[str, bool]:
-    """INGEST-time checkout: (short commit, derivation tooling dirty?).
+    """INGEST-time checkout: (full 40-char commit, derivation tooling dirty?).
+
+    Full SHA so it compares like-for-like with the bundle's origin commit
+    (mk_klt_request.git_state, `rev-parse HEAD`); callers abbreviate it for
+    the record's existing short-SHA fields (issue #272).
 
     Only the code that turns raw values into the record (sim/tools,
     sim/harness) matters here; the simulated sources' identity and dirty
     state come from the source bundle (see mk_klt_request.git_state)."""
-    sha = subprocess.check_output(["git", "-C", str(REPO), "rev-parse", "--short=7", "HEAD"], text=True).strip()
+    sha = subprocess.check_output(["git", "-C", str(REPO), "rev-parse", "HEAD"], text=True).strip()
     dirty = bool(subprocess.check_output(["git", "-C", str(REPO), "status", "--porcelain", "--untracked-files=all", "--", "sim/tools", "sim/harness"], text=True).strip())
     return sha, dirty
 
@@ -988,7 +992,8 @@ def _archive_record(bench: str, work: Path, b: dict, tb, vdds, names: dict, unve
     requests, reports and staged-source tree, plus the netlist snapshot."""
     origin = b["origin"]
     ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S%f")
-    ingest_sha, tools_dirty = git_state()
+    ingest_full, tools_dirty = git_state()
+    ingest_sha = ingest_full[:7]  # existing fields stay short, matching historical records
     noncite = []
     if origin["dirty"]:
         noncite.append(f"sources uncommitted at request generation: {', '.join(origin['dirty_paths'])}")
@@ -997,7 +1002,7 @@ def _archive_record(bench: str, work: Path, b: dict, tb, vdds, names: dict, unve
         noncite.append(f"derivation tooling (sim/tools, sim/harness) dirty at ingest commit {ingest_sha}")
     sha = origin["commit"][:7]
     r = {"rid": f"{ts}-{sha}", "sha": sha, "exp": SIM / bench, "bundle_sha": mk.sha256_file(work / mk.BUNDLE_NAME),
-         "ingest_sha": ingest_sha, "tools_dirty": tools_dirty, "noncite": noncite,
+         "ingest_sha": ingest_sha, "ingest_commit_full": ingest_full, "tools_dirty": tools_dirty, "noncite": noncite,
          "citable": not noncite}  # == not (origin dirty or origin unverified or tooling dirty)
     for sub in ("records", "corners", "netlist-snapshots"):
         (r["exp"] / sub).mkdir(exist_ok=True)
@@ -1031,9 +1036,20 @@ def _provenance(r: dict, bench: str, b: dict, drift: list[str], link_notes: list
         "source_bundle": {"file": f"corners/{r['rid']}/{mk.BUNDLE_NAME}", "sha256": r["bundle_sha"],
                           "schema": b["schema"], "version": b["version"],
                           "origin_commit": origin["commit"], "origin_dirty_paths": origin["dirty_paths"]},
-        "ingest": {"commit": r["ingest_sha"], "tools_dirty": r["tools_dirty"], "source_drift": drift,
+        "ingest": {"commit": r["ingest_sha"], "commit_full": r.get("ingest_commit_full"), "tools_dirty": r["tools_dirty"], "source_drift": drift,
                    "linkage_notes": link_notes},
     }
+
+
+def _same_commit(a: str, b: str) -> bool:
+    """Full SHAs compare exactly; if one side is abbreviated (a record without
+    a full ingest SHA), it matches when it is a prefix of the other."""
+    if not a or not b:
+        return False
+    if len(a) == len(b):
+        return a == b
+    short, full = sorted((a, b), key=len)
+    return len(short) >= 7 and full.startswith(short)
 
 
 def reproduce_line(bench: str, b: dict, r: dict, tb) -> str:
@@ -1046,7 +1062,8 @@ def reproduce_line(bench: str, b: dict, r: dict, tb) -> str:
     set is regenerated from the origin sources while the derivation runs on
     the ingest tooling. A bundled grid that differs from the CLI defaults is
     replayed from the archived requests rather than by a default command."""
-    origin_commit, ingest_commit = b["origin"]["commit"], r["ingest_sha"]
+    origin_commit = b["origin"]["commit"]
+    ingest_commit = r.get("ingest_commit_full") or r["ingest_sha"]  # full SHA; short only if unavailable
     params, sel = b.get("parameters") or {}, b["dut"].get("selector")
     args = bench
     if params.get("mc_n") is not None:
@@ -1070,8 +1087,10 @@ def reproduce_line(bench: str, b: dict, r: dict, tb) -> str:
         out += (f"The bundled grid ({json.dumps(bundled, sort_keys=True)}) differs from the CLI defaults, so no default "
                 f"command reproduces it: replay the archived requests `corners/{rid}/request-*.json` (with their "
                 f"`body-*.spice` and `{mk.SOURCES_DIR}/`) through `klt sim`, then ingest with "
-                f"`python3 sim/tools/klt_record.py {args} --from-report <workdir>`.")
-    if origin_commit != ingest_commit:
+                f"`python3 sim/tools/klt_record.py {args} --from-report <workdir>`; copy the whole "
+                f"`corners/{rid}/` directory as `<workdir>`, since `--from-report` also needs its "
+                f"`{mk.BUNDLE_NAME}` and `design.ngspice`.")
+    if not _same_commit(origin_commit, ingest_commit):
         out += (f" The origin commit (`{origin_commit}`) produced the requests and sources; the derivation tooling ran at "
                 f"the ingest commit (`{ingest_commit}`). To replay, check out the origin commit for the simulation sources "
                 f"(or use the archived requests above), then derive with the ingest-commit `sim/tools` and `sim/harness`.")
