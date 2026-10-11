@@ -74,6 +74,7 @@ from harness import corners as hc  # noqa: E402
 from harness import dut as hdut  # noqa: E402
 from harness import pdk as hpdk  # noqa: E402
 from harness import testbench as htb  # noqa: E402
+from harness import toolchain as htc  # noqa: E402
 
 #: ngspice 46 prints `.meas` results with 5 mantissa decimals by default;
 #: widen so sub-microvolt kickback differences are not quantised away.
@@ -517,6 +518,19 @@ def main() -> int:
     return 0
 
 
+def toolchain_snapshot(commit: str, path: Path | None = None) -> dict:
+    """The ngspice floor in force at generation, frozen into the bundle.
+
+    Ingestion enforces THIS floor, not whatever sim/toolchain.json says at
+    ingest time, so a later pin change never alters the meaning of an
+    originating bundle (issue #269). Bound to the generation commit and the
+    sha256 of the pin file it was read from."""
+    path = path or htc.TOOLCHAIN_JSON
+    pins = htc.load_pins(path)
+    return {"file": repo_rel(path) or str(path), "sha256": sha256_file(path),
+            "commit": commit, "ngspice_min_major": pins.get("ngspice_min_major")}
+
+
 def write_bundle(out: Path, bench: str, tb, dut, binding, selector, staged: dict,
                  commit: str, dirty_paths: list[str], checked: list[str],
                  parameters: dict, requests: dict) -> dict:
@@ -561,6 +575,7 @@ def write_bundle(out: Path, bench: str, tb, dut, binding, selector, staged: dict
             "manifest_sha256": tb.manifest_sha256,
             "staged_dir": staged["testbench_dir"],
         },
+        "toolchain": toolchain_snapshot(commit),
         "parameters": parameters,
         "requests": requests,
         "staged": {p.relative_to(out).as_posix(): sha256_file(p) for p in files},
