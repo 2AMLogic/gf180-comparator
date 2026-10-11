@@ -9,6 +9,7 @@ from __future__ import annotations
 import importlib.util
 import io
 import json
+import os
 import subprocess
 import tempfile
 import unittest
@@ -32,9 +33,16 @@ def run_repo(size: int, allow: dict | None, path: str = BIG):
         f = repo / path
         f.parent.mkdir(parents=True)
         f.write_bytes(b"\0" * size)
+        # No background auto-gc/maintenance may outlive the temp dir (see
+        # test_append_only_evidence.GIT_QUIET_MAINTENANCE).
+        env = {**os.environ,
+               "GIT_CONFIG_COUNT": "3",
+               "GIT_CONFIG_KEY_0": "gc.auto", "GIT_CONFIG_VALUE_0": "0",
+               "GIT_CONFIG_KEY_1": "maintenance.auto", "GIT_CONFIG_VALUE_1": "false",
+               "GIT_CONFIG_KEY_2": "gc.autoDetach", "GIT_CONFIG_VALUE_2": "false"}
         for cmd in (["init", "-q"], ["add", "-A"],
                     ["-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", "x"]):
-            subprocess.run(["git", *cmd], cwd=repo, check=True)
+            subprocess.run(["git", *cmd], cwd=repo, check=True, env=env)
         al = Path(d) / "allow.json"
         if allow is not None:
             al.write_text(json.dumps(allow))

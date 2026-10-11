@@ -14,9 +14,11 @@ import importlib.util
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -64,7 +66,33 @@ def base_env() -> dict[str, str]:
         "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@example.invalid",
         "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@example.invalid",
     })
+    env.update(GIT_QUIET_MAINTENANCE)
     return env
+
+
+# Newer git can spawn detached auto-gc/maintenance after `git commit`; that
+# background process keeps writing into .git and races TemporaryDirectory
+# teardown (CI: OSError ENOTEMPTY on <tmp>/.git). Keep the fixtures synchronous.
+GIT_QUIET_MAINTENANCE = {
+    "GIT_CONFIG_COUNT": "3",
+    "GIT_CONFIG_KEY_0": "gc.auto", "GIT_CONFIG_VALUE_0": "0",
+    "GIT_CONFIG_KEY_1": "maintenance.auto", "GIT_CONFIG_VALUE_1": "false",
+    "GIT_CONFIG_KEY_2": "gc.autoDetach", "GIT_CONFIG_VALUE_2": "false",
+}
+
+
+def rmtree_retry(path: str, attempts: int = 5) -> None:
+    """rmtree that tolerates a transient writer (retry, then raise)."""
+    for i in range(attempts):
+        try:
+            shutil.rmtree(path)
+            return
+        except FileNotFoundError:
+            return
+        except OSError:
+            if i == attempts - 1:
+                raise
+            time.sleep(0.2 * (i + 1))
 
 
 class Repo:
@@ -98,9 +126,9 @@ class Repo:
 
 class Base(unittest.TestCase):
     def setUp(self):
-        self._tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(self._tmp.cleanup)
-        self.r = Repo(Path(self._tmp.name))
+        tmp = tempfile.mkdtemp()
+        self.addCleanup(rmtree_retry, tmp)
+        self.r = Repo(Path(tmp))
         for rel in PROTECTED + UNPROTECTED:
             self.r.write(rel, f"original {rel}\n")
         self.base = self.r.commit("baseline")
