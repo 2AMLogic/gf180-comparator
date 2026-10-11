@@ -87,6 +87,7 @@ import mk_klt_request as mk  # noqa: E402
 import preamp_nodes as pn  # noqa: E402
 from harness import dut as hdut  # noqa: E402
 from harness import pdk as hpdk  # noqa: E402
+from harness.report import scalar_bound_failures  # noqa: E402
 from harness import testbench as htb  # noqa: E402
 
 BENCH = "comparator-offset-tran-extracted-feasibility"
@@ -423,10 +424,12 @@ def evaluate_population(tb, cid: str, raw: dict, centre_mv: float, probe_trip_mv
     d = res[cid]
     if d["n_samples"] != n_requested:
         raise Refusal("SAMPLE_COUNT", f"{cid}: {d['n_samples']} valid draws, {n_requested} requested")
-    if not d["sig_trip_raw_mv"] > 0:
+    guard = scalar_bound_failures(getattr(tb, "checks", None) or {}, d)
+    if not d["sig_trip_raw_mv"] > 0 or guard:
         raise Refusal("MISMATCH_NOT_EXERCISED",
-                      f"{cid}: zero trip-point spread over {d['n_samples']} draws "
-                      "(mismatch is not reaching the adapted devices, or the staircase is too coarse)")
+                      f"{cid}: collapsed trip-point spread over {d['n_samples']} draws "
+                      "(mismatch is not reaching the adapted devices, or the staircase is too coarse)"
+                      + (f": {'; '.join(guard)}" if guard else ""))
     P = tb.params
     levels, margin = int(P["stair_levels"]), int(P["edge_margin_steps"])
     ks = trip_levels(tb, raw).values()

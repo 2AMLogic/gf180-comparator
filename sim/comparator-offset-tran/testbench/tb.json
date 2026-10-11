@@ -57,5 +57,19 @@
     "vos_3sig_total_mv": "3*sqrt(max(s_trip**2 - q2, 0) + (vdrop_over_av*rmis_a_r_um/sqrt(rmis_w_um*rmis_l_um))**2)*1e3",
     "vos_3sig_total_cons_mv": "3*sqrt(max(s_trip**2 - q2, 0) + (vdrop_over_av*rmis_conservative_factor*rmis_a_r_um/sqrt(rmis_w_um*rmis_l_um))**2)*1e3"
   },
+  "checks": {
+    "sig_vos_tran_raw_mv": {
+      "min": 0.1,
+      "description": "MISMATCH-ON GUARD, not a spec bound. The staircase quantises the trip point to 0.16 mV steps, so a collapsed population reads a raw sigma of 0 (one bin) or at most step/2 = 0.080 mV (two adjacent bins), and a corrected sigma of at most 0.065 mV; 0.1 mV sits above both. A deck that failed to turn local mismatch on would report ~0 here while every other number in the record still looked plausible. 0.1 mV is far below anything a real 180 nm comparator can achieve, so this floor cannot be read as a design assertion -- it only catches a collapsed (mismatch-free) population. The ratified bound (<= 15 mV 3-sigma stretch <= 8 mV, README.md, DR-0002) is deliberately NOT encoded as a check in this manifest: it is scored separately against the bound, and a sanity floor here must not be read as, or edited into, the spec verdict."
+    },
+    "sig_vos_tran_mv": {
+      "min": 0.1,
+      "description": "MISMATCH-ON GUARD, not a spec bound. The staircase quantises the trip point to 0.16 mV steps, so a collapsed population reads a raw sigma of 0 (one bin) or at most step/2 = 0.080 mV (two adjacent bins), and a corrected sigma of at most 0.065 mV; 0.1 mV sits above both. This is the quantisation-corrected number the spec row consumes. A deck that failed to turn local mismatch on would report ~0 here while every other number in the record still looked plausible. 0.1 mV is far below anything a real 180 nm comparator can achieve, so this floor cannot be read as a design assertion -- it only catches a collapsed (mismatch-free) population. The ratified bound (<= 15 mV 3-sigma stretch <= 8 mV, README.md, DR-0002) is deliberately NOT encoded as a check in this manifest: it is scored separately against the bound, and a sanity floor here must not be read as, or edited into, the spec verdict."
+    },
+    "sig_vos_pre_mv": {
+      "min": 0.05,
+      "description": "MISMATCH-ON GUARD, not a spec bound. The same-draw preamp offset is continuous (not quantised), so it uses the same 0.05 mV floor as the DC bench sim/comparator-offset-mc/. A deck that failed to turn local mismatch on would report ~0 here while every other number in the record still looked plausible. 0.05 mV is far below anything a real 180 nm comparator can achieve, so this floor cannot be read as a design assertion -- it only catches a collapsed (mismatch-free) population. The ratified bound (<= 15 mV 3-sigma stretch <= 8 mV, README.md, DR-0002) is deliberately NOT encoded as a check in this manifest: it is scored separately against the bound, and a sanity floor here must not be read as, or edited into, the spec verdict."
+    }
+  },
   "evidence": {}
 }

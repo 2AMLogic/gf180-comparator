@@ -602,6 +602,29 @@ def _postlayout_delta_lines(
 
 
 
+def scalar_bound_failures(checks: dict, values: dict) -> list[str]:
+    """Point-local scalar `min` / `max` verdict of `checks` against `values`.
+
+    Shared by the corner-grid report (`point_check_outcome`) and the klt
+    ingest path (`sim/tools/klt_record.py`), so a manifest floor means the
+    same thing on both. Only per-point bounds are evaluated; grid-spread and
+    per-axis checks need the whole grid. A required value that is absent or
+    non-finite never passes."""
+    failures: list[str] = []
+    for name, spec in checks.items():
+        if "min" not in spec and "max" not in spec:
+            continue
+        value = values.get(name)
+        if value is None or not _is_finite(value):
+            failures.append(f"{name} missing or non-finite")
+            continue
+        if "min" in spec and value < spec["min"]:
+            failures.append(f"{name} {value:g} < required min {spec['min']:g}")
+        if "max" in spec and value > spec["max"]:
+            failures.append(f"{name} {value:g} > allowed max {spec['max']:g}")
+    return failures
+
+
 def point_check_outcome(tb: Testbench, result: PointResult) -> dict:
     """Point-local min/max verdict for one completed point.
 
@@ -611,18 +634,7 @@ def point_check_outcome(tb: Testbench, result: PointResult) -> dict:
     """
     if result.status != "ok":
         return {"status": "not_evaluated", "failures": []}
-    failures: list[str] = []
-    for name, spec in tb.checks.items():
-        if "min" not in spec and "max" not in spec:
-            continue
-        value = result.measurements.get(name)
-        if value is None or not _is_finite(value):
-            failures.append(f"{name} missing or non-finite")
-            continue
-        if "min" in spec and value < spec["min"]:
-            failures.append(f"{name} {value:g} < required min {spec['min']:g}")
-        if "max" in spec and value > spec["max"]:
-            failures.append(f"{name} {value:g} > allowed max {spec['max']:g}")
+    failures = scalar_bound_failures(tb.checks, result.measurements)
     return {"status": "fail" if failures else "pass", "failures": failures}
 
 

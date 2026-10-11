@@ -30,6 +30,7 @@ sys.path.insert(0, str(SIM / "tools"))
 
 import klt_record as kr  # noqa: E402
 import mk_klt_request as mk  # noqa: E402
+from harness import report as hr  # noqa: E402
 from harness import testbench as htb  # noqa: E402
 from harness import toolchain as htc  # noqa: E402
 
@@ -206,6 +207,61 @@ class DeriveOffsetTran(unittest.TestCase):
         self.assertEqual(set(res[self.CID]), set(self.tb.measure))
         self.assertIn(kr.SPEC["comparator-offset-tran"][1], self.tb.measure)
         self.assertEqual(kr.SPEC["comparator-offset-tran"][2:4], (15.0, 8.0))  # ratified bounds untouched
+
+
+class OffsetTranMismatchGuard(unittest.TestCase):
+    """Manifest `checks` floors are enforced on the klt ingest path (issue #309)."""
+
+    RECORD = SIM / "comparator-offset-tran/records/20261010-021500046481-d84e59d.json"
+
+    def setUp(self):
+        self.helper = DeriveOffsetTran("test_trip_midpoint_preamp_offset_and_latch_difference")
+        self.helper.setUp()
+
+    def test_manifests_carry_the_floors(self):
+        tb = htb.load(SIM / "comparator-offset-tran")
+        self.assertEqual({k: v["min"] for k, v in tb.checks.items()},
+                         {"sig_vos_tran_raw_mv": 0.1, "sig_vos_tran_mv": 0.1, "sig_vos_pre_mv": 0.05})
+        fb = htb.load(SIM / "comparator-offset-tran-extracted-feasibility")
+        self.assertEqual({k: v["min"] for k, v in fb.checks.items()},
+                         {"sig_trip_raw_mv": 0.1, "sig_trip_mv": 0.1})
+        for t in (tb, fb):
+            for spec in t.checks.values():
+                self.assertIn("not a spec bound", spec["description"])
+                self.assertNotIn("max", spec)
+
+    def test_single_bin_collapse_fails_guard(self):
+        h = self.helper
+        res, problems = h._derive([h._draw(32, 0.0) for _ in range(20)])
+        self.assertEqual(res, {})
+        self.assertTrue(any(p.startswith("GUARD_FAILED") and "sig_vos_tran_raw_mv" in p for p in problems), problems)
+        self.assertTrue(any("sig_vos_pre_mv" in p for p in problems), problems)
+
+    def test_two_bin_collapse_fails_guard(self):
+        h = self.helper
+        res, problems = h._derive([h._draw(k, 0.0) for k in (31, 32) * 10])
+        self.assertEqual(res, {})
+        self.assertTrue(any(p.startswith("GUARD_FAILED") and "sig_vos_tran_mv" in p for p in problems), problems)
+
+    def test_real_spread_passes_guard(self):
+        h = self.helper
+        draws = [h._draw(32 + d, d * 0.2e-3) for d in range(-6, 7) for _ in range(3)]
+        res, problems = h._derive(draws)
+        self.assertEqual(problems, [])
+        self.assertIn(h.CID, res)
+
+    def test_committed_45_point_record_passes_guard_unmodified(self):
+        doc = json.loads(self.RECORD.read_text())
+        tb = htb.load(SIM / "comparator-offset-tran")
+        self.assertEqual(len(doc["derived"]), 45)
+        for cid, d in doc["derived"].items():
+            self.assertEqual(hr.scalar_bound_failures(tb.checks, d), [], cid)
+
+    def test_helper_semantics(self):
+        checks = {"a": {"min": 1.0}, "b": {"max": 2.0}, "c": {"max_spread_pct": 1}}
+        self.assertEqual(hr.scalar_bound_failures(checks, {"a": 1.0, "b": 2.0}), [])
+        self.assertEqual(len(hr.scalar_bound_failures(checks, {"a": 0.5, "b": 3.0})), 2)
+        self.assertEqual(len(hr.scalar_bound_failures(checks, {"a": float("nan")})), 2)
 
 
 class DeriveOtherBenches(unittest.TestCase):

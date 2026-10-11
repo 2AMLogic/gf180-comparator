@@ -104,6 +104,7 @@ sys.path.insert(0, str(SIM))
 
 from harness import corners as hc  # noqa: E402
 from harness import dut as hdut  # noqa: E402
+from harness.report import scalar_bound_failures  # noqa: E402
 from harness import testbench as htb  # noqa: E402
 from harness import toolchain as htc  # noqa: E402
 
@@ -369,6 +370,13 @@ def derive_offset_tran(tb, raw: dict, ids: list[str], problems: list[str]) -> di
             for name, expr in tb.measure.items()
         }, problems)
         if d is not None:
+            # Manifest `checks` floors (mismatch-on guards): a collapsed
+            # population is a named problem and the point is dropped, so it
+            # cannot count towards complete reference evidence (issue #309).
+            guard = scalar_bound_failures(getattr(tb, "checks", None) or {}, d)
+            if guard:
+                problems += [f"GUARD_FAILED: {cid} {g}" for g in guard]
+                continue
             res[cid] = d
     return res
 
