@@ -80,6 +80,10 @@ from harness import toolchain as htc  # noqa: E402
 #: widen so sub-microvolt kickback differences are not quantised away.
 NGSPICE_INIT = ["set measureprec=12", "set numdgt=12"]
 
+#: The gf180mcu variant every generated request selects (`models.pdk`). Also
+#: snapshotted into the bundle as the variant fleet reports must confirm (#283).
+PDK_VARIANT = "gf180mcuD"
+
 OFFSET_MC_SEED = 20260909
 OFFSET_MC_N = 200
 #: Seconds `klt sim --backend batch` keeps re-launching after a
@@ -476,7 +480,7 @@ def main() -> int:
             req = {
                 "netlist": f"body-{vtag}.spice",
                 "engine": "ngspice",
-                "models": {"pdk": "gf180mcuD", "lib": "libs.tech/ngspice/sm141064.ngspice"},
+                "models": {"pdk": PDK_VARIANT, "lib": "libs.tech/ngspice/sm141064.ngspice"},
                 "corners": {"process": process, "temperature_c": temps},
                 # The fleet image's klt can lag the submitting client; run anyway
                 # and let the record state the runner/client versions it saw.
@@ -528,7 +532,11 @@ def toolchain_snapshot(commit: str, path: Path | None = None) -> dict:
     path = path or htc.TOOLCHAIN_JSON
     pins = htc.load_pins(path)
     return {"file": repo_rel(path) or str(path), "sha256": sha256_file(path),
-            "commit": commit, "ngspice_min_major": pins.get("ngspice_min_major")}
+            "commit": commit, "ngspice_min_major": pins.get("ngspice_min_major"),
+            # Issue #283: the exact open_pdks revision and PDK variant the
+            # requests below select; ingestion qualifies every executor
+            # report against THESE, never today's checkout.
+            "open_pdks": pins.get("open_pdks"), "pdk_variant": PDK_VARIANT}
 
 
 def write_bundle(out: Path, bench: str, tb, dut, binding, selector, staged: dict,
