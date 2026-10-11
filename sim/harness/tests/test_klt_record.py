@@ -11,6 +11,7 @@ ngspice, no PDK, no network, and ``subprocess.Popen`` is mocked.
 
 from __future__ import annotations
 
+import dataclasses
 import io
 import json
 import math
@@ -145,9 +146,12 @@ class DeriveOffsetTran(unittest.TestCase):
             "ap_start": 3.3 - self.VDROP,
         }
 
+    guarded = False  # arithmetic tests use tiny synthetic populations: manifest floors off
+
     def _derive(self, draws):
         smp = {f"mc{i}": d for i, d in enumerate(draws)}
-        return kr.derive("comparator-offset-tran", self.tb, {"main": ({self.CID: smp}, [])})
+        tb = self.tb if self.guarded else dataclasses.replace(self.tb, checks={})
+        return kr.derive("comparator-offset-tran", tb, {"main": ({self.CID: smp}, [])})
 
     def test_trip_midpoint_preamp_offset_and_latch_difference(self):
         # level k=32 -> V = -5.04 + 0.16*32 = 0.08 mV; trip estimate = V - step/2 = 0.00 mV.
@@ -217,6 +221,7 @@ class OffsetTranMismatchGuard(unittest.TestCase):
     def setUp(self):
         self.helper = DeriveOffsetTran("test_trip_midpoint_preamp_offset_and_latch_difference")
         self.helper.setUp()
+        self.helper.guarded = True
 
     def test_manifests_carry_the_floors(self):
         tb = htb.load(SIM / "comparator-offset-tran")
