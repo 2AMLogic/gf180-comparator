@@ -333,6 +333,13 @@ class ToleranceProfiles(unittest.TestCase):
                 tp.check_tolerance_body(body, "tight")
             self.assertEqual(cm.exception.code, "TOLERANCE_NOT_APPLIED", what)
 
+    def test_executor_deck_must_include_netlist_without_own_tolerance(self):
+        ok = "* klt\n.options seed=1\n.include /var/tmp/job/inputs/netlist.cir\n.temp 27.0\n"
+        tp.check_deck_no_override(ok, "tight")
+        for deck in (ok + ".options reltol=1e-3\n", ok.replace(".include /var/tmp/job/inputs/netlist.cir\n", "")):
+            with self.assertRaises(tp.ProbeRefused):
+                tp.check_deck_no_override(deck, "tight")
+
     def test_unknown_profile_refused(self):
         with self.assertRaises(tp.ProbeRefused):
             tp.check_tolerance_body(_body("tight"), "tightest")

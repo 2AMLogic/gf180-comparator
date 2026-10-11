@@ -177,6 +177,16 @@ def check_tolerance_body(body: str, profile: str) -> list[str]:
     return mk.tolerance_option_lines(profile)
 
 
+def check_deck_no_override(deck: str, profile: str) -> None:
+    """An executor-generated deck must not carry its own tolerance cards (they
+    could override or duplicate the profile's) and must include a netlist."""
+    for line in deck.splitlines():
+        if _tolerance_pairs(line):
+            raise ProbeRefused("TOLERANCE_NOT_APPLIED", f"{profile}: executor deck carries its own tolerance card {line.strip()!r}")
+    if not any(l.strip().lower().startswith(".include") and "netlist" in l for l in deck.splitlines()):
+        raise ProbeRefused("TOLERANCE_NOT_APPLIED", f"{profile}: executor deck does not include the submitted netlist")
+
+
 # --------------------------------------------------------------------------- loading
 
 def replay_identity(report: dict, vdd: float) -> dict:
@@ -210,10 +220,14 @@ def load_unit(work: Path, profile: str, point: dict) -> dict:
     body = (work / req_meta["netlist"]).read_text()
     check_tolerance_body(body, profile)
     decks = 0
-    for c in report.get("corners", []):  # a returned deck, when present, must agree too
+    for c in report.get("corners", []):
+        # The executor's per-unit deck `.include`s the submitted netlist by its
+        # remote path instead of inlining it, so the cards are proven by the
+        # body hash the report quotes; a returned deck is only checked for a
+        # competing tolerance override and for actually including a netlist.
         d = (c.get("artifacts") or {}).get("deck")
         if d and (work / d).is_file():
-            check_tolerance_body((work / d).read_text(), profile)
+            check_deck_no_override((work / d).read_text(), profile)
             decks += 1
     request = json.loads((work / req_meta["request"]).read_text())
     samples, issues = kr.collect_cm_index(report, request, vdd)
