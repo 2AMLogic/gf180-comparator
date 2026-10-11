@@ -55,6 +55,15 @@ record still cites the bundle's (originating) sources, never today's.
 A record is citable REFERENCE evidence (`"reference": true`) only when BOTH
 gates pass: exact PVT/MC coverage of the bundled requests (#152, `complete`;
 otherwise exit 1) and verified, clean source identity (#151, `citable`).
+
+ngspice floor (issue #269): every ingested report's `environment.engine` /
+`engine_version` is checked against the floor snapshotted into the source
+bundle (`toolchain.ngspice_min_major`, bound to the generation commit). Below
+floor, missing, malformed, wrong-engine or mixed-version reports are refused
+before anything is written; `--allow-engine-drift` retains them as NON-CITABLE
+diagnostics with the override recorded in `ingest.engine_floor`. Legacy
+bundles (no `toolchain` key) are checked against the ingest checkout's floor,
+stamped `ingest-checkout (legacy bundle)`.
 """
 
 from __future__ import annotations
@@ -79,6 +88,7 @@ sys.path.insert(0, str(SIM))
 from harness import corners as hc  # noqa: E402
 from harness import dut as hdut  # noqa: E402
 from harness import testbench as htb  # noqa: E402
+from harness import toolchain as htc  # noqa: E402
 
 sys.path.insert(0, str(HERE))
 import mk_klt_request as mk  # noqa: E402
@@ -818,6 +828,65 @@ def _report_netlist_sha(report: dict) -> str | None:
     return h.split(":", 1)[1] if h.startswith("sha256:") else None
 
 
+def check_engine_floor(b: dict, reports: dict, allow_drift: bool = False) -> dict:
+    """Enforce the ngspice minimum major on every ingested report (issue #269).
+
+    The floor is the one SNAPSHOTTED into the source bundle at generation
+    (`b["toolchain"]`), so a later sim/toolchain.json change does not alter
+    what an originating bundle means. A LEGACY bundle (written before this
+    gate, no `toolchain` key) has no recorded floor; the conservative policy
+    is to apply today's checkout floor and stamp the record
+    `floor_source = "ingest-checkout (legacy bundle)"`. Existing committed
+    records are never re-derived.
+
+    Missing / malformed / wrong-engine / below-floor / mixed-version reports
+    are violations. Without `allow_drift` they refuse BEFORE anything is
+    written. With it (`--allow-engine-drift`, never inferred) ingestion
+    proceeds as an explicitly NON-CITABLE diagnostic and the override and
+    violations are stamped into the record.
+    -> {"ngspice_min_major", "floor_source", "observed", "violations",
+    "override", "noncite"}"""
+    snap = b.get("toolchain")
+    if isinstance(snap, dict) and snap.get("ngspice_min_major") is not None:
+        floor, source = int(snap["ngspice_min_major"]), "source-bundle"
+    elif isinstance(snap, dict):
+        floor, source = None, "source-bundle (no ngspice floor pinned)"
+    else:
+        floor = htc.load_pins().get("ngspice_min_major")
+        floor = None if floor is None else int(floor)
+        source = "ingest-checkout (legacy bundle)"
+    violations: list[str] = []
+    observed: dict[str, str | None] = {}
+    majors = set()
+    for n, rep in sorted(reports.items()):
+        env = rep.get("environment") or {}
+        eng, ver = env.get("engine"), env.get("engine_version")
+        observed[n] = None if ver is None else str(ver)
+        if eng is not None and str(eng).lower() != "ngspice":
+            violations.append(f"report-{n}.json: engine {eng!r}, not ngspice")
+            continue
+        if ver is None or ver == "":
+            violations.append(f"report-{n}.json: no environment.engine_version")
+            continue
+        major = htc.engine_major(ver)
+        if major is None:
+            violations.append(f"report-{n}.json: unparseable engine_version {ver!r}")
+            continue
+        majors.add(major)
+        if floor is not None and major < floor:
+            violations.append(f"report-{n}.json: ngspice major {major} is below the floor {floor}")
+    if len(set(v for v in observed.values())) > 1:
+        violations.append(f"mixed engine versions across reports: {sorted({str(v) for v in observed.values()})}")
+    if violations and not allow_drift:
+        refuse("ENGINE_FLOOR_VIOLATION",
+               f"ngspice floor {floor} ({source}): " + "; ".join(violations[:6])
+               + " -- no record written. Pass --allow-engine-drift to retain a NON-CITABLE diagnostic.")
+    noncite = [f"engine floor override: {v}" for v in violations]
+    return {"ngspice_min_major": floor, "floor_source": source,
+            "observed": sorted({v for v in observed.values() if v is not None}),
+            "violations": violations, "override": bool(violations and allow_drift), "noncite": noncite}
+
+
 def verify_reports(work: Path, b: dict, names: dict, reports: dict) -> list[str]:
     """Link each report to its submitted request/body -> informational notes."""
     notes = []
@@ -1013,7 +1082,8 @@ def legacy_diagnostic(bench: str, work: Path) -> int:
     return 3
 
 
-def _archive_record(bench: str, work: Path, b: dict, tb, vdds, names: dict, unverified: list[str]) -> dict:
+def _archive_record(bench: str, work: Path, b: dict, tb, vdds, names: dict, unverified: list[str],
+                    engine: dict) -> dict:
     """Record identity, citability and the append-only archive, shared by both
     record writers (issue #254). Call only once a nonempty result is derived and
     every verification has passed. The corner dir is created exclusively (an
@@ -1027,12 +1097,14 @@ def _archive_record(bench: str, work: Path, b: dict, tb, vdds, names: dict, unve
     if origin["dirty"]:
         noncite.append(f"sources uncommitted at request generation: {', '.join(origin['dirty_paths'])}")
     noncite += [f"origin unverifiable: {u}" for u in unverified]
+    noncite += engine["noncite"]
     if tools_dirty:
         noncite.append(f"derivation tooling (sim/tools, sim/harness) dirty at ingest commit {ingest_sha}")
     sha = origin["commit"][:7]
     r = {"rid": f"{ts}-{sha}", "sha": sha, "exp": SIM / bench, "bundle_sha": mk.sha256_file(work / mk.BUNDLE_NAME),
          "ingest_sha": ingest_sha, "ingest_commit_full": ingest_full, "tools_dirty": tools_dirty, "noncite": noncite,
-         "citable": not noncite}  # == not (origin dirty or origin unverified or tooling dirty)
+         "citable": not noncite,
+         "engine_floor": {k: v for k, v in engine.items() if k != "noncite"}}  # == not (origin dirty or origin unverified or tooling dirty)
     for sub in ("records", "corners", "netlist-snapshots"):
         (r["exp"] / sub).mkdir(exist_ok=True)
     cdir = r["exp"] / "corners" / r["rid"]
@@ -1066,7 +1138,7 @@ def _provenance(r: dict, bench: str, b: dict, drift: list[str], link_notes: list
                           "schema": b["schema"], "version": b["version"],
                           "origin_commit": origin["commit"], "origin_dirty_paths": origin["dirty_paths"]},
         "ingest": {"commit": r["ingest_sha"], "commit_full": r.get("ingest_commit_full"), "tools_dirty": r["tools_dirty"], "source_drift": drift,
-                   "linkage_notes": link_notes},
+                   "linkage_notes": link_notes, "engine_floor": r["engine_floor"]},
     }
 
 
@@ -1150,6 +1222,7 @@ def mint_cm_index(a) -> int:
         dispatch(work, list(names))
     reports = {n: json.loads((work / f"report-{n}.json").read_text()) for n in names}
     link_notes = verify_reports(work, b, names, reports)
+    engine = check_engine_floor(b, reports, a.allow_engine_drift)
     unverified = verify_origin_commit(b)
     drift = checkout_drift(b)
     requests = {n: json.loads((work / b["requests"][n]["request"]).read_text()) for n in names}
@@ -1172,7 +1245,7 @@ def mint_cm_index(a) -> int:
     if not derived:
         print("\n".join(["no complete PVT point: nothing derived, no record written"] + problems[:60]), file=sys.stderr)
         raise SystemExit(f"EMPTY_RESULT: {bench} produced no complete PVT point; refusing to publish a record")
-    r = _archive_record(bench, work, b, tb, vdds, names, unverified)
+    r = _archive_record(bench, work, b, tb, vdds, names, unverified, engine)
     rid, sha, exp, bundle_sha, ingest_sha, citable, noncite = (
         r[k] for k in ("rid", "sha", "exp", "bundle_sha", "ingest_sha", "citable", "noncite"))
     reference = complete and citable
@@ -1246,6 +1319,9 @@ def main() -> int:
     ap.add_argument("--mc-n", type=int, default=200)
     ap.add_argument("--dut", default=None, help="DUT binding id/path (e.g. a control netlist), as run_corners.py --dut")
     ap.add_argument("--label", default="", help="free-text topology label stamped in the record")
+    ap.add_argument("--allow-engine-drift", action="store_true",
+                    help="retain a report set whose ngspice engine/version fails the bundled floor as an "
+                         "explicitly NON-CITABLE diagnostic (override recorded); default is to refuse")
     ap.add_argument("--legacy-diagnostic", action="store_true",
                     help="for a --from-report dir with no source bundle: print a NON-CITABLE table, write nothing")
     a = ap.parse_args()
@@ -1280,6 +1356,7 @@ def main() -> int:
 
     reports = {n: json.loads((work / f"report-{n}.json").read_text()) for n in names}
     link_notes = verify_reports(work, b, names, reports)
+    engine = check_engine_floor(b, reports, a.allow_engine_drift)
     unverified = verify_origin_commit(b)
     drift = checkout_drift(b)
     # The requests are the bundled (hash-verified) ones; the expected grid
@@ -1299,7 +1376,7 @@ def main() -> int:
     best_cid = min(vals, key=vals.get)
     n_t = sum(v <= tgt for v in vals.values())
     n_s = sum(v <= stretch for v in vals.values())
-    r = _archive_record(a.bench, work, b, tb, vdds, names, unverified)
+    r = _archive_record(a.bench, work, b, tb, vdds, names, unverified, engine)
     rid, sha, exp, bundle_sha, ingest_sha, citable, noncite = (
         r[k] for k in ("rid", "sha", "exp", "bundle_sha", "ingest_sha", "citable", "noncite"))
 

@@ -31,6 +31,7 @@ sys.path.insert(0, str(SIM / "tools"))
 import klt_record as kr  # noqa: E402
 import mk_klt_request as mk  # noqa: E402
 from harness import testbench as htb  # noqa: E402
+from harness import toolchain as htc  # noqa: E402
 
 
 def _report(*corners: tuple[str, str, dict]) -> dict:
@@ -1256,6 +1257,132 @@ class CmIndexReplay(unittest.TestCase):
             self.assertFalse(rec["citable"] or rec["reference"])
             self.assertEqual(rec["not_citable_reasons"],
                              ["derivation tooling (sim/tools, sim/harness) dirty at ingest commit 1ngest0"])
+
+
+def _set_engine(work: Path, version, engine="ngspice", only=None, drop=False) -> None:
+    for f in sorted(work.glob("report-*.json")):
+        if only and only not in f.name:
+            continue
+        rep = json.loads(f.read_text())
+        env = rep["environment"]
+        env["engine"] = engine
+        if drop:
+            env.pop("engine_version", None)
+        else:
+            env["engine_version"] = version
+        f.write_text(json.dumps(rep))
+
+
+class EngineFloorIngest(unittest.TestCase):
+    """Issue #269: the ngspice floor is enforced on ingested fleet reports."""
+
+    def _cases(self):
+        yield "ordinary", BENCH, _generate, lambda td, w: _write_reports(w)
+        yield "cm-index", mk.CM_INDEX_BENCH, lambda td, **k: _cm_index_work(td), None
+
+    def _each(self):
+        for label, bench, gen, wr in self._cases():
+            with tempfile.TemporaryDirectory() as td:
+                td = Path(td)
+                work = gen(td, bench=bench) if label == "ordinary" else gen(td)
+                if wr:
+                    wr(td, work)
+                yield label, td, work, bench
+
+    def _no_evidence(self, td, bench):
+        ev = td / "evidence" / bench
+        return not any((ev / s).exists() and any((ev / s).iterdir()) for s in ("records", "corners", "netlist-snapshots"))
+
+    def test_bundle_snapshots_floor_bound_to_commit(self):
+        with tempfile.TemporaryDirectory() as td:
+            b = _bundle(_generate(Path(td)))
+            self.assertEqual(b["toolchain"]["ngspice_min_major"], 46)
+            self.assertEqual(b["toolchain"]["commit"], ORIGIN)
+            self.assertEqual(b["toolchain"]["file"], "sim/toolchain.json")
+
+    def test_at_or_above_floor_passes_and_is_recorded(self):
+        for ver in ("46", "47", "46.1"):
+            for label, td, work, bench in self._each():
+                with self.subTest(ver=ver, writer=label):
+                    _set_engine(work, ver)
+                    rc, rec, _ = _ingest(td, work, bench=bench)
+                    self.assertEqual(rc, 0)
+                    self.assertTrue(rec["citable"], rec["not_citable_reasons"])
+                    ef = rec["ingest"]["engine_floor"]
+                    self.assertEqual((ef["ngspice_min_major"], ef["floor_source"], ef["observed"], ef["override"]),
+                                     (46, "source-bundle", [ver], False))
+
+    def test_violations_refused_before_any_write(self):
+        cases = {"below": dict(version="42"), "below-prefixed": dict(version="ngspice-45"),
+                 "malformed": dict(version="forty-six"), "empty": dict(version=""),
+                 "missing": dict(version=None, drop=True), "wrong-engine": dict(version="46", engine="xyce")}
+        for name, kw in cases.items():
+            for label, td, work, bench in self._each():
+                with self.subTest(case=name, writer=label):
+                    _set_engine(work, **kw)
+                    rc, rec, _ = _ingest(td, work, bench=bench)
+                    self.assertIn("ENGINE_FLOOR_VIOLATION", str(rc))
+                    self.assertIsNone(rec)
+                    self.assertTrue(self._no_evidence(td, bench))
+
+    def test_mixed_versions_refused(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                _set_engine(work, "46")
+                _set_engine(work, "47", only="v3.30")
+                rc, rec, _ = _ingest(td, work, bench=bench)
+                self.assertIn("mixed engine versions", str(rc))
+                self.assertIsNone(rec)
+                self.assertTrue(self._no_evidence(td, bench))
+
+    def test_explicit_override_retains_non_citable_diagnostic(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                _set_engine(work, "42")
+                rc, rec, _ = _ingest(td, work, "--allow-engine-drift", bench=bench)
+                self.assertEqual(rc, 0)
+                self.assertFalse(rec["citable"] or rec["reference"])
+                ef = rec["ingest"]["engine_floor"]
+                self.assertTrue(ef["override"])
+                self.assertEqual(ef["observed"], ["42"])
+                self.assertTrue(ef["violations"])
+                self.assertTrue(any("engine floor override" in r for r in rec["not_citable_reasons"]))
+
+    def test_override_flag_does_not_degrade_a_passing_set(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                rc, rec, _ = _ingest(td, work, "--allow-engine-drift", bench=bench)
+                self.assertEqual(rc, 0)
+                self.assertTrue(rec["citable"])
+                self.assertFalse(rec["ingest"]["engine_floor"]["override"])
+
+    def test_later_pin_change_does_not_alter_bundle_floor(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                _set_engine(work, "46")
+                with mock.patch.object(htc, "load_pins", return_value={"ngspice_min_major": 99}):
+                    rc, rec, _ = _ingest(td, work, bench=bench)
+                self.assertEqual(rc, 0)
+                self.assertEqual(rec["ingest"]["engine_floor"]["ngspice_min_major"], 46)
+
+    def test_legacy_bundle_uses_checkout_floor_and_says_so(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                b = _bundle(work)
+                b.pop("toolchain")
+                (work / mk.BUNDLE_NAME).write_text(json.dumps(b, indent=1) + "\n")
+                rc, rec, _ = _ingest(td, work, bench=bench)
+                self.assertEqual(rc, 0)
+                ef = rec["ingest"]["engine_floor"]
+                self.assertEqual((ef["ngspice_min_major"], ef["floor_source"]),
+                                 (46, "ingest-checkout (legacy bundle)"))
+                _set_engine(work, "42")
+                rc, rec, _ = _ingest(td, work, bench=bench)
+                self.assertIn("ENGINE_FLOOR_VIOLATION", str(rc))
+
+    def test_engine_major_parsing(self):
+        self.assertEqual([htc.engine_major(v) for v in ("46", "ngspice-46", "46.1", "ngspice 45")], [46, 46, 46, 45])
+        self.assertEqual([htc.engine_major(v) for v in (None, "", "x46", "46x", 46)], [None] * 5)
 
 
 class ReproduceGuidance(unittest.TestCase):

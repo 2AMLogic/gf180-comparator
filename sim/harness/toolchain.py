@@ -52,6 +52,19 @@ def _ngspice_major(version_banner: str) -> int | None:
     return int(match.group(1)) if match else None
 
 
+def engine_major(version_text) -> int | None:
+    """Major version from an ngspice version string, or None if unparseable.
+
+    Accepts the local banner form (``ngspice-46``) and the bare form a fleet
+    ``klt sim`` report carries in ``environment.engine_version`` (``46``,
+    ``46.1``). Anything else (empty, ``None``, ``"unknown"``) is None --
+    callers must treat that as a failure, never as "fine"."""
+    if not isinstance(version_text, str):
+        return None
+    m = re.fullmatch(r"\s*(?:ngspice[- ])?(\d+)(?:\.\d+)*\s*", version_text)
+    return int(m.group(1)) if m else None
+
+
 def check(pdk_version: str, ngspice_banner: str, path: Path = TOOLCHAIN_JSON) -> Toolchain:
     """Compare the pins against what is actually installed.
 
