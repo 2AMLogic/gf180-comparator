@@ -1,0 +1,52 @@
+{
+  "netlist": "body-probe-ss_-40c_3.30v.spice",
+  "engine": "ngspice",
+  "models": {
+    "pdk": "gf180mcuD",
+    "lib": "libs.tech/ngspice/sm141064.ngspice"
+  },
+  "corners": {
+    "process": [
+      {
+        "name": "ss",
+        "sections": [
+          "ss",
+          "res_ss",
+          "bjt_ss",
+          "diode_ss",
+          "moscap_ss",
+          "mimcap_ss"
+        ]
+      }
+    ],
+    "temperature_c": [
+      -40.0
+    ]
+  },
+  "batch": {
+    "runner_version_check": "warn",
+    "capacity_wait_s": 1800
+  },
+  "analysis": {
+    "kind": "tran",
+    "args": "100n 80u 0 100n"
+  },
+  "measurements": [
+    {
+      "name": "t_flip",
+      "spice": ".meas tran t_flip when v(dn)=0.5 rise=1 td=8u"
+    },
+    {
+      "name": "vos_v",
+      "spice": ".meas tran vos_v find v(rmp) when v(dn)=0.5 rise=1 td=8u"
+    }
+  ],
+  "options": {
+    "timeout_s": 3000,
+    "keep_artifacts": true,
+    "ngspice_init": [
+      "set measureprec=12",
+      "set numdgt=12"
+    ]
+  }
+}
