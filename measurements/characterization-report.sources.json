@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "comment": "Source manifest for the item-8 characterization narrative (issue #275). signoff/make_item8_envelope.py validates it before writing the envelope. Each record is pinned by sha256 and scope; each required section must exist in the report and cite its declared records by id. summary_key marks the record the envelope's numeric summary is derived from. expected_grid (issue #289) declares each record's distinct PVT corner coverage; the validator checks it against sim/harness/corners.py and the record's corner identities.",
+  "comment": "Source manifest for the item-8 characterization narrative (issue #275). signoff/make_item8_envelope.py validates it before writing the envelope. Each record is pinned by sha256 and scope; each required section must exist in the report and cite its declared records by id. summary_key marks the record the envelope's numeric summary is derived from. expected_grid (issue #289) declares each record's distinct PVT corner coverage; the validator checks it against sim/harness/corners.py and the record's corner identities. Source qualification (issue #296): each record declares a role -- current scored evidence, or historical/diagnostic context; only a current record may carry a summary_key -- and the dut_id it is expected to characterize (resolved against the live sim/dut.json registry; a schematic record must stamp the current bytes of that entry's netlist -- the refresh contract -- and an extracted record binds through its committed extraction_report).",
   "report": "measurements/characterization-report.md",
   "required_text": {
     "scored-summary": [
@@ -14,6 +14,8 @@
       "sha256": "sha256:eaae9c29ceae363ad4959498d5638c3287edb0ceb146d66907360d0c3fe24bac",
       "bench": "comparator-offset-mc",
       "dut_provenance": "schematic",
+      "role": "diagnostic",
+      "dut_id": "comparator-dr0001",
       "points": 45,
       "expected_grid": {
         "corners": [
@@ -41,6 +43,8 @@
       "sha256": "sha256:71d2accea22f666fe08a07cb320918b1f4caa844fb57a7da518a6d89eb8a1a59",
       "bench": "comparator-offset-tran",
       "dut_provenance": "schematic",
+      "role": "historical",
+      "dut_id": "comparator-dr0001",
       "points": 9,
       "expected_grid": {
         "corner_ids": [
@@ -62,6 +66,8 @@
       "sha256": "sha256:0b865ea0dfab16a3cdbf459f0904c92b7b3455e66c40e89ad6a69240acb871d0",
       "bench": "comparator-offset-tran",
       "dut_provenance": "schematic",
+      "role": "current",
+      "dut_id": "comparator-dr0001",
       "points": 45,
       "summary_key": "offset",
       "expected_grid": {
@@ -90,6 +96,8 @@
       "sha256": "sha256:fa69eedc19ba736b36d62285494749103499b8ace0fa8fbec43385354687f989",
       "bench": "comparator-preamp-noise",
       "dut_provenance": "schematic",
+      "role": "current",
+      "dut_id": "comparator-dr0001",
       "points": 45,
       "summary_key": "noise",
       "expected_grid": {
@@ -118,6 +126,8 @@
       "sha256": "sha256:f3d343e67e21646196c16838d514fae78b91b79d1fdc7ff1f035ee6f2b18cafb",
       "bench": "comparator-regeneration",
       "dut_provenance": "schematic",
+      "role": "current",
+      "dut_id": "comparator-dr0001",
       "points": 45,
       "summary_key": "decision_schematic",
       "expected_grid": {
@@ -146,6 +156,9 @@
       "sha256": "sha256:9dea66adacf01e1d3fb65535a74b14fa07ea146316255a177e6c980a96b9da4a",
       "bench": "comparator-regeneration",
       "dut_provenance": "extracted",
+      "role": "current",
+      "dut_id": "comparator-dr0001-layout",
+      "extraction_report": "layout/lvs/comparator.extract-rc.json",
       "points": 45,
       "summary_key": "decision_extracted",
       "expected_grid": {
@@ -174,6 +187,8 @@
       "sha256": "sha256:ef9296d627f242286d4f92c94f151ab822087fd15e80bdcb1d92ddd5bcd24d88",
       "bench": "comparator-kickback",
       "dut_provenance": "schematic",
+      "role": "current",
+      "dut_id": "comparator-dr0001",
       "points": 45,
       "summary_key": "kickback_schematic_pnode",
       "expected_grid": {
@@ -202,6 +217,9 @@
       "sha256": "sha256:7b1dcdcfddf1cc6b5c45831f47d13841b2677b21de95b1b4931220f6154214a8",
       "bench": "comparator-kickback",
       "dut_provenance": "extracted",
+      "role": "current",
+      "dut_id": "comparator-dr0001-layout",
+      "extraction_report": "layout/lvs/comparator.extract-rc.json",
       "points": 45,
       "summary_key": "kickback_extracted",
       "expected_grid": {
@@ -230,6 +248,8 @@
       "sha256": "sha256:ae67c7a92d2294c6286c190deb4e78ac0c65388f6c25c68eae7d24afffe28df4",
       "bench": "comparator-kickback",
       "dut_provenance": "schematic",
+      "role": "current",
+      "dut_id": "comparator-dr0001",
       "points": 45,
       "summary_key": "kickback_schematic_both",
       "expected_grid": {
