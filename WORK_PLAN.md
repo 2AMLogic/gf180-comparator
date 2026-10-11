@@ -25,7 +25,7 @@ _None._
 
 Issues currently being built (`loom:building`).
 
-- **#288**: Two citable reference records were simulated with a non-pinned open_pdks revision
+_None._
 
 ## PRs Awaiting Review
 
@@ -49,7 +49,6 @@ Issues carrying `loom:curated`.
 - **#158**: Characterize reverse-polarity comparator delay across PVT *(curated)*
 - **#209**: Extend paired extracted preamp noise measurement to full PVT coverage *(curated)*
 - **#273**: Publish structured latch decision correctness in fleet records *(curated)*
-- **#288**: Two citable reference records were simulated with a non-pinned open_pdks revision *(curated)*
 
 ## Proposed (Architect / Hermit)
 
@@ -66,10 +65,10 @@ _None._
 | Operator merge-risk holds | 1 |
 | Operator priority | 1 |
 | Ready (`loom:issue`) | 0 |
-| In Progress (`loom:building`) | 1 |
+| In Progress (`loom:building`) | 0 |
 | PRs awaiting review | 0 |
 | Approved PRs awaiting merge | 2 |
-| Curated | 6 |
+| Curated | 5 |
 | Architect / Hermit proposals | 0 |
 | Active epics | 0 |
 <!-- guide:plan-body:end -->
