@@ -1,0 +1,106 @@
+{
+ "schema": "gf180-comparator/klt-source-bundle",
+ "version": 2,
+ "generator": "sim/tools/mk_klt_request.py",
+ "generated_utc": "2026-10-11T09:13:04Z",
+ "bench": "comparator-offset-cm-index",
+ "origin": {
+  "commit": "d2e47892ec7ebc6560217e082f0f34df841476ae",
+  "dirty": false,
+  "dirty_paths": [],
+  "checked_paths": [
+   "design",
+   "sim/tools",
+   "sim/harness",
+   "sim/comparator-offset-cm-index/testbench",
+   "sim/dut.json",
+   "design/comparator.spice"
+  ]
+ },
+ "dut": {
+  "selector": null,
+  "key": "comparator-dr0001",
+  "dut_id": "comparator-dr0001",
+  "provenance": "schematic",
+  "netlist": "design/comparator.spice",
+  "netlist_sha256": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a",
+  "params": {
+   "dut_ib": 1e-05,
+   "dut_vcm": 1.65
+  },
+  "binding_config": "sim/dut.json",
+  "binding_entry_sha256": "77228add0ad0b1b62eda65cfcfd0f79c62b5d289ecd7eb1caa1522de9afb274e",
+  "staged_netlist": "sources/dut/comparator.spice",
+  "staged_binding": "sources/dut-binding.json"
+ },
+ "testbench": {
+  "experiment": "comparator-offset-cm-index",
+  "dir": "sim/comparator-offset-cm-index/testbench",
+  "netlist": "tb_offset_cm_index.spice",
+  "netlist_sha256": "014293424ecff1e2d81bc979e2d9eb5b8e28e346cecc1326be28125f0b5fc344",
+  "manifest_sha256": "8b164b74c2474a98aef743212a7770e73736f65ad4cd98e53b0fcec4b644c59d",
+  "staged_dir": "sources/testbench"
+ },
+ "toolchain": {
+  "file": "sim/toolchain.json",
+  "sha256": "0a6b61bc0987b2ed17d96142f067025144408b16b2d5f9d54a2a722a62f01a20",
+  "commit": "d2e47892ec7ebc6560217e082f0f34df841476ae",
+  "ngspice_min_major": 46,
+  "open_pdks": "c6d73a35f524070e85faff4a6a9eef49553ebc2b",
+  "pdk_variant": "gf180mcuD"
+ },
+ "parameters": {
+  "corners": [
+   "tt"
+  ],
+  "temperatures_c": [
+   27.0
+  ],
+  "supply_tolerance": 0.1,
+  "supply_v": [
+   3.3
+  ],
+  "mc_n": 8,
+  "tolerance_profile": {
+   "name": "tight",
+   "options": [
+    [
+     "reltol",
+     1e-05
+    ],
+    [
+     "abstol",
+     1e-14
+    ],
+    [
+     "vntol",
+     1e-09
+    ]
+   ],
+   "cards": [
+    ".options reltol=1e-05",
+    ".options abstol=1e-14",
+    ".options vntol=1e-09"
+   ]
+  }
+ },
+ "requests": {
+  "main-v3.30": {
+   "leg": "main",
+   "vdd": 3.3,
+   "request": "request-main-v3.30.json",
+   "request_sha256": "50f7bb5b904248aa9726400390b389b54813d4eb50b9d20a582fe5a7c84b7172",
+   "netlist": "body-v3.30.spice",
+   "netlist_sha256": "3b4c1eba3a7258a3d0b4b32bac5d5aa1de2a09d10e9becd9a658560926c28c64"
+  }
+ },
+ "staged": {
+  "body-v3.30.spice": "3b4c1eba3a7258a3d0b4b32bac5d5aa1de2a09d10e9becd9a658560926c28c64",
+  "design.ngspice": "091cb530bf85160a1f07878fb81f789ca367d018991c8ab41a584cd1a85c6692",
+  "request-main-v3.30.json": "50f7bb5b904248aa9726400390b389b54813d4eb50b9d20a582fe5a7c84b7172",
+  "sources/dut/comparator.spice": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a",
+  "sources/dut-binding.json": "9ed024b2e635e241570e47b0e48c2fbe8719c0c4dbd38c92b7e97c1b06e49701",
+  "sources/testbench/tb.json": "8b164b74c2474a98aef743212a7770e73736f65ad4cd98e53b0fcec4b644c59d",
+  "sources/testbench/tb_offset_cm_index.spice": "014293424ecff1e2d81bc979e2d9eb5b8e28e346cecc1326be28125f0b5fc344"
+ }
+}
