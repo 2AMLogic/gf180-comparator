@@ -46,7 +46,8 @@ class Base(unittest.TestCase):
         self._tmp = tempfile.TemporaryDirectory()
         self.root = Path(self._tmp.name)
         man = json.loads((REPO_ROOT / SOURCES).read_text())
-        rels = [REPORT, SOURCES, ENVELOPE, "signoff/make_item8_envelope.py", "sim/harness/corners.py"]
+        rels = [REPORT, SOURCES, ENVELOPE, "signoff/make_item8_envelope.py", "sim/harness/corners.py",
+                "scripts/check_claim_drift.py", "spec/claim-registry.json"]
         rels += [e["path"] for e in man["records"]]
         for rel in rels:
             (self.root / rel).parent.mkdir(parents=True, exist_ok=True)
@@ -314,6 +315,94 @@ class StaleSummary(Base):
         data["summary"] = data["summary"].replace("target 1/45", "target 45/45", 1)
         env.write_text(json.dumps(data, indent=2) + "\n")
         self.assertEqual(self.cli("--check").returncode, 1)
+
+
+class NarrativeClaims(Base):
+    """#293: registered report numbers must agree with the pinned records."""
+
+    def mutate(self, old: str, new: str) -> None:
+        rep = self.root / REPORT
+        text = rep.read_text()
+        self.assertIn(old, text)
+        rep.write_text(text.replace(old, new))
+        # refresh the narrative hash in the envelope: must still be refused
+        env = self.root / ENVELOPE
+        data = json.loads(env.read_text())
+        data["provenance"]["input"]["content_hash"] = _sha(rep)
+        env.write_text(json.dumps(data, indent=2) + "\n")
+
+    def test_current_claims_validate_with_scopes(self) -> None:
+        self.assertEqual(self.problems(), [])
+        claims = [c for c in json.loads((self.root / "spec/claim-registry.json").read_text())["claims"]
+                  if c["doc"] == REPORT]
+        scopes = {c["scope"] for c in claims}
+        self.assertEqual(scopes, {"scored", "diagnostic", "historical"})
+        self.assertFalse([c for c in claims if "power" in c["id"] or "µW" in c["literal"]])  # power UNSCORED
+
+    def assertNamed(self, claim_id: str) -> None:
+        self.assertRejected(f"claim {claim_id}:")
+        proc = self.cli()
+        self.assertEqual(proc.returncode, 1)
+        self.assertIn(f"claim {claim_id}:", proc.stderr)
+        self.assertIn("nothing written", proc.stderr)
+
+    def test_range_endpoint_mutation_rejected(self) -> None:
+        self.mutate("2.994–3.795 mV 3σ, binding", "2.994–3.895 mV 3σ, binding")
+        before = (self.root / ENVELOPE).read_text()
+        self.assertNamed("char-offset-scored-row-max")
+        self.assertEqual((self.root / ENVELOPE).read_text(), before)
+
+    def test_nominal_mutation_rejected(self) -> None:
+        self.mutate("| 91.25 µV rms |", "| 81.25 µV rms |")
+        self.assertNamed("char-noise-nominal")
+
+    def test_binding_corner_mutation_rejected(self) -> None:
+        self.mutate("| **`ff_125c_3.63v`**", "| **`ss_125c_3.63v`**")
+        self.assertNamed("char-offset-scored-table-max")
+
+    def test_scored_count_mutation_rejected(self) -> None:
+        self.mutate("misses stretch 16/45", "misses stretch 15/45")
+        self.assertNamed("char-dec-sch-count-stretch-miss")
+
+    def test_historical_and_diagnostic_claims_are_checked_too(self) -> None:
+        self.mutate("3σ ≈ 3.15 mV (`tt_27c_3.30v`, 9-point record)", "3σ ≈ 3.25 mV (`tt_27c_3.30v`, 9-point record)")
+        self.assertNamed("char-offset-hist-9pt-nominal")
+
+    def test_changed_record_changes_count_claim(self) -> None:
+        """A coherently re-pinned record that flips a count leaves the prose wrong."""
+        man = self.manifest()
+        ent = next(e for e in man["records"] if e.get("summary_key") == "decision_schematic")
+        path = self.root / ent["path"]
+        rec = json.loads(path.read_text())
+        rec["points"][0]["measurements"]["td_od50_ns"] = 1.9
+        path.write_text(json.dumps(rec))
+        ent["sha256"] = _sha(path)
+        self.write_manifest(man)
+        self.assertRejected("claim char-dec-sch-count-target:")
+
+    def test_scored_record_without_scored_claim_rejected(self) -> None:
+        reg = self.root / "spec/claim-registry.json"
+        data = json.loads(reg.read_text())
+        data["claims"] = [c for c in data["claims"]
+                          if not (c["doc"] == REPORT and c["id"].startswith("char-noise"))]
+        reg.write_text(json.dumps(data))
+        self.assertRejected("no scored claim registered against summary record 20260910-125200-4805118")
+
+    def test_claim_against_unmanifested_record_rejected(self) -> None:
+        reg = self.root / "spec/claim-registry.json"
+        data = json.loads(reg.read_text())
+        next(c for c in data["claims"] if c["id"] == "char-noise-nominal")["record"] = "sim/other/records/x.json"
+        reg.write_text(json.dumps(data))
+        self.assertRejected("claim char-noise-nominal: record sim/other/records/x.json is not in the source manifest")
+
+    def test_missing_registry_rejected(self) -> None:
+        (self.root / "spec/claim-registry.json").unlink()
+        self.assertRejected("narrative claim registry")
+
+    def test_disclosed_misses_still_pass(self) -> None:
+        # the committed report already discloses target/stretch misses and passes
+        self.assertEqual(M8.build_envelope(self.root)["status"], "pass")
+        self.assertIn("misses stretch 16/45", (self.root / REPORT).read_text())
 
 
 if __name__ == "__main__":

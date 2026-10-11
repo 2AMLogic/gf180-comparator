@@ -35,6 +35,21 @@ element whose corner_id is X; a segment `*` ranges over all keys of a dict and
 needs "agg": "min" or "max" (the extreme is the value, its key the corner, so
 "corner_pointer" is not needed).
 
+Characterization report (issue #293): measurements/characterization-report.md
+is a registry-only doc (CLAIM_DOCS): its scored table claims are checked by
+the NUMERIC step, and also by signoff/make_item8_envelope.py before item-8
+generation (it calls check_claims on this doc's rows). It is NOT in DOCS, so
+the CITATION/STALE steps do not apply to the narrative, which legitimately
+cites older records. Every row for that doc must carry "scope":
+  "scored"      a current scored table claim (nominal, extrema, binding
+                corner, target/stretch counts)
+  "diagnostic"  a diagnostic figure (preamp-only bench, simulated-only, ...)
+  "historical"  an earlier/superseded record's figure
+Extensions for it: a `*` segment also ranges over a list of objects keyed by
+their corner_id; "agg": "count_le" / "count_gt" with a numeric "threshold"
+counts the ranged values <= / > threshold and the literal must show "k/n".
+Average power is deliberately unregistered: it stays UNSCORED.
+
 Known, already-reported drift is waived in the registry key "known_drift"
 ({"doc","cited","newer":[ids],"issue":"#N"}). A waiver that no longer matches
 anything fails the check, so waivers cannot rot silently.
@@ -48,6 +63,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 DOCS = ("README.md", "spec/evidence-ledger.md", "spec/consumers.md")
+REPORT_DOC = "measurements/characterization-report.md"
+CLAIM_DOCS = DOCS + (REPORT_DOC,)
+SCOPES = ("scored", "diagnostic", "historical")
+COUNT_AGGS = ("count_le", "count_gt")
 REGISTRY = "spec/claim-registry.json"
 CITE = re.compile(r"sim/(comparator-[a-z0-9-]+)/records/([0-9][0-9A-Za-z_.-]*?)\.md")
 MARKER = re.compile(r"historical|earlier|superseded|prior|previous|history|"
@@ -137,22 +156,46 @@ def check_stale(root, cites, waivers):
     return errs, used
 
 
+class _Threshold:
+    """Carries the claim threshold into walk() without widening its API."""
+    value = None
+
+    def get(self):
+        return self.value
+
+
+_THRESHOLD = _Threshold()
+
+
 def walk(node, segs, agg):
     """Resolve segs in node. Returns (value, key_or_None)."""
     if not segs:
         return node, None
     seg, rest = segs[0], segs[1:]
     if seg == "*":
-        if not isinstance(node, dict) or agg not in ("min", "max"):
-            raise KeyError("'*' needs a dict and agg min|max")
+        if isinstance(node, list):  # list of objects keyed by corner_id
+            if not all(isinstance(e, dict) and "corner_id" in e for e in node):
+                raise KeyError("'*' over a list needs corner_id objects")
+            items = [(e["corner_id"], e) for e in node]
+        else:
+            items = list(node.items()) if isinstance(node, dict) else None
+        if items is None or agg not in ("min", "max") + COUNT_AGGS:
+            raise KeyError("'*' needs a dict/list and agg min|max|count_le|count_gt")
         vals = {}
-        for k, sub in node.items():
+        for k, sub in items:
             try:
                 vals[k] = walk(sub, rest, agg)[0]
             except KeyError:
                 pass
         if not vals:
             raise KeyError("'*' matched nothing")
+        if agg in COUNT_AGGS:
+            thr = _THRESHOLD.get()
+            if isinstance(thr, bool) or not isinstance(thr, (int, float)):
+                raise KeyError("count agg needs a numeric threshold")
+            n = sum(v <= thr if agg == "count_le" else v > thr
+                    for v in vals.values())
+            return n, len(vals)  # (count, total)
         k = (min if agg == "min" else max)(vals, key=vals.get)
         return vals[k], k
     if "=" in seg:
@@ -168,7 +211,8 @@ def walk(node, segs, agg):
     return walk(node[seg], rest, agg)
 
 
-def resolve(twin, pointer, agg=None):
+def resolve(twin, pointer, agg=None, threshold=None):
+    _THRESHOLD.value = threshold
     if not isinstance(pointer, str) or not pointer.startswith("/"):
         raise KeyError(f"bad pointer {pointer!r}")
     return walk(twin, pointer[1:].split("/"), agg)
@@ -192,7 +236,7 @@ def has_token(literal, shown):
 
 
 FIELDS = {"id", "doc", "literal", "record", "pointer", "decimals", "scale",
-          "agg", "corner", "corner_pointer"}
+          "agg", "corner", "corner_pointer", "scope", "threshold"}
 
 
 def check_claims(root, claims):
@@ -208,8 +252,14 @@ def check_claims(root, claims):
         if cid in ids:
             errs.append(f"{tag} duplicate id")
         ids.add(cid)
-        if c["doc"] not in DOCS:
-            errs.append(f"{tag} doc {c['doc']} is not one of {DOCS}")
+        if c["doc"] not in CLAIM_DOCS:
+            errs.append(f"{tag} doc {c['doc']} is not one of {CLAIM_DOCS}")
+            continue
+        if c["doc"] == REPORT_DOC and c.get("scope") not in SCOPES:
+            errs.append(f"{tag} {REPORT_DOC} claims need scope in {SCOPES}")
+            continue
+        if c.get("agg") in COUNT_AGGS and c.get("decimals") != 0:
+            errs.append(f"{tag} count claims need decimals 0")
             continue
         if c["doc"] not in docs:
             f = Path(root) / c["doc"]
@@ -227,7 +277,9 @@ def check_claims(root, claims):
             continue
         try:
             twin = load_json(rec)
-            val, key = resolve(twin, c["pointer"], c.get("agg"))
+            val, key = resolve(twin, c["pointer"], c.get("agg"),
+                               c.get("threshold"))
+            counting = c.get("agg") in COUNT_AGGS
             dec, scale = c["decimals"], float(c.get("scale", 1))
             if (not isinstance(dec, int) or isinstance(dec, bool) or dec < 0
                     or not math.isfinite(scale)):
@@ -237,6 +289,8 @@ def check_claims(root, claims):
             if not math.isfinite(val):
                 raise ValueError(f"non-finite resolved value {val}")
             corner = c.get("corner")
+            if corner is not None and counting:
+                raise ValueError("a count claim has no corner")
             if corner is not None:
                 if "corner_pointer" in c:
                     key = resolve(twin, c["corner_pointer"])[0]
@@ -249,7 +303,7 @@ def check_claims(root, claims):
             errs.append(f"{tag} cannot resolve {c['pointer']} in "
                         f"{c['record']}: {e}")
             continue
-        shown = f"{val:.{dec}f}"
+        shown = f"{int(val)}/{key}" if counting else f"{val:.{dec}f}"
         if not has_token(c["literal"], shown):
             errs.append(f"{tag} {c['doc']} says {c['literal']!r} but "
                         f"{c['record']}{c['pointer']} = {shown}")
