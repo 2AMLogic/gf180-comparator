@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "comment": "Source manifest for the item-8 characterization narrative (issue #275). signoff/make_item8_envelope.py validates it before writing the envelope. Each record is pinned by sha256 and scope; each required section must exist in the report and cite its declared records by id. summary_key marks the record the envelope's numeric summary is derived from.",
+  "comment": "Source manifest for the item-8 characterization narrative (issue #275). signoff/make_item8_envelope.py validates it before writing the envelope. Each record is pinned by sha256 and scope; each required section must exist in the report and cite its declared records by id. summary_key marks the record the envelope's numeric summary is derived from. expected_grid (issue #289) declares each record's distinct PVT corner coverage; the validator checks it against sim/harness/corners.py and the record's corner identities.",
   "report": "measurements/characterization-report.md",
   "required_text": {
     "scored-summary": [
@@ -14,7 +14,26 @@
       "sha256": "sha256:eaae9c29ceae363ad4959498d5638c3287edb0ceb146d66907360d0c3fe24bac",
       "bench": "comparator-offset-mc",
       "dut_provenance": "schematic",
-      "points": 45
+      "points": 45,
+      "expected_grid": {
+        "corners": [
+          "tt",
+          "ff",
+          "ss",
+          "fs",
+          "sf"
+        ],
+        "temps_c": [
+          -40,
+          27,
+          125
+        ],
+        "supplies_v": [
+          2.97,
+          3.3,
+          3.63
+        ]
+      }
     },
     {
       "id": "20261010-013540611508-4a4df37",
@@ -22,7 +41,20 @@
       "sha256": "sha256:71d2accea22f666fe08a07cb320918b1f4caa844fb57a7da518a6d89eb8a1a59",
       "bench": "comparator-offset-tran",
       "dut_provenance": "schematic",
-      "points": 9
+      "points": 9,
+      "expected_grid": {
+        "corner_ids": [
+          "tt_-40c_3.30v",
+          "tt_27c_3.30v",
+          "tt_125c_3.30v",
+          "ff_-40c_3.30v",
+          "ff_27c_3.30v",
+          "ff_125c_3.30v",
+          "ss_-40c_3.30v",
+          "ss_27c_3.30v",
+          "ss_125c_3.30v"
+        ]
+      }
     },
     {
       "id": "20261010-021500046481-d84e59d",
@@ -31,7 +63,26 @@
       "bench": "comparator-offset-tran",
       "dut_provenance": "schematic",
       "points": 45,
-      "summary_key": "offset"
+      "summary_key": "offset",
+      "expected_grid": {
+        "corners": [
+          "tt",
+          "ff",
+          "ss",
+          "fs",
+          "sf"
+        ],
+        "temps_c": [
+          -40,
+          27,
+          125
+        ],
+        "supplies_v": [
+          2.97,
+          3.3,
+          3.63
+        ]
+      }
     },
     {
       "id": "20260910-125200-4805118",
@@ -40,7 +91,26 @@
       "bench": "comparator-preamp-noise",
       "dut_provenance": "schematic",
       "points": 45,
-      "summary_key": "noise"
+      "summary_key": "noise",
+      "expected_grid": {
+        "corners": [
+          "tt",
+          "ff",
+          "ss",
+          "fs",
+          "sf"
+        ],
+        "temps_c": [
+          -40,
+          27,
+          125
+        ],
+        "supplies_v": [
+          2.97,
+          3.3,
+          3.63
+        ]
+      }
     },
     {
       "id": "20260910-125206-4805118",
@@ -49,7 +119,26 @@
       "bench": "comparator-regeneration",
       "dut_provenance": "schematic",
       "points": 45,
-      "summary_key": "decision_schematic"
+      "summary_key": "decision_schematic",
+      "expected_grid": {
+        "corners": [
+          "tt",
+          "ff",
+          "ss",
+          "fs",
+          "sf"
+        ],
+        "temps_c": [
+          -40,
+          27,
+          125
+        ],
+        "supplies_v": [
+          2.97,
+          3.3,
+          3.63
+        ]
+      }
     },
     {
       "id": "20261002-202641-baeffe5",
@@ -58,7 +147,26 @@
       "bench": "comparator-regeneration",
       "dut_provenance": "extracted",
       "points": 45,
-      "summary_key": "decision_extracted"
+      "summary_key": "decision_extracted",
+      "expected_grid": {
+        "corners": [
+          "tt",
+          "ff",
+          "ss",
+          "fs",
+          "sf"
+        ],
+        "temps_c": [
+          -40,
+          27,
+          125
+        ],
+        "supplies_v": [
+          2.97,
+          3.3,
+          3.63
+        ]
+      }
     },
     {
       "id": "20260910-125341-4805118",
@@ -67,7 +175,26 @@
       "bench": "comparator-kickback",
       "dut_provenance": "schematic",
       "points": 45,
-      "summary_key": "kickback_schematic_pnode"
+      "summary_key": "kickback_schematic_pnode",
+      "expected_grid": {
+        "corners": [
+          "tt",
+          "ff",
+          "ss",
+          "fs",
+          "sf"
+        ],
+        "temps_c": [
+          -40,
+          27,
+          125
+        ],
+        "supplies_v": [
+          2.97,
+          3.3,
+          3.63
+        ]
+      }
     },
     {
       "id": "20261002-211343-6346fad",
@@ -76,7 +203,26 @@
       "bench": "comparator-kickback",
       "dut_provenance": "extracted",
       "points": 45,
-      "summary_key": "kickback_extracted"
+      "summary_key": "kickback_extracted",
+      "expected_grid": {
+        "corners": [
+          "tt",
+          "ff",
+          "ss",
+          "fs",
+          "sf"
+        ],
+        "temps_c": [
+          -40,
+          27,
+          125
+        ],
+        "supplies_v": [
+          2.97,
+          3.3,
+          3.63
+        ]
+      }
     },
     {
       "id": "20261010-022609774981-bf851ec",
@@ -85,7 +231,26 @@
       "bench": "comparator-kickback",
       "dut_provenance": "schematic",
       "points": 45,
-      "summary_key": "kickback_schematic_both"
+      "summary_key": "kickback_schematic_both",
+      "expected_grid": {
+        "corners": [
+          "tt",
+          "ff",
+          "ss",
+          "fs",
+          "sf"
+        ],
+        "temps_c": [
+          -40,
+          27,
+          125
+        ],
+        "supplies_v": [
+          2.97,
+          3.3,
+          3.63
+        ]
+      }
     }
   ],
   "sections": [
