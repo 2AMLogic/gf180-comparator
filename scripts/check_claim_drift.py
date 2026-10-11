@@ -40,6 +40,7 @@ Known, already-reported drift is waived in the registry key "known_drift"
 anything fails the check, so waivers cannot rot silently.
 """
 import json
+import math
 import re
 import subprocess
 import sys
@@ -173,6 +174,23 @@ def resolve(twin, pointer, agg=None):
     return walk(twin, pointer[1:].split("/"), agg)
 
 
+def has_token(literal, shown):
+    """True if `shown` occurs in `literal` as a complete numeric token: not
+    glued to more digits, a decimal part, an exponent, or a leading minus
+    (a minus right after a digit is a range dash, not a sign)."""
+    for m in re.finditer(re.escape(shown), literal):
+        a, b = m.start(), m.end()
+        before, after = literal[:a], literal[b:]
+        if re.search(r"\d$|\d\.$|\.$|\d\.?[eE][+-]?$", before):
+            continue
+        if re.match(r"\d|\.\d|\.?[eE][+-]?\d", after):
+            continue
+        if not shown.startswith("-") and re.search(r"(?<!\d)[-\u2212]$", before):
+            continue
+        return True
+    return False
+
+
 FIELDS = {"id", "doc", "literal", "record", "pointer", "decimals", "scale",
           "agg", "corner", "corner_pointer"}
 
@@ -210,7 +228,14 @@ def check_claims(root, claims):
         try:
             twin = load_json(rec)
             val, key = resolve(twin, c["pointer"], c.get("agg"))
-            val = float(val) * float(c.get("scale", 1))
+            dec, scale = c["decimals"], float(c.get("scale", 1))
+            if (not isinstance(dec, int) or isinstance(dec, bool) or dec < 0
+                    or not math.isfinite(scale)):
+                raise ValueError(f"invalid decimals {c['decimals']!r} "
+                                 f"or scale {c.get('scale')!r}")
+            val = float(val) * scale
+            if not math.isfinite(val):
+                raise ValueError(f"non-finite resolved value {val}")
             corner = c.get("corner")
             if corner is not None:
                 if "corner_pointer" in c:
@@ -224,8 +249,8 @@ def check_claims(root, claims):
             errs.append(f"{tag} cannot resolve {c['pointer']} in "
                         f"{c['record']}: {e}")
             continue
-        shown = f"{val:.{int(c['decimals'])}f}"
-        if shown not in c["literal"]:
+        shown = f"{val:.{dec}f}"
+        if not has_token(c["literal"], shown):
             errs.append(f"{tag} {c['doc']} says {c['literal']!r} but "
                         f"{c['record']}{c['pointer']} = {shown}")
     return errs
