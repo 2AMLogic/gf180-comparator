@@ -115,9 +115,18 @@ def corner_id(raw: str, vdd: float) -> tuple[str, str]:
 
     The supply is not in klt's corner id: it is baked into each request's
     body netlist (one request per supply point, see mk_klt_request.py)."""
+    if not isinstance(raw, str):
+        raise ValueError(f"corner id {raw!r} is not a string")
     parts = raw.split("/")
     proc = parts[0]
-    temp = next(float(x.rstrip("C")) for x in parts[1:] if x.endswith("C"))
+    try:
+        temp = next(float(x[:-1]) for x in parts[1:] if x.endswith("C"))
+    except StopIteration:
+        raise ValueError(f"corner id {raw!r} has no temperature part") from None
+    except ValueError:
+        raise ValueError(f"corner id {raw!r} has an unparsable temperature") from None
+    if not proc or not math.isfinite(temp):
+        raise ValueError(f"corner id {raw!r} has no process or a non-finite temperature")
     sample = next((x for x in parts[1:] if x.startswith("mc")), "")
     return f"{proc}_{temp:g}c_{vdd:.2f}v", sample
 
@@ -162,7 +171,10 @@ def collect_checked(report: dict, request: dict, vdd: float, tag: str = "") -> t
 
     Unlike `collect`, nothing is overwritten or silently dropped. Every issue is
     a string led by a named diagnostic code: DUPLICATE_UNIT, MISSING_UNIT,
-    UNEXPECTED_UNIT, FAILED_UNIT, MC_DECLARATION_MISMATCH, NONFINITE_INGREDIENT."""
+    UNEXPECTED_UNIT, FAILED_UNIT, MC_DECLARATION_MISMATCH, NONFINITE_INGREDIENT,
+    DUPLICATE_INGREDIENT, MALFORMED_CORNER_ID. Duplicates are judged on the
+    normalized (corner_id, sample) key, so aliases such as tt/27C and tt/27.0C
+    collide; neither copy of a repeated unit is trusted, whatever the order."""
     pre = f"{tag}: " if tag else ""
     issues: list[str] = []
     want = expected_units(request, vdd)
@@ -177,15 +189,25 @@ def collect_checked(report: dict, request: dict, vdd: float, tag: str = "") -> t
     ingredients = [m["name"] for m in request.get("measurements", []) if "name" in m]
     out: dict = {}
     bad: list = []
-    seen: set = set()
+    seen: dict = {}
     failed: set = set()
     for c in report["corners"]:
-        raw = c["corner_id"]
-        cid, sample = corner_id(raw, vdd)
-        if raw in seen:
-            issues.append(f"{pre}DUPLICATE_UNIT: {raw} appears more than once")
+        raw = c.get("corner_id")
+        try:
+            cid, sample = corner_id(raw, vdd)
+        except ValueError as e:
+            issues.append(f"{pre}MALFORMED_CORNER_ID: {e}")
             continue
-        seen.add(raw)
+        key = (cid, sample)
+        if key in seen:
+            issues.append(f"{pre}DUPLICATE_UNIT: {raw} appears more than once"
+                          f" (same unit as {seen[key]}, normalized {cid}{'/' + sample if sample else ''})")
+            out.get(cid, {}).pop(sample, None)  # neither copy is trusted
+            if cid in out and not out[cid]:
+                del out[cid]
+            failed.add(key)
+            continue
+        seen[key] = raw
         if cid not in want or sample not in want[cid]:
             issues.append(f"{pre}UNEXPECTED_UNIT: {raw} is not in the requested grid")
             continue
@@ -193,6 +215,13 @@ def collect_checked(report: dict, request: dict, vdd: float, tag: str = "") -> t
             bad.append((raw, c["status"]))
             failed.add((cid, sample))
             issues.append(f"{pre}FAILED_UNIT: {raw} -> {c['status']}")
+            continue
+        names = [m.get("name") for m in c["measurements"]]
+        repeated = [n for n in ingredients if names.count(n) > 1]
+        for name in repeated:
+            issues.append(f"{pre}DUPLICATE_INGREDIENT: {raw} {name} appears {names.count(name)} times")
+        if repeated:
+            failed.add(key)
             continue
         vals = {m["name"]: m["value"] for m in c["measurements"] if m.get("value") is not None}
         invalid = [name for name in ingredients if not _finite(vals.get(name))]

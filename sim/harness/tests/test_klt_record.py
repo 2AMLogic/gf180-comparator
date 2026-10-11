@@ -984,7 +984,54 @@ class CoverageValidation(unittest.TestCase):
         rep["environment"] = {"monte_carlo": MC2}
         out, _, issues = self._check(rep, req)
         self.assertTrue(any(i.startswith("DUPLICATE_UNIT") and "tt/27C/mc0" in i for i in issues))
-        self.assertEqual(out["tt_27c_3.30v"]["mc0"]["dv0"], 1.0)  # first kept
+        self.assertNotIn("mc0", out.get("tt_27c_3.30v", {}))  # neither copy trusted
+        self.assertFalse(any(i.startswith("MISSING_UNIT") for i in issues))
+
+    def _one(self, *units):
+        req = _req(procs=("tt",), temps=(27.0,), mc=None, meas=("x",))
+        return kr.collect_checked(_report(*units), req, 3.3)
+
+    def test_alias_duplicate_rejected_either_order(self):
+        a, b = ("tt/27C", "pass", {"x": 1}), ("tt/27.0C", "pass", {"x": 99})
+        for units in ((a, b), (b, a)):
+            out, _, issues = self._one(*units)
+            self.assertEqual(self._codes(issues), ["DUPLICATE_UNIT"], issues)
+            self.assertEqual(out, {})
+
+    def test_exact_duplicate_rejected(self):
+        a = ("tt/27C", "pass", {"x": 1})
+        out, _, issues = self._one(a, a)
+        self.assertEqual(self._codes(issues), ["DUPLICATE_UNIT"], issues)
+        self.assertEqual(out, {})
+        out, _, issues = self._one(a, a, a)
+        self.assertEqual(out, {})
+
+    def test_repeated_ingredient_rejected(self):
+        for ms in ([("x", 1), ("x", 99)], [("x", None), ("x", 5)], [("x", 5), ("x", None)]):
+            rep = {"corners": [{"corner_id": "tt/27C", "status": "pass",
+                                "measurements": [{"name": n, "value": v} for n, v in ms]}]}
+            req = _req(procs=("tt",), temps=(27.0,), meas=("x",))
+            out, _, issues = kr.collect_checked(rep, req, 3.3)
+            self.assertEqual(self._codes(issues), ["DUPLICATE_INGREDIENT"], issues)
+            self.assertEqual(out, {})
+
+    def test_repeated_unrequired_name_tolerated(self):
+        rep = {"corners": [{"corner_id": "tt/27C", "status": "pass", "measurements": [
+            {"name": "x", "value": 1}, {"name": "y", "value": 1}, {"name": "y", "value": 2}]}]}
+        out, _, issues = kr.collect_checked(rep, _req(procs=("tt",), temps=(27.0,), meas=("x",)), 3.3)
+        self.assertEqual(issues, [])
+
+    def test_distinct_mc_samples_not_duplicates(self):
+        req = _req(procs=("tt",), temps=(27.0,), mc=MC2)
+        out, _, issues = self._check(_full_mc_report(req), req)
+        self.assertEqual(issues, [])
+        self.assertEqual(sorted(out["tt_27c_3.30v"]), ["mc0", "mc1"])
+
+    def test_malformed_corner_ids_named(self):
+        for raw in ("tt", "tt/xC", "tt/nanC", "/27C", "", None, 5):
+            out, _, issues = self._one((raw, "pass", {"x": 1}))
+            self.assertIn("MALFORMED_CORNER_ID", self._codes(issues), (raw, issues))
+            self.assertEqual(out, {})
 
     def test_missing_mc_draw_named(self):
         req = _req(procs=("tt",), temps=(27.0,), mc=MC2)
