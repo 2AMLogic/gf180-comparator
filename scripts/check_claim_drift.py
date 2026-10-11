@@ -181,7 +181,7 @@ def has_token(literal, shown):
     for m in re.finditer(re.escape(shown), literal):
         a, b = m.start(), m.end()
         before, after = literal[:a], literal[b:]
-        if re.search(r"\d$|\d\.$|\.$", before):
+        if re.search(r"\d$|\d\.$|\.$|\d[eE][+-]?$", before):
             continue
         if re.match(r"\d|\.\d|[eE][+-]?\d", after):
             continue
@@ -228,8 +228,9 @@ def check_claims(root, claims):
         try:
             twin = load_json(rec)
             val, key = resolve(twin, c["pointer"], c.get("agg"))
-            dec, scale = int(c["decimals"]), float(c.get("scale", 1))
-            if dec < 0 or not math.isfinite(scale):
+            dec, scale = c["decimals"], float(c.get("scale", 1))
+            if (not isinstance(dec, int) or isinstance(dec, bool) or dec < 0
+                    or not math.isfinite(scale)):
                 raise ValueError(f"invalid decimals {c['decimals']!r} "
                                  f"or scale {c.get('scale')!r}")
             val = float(val) * scale

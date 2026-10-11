@@ -126,6 +126,25 @@ class ClaimDrift(unittest.TestCase):
             rc, out = self._lit(lit)
             self.assertEqual(rc, 0, f"{lit}: {out}")
 
+    def _set_decimals(self, literal, decimals):
+        t = self.tree(readme=f"Result {literal} (sim/{B}/records/{OLD}.md).\n",
+                      literal=literal)
+        p = Path(t) / "spec" / "claim-registry.json"
+        p.write_text(p.read_text().replace('"decimals": 3', decimals))
+        return run(t)
+
+    def test_exponent_on_the_left_fails(self):
+        for lit in ("1e3 mV worst ff", "1E+3 mV worst ff", "2.5e-3 mV worst ff"):
+            rc, out = self._set_decimals(lit, '"decimals": 0')
+            self.assertEqual(rc, 1, lit)
+            self.assertIn("claim c1", out)
+
+    def test_invalid_or_non_finite_decimals_fail(self):
+        for d in ("3.9", "Infinity", "-Infinity", "NaN", "true", "null", "[3]"):
+            rc, out = self._set_decimals("3 mV worst ff", f'"decimals": {d}')
+            self.assertEqual(rc, 1, d)
+            self.assertIn("claim c1", out)
+
     def test_bad_formatting_metadata_fails(self):
         for k, v in (("decimals", "x"), ("decimals", -1), ("scale", "x"),
                      ("scale", "inf")):
