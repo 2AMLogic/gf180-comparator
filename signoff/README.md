@@ -571,7 +571,28 @@ Before emitting `pass`, `make_item8_envelope.py` validates
 non-empty, contain each required section heading, cite each section's
 declared `sim/*/records/` ids and keep average power explicitly `UNSCORED`;
 every registered record must exist, match its pinned sha256 and declared
-scope (bench, DUT provenance, point count, clean tree). Failures print named
+scope (bench, DUT provenance, point count, clean tree). Source qualification
+([#296](https://github.com/2AMLogic/gf180-comparator/issues/296)): each
+registered record also declares a `role` — `current` scored evidence, or
+`historical`/`diagnostic` context (only a `current` record may carry a
+`summary_key`) — and the `dut_id` it is expected to characterize, resolved
+against the live `sim/dut.json` registry. Every role must name that DUT, its
+registry provenance and netlist path (schematic records also stamp a
+`dut_netlist_sha256`; extracted records declare a committed
+`extraction_report` that pins an input layout hash). Freshness against
+today's bytes is checked on `current` records only: a `current` schematic
+record must stamp the current bytes of that entry's netlist, and a `current`
+extracted record's `extraction_report` input hash must still match the
+committed layout bytes (the regenerated scratch netlist is never required).
+`historical`/`diagnostic` records are context for the design they ran
+against and are not compared with today's bytes — that is what makes the
+refresh contract satisfiable: the design changed — re-run, register the new
+record as `current`, re-role the old one `historical`/`diagnostic` (it stays
+citable as context but can never back a scored summary row). A `current` record whose bytes carry fleet
+provenance fields must be citable reference evidence with no refusal reasons
+(legacy local records carry no fleet fields and qualify through their
+committed context). A SHA pin proves which record bytes were read; these
+checks prove they are eligible for the current claim. Failures print named
 `evidence-chain:` diagnostics and write nothing, even if the report hash was
 refreshed. The envelope `summary`'s per-row counts are derived from the pinned
 records, so a changed record cannot leave a stale summary. This does not
