@@ -1208,6 +1208,75 @@ class CmIndexReplay(unittest.TestCase):
                              ["derivation tooling (sim/tools, sim/harness) dirty at ingest commit 1ngest0"])
 
 
+class ReproduceGuidance(unittest.TestCase):
+    """Issue #272: both record writers share one bundle-derived formatter, so a
+    non-default MC count / DUT selector survives into the Reproduce bullet."""
+
+    DUT = "comparator-dr0004-cascode-exp"
+
+    def _md(self, td, rec, bench):
+        return (td / "evidence" / bench / "records" / f"{rec['record_id']}.md").read_text()
+
+    def _line(self, md):
+        return next(l for l in md.splitlines() if l.startswith("- **Reproduce**"))
+
+    def test_common_mode_writer_preserves_n_and_custom_dut(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work = _generate(td, "--mc-n", "3", "--dut", self.DUT, bench=mk.CM_INDEX_BENCH)
+            self.assertEqual(_bundle(work)["parameters"]["mc_n"], 3)
+            # reuse the synthetic reports of the default-DUT helper for N=3
+            tmp = td / "other"
+            tmp.mkdir()
+            ref = _cm_index_work(tmp, n=3)
+            for f in ref.glob("report-*.json"):
+                req = json.loads((work / f.name.replace("report-", "request-")).read_text())
+                rep = json.loads(f.read_text())
+                rep["environment"] = _link_env(work, _bundle(work), _bundle(work)["requests"][f.stem[7:]])
+                rep["environment"]["monte_carlo"] = dict(req["monte_carlo"])
+                rep["environment"]["remote"] = {"runner_klt_version": "0.5.0", "runner_compatibility": "match"}
+                (work / f.name).write_text(json.dumps(rep))
+            rc, rec, _ = _ingest(td, work, bench=mk.CM_INDEX_BENCH)
+            self.assertEqual(rc, 0)
+            line = self._line(self._md(td, rec, mk.CM_INDEX_BENCH))
+            self.assertIn("--mc-n 3", line)
+            self.assertNotIn("200", line)
+            self.assertIn(f"--dut {self.DUT}", line)
+            self.assertIn(ORIGIN, line)
+            self.assertIn("1ngest0", line)
+            self.assertIn("derivation tooling ran at the ingest commit", line)
+
+    def test_scored_writer_preserves_custom_dut_and_both_commits(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work = _generate(td, "--dut", self.DUT)
+            _write_reports(work)
+            rc, rec, _ = _ingest(td, work)
+            self.assertEqual(rc, 0)
+            line = self._line(self._md(td, rec, BENCH))
+            self.assertIn(f"--dut {self.DUT}", line)
+            self.assertIn(ORIGIN, line)
+            self.assertIn("1ngest0", line)
+
+    def test_formatter_preserves_n3_and_flags_nondefault_grid(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work = _generate(td, "--mc-n", "3", bench="comparator-offset-mc")
+            b = _bundle(work)
+            tb = htb.load(work / b["testbench"]["staged_dir"])
+            r = {"rid": "RID", "ingest_sha": ORIGIN}
+            line = kr.reproduce_line("comparator-offset-mc", b, r, tb)
+            self.assertIn("--mc-n 3", line)
+            self.assertNotIn("--mc-n 200", line)
+            self.assertNotIn("differs", line)
+            self.assertNotIn("derivation tooling ran", line)  # same commit: no replay split
+            b["parameters"]["temperatures_c"] = [27.0]
+            line = kr.reproduce_line("comparator-offset-mc", b, r, tb)
+            self.assertIn("differs from the CLI defaults", line)
+            self.assertIn("corners/RID/request-*.json", line)
+            self.assertIn("--mc-n 3", line)
+
+
 class ExistingRecordRefused(unittest.TestCase):
     """Both writers create the corner dir exclusively: an existing record id
     is refused, never overwritten (issue #254 keeps this for both paths)."""

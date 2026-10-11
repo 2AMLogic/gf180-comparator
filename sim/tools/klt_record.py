@@ -1036,6 +1036,48 @@ def _provenance(r: dict, bench: str, b: dict, drift: list[str], link_notes: list
     }
 
 
+def reproduce_line(bench: str, b: dict, r: dict, tb) -> str:
+    """Shared `Reproduce` bullet for both record writers (issue #272).
+
+    Built from the verified source bundle (MC count, DUT selector, grid) and
+    the ingestion identity -- never from today's CLI defaults, so a non-default
+    N or DUT cannot silently regenerate as N=200 / the default DUT. Names the
+    full origin and ingest commits; when they differ, explains that the request
+    set is regenerated from the origin sources while the derivation runs on
+    the ingest tooling. A bundled grid that differs from the CLI defaults is
+    replayed from the archived requests rather than by a default command."""
+    origin_commit, ingest_commit = b["origin"]["commit"], r["ingest_sha"]
+    params, sel = b.get("parameters") or {}, b["dut"].get("selector")
+    args = bench
+    if params.get("mc_n") is not None:
+        args += f" --mc-n {params['mc_n']}"
+    if sel:
+        args += f" --dut {sel}"
+    cmd = f"KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py {args}"
+    try:
+        default_grid = {"corners": [c.name for c in hc.resolve_corners(list(tb.corners))],
+                        "temperatures_c": [float(t) for t in tb.temperatures_c],
+                        "supply_tolerance": tb.supply_tolerance}
+    except Exception:  # unresolvable defaults: do not claim a default command reproduces it
+        default_grid = None
+    bundled = {k: params.get(k) for k in ("corners", "temperatures_c", "supply_tolerance")}
+    bundled["temperatures_c"] = [float(t) for t in bundled["temperatures_c"] or []]
+    rid = r["rid"]
+    out = f"- **Reproduce**: origin commit `{origin_commit}`; ingested at commit `{ingest_commit}`. "
+    if default_grid is not None and bundled == default_grid:
+        out += f"At the origin commit: `{cmd}`."
+    else:
+        out += (f"The bundled grid ({json.dumps(bundled, sort_keys=True)}) differs from the CLI defaults, so no default "
+                f"command reproduces it: replay the archived requests `corners/{rid}/request-*.json` (with their "
+                f"`body-*.spice` and `{mk.SOURCES_DIR}/`) through `klt sim`, then ingest with "
+                f"`python3 sim/tools/klt_record.py {args} --from-report <workdir>`.")
+    if origin_commit != ingest_commit:
+        out += (f" The origin commit (`{origin_commit}`) produced the requests and sources; the derivation tooling ran at "
+                f"the ingest commit (`{ingest_commit}`). To replay, check out the origin commit for the simulation sources "
+                f"(or use the archived requests above), then derive with the ingest-commit `sim/tools` and `sim/harness`.")
+    return out
+
+
 def mint_cm_index(a) -> int:
     """Issue #218: append-only record for the monotonic-index common-mode
     bench. UNSCORED: no ratified bound exists, so there is no target/stretch
@@ -1124,7 +1166,7 @@ def mint_cm_index(a) -> int:
         lines.append(f"  | `{cid}` | " + " | ".join(fmt(dd[n]) for n in cols) + " |")
     lines += [
         "",
-        f"- **Reproduce**: at commit `{sha}`: `KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py {bench}`",
+        reproduce_line(bench, b, r, tb),
         "",
     ]
     (exp / "records" / f"{rid}.md").write_text("\n".join(lines))
@@ -1271,7 +1313,6 @@ def main() -> int:
         bad_end = [cid for cid, dd in derived.items() if min(dd["dout_1k_end"], dd["dout_float_small_end"], dd["dout_float_big_end"]) < 0.9]
         lines.append(f"- **Decision correctness while kicked** (`dout_*_end` >= 0.9): failing corners: {bad_end or 'none'}.")
         lines.append(f"- **Input-node coverage** (issue #160): {node_coverage_line(derived)}")
-    sel = d.get("selector")
     lines += [
         "- **Not computed by this executor** (single-analysis `klt sim` requests): "
         + {
@@ -1281,7 +1322,7 @@ def main() -> int:
             "comparator-kickback": "nothing (all `.meas` ingredients are requested; `.meas` precision is the executor's `measureprec=12`).",
             "comparator-regeneration": "nothing.",
         }[a.bench],
-        f"- **Reproduce**: at commit `{sha}`: `KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py {a.bench}" + (f" --dut {sel}" if sel else "") + "`",
+        reproduce_line(a.bench, b, r, tb),
         "",
     ]
     (exp / "records" / f"{rid}.md").write_text("\n".join(lines))
