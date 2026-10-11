@@ -64,6 +64,18 @@ before anything is written; `--allow-engine-drift` retains them as NON-CITABLE
 diagnostics with the override recorded in `ingest.engine_floor`. Legacy
 bundles (no `toolchain` key) are checked against the ingest checkout's floor,
 stamped `ingest-checkout (legacy bundle)`.
+
+Functional correctness (issue #273) is a SEPARATE axis. For
+comparator-regeneration and comparator-kickback the record carries
+`decision_correctness` (schema `decision-correctness/1`): every latch-decision
+polarity check (`dout_*_first` / `dout_*_end`) of every expected corner,
+evaluated against the generation-time manifest's `min`/`max`, with a rollup
+`status` of `pass`, `fail` (a wrong decision; `failures` names the corner and
+measurement) or `incomplete` (a missing corner / measurement / bound; never
+`pass`). A faithfully executed design with a wrong decision is still recorded
+and may still be `reference` evidence -- `reference` keeps its coverage +
+provenance meaning -- but it is not functionally verified, whatever its
+`within_target` count. See sim/README.md "Fleet record correctness fields".
 """
 
 from __future__ import annotations
@@ -696,6 +708,122 @@ def power_uw(bench: str, cid: str, d: dict) -> float | None:
     return d["i_static_ua"] * float(cid.rsplit("_", 1)[1].rstrip("v"))
 
 
+#: Issue #273: the latch-decision polarity measurements each bench REQUIRES
+#: to be evaluated before a record may claim functional correctness. Only the
+#: NAMES live here; the thresholds always come from the generation-time
+#: (bundled, staged) manifest's `checks`, so they are the ratified manifest
+#: bounds the record was minted against, never a copy hard-coded in this tool.
+#: A required name with no `min`/`max` bound in that manifest cannot pass.
+#: Any further `dout_*` bound in the manifest is evaluated as well.
+DECISION_CHECKS = {
+    # tb.json: the second-strobe (end) answer must be positive AND the
+    # first-strobe answer negative -- together they prove the latch flipped.
+    "comparator-regeneration": ("dout_od50_first", "dout_od1_first", "dout_od01_first",
+                                "dout_od50_end", "dout_od1_end", "dout_od01_end"),
+    # tb.json: every instance must still decide correctly while kicked.
+    "comparator-kickback": ("dout_1k_end", "dout_float_small_end", "dout_float_big_end"),
+}
+DECISION_SCHEMA = "decision-correctness/1"
+
+
+def _decision_phase(name: str) -> str:
+    return "first" if name.endswith("_first") else "end" if name.endswith("_end") else "other"
+
+
+def decision_correctness(bench: str, tb, derived: dict, expected_ids) -> dict | None:
+    """Structured latch-decision correctness (issue #273), or None for a bench
+    with no decision checks.
+
+    Evaluates every `DECISION_CHECKS[bench]` measurement (plus any other
+    `dout_*` bound) of every EXPECTED corner against the generation-time
+    manifest's `min`/`max`, with `report.point_check_outcome`'s semantics
+    (value < min or value > max is wrong). Per check the status is `pass`,
+    `fail` (a finite value on the wrong side of its bound: a wrong decision)
+    or `missing` (absent / non-finite value, a corner that derived no result,
+    or a required check with no bound). A corner is `fail` if any check fails,
+    else `missing` if any is missing, else `pass`. The rollup is `fail` if any
+    corner has a wrong decision, else `incomplete` if anything is missing,
+    else `pass` -- so absent evidence can never roll up to `pass`.
+
+    This is FUNCTIONAL correctness only; it is independent of coverage /
+    provenance (`complete`, `citable`, `reference`) and of target compliance
+    (`within_target`), and it does not change any of them."""
+    required = DECISION_CHECKS.get(bench)
+    if required is None:
+        return None
+    extra = sorted(n for n in tb.checks if n.startswith("dout_") and n not in required)
+    names = list(required) + extra
+    bounds = {n: {k: (tb.checks.get(n) or {})[k] for k in ("min", "max") if k in (tb.checks.get(n) or {})}
+              for n in names}
+    per_corner: dict = {}
+    failures: list = []
+    missing: list = []
+    for cid in sorted(set(expected_ids) | set(derived)):
+        d = derived.get(cid)
+        if d is None:
+            per_corner[cid] = {"status": "missing", "checks": {}}
+            missing.append({"corner": cid, "measurement": None,
+                            "reason": "no derived result for this corner (see problems)"})
+            continue
+        checks: dict = {}
+        for n in names:
+            b, v = bounds[n], d.get(n)
+            entry = {"phase": _decision_phase(n), "value": v if _finite(v) else None, **b}
+            if not b:
+                entry["status"], reason = "missing", "no min/max bound in the generation-time manifest"
+            elif not _finite(v):
+                entry["status"], reason = "missing", "measurement absent or non-finite"
+            else:
+                wrong = ("min" in b and v < b["min"]) or ("max" in b and v > b["max"])
+                entry["status"], reason = ("fail", "wrong decision") if wrong else ("pass", "")
+            checks[n] = entry
+            if entry["status"] == "fail":
+                failures.append({"corner": cid, "measurement": n, "phase": entry["phase"], "value": v, **b})
+            elif entry["status"] == "missing":
+                missing.append({"corner": cid, "measurement": n, "reason": reason})
+        sts = {c["status"] for c in checks.values()}
+        per_corner[cid] = {"status": "fail" if "fail" in sts else "missing" if "missing" in sts or not checks else "pass",
+                           "checks": checks}
+    n_pass = sum(c["status"] == "pass" for c in per_corner.values())
+    status = "fail" if failures else "incomplete" if (missing or not per_corner) else "pass"
+    return {
+        "schema": DECISION_SCHEMA,
+        "status": status,
+        "bounds_source": "generation-time testbench manifest `checks` (record `testbench.manifest_sha256`)",
+        "checks": {n: dict(bounds[n], phase=_decision_phase(n), required=n in required) for n in names},
+        "corners_expected": len(set(expected_ids)),
+        "corners_evaluated": sum(bool(c["checks"]) for c in per_corner.values()),
+        "corners_pass": n_pass,
+        "corners_fail": sum(c["status"] == "fail" for c in per_corner.values()),
+        "failures": failures,
+        "missing": missing,
+        "per_corner": per_corner,
+    }
+
+
+def _bound_text(e: dict) -> str:
+    return " and ".join(f"{op} {e[k]:g}" for k, op in (("min", ">="), ("max", "<=")) if k in e) or "no bound"
+
+
+def decision_lines(dc: dict, bench: str) -> list[str]:
+    """Markdown for `decision_correctness`, rendered ONLY from that structure
+    (so the record's JSON and Markdown cannot disagree)."""
+    title = {"comparator-regeneration": "Decision correctness (first strobe negative, second strobe positive)",
+             "comparator-kickback": "Decision correctness while kicked"}.get(bench, "Decision correctness")
+    rule = "; ".join(f"`{n}` {_bound_text(c)}" for n, c in dc["checks"].items())
+    out = [f"- **{title}** (`decision_correctness.status` = `{dc['status']}`; bounds from the generation-time manifest: "
+           f"{rule}): {dc['corners_pass']}/{dc['corners_expected']} expected corners pass, "
+           f"{dc['corners_fail']} with a wrong decision, {len(dc['missing'])} missing check(s)."]
+    if dc["status"] == "fail":
+        out.append("  - FUNCTIONAL FAILURE: the delay/kickback numbers at the corners below were taken on a "
+                   "wrong decision and do not establish functional verification, whatever their target score.")
+    out += [f"  - wrong decision: `{f['corner']}` `{f['measurement']}` = {fmt(f['value'])} (required {_bound_text(f)})"
+            for f in dc["failures"][:60]]
+    out += [f"  - missing: `{m['corner']}`" + (f" `{m['measurement']}`" if m["measurement"] else "") + f" -- {m['reason']}"
+            for m in dc["missing"][:60]]
+    return out
+
+
 def git_state() -> tuple[str, bool]:
     """INGEST-time checkout: (full 40-char commit, derivation tooling dirty?).
 
@@ -1060,6 +1188,15 @@ def _collect_checked_legs(bench: str, names: dict, reports: dict, requests: dict
     return legs_c, coverage, expected
 
 
+def expected_corner_ids(bench: str, names: dict, requests: dict) -> set[str]:
+    """The requested PVT corner ids (first leg, as `_collect_checked_legs` counts them)."""
+    ids: set[str] = set()
+    for n, (leg, v) in names.items():
+        if leg == LEGS[bench][0]:
+            ids |= set(expected_units(requests[n], v))
+    return ids
+
+
 def legacy_diagnostic(bench: str, work: Path) -> int:
     """A pre-#151 work dir: print, never publish. Exit 3 (not a record)."""
     tb = htb.load(HERE.parent / bench)  # today's manifest: interpretation aid only
@@ -1370,6 +1507,11 @@ def main() -> int:
         print("\n".join(["no scorable corner: nothing derived, no record written"] + problems[:60]), file=sys.stderr)
         raise SystemExit(f"EMPTY_RESULT: {a.bench} produced no complete PVT point; refusing to publish a record")
 
+    # Issue #273: functional (latch-decision) correctness, evaluated against
+    # the generation-time manifest; separate from coverage, provenance and
+    # target compliance, and never folded into `complete` / `reference`.
+    decisions = decision_correctness(a.bench, tb, derived, expected_corner_ids(a.bench, names, requests))
+
     label, key, tgt, stretch, unit = SPEC[a.bench]
     vals = {cid: dd[key] for cid, dd in derived.items()}
     worst_cid = max(vals, key=vals.get)
@@ -1391,6 +1533,9 @@ def main() -> int:
         claim = "NON-COMPLETE DIAGNOSTIC (NOT reference evidence; coverage incomplete, see INCOMPLETE / FAILED UNITS" + ("; also NOT CITABLE, see Commit" if not citable else "") + ")"
     else:
         claim = "NOT-CITABLE DIAGNOSTIC (NOT reference evidence; source identity not citable, see Commit)"
+    if decisions is not None and decisions["status"] != "pass":
+        claim += (" -- FUNCTIONAL DECISION CHECKS " + {"fail": "FAILED", "incomplete": "INCOMPLETE"}[decisions["status"]]
+                  + " (`decision_correctness`, see Decision correctness): NOT functionally verified")
     lines = [
         f"# Record {rid}",
         "",
@@ -1422,9 +1567,12 @@ def main() -> int:
     if problems:
         lines += ["- **INCOMPLETE / FAILED UNITS**:"] + [f"  - {p}" for p in problems[:60]]
     cols = list(next(iter(derived.values())).keys())
-    lines += ["- **Result**:", "", "  | corner-id | " + " | ".join(f"`{n}`" for n in cols) + " | vs target |", "  |---|" + "---|" * (len(cols) + 1)]
+    dcol = decisions is not None
+    lines += ["- **Result**:", "", "  | corner-id | " + " | ".join(f"`{n}`" for n in cols) + " | vs target |"
+              + (" decisions |" if dcol else ""), "  |---|" + "---|" * (len(cols) + 1 + dcol)]
     for cid, dd in derived.items():
-        lines.append(f"  | `{cid}` | " + " | ".join(fmt(dd[n]) for n in cols) + f" | {'PASS' if dd[key] <= tgt else 'FAIL'} |")
+        lines.append(f"  | `{cid}` | " + " | ".join(fmt(dd[n]) for n in cols) + f" | {'PASS' if dd[key] <= tgt else 'FAIL'} |"
+                     + (f" {decisions['per_corner'][cid]['status'].upper()} |" if dcol else ""))
     lines += [
         "",
         f"- **Score vs ratified bounds** (`{key}`): within target {n_t}/{len(vals)}, within stretch {n_s}/{len(vals)}; min {vals[best_cid]:.6g} @ `{best_cid}`, max {vals[worst_cid]:.6g} @ `{worst_cid}` ({unit}).",
@@ -1432,11 +1580,9 @@ def main() -> int:
     if a.bench == "comparator-regeneration":
         pw = {cid: power_uw(a.bench, cid, dd) for cid, dd in derived.items()}
         lines.append(f"- **Static power** (`i_static_ua` x vdd): min {min(pw.values()):.4g} uW, max {max(pw.values()):.4g} uW; within the {POWER_TARGET_UW:g} uW target at {sum(p <= POWER_TARGET_UW for p in pw.values())}/{len(pw)} corners.")
-        bad_end = [cid for cid, dd in derived.items() if min(dd["dout_od50_end"], dd["dout_od1_end"], dd["dout_od01_end"]) < 0.9]
-        lines.append(f"- **Decision correctness** (`dout_*_end` >= 0.9 at all three overdrives): failing corners: {bad_end or 'none'}.")
+    if decisions is not None:
+        lines += decision_lines(decisions, a.bench)
     if a.bench == "comparator-kickback":
-        bad_end = [cid for cid, dd in derived.items() if min(dd["dout_1k_end"], dd["dout_float_small_end"], dd["dout_float_big_end"]) < 0.9]
-        lines.append(f"- **Decision correctness while kicked** (`dout_*_end` >= 0.9): failing corners: {bad_end or 'none'}.")
         lines.append(f"- **Input-node coverage** (issue #160): {node_coverage_line(derived)}")
     lines += [
         "- **Not computed by this executor** (single-analysis `klt sim` requests): "
@@ -1459,9 +1605,13 @@ def main() -> int:
         "within_target": n_t, "within_stretch": n_s, "points": len(vals), "problems": problems,
         "derived": derived,
         **({"input_node_coverage": node_coverage(derived)} if a.bench == "comparator-kickback" else {}),
+        **({"decision_correctness": decisions} if decisions is not None else {}),
     }, indent=1, allow_nan=False) + "\n")  # strict JSON: no NaN/Infinity tokens
     print(f"record {rid}: {len(derived)} points, {key} within target {n_t}/{len(vals)}, stretch {n_s}/{len(vals)}, worst {vals[worst_cid]:.6g} @ {worst_cid}"
           + ("" if citable else " -- NOT CITABLE: " + "; ".join(noncite)))
+    if decisions is not None:
+        print(f"decision correctness: {decisions['status']} ({decisions['corners_pass']}/{decisions['corners_expected']} corners pass, "
+              f"{len(decisions['failures'])} wrong decision(s), {len(decisions['missing'])} missing)")
     if drift:
         print(f"source drift since generation (record cites the generation-time sources): {', '.join(drift)}")
     if not complete:

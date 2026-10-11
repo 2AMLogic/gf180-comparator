@@ -251,6 +251,48 @@ it:
 - the full per-corner result table, the grid spread, the per-axis corner
   sensitivity, the verdict, and the reproduction command.
 
+### Fleet record correctness fields
+
+A fleet record (`sim/tools/klt_record.py`) answers separate questions; a
+consumer must read each from its own field and never infer one from another:
+
+| question | field | meaning |
+|---|---|---|
+| did the whole requested grid execute? | `complete` | exact PVT/MC coverage of the bundled requests (#152) |
+| is the provenance valid? | `citable` | clean, verified source identity (#151) |
+| is it citable reference evidence? | `reference` | `complete` and `citable` -- nothing more |
+| did the latch decide correctly? | `decision_correctness.status` | functional decision checks (#273), regeneration and kickback only |
+| does it meet the ratified row? | `within_target` / `within_stretch` | target compliance of the headline quantity |
+
+`decision_correctness` (schema `decision-correctness/1`) evaluates every
+latch-decision polarity check -- regeneration's `dout_*_first` (`max`, the
+first strobe must decide low) and `dout_*_end` (`min`, the second strobe must
+decide high, so the latch is proven to have flipped), kickback's `dout_*_end`
+(the instance still decides correctly while kicked) -- at every expected
+corner, against the `min`/`max` of the **generation-time** manifest the
+record was minted from (`testbench.manifest_sha256`), not today's. It
+carries the bounds used (`checks`), a `per_corner` breakdown (`pass` / `fail`
+/ `missing` per check and per corner), `failures` (`corner`, `measurement`,
+`phase`, `value`, bound) and `missing` (`corner`, `measurement`, `reason`).
+The rollup `status` is:
+
+- `pass` -- every expected corner was evaluated and every decision is correct;
+- `fail` -- at least one finite decision is on the wrong side of its bound;
+- `incomplete` -- no wrong decision observed, but a corner, measurement or
+  manifest bound is missing, so correctness is **not** established.
+
+**Downstream scoring consumers** (signoff envelopes, ledgers) must treat a
+regeneration or kickback record as functionally verified **only** when
+`decision_correctness.status == "pass"`; a `fail` or `incomplete` record may
+still be cited as `reference` evidence of what the design did, but its delay
+or kickback score must not be presented as a verified result. A record minted
+before #273 has **no** `decision_correctness` field: treat that as *not
+evaluated* (never as `pass`). Its archived reports and `derived` table can be
+re-evaluated against its archived manifest by a consumer, but the historical
+record itself is append-only evidence and is not rewritten. The Markdown
+record's "Decision correctness" bullet and `decisions` table column are
+rendered from the same structure.
+
 Raw per-corner ngspice logs are committed alongside (`.gitignore` explicitly
 un-ignores `sim/*/corners/**/*.log` for this reason), so a reader can check a
 number against the tool's own output rather than against a table somebody
