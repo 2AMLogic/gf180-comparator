@@ -4,6 +4,7 @@ Chronological record of merged pull requests and closed issues. Newest entries a
 
 ### 2026-10-11
 
+- **PR #306**: docs(sim): mark two records non-qualified under exact open_pdks pin; fleet probe evidence (#288)
 - **PR #304**: fix(signoff): mark positive-node-only kickback fallback as incomplete item-5 coverage
 - **PR #302**: fix: qualify schematic baselines against PDK revision and toolchain drift
 - **PR #300**: signoff: require qualified DUT-bound sources for item-8 characterization claims
