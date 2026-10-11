@@ -1,0 +1,162 @@
+name: Scheduled runtime checks
+
+# Non-gating, independent runtime coverage (issue #280). The PDK-free merge
+# gate (signoff.yml) never runs ngspice, xschem or the PDK. This workflow does:
+# it source-builds the pinned tools on a hosted runner, installs the pinned
+# open_pdks revision with volare, and runs the harness selftest and the
+# netlist regeneration check. It is NOT a required check and it produces no
+# committed evidence: it is only weekly + manual, never on push/PR, and it
+# commits nothing. Failures are real failures and are never swallowed.
+#
+# This is not full characterization (no 45-point PVT grids) and not a
+# CI-produced signoff envelope.
+
+on:
+  schedule:
+    - cron: "17 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: selftest-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  selftest:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      PDK_ROOT: ${{ github.workspace }}/.ci-pdk
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read pins from sim/toolchain.json and sim/pdk.json
+        run: |
+          python3 - >> "$GITHUB_ENV" <<'PY'
+          import json
+          t = json.load(open("sim/toolchain.json"))
+          p = json.load(open("sim/pdk.json"))
+          print(f"NGSPICE_VERSION={int(t['ngspice_min_major'])}")
+          print(f"XSCHEM_TAG={t['xschem_tag']}")
+          print(f"OPEN_PDKS={t['open_pdks']}")
+          print(f"PDK={p['variant']}")
+          print(f"PYTHON_MIN={t['python_min']}")
+          PY
+          grep -E '^(NGSPICE_VERSION|XSCHEM_TAG|OPEN_PDKS|PDK|PYTHON_MIN)=' "$GITHUB_ENV"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check Python floor
+        run: |
+          python3 - <<PY
+          import sys
+          need = tuple(int(x) for x in "${PYTHON_MIN}".split("."))
+          assert sys.version_info[:2] >= need, (sys.version, need)
+          print("python", sys.version)
+          PY
+
+      - name: Install build prerequisites and runtime libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential autoconf automake libtool bison flex \
+            libx11-dev libxaw7-dev libxpm-dev libxrender-dev libxext-dev \
+            libreadline-dev libfftw3-dev libcairo2-dev \
+            tcl-dev tk-dev libxcb1-dev libxcb-render0-dev libxcb-shm0-dev \
+            xvfb gawk curl ca-certificates
+
+      - name: Cache ngspice
+        id: cache-ngspice
+        uses: actions/cache@v4
+        with:
+          path: ~/tools/ngspice
+          key: ngspice-${{ runner.os }}-${{ runner.arch }}-${{ env.NGSPICE_VERSION }}-shared0-readline-v1
+
+      - name: Build ngspice from source
+        if: steps.cache-ngspice.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/ngspice-src"
+          cd "$RUNNER_TEMP/ngspice-src"
+          curl -fsSL -o ngspice.tar.gz \
+            "https://downloads.sourceforge.net/project/ngspice/ng-spice-rework/${NGSPICE_VERSION}/ngspice-${NGSPICE_VERSION}.tar.gz"
+          sha256sum ngspice.tar.gz | tee ngspice.sha256
+          mkdir src && tar -xzf ngspice.tar.gz -C src --strip-components=1
+          cd src
+          ./configure --prefix="$HOME/tools/ngspice" --with-readline=yes \
+            --disable-debug --enable-openmp=no
+          make -j2
+          make install
+          cp ../ngspice.sha256 "$HOME/tools/ngspice/SOURCE.sha256"
+
+      - name: Cache xschem
+        id: cache-xschem
+        uses: actions/cache@v4
+        with:
+          path: ~/tools/xschem
+          key: xschem-${{ runner.os }}-${{ runner.arch }}-${{ env.XSCHEM_TAG }}-v1
+
+      - name: Build xschem from source
+        if: steps.cache-xschem.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch "${XSCHEM_TAG}" \
+            https://github.com/StefanSchippers/xschem.git "$RUNNER_TEMP/xschem-src"
+          cd "$RUNNER_TEMP/xschem-src"
+          git rev-parse HEAD | tee "$RUNNER_TEMP/xschem.rev"
+          ./configure --prefix="$HOME/tools/xschem"
+          make -j2
+          make install
+          cp "$RUNNER_TEMP/xschem.rev" "$HOME/tools/xschem/SOURCE.rev"
+
+      - name: Expose tools and verify versions
+        run: |
+          set -euo pipefail
+          echo "$HOME/tools/ngspice/bin" >> "$GITHUB_PATH"
+          echo "$HOME/tools/xschem/bin" >> "$GITHUB_PATH"
+          export PATH="$HOME/tools/ngspice/bin:$HOME/tools/xschem/bin:$PATH"
+          echo "--- source identities"
+          cat "$HOME/tools/ngspice/SOURCE.sha256" || true
+          echo "xschem rev: $(cat "$HOME/tools/xschem/SOURCE.rev" || true)"
+          echo "--- versions"
+          ngspice --version | head -n 5
+          xschem --version 2>&1 | head -n 3 || true
+          test -d "$HOME/tools/xschem/share/xschem/xschem_library/devices" \
+            || { echo "xschem generic devices library missing" >&2; exit 1; }
+          ls "$HOME/tools/xschem/share/xschem/xschem_library/devices" | head -n 5
+
+      - name: Cache PDK
+        id: cache-pdk
+        uses: actions/cache@v4
+        with:
+          path: .ci-pdk
+          key: pdk-${{ runner.os }}-${{ env.OPEN_PDKS }}-${{ env.PDK }}-v1
+
+      - name: Install volare and enable pinned open_pdks
+        run: |
+          set -euo pipefail
+          python3 -m pip install volare
+          python3 -m pip --version
+          volare --version || true
+          volare enable --pdk gf180mcu --pdk-root "$PDK_ROOT" "$OPEN_PDKS"
+          test -d "$PDK_ROOT/$PDK" || { echo "PDK variant $PDK not found under $PDK_ROOT" >&2; ls -la "$PDK_ROOT" >&2; exit 1; }
+          echo "open_pdks: $OPEN_PDKS  variant: $PDK  root: $PDK_ROOT"
+
+      - name: Check environment (python3 sim/run_corners.py --check-env)
+        run: python3 sim/run_corners.py --check-env
+
+      - name: Harness selftest (nominal + sabotage negative control)
+        run: ./sim/selftest.sh
+
+      - name: Netlist regeneration check
+        run: xvfb-run -a ./design/netlist.sh --check
+
+      - name: Verify the run mutated nothing tracked
+        run: |
+          git status --porcelain
+          test -z "$(git status --porcelain --untracked-files=no)" \
+            || { echo "runtime checks modified tracked files" >&2; git diff --stat >&2; exit 1; }
