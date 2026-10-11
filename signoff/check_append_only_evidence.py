@@ -15,12 +15,21 @@ is protected with no edit here):
     sim/<experiment>/yield/**
     sim/<experiment>/probes/**           (committed feasibility probe artifacts)
     sim/corner-matrix/**/*.json          (item-5 revision envelopes)
+    layout/pex/artifacts/parasitic-attribution/<run-id>/**   (issue #266)
+    layout/pex/artifacts/ground-c-budget/<run-id>/**
 
 Probe artifacts (reports, logs, refusals, and the `sources/` / `extract/`
 copies bundled into a probe) are empirical results exactly as run, so the whole
 subtree is immutable once committed. They stay experimental: protection does not
 make them signoff evidence. Editable testbench/DUT sources live outside
 `probes/`; a correction is a NEW probe identifier.
+
+Parasitic-study run archives are immutable too: each `<run-id>`
+(`YYYYMMDD-HHMMSS-<7+ hex>`) directory under the two archive families above is
+protected as a complete subtree (requests, reports, source snapshots, stage
+manifests, derived tables, any extension). Family-level documentation and the
+study code stay editable; a correction is a NEW run identifier. Other
+`layout/pex/artifacts/` families are deliberately not covered.
 
 Everything else is out of scope: testbenches, harness code, experiment
 README files, DUT/configuration sources, mutable `layout/` reports and the
@@ -81,6 +90,15 @@ CORNER_MATRIX = "corner-matrix"
 SHA_RE = re.compile(r"^(?:[0-9a-f]{40}|[0-9a-f]{64})$")
 ZERO_RE = re.compile(r"^0+$")
 
+# Immutable parasitic-study archive families (issue #266): <root>/<run-id>/**.
+ARCHIVE_ROOTS = (
+    "layout/pex/artifacts/parasitic-attribution",
+    "layout/pex/artifacts/ground-c-budget",
+)
+RUN_ID_RE = re.compile(r"^\d{8}-\d{6}-[0-9a-f]{7,40}$")
+# Git pathspecs covering every protected family root (used by the size guard).
+PROTECTED_PATHSPECS = ("sim", *ARCHIVE_ROOTS)
+
 ENV_EVENT = "APPEND_ONLY_EVENT"
 ENV_PR_BASE = "APPEND_ONLY_PR_BASE_SHA"
 ENV_PR_HEAD = "APPEND_ONLY_PR_HEAD_SHA"
@@ -98,6 +116,11 @@ class BaselineError(Exception):
 
 def is_protected(path: str) -> bool:
     """True if `path` (repo-relative, '/'-separated) is immutable evidence."""
+    for root in ARCHIVE_ROOTS:
+        prefix = root + "/"
+        if path.startswith(prefix):
+            rest = path[len(prefix):].split("/")
+            return len(rest) >= 2 and bool(RUN_ID_RE.match(rest[0]))
     parts = path.split("/")
     if len(parts) < 3 or parts[0] != "sim":
         return False
@@ -389,7 +412,7 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
               f"between {base[:12]} and {head[:12]}:")
         for v in violations:
             print(f"  {v}")
-        print("sim/ evidence is append-only: restore the original bytes and mode, and "
+        print("sim/ evidence and parasitic-study run archives are append-only: restore the original bytes and mode, and "
               "record a correction as a NEW run/revision path (update citations to "
               "point at it). See sim/README.md, 'Append-only enforcement'.")
         if in_ci(env):

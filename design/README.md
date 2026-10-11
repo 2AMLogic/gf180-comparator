@@ -59,8 +59,12 @@ before writing.
 
 ## Source pins: the PDK-free CI check (issue #120)
 
-`./design/netlist.sh --check` needs xschem and the PDK, so CI cannot run it.
-What CI runs instead (`.github/workflows/signoff.yml`, step "Netlist
+`./design/netlist.sh --check` needs xschem and the PDK, so the PDK-free merge
+gate cannot run it. A separate, non-gating, weekly/manual workflow
+(`.github/workflows/selftest.yml`, issue #280) source-builds xschem and
+installs the pinned PDK on a hosted runner and runs `./design/netlist.sh
+--check` there; it is not a required check, commits nothing, and its result is
+not an evidence envelope. What the merge gate runs instead (`.github/workflows/signoff.yml`, step "Netlist
 source-pin check (PDK-free)") is:
 
 ```bash

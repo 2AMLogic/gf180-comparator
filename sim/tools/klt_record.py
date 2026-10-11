@@ -55,6 +55,31 @@ record still cites the bundle's (originating) sources, never today's.
 A record is citable REFERENCE evidence (`"reference": true`) only when BOTH
 gates pass: exact PVT/MC coverage of the bundled requests (#152, `complete`;
 otherwise exit 1) and verified, clean source identity (#151, `citable`).
+
+ngspice floor (issue #269): every ingested report's `environment.engine` /
+`engine_version` is checked against the floor snapshotted into the source
+bundle (`toolchain.ngspice_min_major`, bound to the generation commit). Below
+floor, missing, malformed, wrong-engine or mixed-version reports are refused
+before anything is written; `--allow-engine-drift` retains them as NON-CITABLE
+diagnostics with the override recorded in `ingest.engine_floor`. Legacy
+bundles (no `toolchain` key) are checked against the ingest checkout's floor,
+stamped `ingest-checkout (legacy bundle)`.
+
+PDK qualification (issue #283): the exact open_pdks revision (sim/toolchain.json
+`open_pdks`) IS the device models, so every ingested leg's executor-reported
+`provenance.pdk.{name,version}` must equal the revision and variant snapshotted
+into the source bundle (`toolchain.open_pdks` / `pdk_variant`). Missing,
+malformed, wrong, contradictory (deck hash vs environment model hash) or mixed
+identities are refused before anything is written; `--allow-pdk-drift` retains
+them as NON-CITABLE diagnostics with the override in `ingest.pdk_qualification`.
+The submitting host's PDK is never taken as proof. Bundles without
+`toolchain.open_pdks` (legacy) are qualified against the ingest checkout's pin
+and the request-selected variant, stamped `ingest-checkout (legacy bundle)`.
+The snapshot itself is source identity: for a clean origin, the pin file at
+the origin commit must hash to the snapshot's sha256 and carry the same
+`open_pdks` / `ngspice_min_major` (else SOURCE_COMMIT_MISMATCH; unreadable ->
+non-citable), and the snapshot variant must equal every bundled request's
+`models.pdk` (else SOURCE_BUNDLE_INCONSISTENT).
 """
 
 from __future__ import annotations
@@ -64,6 +89,7 @@ import hashlib
 import json
 import math
 import os
+import re
 import shutil
 import statistics
 import subprocess
@@ -79,6 +105,7 @@ sys.path.insert(0, str(SIM))
 from harness import corners as hc  # noqa: E402
 from harness import dut as hdut  # noqa: E402
 from harness import testbench as htb  # noqa: E402
+from harness import toolchain as htc  # noqa: E402
 
 sys.path.insert(0, str(HERE))
 import mk_klt_request as mk  # noqa: E402
@@ -818,6 +845,173 @@ def _report_netlist_sha(report: dict) -> str | None:
     return h.split(":", 1)[1] if h.startswith("sha256:") else None
 
 
+def check_engine_floor(b: dict, reports: dict, allow_drift: bool = False) -> dict:
+    """Enforce the ngspice minimum major on every ingested report (issue #269).
+
+    The floor is the one SNAPSHOTTED into the source bundle at generation
+    (`b["toolchain"]`), so a later sim/toolchain.json change does not alter
+    what an originating bundle means. A LEGACY bundle (written before this
+    gate, no `toolchain` key) has no recorded floor; the conservative policy
+    is to apply today's checkout floor and stamp the record
+    `floor_source = "ingest-checkout (legacy bundle)"`. Existing committed
+    records are never re-derived.
+
+    Missing / malformed / wrong-engine / below-floor / mixed-version reports
+    are violations. Without `allow_drift` they refuse BEFORE anything is
+    written. With it (`--allow-engine-drift`, never inferred) ingestion
+    proceeds as an explicitly NON-CITABLE diagnostic and the override and
+    violations are stamped into the record.
+    -> {"ngspice_min_major", "floor_source", "observed", "violations",
+    "override", "noncite"}"""
+    snap = b.get("toolchain")
+    if isinstance(snap, dict) and snap.get("ngspice_min_major") is not None:
+        floor, source = int(snap["ngspice_min_major"]), "source-bundle"
+    elif isinstance(snap, dict):
+        floor, source = None, "source-bundle (no ngspice floor pinned)"
+    else:
+        floor = htc.load_pins().get("ngspice_min_major")
+        floor = None if floor is None else int(floor)
+        source = "ingest-checkout (legacy bundle)"
+    violations: list[str] = []
+    observed: dict[str, str | None] = {}
+    majors = set()
+    for n, rep in sorted(reports.items()):
+        env = rep.get("environment") or {}
+        eng, ver = env.get("engine"), env.get("engine_version")
+        observed[n] = None if ver is None else str(ver)
+        if eng is not None and str(eng).lower() != "ngspice":
+            violations.append(f"report-{n}.json: engine {eng!r}, not ngspice")
+            continue
+        if ver is None or ver == "":
+            violations.append(f"report-{n}.json: no environment.engine_version")
+            continue
+        major = htc.engine_major(ver)
+        if major is None:
+            violations.append(f"report-{n}.json: unparseable engine_version {ver!r}")
+            continue
+        majors.add(major)
+        if floor is not None and major < floor:
+            violations.append(f"report-{n}.json: ngspice major {major} is below the floor {floor}")
+    if len(set(v for v in observed.values())) > 1:
+        violations.append(f"mixed engine versions across reports: {sorted({str(v) for v in observed.values()})}")
+    if violations and not allow_drift:
+        refuse("ENGINE_FLOOR_VIOLATION",
+               f"ngspice floor {floor} ({source}): " + "; ".join(violations[:6])
+               + " -- no record written. Pass --allow-engine-drift to retain a NON-CITABLE diagnostic.")
+    noncite = [f"engine floor override: {v}" for v in violations]
+    return {"ngspice_min_major": floor, "floor_source": source,
+            "observed": sorted({v for v in observed.values() if v is not None}),
+            "violations": violations, "override": bool(violations and allow_drift), "noncite": noncite}
+
+
+_OPEN_PDKS_VERSION = re.compile(r"open_pdks\s+([0-9a-fA-F]{40})")
+_SHA256 = re.compile(r"(?:sha256:)?([0-9a-fA-F]{64})")
+
+
+def report_pdk_identity(rep: dict) -> tuple[str | None, str | None, list[str]]:
+    """-> (variant, open_pdks revision, problems) from one report's EXECUTOR
+    metadata (`provenance.pdk`). Anything not exactly the observed shape
+    (`{"name": "gf180mcuD", "version": "open_pdks <40-hex>"}`) is a problem,
+    never a guess."""
+    pdk = (rep.get("provenance") or {}).get("pdk")
+    if not isinstance(pdk, dict):
+        return None, None, ["no provenance.pdk identity"]
+    problems = []
+    name, ver = pdk.get("name"), pdk.get("version")
+    if not isinstance(name, str) or not name:
+        name = None
+        problems.append("no provenance.pdk.name")
+    rev = None
+    if not isinstance(ver, str) or not ver:
+        problems.append("no provenance.pdk.version")
+    else:
+        m = _OPEN_PDKS_VERSION.fullmatch(ver.strip())
+        if m:
+            rev = m.group(1).lower()
+        else:
+            problems.append(f"unparseable provenance.pdk.version {ver!r}")
+    return name, rev, problems
+
+
+def check_pdk_identity(work: Path, b: dict, reports: dict, allow_drift: bool = False) -> dict:
+    """Qualify every ingested leg against the exact open_pdks revision and PDK
+    variant (issue #283). Required identity is the bundle's snapshot; a legacy
+    bundle falls back to the ingest checkout's pin and the variant its own
+    requests select, stamped as such. Observed identity is only what the
+    EXECUTOR reported. Violations refuse before any write unless
+    `allow_drift` (explicit `--allow-pdk-drift`), which keeps a NON-CITABLE
+    diagnostic. Model-library hashes are recorded for traceability only.
+    -> {"required", "required_source", "observed", "model_lib_sha256",
+    "violations", "override", "noncite"}"""
+    snap = b.get("toolchain")
+    if isinstance(snap, dict) and snap.get("open_pdks"):
+        req_rev, req_var, source = str(snap["open_pdks"]).lower(), snap.get("pdk_variant"), "source-bundle"
+    elif isinstance(snap, dict) and "open_pdks" in snap:
+        req_rev, req_var, source = None, snap.get("pdk_variant"), "source-bundle (no open_pdks pinned)"
+    else:
+        pin = htc.load_pins().get("open_pdks")
+        req_rev, req_var, source = (str(pin).lower() if pin else None), None, "ingest-checkout (legacy bundle)"
+    if req_var is not None:
+        # The snapshot variant and the variant each bundled (hash-verified)
+        # request selects are both the bundle's own claims: a disagreement is
+        # a contradiction, not executor drift, so no override applies.
+        for n, r in sorted((b.get("requests") or {}).items()):
+            try:
+                got = (json.loads((work / r["request"]).read_text()).get("models") or {}).get("pdk")
+            except (OSError, ValueError, KeyError, TypeError, AttributeError):
+                got = None
+            if got != req_var:
+                refuse("SOURCE_BUNDLE_INCONSISTENT",
+                       f"toolchain snapshot pdk_variant {req_var!r}, but request {n} selects models.pdk {got!r}")
+    if req_var is None:
+        variants = set()
+        for r in (b.get("requests") or {}).values():
+            try:
+                variants.add((json.loads((work / r["request"]).read_text()).get("models") or {}).get("pdk"))
+            except (OSError, ValueError, KeyError, TypeError):
+                variants.add(None)
+        req_var = variants.pop() if len(variants) == 1 else None
+    violations: list[str] = []
+    if not req_rev:
+        violations.append("no required open_pdks revision is pinned for this bundle")
+    if not req_var:
+        violations.append("required PDK variant cannot be established from the bundle")
+    seen: dict[str, tuple] = {}
+    hashes: dict[str, str | None] = {}
+    for n, rep in sorted(reports.items()):
+        name, rev, problems = report_pdk_identity(rep)
+        v = [f"report-{n}.json: {p}" for p in problems]
+        if name is not None and req_var and name != req_var:
+            v.append(f"report-{n}.json: PDK variant {name!r}, required {req_var!r}")
+        if rev is not None and req_rev and rev != req_rev:
+            v.append(f"report-{n}.json: open_pdks {rev}, required {req_rev}")
+        deck = ((rep.get("provenance") or {}).get("deck") or {}).get("content_hash")
+        envh = (rep.get("environment") or {}).get("models_lib_sha256")
+        dm, em = (_SHA256.fullmatch(x) if isinstance(x, str) else None for x in (deck, envh))
+        if dm and em and dm.group(1).lower() != em.group(1).lower():
+            v.append(f"report-{n}.json: contradictory model hashes (provenance.deck {dm.group(1)[:12]} vs "
+                     f"environment.models_lib_sha256 {em.group(1)[:12]})")
+        # provenance.deck.content_hash is the MODEL-LIBRARY hash (sm141064.ngspice),
+        # not the netlist hash: verified equal to environment.models_lib_sha256
+        # in committed fleet reports (e.g. report-main-v3.30.json).
+        hashes[n] = (em or dm).group(1).lower() if (em or dm) else None
+        seen[n] = (name, rev)
+        violations += v
+    if len({s for s in seen.values()}) > 1:
+        violations.append(f"mixed PDK identities across legs: {sorted({str(s) for s in seen.values()})}")
+    if len({h for h in hashes.values() if h}) > 1:
+        violations.append("mixed model-library hashes across legs")
+    if violations and not allow_drift:
+        refuse("PDK_QUALIFICATION_FAILED",
+               f"required {req_var} / open_pdks {req_rev} ({source}): " + "; ".join(violations[:6])
+               + " -- no record written. Pass --allow-pdk-drift to retain a NON-CITABLE diagnostic.")
+    return {"required": {"open_pdks": req_rev, "pdk_variant": req_var}, "required_source": source,
+            "observed": [{"pdk_variant": s[0], "open_pdks": s[1]} for s in sorted({s for s in seen.values()}, key=str)],
+            "model_lib_sha256": sorted({h for h in hashes.values() if h}),
+            "violations": violations, "override": bool(violations and allow_drift),
+            "noncite": [f"PDK qualification override: {x}" for x in violations]}
+
+
 def verify_reports(work: Path, b: dict, names: dict, reports: dict) -> list[str]:
     """Link each report to its submitted request/body -> informational notes."""
     notes = []
@@ -902,7 +1096,50 @@ def verify_origin_commit(b: dict) -> list[str]:
             refuse("SOURCE_COMMIT_MISMATCH",
                    f"bundle claims clean commit {o['commit'][:7]}, but its {d['binding_config']} "
                    f"entry {d['key']!r} differs from the staged binding")
+    unverified += _verify_toolchain_snapshot(o["commit"], b.get("toolchain"))
     return unverified
+
+
+# Snapshot fields that must equal the pin file at the origin commit. Each is
+# only compared when the snapshot carries it (pre-#283 bundles lack open_pdks).
+_SNAPSHOT_PINS = ("open_pdks", "ngspice_min_major")
+
+
+def _verify_toolchain_snapshot(commit: str, snap) -> list[str]:
+    """The toolchain snapshot (ngspice floor #269, open_pdks pin #283) is
+    bound to the CLEAN origin commit: its pin file there must hash to the
+    recorded sha256 and parse to the recorded pins. Unreadable -> a reason the
+    record is non-citable; a contradiction refuses SOURCE_COMMIT_MISMATCH.
+    Legacy bundles without a snapshot are qualified against the ingest
+    checkout instead (stamped so), so there is nothing to bind here."""
+    if not isinstance(snap, dict):
+        return []
+    path, want = snap.get("file"), snap.get("sha256")
+    if not path or not want:
+        return [f"toolchain snapshot names no pin file/sha256 to verify at {commit[:7]}"]
+    if snap.get("commit") and not _same_commit(str(snap["commit"]), commit):
+        refuse("SOURCE_COMMIT_MISMATCH",
+               f"toolchain snapshot was taken at {str(snap['commit'])[:7]}, but the bundle claims "
+               f"clean commit {commit[:7]}")
+    blob = git_blob(commit, path)
+    if blob is None:
+        return [f"{path} @ {commit[:7]} not readable from this clone"]
+    got = mk.sha256_bytes(blob)
+    if got != want:
+        refuse("SOURCE_COMMIT_MISMATCH",
+               f"bundle claims clean commit {commit[:7]}, but {path} there is {got[:16]}, "
+               f"toolchain snapshot {str(want)[:16]}")
+    try:
+        pins = json.loads(blob)
+    except ValueError:
+        pins = None
+    if not isinstance(pins, dict):
+        refuse("SOURCE_COMMIT_MISMATCH", f"{path} @ {commit[:7]} is not a pin object")
+    for k in _SNAPSHOT_PINS:
+        if k in snap and snap[k] != pins.get(k):
+            refuse("SOURCE_COMMIT_MISMATCH",
+                   f"toolchain snapshot {k} = {snap[k]!r}, but {path} @ {commit[:7]} pins {pins.get(k)!r}")
+    return []
 
 
 def checkout_drift(b: dict, repo: Path | None = None) -> list[str]:
@@ -1013,7 +1250,8 @@ def legacy_diagnostic(bench: str, work: Path) -> int:
     return 3
 
 
-def _archive_record(bench: str, work: Path, b: dict, tb, vdds, names: dict, unverified: list[str]) -> dict:
+def _archive_record(bench: str, work: Path, b: dict, tb, vdds, names: dict, unverified: list[str],
+                    engine: dict, pdk: dict) -> dict:
     """Record identity, citability and the append-only archive, shared by both
     record writers (issue #254). Call only once a nonempty result is derived and
     every verification has passed. The corner dir is created exclusively (an
@@ -1027,12 +1265,15 @@ def _archive_record(bench: str, work: Path, b: dict, tb, vdds, names: dict, unve
     if origin["dirty"]:
         noncite.append(f"sources uncommitted at request generation: {', '.join(origin['dirty_paths'])}")
     noncite += [f"origin unverifiable: {u}" for u in unverified]
+    noncite += engine["noncite"] + pdk["noncite"]
     if tools_dirty:
         noncite.append(f"derivation tooling (sim/tools, sim/harness) dirty at ingest commit {ingest_sha}")
     sha = origin["commit"][:7]
     r = {"rid": f"{ts}-{sha}", "sha": sha, "exp": SIM / bench, "bundle_sha": mk.sha256_file(work / mk.BUNDLE_NAME),
          "ingest_sha": ingest_sha, "ingest_commit_full": ingest_full, "tools_dirty": tools_dirty, "noncite": noncite,
-         "citable": not noncite}  # == not (origin dirty or origin unverified or tooling dirty)
+         "citable": not noncite,
+         "engine_floor": {k: v for k, v in engine.items() if k != "noncite"},
+         "pdk_qualification": {k: v for k, v in pdk.items() if k != "noncite"}}  # == not (origin dirty or origin unverified or tooling dirty)
     for sub in ("records", "corners", "netlist-snapshots"):
         (r["exp"] / sub).mkdir(exist_ok=True)
     cdir = r["exp"] / "corners" / r["rid"]
@@ -1066,7 +1307,8 @@ def _provenance(r: dict, bench: str, b: dict, drift: list[str], link_notes: list
                           "schema": b["schema"], "version": b["version"],
                           "origin_commit": origin["commit"], "origin_dirty_paths": origin["dirty_paths"]},
         "ingest": {"commit": r["ingest_sha"], "commit_full": r.get("ingest_commit_full"), "tools_dirty": r["tools_dirty"], "source_drift": drift,
-                   "linkage_notes": link_notes},
+                   "linkage_notes": link_notes, "engine_floor": r["engine_floor"],
+                   "pdk_qualification": r["pdk_qualification"]},
     }
 
 
@@ -1119,6 +1361,13 @@ def reproduce_line(bench: str, b: dict, r: dict, tb) -> str:
                 f"`python3 sim/tools/klt_record.py {args} --from-report <workdir>`; copy the whole "
                 f"`corners/{rid}/` directory as `<workdir>`, since `--from-report` also needs its "
                 f"`{mk.BUNDLE_NAME}` and `design.ngspice`.")
+    q = r.get("pdk_qualification")
+    if q:
+        req = q["required"]
+        out += (f" PDK qualification: required `{req['pdk_variant']}` / open_pdks `{req['open_pdks']}` "
+                f"({q['required_source']}); executor-reported {json.dumps(q['observed'])}"
+                + ("; DIAGNOSTIC OVERRIDE (`--allow-pdk-drift`), not citable." if q["override"]
+                   else "; every leg matched. Replaying needs an executor reporting this exact revision."))
     if not _same_commit(origin_commit, ingest_commit):
         out += (f" The origin commit (`{origin_commit}`) produced the requests and sources; the derivation tooling ran at "
                 f"the ingest commit (`{ingest_commit}`). To replay, check out the origin commit for the simulation sources "
@@ -1150,6 +1399,8 @@ def mint_cm_index(a) -> int:
         dispatch(work, list(names))
     reports = {n: json.loads((work / f"report-{n}.json").read_text()) for n in names}
     link_notes = verify_reports(work, b, names, reports)
+    engine = check_engine_floor(b, reports, a.allow_engine_drift)
+    pdk = check_pdk_identity(work, b, reports, a.allow_pdk_drift)
     unverified = verify_origin_commit(b)
     drift = checkout_drift(b)
     requests = {n: json.loads((work / b["requests"][n]["request"]).read_text()) for n in names}
@@ -1172,7 +1423,7 @@ def mint_cm_index(a) -> int:
     if not derived:
         print("\n".join(["no complete PVT point: nothing derived, no record written"] + problems[:60]), file=sys.stderr)
         raise SystemExit(f"EMPTY_RESULT: {bench} produced no complete PVT point; refusing to publish a record")
-    r = _archive_record(bench, work, b, tb, vdds, names, unverified)
+    r = _archive_record(bench, work, b, tb, vdds, names, unverified, engine, pdk)
     rid, sha, exp, bundle_sha, ingest_sha, citable, noncite = (
         r[k] for k in ("rid", "sha", "exp", "bundle_sha", "ingest_sha", "citable", "noncite"))
     reference = complete and citable
@@ -1246,6 +1497,12 @@ def main() -> int:
     ap.add_argument("--mc-n", type=int, default=200)
     ap.add_argument("--dut", default=None, help="DUT binding id/path (e.g. a control netlist), as run_corners.py --dut")
     ap.add_argument("--label", default="", help="free-text topology label stamped in the record")
+    ap.add_argument("--allow-engine-drift", action="store_true",
+                    help="retain a report set whose ngspice engine/version fails the bundled floor as an "
+                         "explicitly NON-CITABLE diagnostic (override recorded); default is to refuse")
+    ap.add_argument("--allow-pdk-drift", action="store_true",
+                    help="retain a report set whose executor-reported PDK variant / open_pdks revision fails "
+                         "qualification as an explicitly NON-CITABLE diagnostic (override recorded); default is to refuse")
     ap.add_argument("--legacy-diagnostic", action="store_true",
                     help="for a --from-report dir with no source bundle: print a NON-CITABLE table, write nothing")
     a = ap.parse_args()
@@ -1280,6 +1537,8 @@ def main() -> int:
 
     reports = {n: json.loads((work / f"report-{n}.json").read_text()) for n in names}
     link_notes = verify_reports(work, b, names, reports)
+    engine = check_engine_floor(b, reports, a.allow_engine_drift)
+    pdk = check_pdk_identity(work, b, reports, a.allow_pdk_drift)
     unverified = verify_origin_commit(b)
     drift = checkout_drift(b)
     # The requests are the bundled (hash-verified) ones; the expected grid
@@ -1299,7 +1558,7 @@ def main() -> int:
     best_cid = min(vals, key=vals.get)
     n_t = sum(v <= tgt for v in vals.values())
     n_s = sum(v <= stretch for v in vals.values())
-    r = _archive_record(a.bench, work, b, tb, vdds, names, unverified)
+    r = _archive_record(a.bench, work, b, tb, vdds, names, unverified, engine, pdk)
     rid, sha, exp, bundle_sha, ingest_sha, citable, noncite = (
         r[k] for k in ("rid", "sha", "exp", "bundle_sha", "ingest_sha", "citable", "noncite"))
 

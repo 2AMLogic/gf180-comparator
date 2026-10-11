@@ -74,10 +74,15 @@ from harness import corners as hc  # noqa: E402
 from harness import dut as hdut  # noqa: E402
 from harness import pdk as hpdk  # noqa: E402
 from harness import testbench as htb  # noqa: E402
+from harness import toolchain as htc  # noqa: E402
 
 #: ngspice 46 prints `.meas` results with 5 mantissa decimals by default;
 #: widen so sub-microvolt kickback differences are not quantised away.
 NGSPICE_INIT = ["set measureprec=12", "set numdgt=12"]
+
+#: The gf180mcu variant every generated request selects (`models.pdk`). Also
+#: snapshotted into the bundle as the variant fleet reports must confirm (#283).
+PDK_VARIANT = "gf180mcuD"
 
 OFFSET_MC_SEED = 20260909
 OFFSET_MC_N = 200
@@ -475,7 +480,7 @@ def main() -> int:
             req = {
                 "netlist": f"body-{vtag}.spice",
                 "engine": "ngspice",
-                "models": {"pdk": "gf180mcuD", "lib": "libs.tech/ngspice/sm141064.ngspice"},
+                "models": {"pdk": PDK_VARIANT, "lib": "libs.tech/ngspice/sm141064.ngspice"},
                 "corners": {"process": process, "temperature_c": temps},
                 # The fleet image's klt can lag the submitting client; run anyway
                 # and let the record state the runner/client versions it saw.
@@ -515,6 +520,23 @@ def main() -> int:
     print(f"wrote {out}/{BUNDLE_NAME} (commit {commit[:7]}"
           + (f", DIRTY: {', '.join(dirty_paths)})" if dirty_paths else ", clean)"))
     return 0
+
+
+def toolchain_snapshot(commit: str, path: Path | None = None) -> dict:
+    """The ngspice floor in force at generation, frozen into the bundle.
+
+    Ingestion enforces THIS floor, not whatever sim/toolchain.json says at
+    ingest time, so a later pin change never alters the meaning of an
+    originating bundle (issue #269). Bound to the generation commit and the
+    sha256 of the pin file it was read from."""
+    path = path or htc.TOOLCHAIN_JSON
+    pins = htc.load_pins(path)
+    return {"file": repo_rel(path) or str(path), "sha256": sha256_file(path),
+            "commit": commit, "ngspice_min_major": pins.get("ngspice_min_major"),
+            # Issue #283: the exact open_pdks revision and PDK variant the
+            # requests below select; ingestion qualifies every executor
+            # report against THESE, never today's checkout.
+            "open_pdks": pins.get("open_pdks"), "pdk_variant": PDK_VARIANT}
 
 
 def write_bundle(out: Path, bench: str, tb, dut, binding, selector, staged: dict,
@@ -561,6 +583,7 @@ def write_bundle(out: Path, bench: str, tb, dut, binding, selector, staged: dict
             "manifest_sha256": tb.manifest_sha256,
             "staged_dir": staged["testbench_dir"],
         },
+        "toolchain": toolchain_snapshot(commit),
         "parameters": parameters,
         "requests": requests,
         "staged": {p.relative_to(out).as_posix(): sha256_file(p) for p in files},
