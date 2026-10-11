@@ -407,6 +407,26 @@ unchanged: 1/45 within target, 0/45 within stretch. Bounds untouched; the
 r1/r2/r3 files stay committed unchanged. Extracted-DUT both-node evidence is
 out of scope (#112).
 
+**Revision 5 (issue #303): the positive-node-only fallback is incomplete
+coverage, not just a disclosure.** Revision 4 kept the kickback row
+`coverage: complete` with only a `partial_node_coverage` flag when
+`validate_kickback_both` failed — contradictory machine-readable statements.
+Revision 5 marks the row `coverage: "incomplete"` (`coverage_reason:
+"kickback_partial_node_coverage"`), adds `kickback_1k_peak_mv` to every
+affected corner's `unscored_rows`, appends one skipped-work entry per corner
+to `coverage.skipped`, and includes the row in `eligibility.incomplete_rows` —
+the same structured treatment the offset fallback and the average-power row
+already get. The positive-node values, verdict counts and the ratified 5 / 2
+mV bounds are unchanged (`kickback_source` still discloses the limited
+positive-node scope), and a measured kickback miss still fails outright:
+numerical failure precedes partial coverage, so the fallback never turns a
+miss into `pass_partial`. A valid both-node record keeps the row `complete`
+with no extra skipped work. Regression fixtures cover an absent, malformed,
+non-citable, partial-node, stale-DUT, relaxed-bound and wrong-point-count
+both-node record, plus the all-values-pass fallback (capped at
+`pass_partial`) and a measured miss under fallback (still `fail`). The
+r1–r4 files stay committed unchanged.
+
 **Append-only identity.** The file name is the four record ids plus
 `-r<SCORING_REVISION>`: a new record set *or* a new scoring revision mints a
 new file, and an existing file with different content is never overwritten.

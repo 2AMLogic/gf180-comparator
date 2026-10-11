@@ -76,6 +76,19 @@ unchanged 5 / 2 mV bounds, coverage ``both`` and finite values. Otherwise the
 row falls back to the positive-node-only record, disclosed as partial node
 coverage (``KICKBACK_FALLBACK_REASON``) in the row, per corner and in
 ``kickback_source``. Bounds are untouched; verdict counts are unchanged.
+
+Revision 5 (issue #303) makes that fallback's machine-readable coverage
+consistent with its disclosure: when ``validate_kickback_both`` fails, the
+kickback row is now ``coverage: incomplete`` (``coverage_reason`` =
+``KICKBACK_FALLBACK_REASON``), ``kickback_1k_peak_mv`` joins every affected
+corner's ``unscored_rows``, one skipped-work entry per corner is appended to
+``coverage.skipped``, and the row lands in ``eligibility.incomplete_rows`` --
+the same structured treatment the offset fallback (revision 3) and the
+average-power row already get. The positive-node values, verdict counts and
+the ratified 5 / 2 mV bounds are unchanged, and a measured kickback miss
+still fails outright: numerical failure precedes partial coverage, so the
+fallback can never turn a miss into ``pass_partial``. A valid both-node
+record keeps the row ``complete`` with no extra skipped work.
 """
 
 from __future__ import annotations
@@ -94,7 +107,9 @@ NETLIST = "design/comparator.spice"
 #: append-only guard in main(). Revision 2 = issue #108 (coverage split out). Revision 3 = issue #200
 #: (offset scored on the full-grid whole-comparator record when valid).
 #: Revision 4 = issue #204 (kickback scored on the both-node klt-record when valid).
-SCORING_REVISION = 4
+#: Revision 5 = issue #303 (positive-node-only kickback fallback recorded as
+#: incomplete coverage, not merely disclosed).
+SCORING_REVISION = 5
 
 # (bench, record id) -- the four records DR-0002 ratified and the
 # characterization report scores. The kickback entry is the positive-node-only
@@ -205,8 +220,8 @@ def predecessor_path() -> Path:
 
 
 def supersedes_path() -> Path:
-    """The revision-3 (issue #200) envelope this one supersedes."""
-    return REPO_ROOT / "sim" / "corner-matrix" / f"item5-corner-matrix-{_four_tag()}-{OFFSET_TRAN_RECORD_ID}-r3.json"
+    """The revision-4 (issue #204) envelope this one supersedes."""
+    return REPO_ROOT / "sim" / "corner-matrix" / f"item5-corner-matrix-{_tag()}-r4.json"
 
 
 #: Key under which the both-node kickback record rides in ``recs`` (its bench
@@ -629,6 +644,12 @@ def build_envelope_from(recs: dict, sources: list) -> dict:
         if not use_whole:
             skipped.append({"id": work_id("spec_row", idx, cid, OFFSET_ROW), "reason": OFFSET_TRAN_SKIP_REASON})
             unscored.insert(0, OFFSET_ROW)
+        if not use_both:
+            # The positive-node fallback is disclosed partial evidence, not a
+            # scored both-node claim (issue #303): the row is unscored work here
+            # too, exactly like the offset fallback above.
+            skipped.append({"id": work_id("spec_row", idx, cid, KICKBACK_ROW), "reason": KICKBACK_FALLBACK_REASON})
+            unscored.insert(len(unscored) - 1, KICKBACK_ROW)
         numerically_ok = all(m["status"] == "pass" for m in meas)
         corners.append({
             "corner_id": cid, "process": base["corner"], "temp_c": base["temp_c"],
@@ -676,6 +697,12 @@ def build_envelope_from(recs: dict, sources: list) -> dict:
         if name == KICKBACK_ROW:
             row.update(_kickback_disclosure(use_both, kick_problems))
             if not use_both:
+                # Partial node coverage means the row is not completely scored
+                # (issue #303), but the measured positive-node values are kept:
+                # a miss still fails through the numerical rollup, which
+                # precedes coverage.
+                row["coverage"] = "incomplete"
+                row["coverage_reason"] = KICKBACK_FALLBACK_REASON
                 row["label"] += " -- POSITIVE-NODE-ONLY evidence (partial node coverage)"
         spec_rows.append(row)
     vals, wc_id, wc, n_t, n_s = _row_stats(STATIC_POWER)
@@ -761,7 +788,12 @@ def build_envelope_from(recs: dict, sources: list) -> dict:
             "transient Monte Carlo record (simulated mismatch + a DERIVED, "
             "conservative load-resistor budget) when that record has complete, "
             "source-bound 45-point coverage, else it is marked incomplete; the "
-            "preamp-only DC value is carried as a separate diagnostic. Measured rows are scored against the DR-0002 "
+            "preamp-only DC value is carried as a separate diagnostic. The "
+            "kickback row is scored on the both-node schematic record when it "
+            "validates; otherwise it falls back to the positive-node-only "
+            "record, is marked incomplete coverage with one skipped-work entry "
+            "per corner, and keeps those measured values and the ratified "
+            "bounds. Measured rows are scored against the DR-0002 "
             "ratified TARGET bounds at every corner; stretch is reported in "
             "spec_rows only. The ratified average-power row is NOT scored (its "
             "clock rate is TBD): static_power_uw = i_static_ua x vdd is carried "
