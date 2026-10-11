@@ -58,6 +58,7 @@ Usage
     # issue #231 experimental 45-point campaign (N=200, seed 20260909):
     extracted_tran_feasibility.py {probe,mc,evaluate} OUTDIR --point P --campaign
     extracted_tran_feasibility.py summary   OUTDIR       # exit 3 unless 45/45 complete
+    #   with a validated point/run identity binding (issue #292)
 """
 
 from __future__ import annotations
@@ -638,13 +639,76 @@ def stat_uncertainty(pop: dict) -> dict:
             "sigma_ci95_mv": [sig - 1.96 * se_sig, sig + 1.96 * se_sig]}
 
 
+def _point_identity_failure(pt: str, r: dict, n: int):
+    """Named identity diagnostics for one loaded campaign point result
+    (issue #292). The result's embedded `point` must be the expected key it was
+    loaded under (a filename never establishes identity), and the recorded run
+    identity -- seed, draw count, mismatch mode and the contract/source hashes
+    -- must be present and well-formed. Returns None when the binding holds,
+    else (code, reason); legacy artifacts missing the fields are disclosed as
+    UNVERIFIED rather than silently aggregated."""
+    missing, malformed = [], []
+    v = r.get("point")
+    if "point" not in r:
+        missing.append("point")
+    elif not isinstance(v, str):
+        malformed.append("point")
+    elif v != pt:
+        return ("POINT_IDENTITY",
+                f"result's embedded point {v!r} is not this file's point {pt!r}: a valid population "
+                "must not be presented under another point's filename")
+    for field, want, code in (("seed", CAMPAIGN_SEED, "SEED_IDENTITY"),
+                              ("n", n, "DRAW_COUNT_IDENTITY")):
+        v = r.get(field)
+        if field not in r:
+            missing.append(field)
+        elif isinstance(v, bool) or not isinstance(v, int):
+            malformed.append(field)
+        elif v != want:
+            return (code, f"result's embedded {field} {v!r} != the campaign's {want}")
+    v = r.get("mismatch_mode")
+    if "mismatch_mode" not in r:
+        missing.append("mismatch_mode")
+    elif not isinstance(v, str):
+        malformed.append("mismatch_mode")
+    elif v != "mismatch":
+        return ("MISMATCH_MODE_IDENTITY",
+                f"result's embedded mismatch mode {v!r} is not 'mismatch'")
+    v = r.get("campaign_identity")
+    if "campaign_identity" not in r:
+        missing.append("campaign_identity")
+    elif not isinstance(v, dict) or not all(
+            isinstance(v.get(k), str) and v[k]
+            for k in ("contract_sha256", "extract_report_sha256")):
+        malformed.append("campaign_identity")
+    if missing:
+        return ("IDENTITY_MISSING",
+                "legacy artifact lacks identity fields [" + ", ".join(missing) + "]: this result's "
+                "point/run identity is UNVERIFIED, so a validated complete campaign is not possible "
+                "(committed historical evidence is left unchanged)")
+    if malformed:
+        return ("IDENTITY_MALFORMED", "malformed identity fields [" + ", ".join(malformed) + "]")
+    return None
+
+
 def summarize_campaign(expected: dict, results: dict, refusals: dict, n: int = CAMPAIGN_N) -> dict:
     """Summary over the expected grid. `results` = {point: campaign json},
     `refusals` = {point: refusal json}. Complete only if EVERY expected point
-    has exactly `n` valid draws; otherwise the failed/missing points are listed
-    and no aggregate claim is made. Absolute systematic offset (= -mean trip,
-    centre NOT subtracted) and random sigma are separate columns."""
+    has exactly `n` valid draws and a validated point/run identity binding
+    (issue #292); otherwise the offending points are listed and no aggregate
+    claim is made. Identity validation: the result's embedded `point` must
+    equal the expected key it was loaded under, and the recorded seed, draw
+    count, mismatch mode and contract/source identity must be present,
+    well-formed and homogeneous across the grid -- named diagnostics
+    (POINT_IDENTITY, SEED_IDENTITY, DRAW_COUNT_IDENTITY, MISMATCH_MODE_IDENTITY,
+    CAMPAIGN_IDENTITY, IDENTITY_MISSING, IDENTITY_MALFORMED) otherwise. Legacy
+    results lacking identity fields are disclosed as UNVERIFIED, never silently
+    aggregated; `identity_verified` says whether every expected point carried
+    and passed the binding. Absolute systematic offset (= -mean trip, centre
+    NOT subtracted) and random sigma are separate columns."""
     rows, failed, missing = {}, {}, []
+    identity_ok = 0
+    identity_ref = None
     for pt in expected:
         r = results.get(pt)
         if r is None:
@@ -652,6 +716,19 @@ def summarize_campaign(expected: dict, results: dict, refusals: dict, n: int = C
                 failed[pt] = {"code": refusals[pt].get("code"), "reason": refusals[pt].get("reason")}
             else:
                 missing.append(pt)
+            continue
+        ident = _point_identity_failure(pt, r, n)
+        if ident is not None:
+            failed[pt] = {"code": ident[0], "reason": ident[1]}
+            continue
+        identity_ok += 1
+        if identity_ref is None:
+            identity_ref = r["campaign_identity"]
+        elif r["campaign_identity"] != identity_ref:
+            failed[pt] = {"code": "CAMPAIGN_IDENTITY",
+                          "reason": "contract/source identity differs from the campaign's first "
+                                    f"validated point ({r['campaign_identity']} != {identity_ref}): "
+                                    "the points are not from the same campaign run"}
             continue
         pop = r["population"]
         vals = [pop.get(k) for k in ("trip_abs_mean_mv", "sig_trip_mv", "se_mean_mv", "se_sigma_mv")]
@@ -666,7 +743,8 @@ def summarize_campaign(expected: dict, results: dict, refusals: dict, n: int = C
                     "probe_trip_mv": pop["probe_trip_mv"], "centre_mv": pop["centre_mv"]}
     complete = len(rows) == len(expected) == CAMPAIGN_POINTS_EXPECTED and not failed and not missing
     out = {"experimental": True, "issue": CAMPAIGN_ISSUE, "mints_record": False,
-           "complete": complete, "expected_points": len(expected), "valid_points": len(rows),
+           "complete": complete, "identity_verified": identity_ok == len(expected),
+           "expected_points": len(expected), "valid_points": len(rows),
            "n_per_point": n, "seed": CAMPAIGN_SEED,
            "failed_points": failed, "missing_points": missing, "points": rows,
            "ratified_total_offset_verdict": None,
@@ -794,6 +872,12 @@ def cmd_evaluate(outdir: Path, point: str, campaign: bool = False) -> dict:
                                             pc["trip_mv"], req["monte_carlo"]["n"])
     if campaign:
         out["population"].update(stat_uncertainty(out["population"]))
+        # issue #292: bind the result to its run and contract identity so the
+        # summary can validate what the filename alone never establishes
+        out["mismatch_mode"] = req["monte_carlo"].get("vary")
+        out["campaign_identity"] = {
+            "contract_sha256": sha256_file(outdir / "contract.json"),
+            "extract_report_sha256": sha256_file(EXTRACT_REPORT)}
     env = rep.get("environment") or {}
     out["executor"] = {"remote": env.get("remote"), "monte_carlo": env.get("monte_carlo"),
                        "engine_version": env.get("engine_version")}

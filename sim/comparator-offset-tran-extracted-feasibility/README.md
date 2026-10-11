@@ -229,8 +229,13 @@ per-corner mismatch-free trip probe before centring; finite-value, coverage,
 endpoint-decision, trip-bracket, mismatch-exercised (sigma > 0), 3-step
 edge-margin and probe-bracketed gates; exactly 200 valid draws. A corner that
 fails any gate writes `refusal-<point>.json` and is **listed, never dropped**;
-`summary` reports `complete: true` only with 45/45 valid corners (exit 3
-otherwise, and no aggregate is produced).
+`summary` reports `complete: true` only with 45/45 valid corners whose point/run
+identity binding validates (issue #292: each `campaign-<point>.json` must embed
+its own `point`, seed, draw count, mismatch mode and contract/source hashes, and
+all 45 must agree; exit 3 otherwise, and no aggregate is produced). Pre-#292
+per-point artifacts lack the binding fields: re-summarizing them lists every
+point `IDENTITY_MISSING` (identity UNVERIFIED) and produces no aggregate; the
+committed evidence itself is never rewritten.
 
 Reported per corner, as separate numbers: the absolute mean trip (centre NOT
 subtracted; systematic offset = -mean trip) with SE(mean) = sigma/sqrt(N), and

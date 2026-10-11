@@ -5,7 +5,9 @@ Synthetic fixtures only. Every refusal path the issue names has a fixture:
 missing/ambiguous observation nodes, invalid gain, missing/non-finite
 ingredients, out-of-range trips, wrong endpoint decisions, late flips, plus the
 feasibility-specific gates (mismatch not exercised, edge margin, probe not
-bracketed, identity, body bias, mismatch support).
+bracketed, identity, body bias, mismatch support) and the campaign summary's
+point/run identity binding (copied files, mixed seeds/draws/modes/contracts,
+legacy and malformed identity fields).
 """
 
 from __future__ import annotations
@@ -318,8 +320,11 @@ class Contract(unittest.TestCase):
 
 
 class Campaign(unittest.TestCase):
-    """Issue #231: 45-point x N=200 experimental campaign (PDK-free)."""
+    """Issue #231: 45-point x N=200 experimental campaign (PDK-free), plus the
+    issue #292 point/run identity binding of the summary."""
     REPORT = json.loads((REPO / "layout/lvs/comparator.extract-rc.json").read_text())
+    CONTRACT_SHA = "a" * 64
+    EXTRACT_REPORT_SHA = "b" * 64
 
     def contract(self):
         rep = self.REPORT
@@ -335,7 +340,20 @@ class Campaign(unittest.TestCase):
         d = {"n_valid_draws": n, "trip_abs_mean_mv": mean, "sig_trip_mv": sig,
              "probe_trip_mv": mean, "centre_mv": round(mean, 2)}
         d.update(ef.stat_uncertainty(d))
-        return {"population": d}
+        return {"population": d, "seed": ef.CAMPAIGN_SEED, "n": n,
+                "mismatch_mode": "mismatch",
+                "campaign_identity": {"contract_sha256": self.CONTRACT_SHA,
+                                      "extract_report_sha256": self.EXTRACT_REPORT_SHA}}
+
+    def res(self, pt, **kw):
+        """A valid point result whose embedded identity names `pt`."""
+        r = self.pop(**kw)
+        r["point"] = pt
+        return r
+
+    @staticmethod
+    def copied(r):
+        return json.loads(json.dumps(r))
 
     def grid(self):
         return ef.campaign_points()
@@ -418,9 +436,10 @@ class Campaign(unittest.TestCase):
 
     def test_complete_summary_keeps_systematic_and_random_separate(self):
         g = self.grid()
-        res = {pt: self.pop(mean=-8.0 - i * 0.3, sig=1.1 + i * 0.01) for i, pt in enumerate(g)}
+        res = {pt: self.res(pt, mean=-8.0 - i * 0.3, sig=1.1 + i * 0.01) for i, pt in enumerate(g)}
         s = ef.summarize_campaign(g, res, {})
         self.assertTrue(s["complete"])
+        self.assertTrue(s["identity_verified"])
         self.assertEqual(s["valid_points"], 45)
         r = s["points"]["tt_27c_3.30v"]
         self.assertAlmostEqual(r["systematic_offset_mv"], -r["trip_abs_mean_mv"])
@@ -431,8 +450,9 @@ class Campaign(unittest.TestCase):
     def test_incomplete_summary_lists_failures_and_has_no_aggregate(self):
         g = self.grid()
         pts = list(g)
-        res = {pt: self.pop() for pt in pts[2:]}
-        res[pts[2]] = self.pop(n=199)             # wrong draw count: failed, not dropped
+        res = {pt: self.res(pt) for pt in pts[2:]}
+        res[pts[2]] = self.res(pts[2])          # identity intact, but...
+        res[pts[2]]["population"]["n_valid_draws"] = 199   # ...short population: failed, not dropped
         s = ef.summarize_campaign(g, res, {pts[0]: {"code": "EDGE_MARGIN", "reason": "x"}})
         self.assertFalse(s["complete"])
         self.assertEqual(s["failed_points"][pts[0]]["code"], "EDGE_MARGIN")
@@ -442,13 +462,94 @@ class Campaign(unittest.TestCase):
 
     def test_summary_rejects_zero_sigma_and_nonfinite(self):
         g = self.grid()
-        res = {pt: self.pop() for pt in g}
+        res = {pt: self.res(pt) for pt in g}
         pt = next(iter(g))
         res[pt]["population"]["sig_trip_mv"] = 0.0
         res[list(g)[1]]["population"]["trip_abs_mean_mv"] = float("nan")
         s = ef.summarize_campaign(g, res, {})
         self.assertFalse(s["complete"])
         self.assertEqual(len(s["failed_points"]), 2)
+
+    # -- point/run identity binding (issue #292) ---------------------------
+
+    def test_copied_result_rejected_by_point_identity(self):
+        g = self.grid()
+        pts = list(g)
+        res = {pt: self.res(pt, mean=-8.0 - i * 0.3) for i, pt in enumerate(pts)}
+        res[pts[5]] = self.copied(res[pts[4]])   # valid population, another point's identity
+        s = ef.summarize_campaign(g, res, {})
+        self.assertFalse(s["complete"])
+        self.assertEqual(s["failed_points"][pts[5]]["code"], "POINT_IDENTITY")
+        self.assertIn(pts[4], s["failed_points"][pts[5]]["reason"])
+        self.assertNotIn(pts[5], s["points"])
+        self.assertNotIn("aggregate", s)
+        self.assertFalse(s["identity_verified"])
+
+    def test_cmd_summary_rejects_file_copied_to_another_corner_filename(self):
+        g = self.grid()
+        pts = list(g)
+        with tempfile.TemporaryDirectory() as td:
+            out = Path(td)
+            for i, pt in enumerate(pts):
+                (out / f"campaign-{pt}.json").write_text(
+                    json.dumps(self.res(pt, mean=-8.0 - i * 0.3)))
+            (out / f"campaign-{pts[7]}.json").write_text(
+                (out / f"campaign-{pts[6]}.json").read_text())
+            s = ef.cmd_summary(out)
+        self.assertFalse(s["complete"])
+        self.assertEqual(s["failed_points"][pts[7]]["code"], "POINT_IDENTITY")
+        self.assertNotIn("aggregate", s)
+        self.assertFalse(s["identity_verified"])
+
+    def test_mixed_seed_draw_count_mode_and_contract_cannot_complete(self):
+        g = self.grid()
+        pts = list(g)
+        base = {pt: self.res(pt) for pt in pts}
+        for label, kw, code in (("seed", {"seed": ef.CAMPAIGN_SEED + 1}, "SEED_IDENTITY"),
+                                ("draws", {"n": ef.CAMPAIGN_N - 1}, "DRAW_COUNT_IDENTITY"),
+                                ("mode", {"mismatch_mode": "all"}, "MISMATCH_MODE_IDENTITY")):
+            res = {pt: self.copied(r) for pt, r in base.items()}
+            res[pts[3]].update(kw)   # valid population, one field disagrees
+            s = ef.summarize_campaign(g, res, {})
+            self.assertFalse(s["complete"], label)
+            self.assertEqual(s["failed_points"][pts[3]]["code"], code, label)
+            self.assertNotIn("aggregate", s, label)
+            self.assertFalse(s["identity_verified"], label)
+        res = {pt: self.copied(r) for pt, r in base.items()}
+        res[pts[3]]["campaign_identity"]["contract_sha256"] = "c" * 64
+        s = ef.summarize_campaign(g, res, {})
+        self.assertFalse(s["complete"])
+        self.assertEqual(s["failed_points"][pts[3]]["code"], "CAMPAIGN_IDENTITY")
+        self.assertNotIn("aggregate", s)
+
+    def test_legacy_result_missing_identity_fields_is_disclosed_not_aggregated(self):
+        g = self.grid()
+        res = {pt: self.res(pt) for pt in g}
+        for r in res.values():
+            del r["mismatch_mode"], r["campaign_identity"]   # pre-#292 artifacts
+        s = ef.summarize_campaign(g, res, {})
+        self.assertFalse(s["complete"])
+        self.assertFalse(s["identity_verified"])
+        self.assertEqual(len(s["failed_points"]), 45)
+        self.assertEqual({v["code"] for v in s["failed_points"].values()}, {"IDENTITY_MISSING"})
+        self.assertIn("UNVERIFIED", next(iter(s["failed_points"].values()))["reason"])
+        self.assertNotIn("aggregate", s)
+
+    def test_malformed_identity_field_is_named(self):
+        g = self.grid()
+        res = {pt: self.res(pt) for pt in g}
+        res[next(iter(g))]["point"] = 123
+        s = ef.summarize_campaign(g, res, {})
+        self.assertFalse(s["complete"])
+        self.assertEqual(next(iter(s["failed_points"].values()))["code"], "IDENTITY_MALFORMED")
+        self.assertNotIn("aggregate", s)
+
+    def test_identity_verified_true_for_homogeneous_valid_campaign(self):
+        g = self.grid()
+        s = ef.summarize_campaign(g, {pt: self.res(pt) for pt in g}, {})
+        self.assertTrue(s["complete"])
+        self.assertTrue(s["identity_verified"])
+        self.assertIn("aggregate", s)
 
 
 class Scope(unittest.TestCase):
