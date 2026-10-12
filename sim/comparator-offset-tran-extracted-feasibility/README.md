@@ -154,7 +154,9 @@ python3 -I ../tools/extracted_tran_feasibility.py summary "$S"
 `evaluate` checks the report's netlist sha256 against the submitted body,
 draw coverage and the population gates, then re-derives every statistic; the
 output matches the committed `campaign-<point>.json` (verified for
-`tt_27c_3.30v` and `ff_125c_3.63v`).
+`tt_27c_3.30v` and `ff_125c_3.63v`; the full 45-point replay of both runs
+under the post-#292 identity gates is recorded in the completion assessment
+below).
 
 ### Clean-source rerun (issue #247) -- `campaign/20261011/`, 45/45 valid (experimental)
 
@@ -209,6 +211,54 @@ Versions: fleet runner klt 0.5.0 for every point in both runs, client
 throughout, not normalized. ngspice engine version 46 in both. Fleet instances
 were c7i.4xlarge (41) and m6i.4xlarge (4) vs c7i/m6i/m7i (32/10/3). No
 production adapter, active binding, record or ratified bound was changed.
+
+### Completion assessment under the current identity gates (#292 replay, 2026-10-12)
+
+Both runs predate #292, so neither committed summary can self-certify under
+the current gates. Both retention paths were verified on 2026-10-12, PDK-free,
+on scratch copies, committed evidence untouched:
+
+* **Re-summarizing the committed per-point artifacts** (what a reader holding
+  only the committed `campaign-<point>.json` files gets): `summary` lists all
+  45 points `IDENTITY_MISSING`, reports `complete: false`,
+  `identity_verified: false`, exits 3 — for **both** `20261010` and
+  `20261011`. Disclosed, not fixed: the committed summaries keep their
+  historical `complete: true` and are never rewritten.
+* **Replaying the retained raw reports** (`report-mc.tar.gz`) through the
+  current `evaluate --campaign` (all 45 points) + `summary`: both campaigns
+  re-derive **`complete: true`, `identity_verified: true`, 45/45 valid**,
+  zero refusals. Every replayed per-point population statistic and every
+  summary row is identical to the committed artifacts (all 45 points
+  cross-checked, both runs), and all 45 points in each replay carry the same
+  `campaign_identity` (`contract_sha256` `792b1509…`,
+  `extract_report_sha256` `7af46bd8…`) — the two runs shared a byte-identical
+  contract, so one binding covers both.
+
+Status against the issue's original acceptance criteria: 45 corners x exactly
+200 valid draws, failures visible — verified in the committed artifacts (no
+`refusal-*.json`, `n_valid_draws = 200`, request seed 20260909 /
+`vary: mismatch` in all 45 plans of both runs) and re-established by replay;
+the PDK-free refusal and identity gates are the harness tests (all pass,
+including wrong-extraction, zero-mismatch-dispersion, missing-draw,
+point/run-identity and copied-result refusals); absolute systematic offset
+and random sigma are reported separately (replayed ranges unchanged:
+1.75..21.38 mV and 0.884..1.201 mV, worst corner `ff_125c_3.63v`); the
+production adapter refusal (`mk_klt_request.py` "supports the schematic
+binding only"), the `comparator-dr0001-layout` binding, the committed
+extracted records and the signoff verdict are untouched.
+
+Remaining gap, stated explicitly: a validated aggregate under the current
+gates exists **as the replay output** — reproducible from the retained inputs
+with the recipe below — while the committed historical summaries themselves
+still predate the identity binding and remain UNVERIFIED as artifacts. The
+replay binds each point to the committed contract/extract identity and the
+retained request's seed/draw count/mismatch mode, and each report to its
+submitted body's netlist hash; it cannot retroactively add provenance the
+runs never recorded (20261010's dirty source bundle stays a disclosed caveat).
+A fresh identity-native fleet campaign is therefore **not required** to
+re-establish these statistics; it would be needed only if the retained raw
+reports were ever found incomplete or corrupt. `ratified_total_offset_verdict`
+stays `null` everywhere; no signoff item is repinned.
 
 The tool, PDK-free tests and fleet reproduction recipe below were delivered
 first (#236). This is an additive, experimental extension:
