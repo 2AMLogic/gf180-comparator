@@ -2262,3 +2262,179 @@ class CmWindowDerivation(unittest.TestCase):
         with self.assertRaises(SystemExit):
             kr.pair_cm_window_reports([])
         self.assertIs(kr.pair_cm_window_reports(reps[:1]), reps[0])
+
+
+#: Raw `.meas` ingredients of each bench's decision measurements (tb.json `measure`).
+_DECISION_RAW = {
+    "comparator-regeneration": {"da_first": 0.0, "db_first": 0.0, "dc_first": 0.0,
+                                "da_end": 1.0, "db_end": 1.0, "dc_end": 1.0},
+    "comparator-kickback": {"da_end": 1.0, "db_end": 1.0, "dc_end": 1.0},
+}
+
+
+class DecisionCorrectness(unittest.TestCase):
+    """#273: latch-decision polarity checks are a structured, per-corner result."""
+
+    def _derived(self, bench, **raw):
+        tb = htb.load(SIM / bench)
+        names = set()
+        for expr in tb.measure.values():
+            names |= {t for t in __import__("re").findall(r"[A-Za-z_]\w*", expr) if t not in kr.MATH}
+        full = {n: 2.0 + i for i, n in enumerate(sorted(names))}
+        full.update(_DECISION_RAW[bench], **raw)
+        res, problems = kr.derive(bench, tb, {"main": ({"tt_27c_3.30v": {"": full}}, [])})
+        self.assertEqual(problems, [])
+        return tb, res
+
+    def test_thresholds_come_from_the_manifest(self):
+        tb = htb.load(SIM / "comparator-regeneration")
+        dc = kr.decision_correctness("comparator-regeneration", tb, {}, set())
+        for n in kr.DECISION_CHECKS["comparator-regeneration"]:
+            self.assertEqual({k: v for k, v in dc["checks"][n].items() if k in ("min", "max")},
+                             {k: tb.checks[n][k] for k in ("min", "max") if k in tb.checks[n]})
+            self.assertTrue(dc["checks"][n]["required"])
+        self.assertEqual(dc["checks"]["dout_od1_first"]["phase"], "first")
+        self.assertEqual(dc["checks"]["dout_od1_end"]["phase"], "end")
+        # a different (generation-time) manifest bound is the one applied
+        tb2 = types.SimpleNamespace(checks=dict(tb.checks, dout_od50_end={"min": 1.5}))
+        _, res = self._derived("comparator-regeneration")
+        self.assertEqual(kr.decision_correctness("comparator-regeneration", tb, res, set(res))["status"], "pass")
+        dc2 = kr.decision_correctness("comparator-regeneration", tb2, res, set(res))
+        self.assertEqual(dc2["status"], "fail")
+        self.assertEqual([(f["corner"], f["measurement"]) for f in dc2["failures"]], [("tt_27c_3.30v", "dout_od50_end")])
+
+    def test_other_benches_have_none(self):
+        self.assertIsNone(kr.decision_correctness("comparator-offset-mc", htb.load(SIM / "comparator-offset-mc"), {}, set()))
+
+    def test_correct_decisions_pass(self):
+        for bench in _DECISION_RAW:
+            tb, res = self._derived(bench)
+            dc = kr.decision_correctness(bench, tb, res, set(res))
+            self.assertEqual(dc["status"], "pass", (bench, dc))
+            self.assertEqual((dc["corners_pass"], dc["corners_expected"], dc["failures"], dc["missing"]), (1, 1, [], []))
+
+    def test_wrong_first_decision_fails_with_corner_and_measurement(self):
+        tb, res = self._derived("comparator-regeneration", db_first=1.0)  # first strobe decided high
+        dc = kr.decision_correctness("comparator-regeneration", tb, res, set(res))
+        self.assertEqual(dc["status"], "fail")
+        self.assertEqual(dc["failures"], [{"corner": "tt_27c_3.30v", "measurement": "dout_od1_first",
+                                           "phase": "first", "value": 1.0, "max": 0.1}])
+        self.assertEqual(dc["per_corner"]["tt_27c_3.30v"]["status"], "fail")
+        self.assertEqual(dc["per_corner"]["tt_27c_3.30v"]["checks"]["dout_od1_end"]["status"], "pass")
+
+    def test_wrong_final_decision_fails_even_with_in_bound_headline(self):
+        for bench, raw, name in (("comparator-regeneration", {"dc_end": 0.0}, "dout_od01_end"),
+                                 ("comparator-kickback", {"db_end": 0.2}, "dout_float_small_end")):
+            tb, res = self._derived(bench, **raw)
+            key, tgt = kr.SPEC[bench][1], kr.SPEC[bench][2]
+            res["tt_27c_3.30v"][key] = tgt / 2  # finite and within the ratified target
+            dc = kr.decision_correctness(bench, tb, res, set(res))
+            self.assertEqual(dc["status"], "fail", bench)
+            self.assertEqual([(f["corner"], f["measurement"], f["phase"]) for f in dc["failures"]],
+                             [("tt_27c_3.30v", name, "end")])
+
+    def test_absent_measurement_or_corner_cannot_pass(self):
+        tb, res = self._derived("comparator-kickback")
+        del res["tt_27c_3.30v"]["dout_1k_end"]
+        dc = kr.decision_correctness("comparator-kickback", tb, res, set(res))
+        self.assertEqual(dc["status"], "incomplete")
+        self.assertEqual(dc["missing"][0]["measurement"], "dout_1k_end")
+        self.assertEqual(dc["corners_pass"], 0)
+        _, res = self._derived("comparator-kickback")
+        dc = kr.decision_correctness("comparator-kickback", tb, res, set(res) | {"ss_125c_2.97v"})
+        self.assertEqual(dc["status"], "incomplete")
+        self.assertEqual(dc["per_corner"]["ss_125c_2.97v"]["status"], "missing")
+        self.assertEqual((dc["corners_pass"], dc["corners_expected"], dc["corners_evaluated"]), (1, 2, 1))
+        dc = kr.decision_correctness("comparator-kickback", tb, {}, set())
+        self.assertEqual(dc["status"], "incomplete")  # nothing evaluated is not a pass
+
+    def test_required_check_without_manifest_bound_cannot_pass(self):
+        tb, res = self._derived("comparator-regeneration")
+        checks = {k: v for k, v in tb.checks.items() if k != "dout_od50_first"}
+        dc = kr.decision_correctness("comparator-regeneration", types.SimpleNamespace(checks=checks), res, set(res))
+        self.assertEqual(dc["status"], "incomplete")
+        self.assertEqual([m["measurement"] for m in dc["missing"]], ["dout_od50_first"])
+
+    def test_nonfinite_value_is_missing_not_pass(self):
+        tb, res = self._derived("comparator-kickback")
+        res["tt_27c_3.30v"]["dout_1k_end"] = float("nan")
+        dc = kr.decision_correctness("comparator-kickback", tb, res, set(res))
+        self.assertEqual(dc["status"], "incomplete")
+        self.assertIsNone(dc["per_corner"]["tt_27c_3.30v"]["checks"]["dout_1k_end"]["value"])
+        json.dumps(dc, allow_nan=False)  # strict JSON
+
+
+class DecisionCorrectnessIngest(unittest.TestCase):
+    """#273 end to end: synthetic fleet reports -> record JSON and Markdown agree."""
+
+    def _run(self, bench, bad=None):
+        """bad = (corner_id, {raw: value}) applied to one unit of every supply's report."""
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work = _generate(td, bench=bench)
+            _write_reports(work)
+            for p in work.glob("report-*.json"):
+                rep = json.loads(p.read_text())
+                for c in rep["corners"]:
+                    over = dict(_DECISION_RAW[bench])
+                    if bad and c["corner_id"] == bad[0] and p.name == "report-main-v3.30.json":
+                        over.update(bad[1])
+                    for m in c["measurements"]:
+                        if m["name"] in over:
+                            m["value"] = over[m["name"]]
+                p.write_text(json.dumps(rep))
+            with mock.patch.object(sys, "stderr", io.StringIO()):
+                rc, rec, out = _ingest(td, work, bench=bench)
+            md = (td / "evidence" / bench / "records" / f"{rec['record_id']}.md").read_text()
+        return rc, rec, md, out
+
+    def test_correct_decisions_pass_and_gates_unchanged(self):
+        for bench in _DECISION_RAW:
+            rc, rec, md, out = self._run(bench)
+            self.assertEqual(rc, 0, bench)
+            self.assertTrue(rec["complete"] and rec["citable"] and rec["reference"])
+            dc = rec["decision_correctness"]
+            self.assertEqual(dc["schema"], "decision-correctness/1")
+            self.assertEqual(dc["status"], "pass")
+            self.assertEqual(dc["corners_pass"], rec["expected_points"])
+            self.assertIn("`decision_correctness.status` = `pass`", md)
+            self.assertNotIn("FUNCTIONAL", md)
+            self.assertIn("decision correctness: pass", out)
+
+    def test_wrong_decision_is_machine_readable_and_rendered(self):
+        rc, rec, md, _ = self._run("comparator-regeneration", ("ss/125C", {"da_first": 1.0}))
+        # coverage / provenance gates are untouched: still complete reference evidence
+        self.assertEqual(rc, 0)
+        self.assertTrue(rec["complete"] and rec["reference"])
+        dc = rec["decision_correctness"]
+        self.assertEqual(dc["status"], "fail")
+        self.assertEqual([(f["corner"], f["measurement"]) for f in dc["failures"]],
+                         [("ss_125c_3.30v", "dout_od50_first")])
+        self.assertEqual(dc["corners_fail"], 1)
+        self.assertEqual(dc["corners_pass"], rec["expected_points"] - 1)
+        # Markdown is rendered from the same structure
+        self.assertIn("`decision_correctness.status` = `fail`", md)
+        self.assertIn("wrong decision: `ss_125c_3.30v` `dout_od50_first` = 1 (required <= 0.1)", md)
+        self.assertIn("FUNCTIONAL DECISION CHECKS FAILED", md)
+        rows = {l.split("|")[1].strip(" `"): l.rstrip().rsplit("|", 2)[-2].strip()
+                for l in md.splitlines() if l.startswith("  | `")}
+        self.assertEqual({c for c, s in rows.items() if s == "FAIL"}, {"ss_125c_3.30v"})
+        self.assertEqual({c: s.lower() for c, s in rows.items()},
+                         {c: v["status"] for c, v in dc["per_corner"].items()})
+
+    def test_kickback_wrong_decision_while_kicked(self):
+        rc, rec, md, _ = self._run("comparator-kickback", ("tt/27C", {"dc_end": 0.5}))
+        dc = rec["decision_correctness"]
+        self.assertEqual(dc["status"], "fail")
+        self.assertEqual(dc["failures"], [{"corner": "tt_27c_3.30v", "measurement": "dout_float_big_end",
+                                           "phase": "end", "value": 0.5, "min": 0.9}])
+        self.assertIn("wrong decision: `tt_27c_3.30v` `dout_float_big_end` = 0.5 (required >= 0.9)", md)
+
+    def test_dropped_corner_is_incomplete_not_pass(self):
+        rc, rec, md, _ = self._run("comparator-kickback", ("tt/27C", {"dc_end": float("nan")}))
+        self.assertEqual(rc, 1)  # #152 coverage gate still fires
+        self.assertFalse(rec["complete"])
+        dc = rec["decision_correctness"]
+        self.assertEqual(dc["status"], "incomplete")
+        self.assertEqual(dc["per_corner"]["tt_27c_3.30v"]["status"], "missing")
+        self.assertIn("FUNCTIONAL DECISION CHECKS INCOMPLETE", md)
