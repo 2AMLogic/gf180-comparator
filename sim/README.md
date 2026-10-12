@@ -31,8 +31,8 @@ runner (klt 0.5.0) cannot address a nested sweep's points. Full 45-point
 coverage is not available from this bench. Its monotonic-index variant,
 [`comparator-offset-cm-index/`](comparator-offset-cm-index/) (issue #218), is
 executable on the 0.5.0 runner and has a complete unscored 45-point x N=200
-record ([`20261010-130605300890-d8e9253`](comparator-offset-cm-index/records/20261010-130605300890-d8e9253.md)); the
-consumer's rejection verdict stays Unknown.
+record ([`20261011-210628443577-7e20c78`](comparator-offset-cm-index/records/20261011-210628443577-7e20c78.md)); the
+consumer's rejection verdict stays Unknown. **Re-qualified (#288):** the earlier record `20261010-130605300890-d8e9253` showed `open_pdks f6eeac7`, not the `sim/toolchain.json` pin, so it is superseded by this one (pin `c6d73a35...`, identical results); see [`qualification-notes/20261011-288-open-pdks-requalification.md`](qualification-notes/20261011-288-open-pdks-requalification.md).
 
 A further supplemental feasibility stage,
 [`comparator-offset-tran-extracted-feasibility/`](comparator-offset-tran-extracted-feasibility/)

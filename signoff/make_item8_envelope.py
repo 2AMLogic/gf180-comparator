@@ -31,10 +31,35 @@ Evidence chain (issue #275): before emitting ``pass`` the script validates
 non-empty, contain each required section heading, cite each section's
 declared records by id and keep average power explicitly UNSCORED; each
 registered record must exist, match its pinned sha256 and declared scope
-(bench, DUT provenance, point count, clean tree). The envelope's numeric
-summary is derived from those records, so a changed record cannot leave a
-stale summary. This is not an all-targets-met gate: disclosed misses pass.
-On failure it prints named ``evidence-chain:`` diagnostics and writes nothing.
+(bench, DUT provenance, point count, clean tree). Source qualification
+(issue #296): each record declares a ``role`` -- ``current`` scored evidence,
+or ``historical``/``diagnostic`` context -- and only a ``current`` record may
+carry the ``summary_key`` a scored summary row is derived from; each record
+binds an expected DUT identity (``dut_id``) through the live ``sim/dut.json``
+registry (every role); a ``current`` schematic record must carry the current
+bytes of the netlist that entry binds, and a ``current`` extracted record
+binds through its declared committed ``extraction_report`` whose pinned input
+hash must still match the committed layout bytes (the scratch adapted netlist
+is never required to exist or be regenerated). ``historical``/``diagnostic``
+records keep the identity checks but are not compared with today's bytes, so
+the refresh contract is satisfiable: the design changed -- re-run, register
+the new record as ``current``, re-role the old one; and a current record whose bytes carry
+fleet provenance fields must be explicitly citable reference evidence with no
+refusal reasons (legacy local records carry no fleet fields and qualify
+through their committed context instead). A SHA pin proves which record bytes
+were read; these checks prove they are eligible for the current claim. The
+envelope's numeric summary is derived from those records, so a changed record
+cannot leave a stale summary. This is not an all-targets-met gate: disclosed
+misses pass. Narrative numbers (issue #293): the report's principal scored
+table claims (nominals, extrema, binding corners, target/stretch counts) are
+registered in ``spec/claim-registry.json`` and checked by
+``scripts/check_claim_drift.py`` against the same pinned records, so a
+narrative whose numbers disagree with its records is refused even when its
+envelope hash is refreshed. Every scored summary record must be covered by at
+least one ``scored`` claim; ``scored`` claims stay distinct from
+``diagnostic`` and ``historical`` ones. Average power is not registered and
+stays UNSCORED. On failure it prints named ``evidence-chain:`` diagnostics
+and writes nothing.
 
 Usage (from the repo root):
 
@@ -52,7 +77,9 @@ unchanged report must reproduce the committed envelope byte-for-byte.
 from __future__ import annotations
 
 import hashlib
+import importlib.util
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -81,6 +108,275 @@ SCORED = {
 }
 EXPECTED_POINTS = 45
 
+_ID_RE = re.compile(r"^(?P<corner>[a-z][a-z_]*)_(?P<temp>-?\d+(?:\.\d+)?)c_(?P<vdd>\d+\.\d\d)v$")
+
+
+def _load_corners():
+    """Import the authoritative PVT definitions (sim/harness/corners.py, stdlib only)."""
+    path = REPO_ROOT / "sim" / "harness" / "corners.py"
+    spec = importlib.util.spec_from_file_location("_item8_corners", path)
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = mod  # dataclasses needs the module registered
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def authoritative_grid() -> dict[str, tuple[str, float, float]]:
+    """corner_id -> (corner, temp_c, vdd) of the ratified full grid: the default
+    ``mos`` corner set x default temperatures x ``supply_points()``."""
+    c = _load_corners()
+    pts = c.build_grid(c.resolve_corners([c.DEFAULT_CORNER_SET]), c.DEFAULT_TEMPERATURES_C, c.supply_points())
+    return {p.corner_id: (p.corner.name, p.temp_c, p.vdd) for p in pts}
+
+
+def expected_grid(ent: dict, rid: str) -> tuple[set[str] | None, list[str]]:
+    """Resolve a manifest entry's ``expected_grid`` against the authoritative grid.
+
+    Either ``{"corners": [...], "temps_c": [...], "supplies_v": [...]}`` (must
+    be exactly the authoritative full grid) or ``{"corner_ids": [...]}`` (a
+    declared reduced subset of it). Its size must equal the entry's ``points``.
+    """
+    probs: list[str] = []
+    decl = ent.get("expected_grid")
+    if not isinstance(decl, dict):
+        return None, [f"record {rid}: manifest declares no expected_grid"]
+    auth = authoritative_grid()
+    if "corner_ids" in decl:
+        ids = decl["corner_ids"]
+        if not (isinstance(ids, list) and all(isinstance(i, str) for i in ids)):
+            return None, [f"record {rid}: expected_grid.corner_ids malformed"]
+        if len(set(ids)) != len(ids):
+            probs.append(f"record {rid}: expected_grid declares duplicate corner ids")
+        for i in sorted(set(ids) - set(auth)):
+            probs.append(f"record {rid}: expected_grid id {i!r} is not in the authoritative grid (sim/harness/corners.py)")
+        want = set(ids)
+    else:
+        try:
+            cn, tc, sv = decl["corners"], decl["temps_c"], decl["supplies_v"]
+            want = {f"{c}_{float(t):g}c_{float(v):.2f}v" for c in cn for t in tc for v in sv}
+            n = len(cn) * len(tc) * len(sv)
+        except (KeyError, TypeError, ValueError):
+            return None, [f"record {rid}: expected_grid malformed"]
+        if len(want) != n:
+            probs.append(f"record {rid}: expected_grid axes contain duplicates")
+        if want != set(auth):
+            probs.append(f"record {rid}: expected_grid axes do not equal the authoritative full grid "
+                         f"({len(auth)} points, sim/harness/corners.py)")
+    if len(want) != ent.get("points"):
+        probs.append(f"record {rid}: expected_grid has {len(want)} points, manifest points is {ent.get('points')!r}")
+    return want, probs
+
+
+def _norm_id(cid: object, fields: dict | None, where: str) -> tuple[str | None, str | None]:
+    """Normalize one identity; returns (id, problem)."""
+    if not isinstance(cid, str) or not (m := _ID_RE.match(cid)):
+        return None, f"malformed identity {cid!r} at {where}"
+    corner, temp, vdd = m["corner"], float(m["temp"]), float(m["vdd"])
+    if f"{corner}_{temp:g}c_{vdd:.2f}v" != cid:
+        return None, f"malformed identity {cid!r} at {where} (non-canonical formatting)"
+    if fields is not None:
+        fc, ft, fv = fields.get("corner"), fields.get("temp_c"), fields.get("vdd")
+        num = lambda x: isinstance(x, (int, float)) and not isinstance(x, bool)  # noqa: E731
+        if not (fc == corner and num(ft) and num(fv)
+                and f"{float(ft):g}" == f"{temp:g}" and f"{float(fv):.2f}" == f"{vdd:.2f}"):
+            return None, (f"identity {cid!r} at {where} disagrees with explicit fields "
+                          f"corner={fc!r} temp_c={ft!r} vdd={fv!r}")
+    return cid, None
+
+
+def check_coverage(rec: dict, want: set[str], rid: str) -> list[str]:
+    """Duplicate / missing / unexpected / malformed / inconsistent identities."""
+    probs: list[str] = []
+    ids: list[str] = []
+    malformed = False
+    pts = rec.get("points")
+    if isinstance(pts, list):  # list-based point record
+        raw = [(pt.get("corner_id") if isinstance(pt, dict) else None, pt if isinstance(pt, dict) else {},
+                f"points[{i}]") for i, pt in enumerate(pts)]
+    elif isinstance(rec.get("derived"), dict):  # keyed derived record
+        raw = [(k, None, f"derived key {k!r}") for k in rec["derived"]]
+    else:
+        return [f"record {rid}: no corner identities found ('points' list or 'derived' dict)"]
+    for cid, fields, where in raw:
+        n, prob = _norm_id(cid, fields, where)
+        if prob:
+            malformed = True
+            probs.append(f"record {rid}: {prob}")
+        else:
+            ids.append(n)
+    for cid in sorted({i for i in ids if ids.count(i) > 1}):
+        probs.append(f"record {rid}: duplicate corner {cid} ({ids.count(cid)}x)")
+    if not malformed:  # only report set differences once identities are well-formed
+        for cid in sorted(want - set(ids)):
+            probs.append(f"record {rid}: missing expected corner {cid}")
+        for cid in sorted(set(ids) - want):
+            probs.append(f"record {rid}: unexpected corner {cid}")
+    return probs
+
+
+# Source qualification (issue #296). A SHA pin proves which record bytes were
+# read; these checks prove they are eligible for the current claim.
+
+#: The role a manifest entry declares for its record. Only ``current`` records
+#: may carry the ``summary_key`` a scored summary row is derived from;
+#: ``historical``/``diagnostic`` records stay citable as context only.
+ROLES = ("current", "historical", "diagnostic")
+
+#: Top-level fields whose presence marks a record as minted by the fleet
+#: (``klt``-record) schema. Legacy local records carry none of them and
+#: qualify through their committed context instead -- never demand fleet
+#: fields of a legacy record.
+FLEET_FIELDS = ("citable", "reference", "not_citable_reasons")
+
+DUT_REGISTRY = "sim/dut.json"
+
+
+def _fleet_schema(rec: dict) -> bool:
+    """Whether the record's own bytes follow the fleet (klt-record) schema."""
+    return "source_bundle" in rec or any(k in rec for k in FLEET_FIELDS)
+
+
+def fleet_problems(rec: dict, rid: str) -> list[str]:
+    """Fleet qualification a ``current`` record's bytes must carry (#296).
+
+    The record must be explicitly citable reference evidence with no refusal
+    reasons (the same qualification ``make_item5_envelope.py`` demands before
+    scoring a fleet source). Legacy local records never reach this check."""
+    cit, ref = rec.get("citable"), rec.get("reference")
+    ncr = rec.get("not_citable_reasons")
+    if cit is True and ref is True and ncr == []:
+        return []
+    return [
+        f"record {rid}: fleet-schema source not qualified for a current claim: "
+        f"citable={cit!r}, reference={ref!r}, not_citable_reasons={ncr!r} "
+        "(a SHA pin proves which bytes were read, not that they are citable)"
+    ]
+
+
+def _record_dut_fields(rec: dict) -> dict:
+    """The DUT identity fields the record's own bytes declare (fleet `dut`
+    dict or legacy `context`; neither schema is assumed a priori)."""
+    dut = rec.get("dut") if isinstance(rec.get("dut"), dict) else {}
+    ctx = rec.get("context") if isinstance(rec.get("context"), dict) else {}
+    return {k: dut.get(k) or ctx.get(k)
+            for k in ("dut_id", "dut_provenance", "dut_netlist", "dut_netlist_sha256")}
+
+
+def extraction_problems(root: Path, ent: dict, rid: str, current_role: bool = True) -> list[str]:
+    """Bind an extracted record through its declared committed extraction
+    report (#296). The scratch adapted netlist is never required to exist or
+    be regenerated: the report pins the extraction's input layout hash, and
+    for a ``current`` record that hash must still match the committed layout
+    bytes (freshness). A ``historical``/``diagnostic`` record must still
+    declare a report that pins an input, but is not held to today's layout
+    bytes -- it is context for the design it ran against. If the committed
+    metadata cannot establish the identity, a named diagnostic says so --
+    identity is never inferred from the word "extracted"."""
+    rep_rel = ent.get("extraction_report")
+    if not isinstance(rep_rel, str) or not rep_rel:
+        return [f"record {rid}: extracted manifest entry declares no "
+                "extraction_report; cannot bind it to committed extraction provenance"]
+    rep_path = root / rep_rel
+    if not rep_path.is_file():
+        return [f"record {rid}: declared extraction report {rep_rel} is missing"]
+    try:
+        rep = json.loads(rep_path.read_text())
+        assert isinstance(rep, dict)
+    except (ValueError, AssertionError):
+        return [f"record {rid}: declared extraction report {rep_rel} is not a JSON object"]
+    prov = rep.get("provenance") if isinstance(rep.get("provenance"), dict) else {}
+    inp = prov.get("input") if isinstance(prov.get("input"), dict) else {}
+    layout_rel, pinned = rep.get("file"), inp.get("content_hash")
+    if not isinstance(layout_rel, str) or not layout_rel:
+        return [f"record {rid}: declared extraction report {rep_rel} names no input "
+                "layout file; committed metadata cannot establish the DUT identity"]
+    if not isinstance(pinned, str) or not pinned:
+        return [f"record {rid}: declared extraction report {rep_rel} pins no input "
+                "content_hash; committed metadata cannot establish the DUT identity"]
+    if not current_role:
+        return []
+    layout = root / layout_rel
+    if not layout.is_file():
+        return [f"record {rid}: extracted layout {layout_rel} is missing; "
+                f"cannot verify the declared extraction report {rep_rel}"]
+    current = _sha_file(layout)
+    if pinned != current:
+        return [f"record {rid}: declared extraction report {rep_rel} pins input "
+                f"{pinned}, but the committed {layout_rel} bytes hash {current} "
+                "(the layout changed since extraction; re-extract, re-run, register the new record)"]
+    return []
+
+
+def dut_binding_problems(root: Path, rec: dict, ent: dict, want: str, rid: str,
+                         current_role: bool = True) -> list[str]:
+    """Bind a record to the DUT the manifest declares it characterizes (#296).
+
+    Every role: the record's own identity metadata must name that DUT, the id
+    must resolve in the live ``sim/dut.json`` registry with the declared
+    provenance, and the record's stamped netlist path must be the one that
+    entry binds. A schematic record must stamp a ``dut_netlist_sha256``.
+
+    Freshness (``current`` role only): the stamped netlist must be the bytes
+    that entry binds *today* -- a schematic record is checked against the
+    current committed netlist bytes, an extracted record through
+    ``extraction_problems``' layout-hash check. ``historical``/``diagnostic``
+    records are context for the design they ran against and are not compared
+    with today's bytes; that is what makes the refresh contract satisfiable
+    (the design changed -- re-run, register the new record as ``current``,
+    re-role the old one ``historical``/``diagnostic``). They still cannot
+    back a scored summary row (``validate_chain`` refuses their
+    ``summary_key``)."""
+    probs: list[str] = []
+    f = _record_dut_fields(rec)
+    if not f["dut_id"]:
+        return [f"record {rid}: bytes declare no DUT identity (no dut.dut_id / "
+                f"context.dut_id); cannot bind them to the declared DUT {want!r}"]
+    if f["dut_id"] != want:
+        probs.append(f"record {rid}: dut id {f['dut_id']!r} != manifest-declared {want!r}")
+    reg_path = root / DUT_REGISTRY
+    try:
+        duts = json.loads(reg_path.read_text()).get("duts")
+        assert isinstance(duts, dict)
+    except (OSError, ValueError, AssertionError):
+        return probs + [f"{DUT_REGISTRY} is missing or malformed; cannot bind DUT identity"]
+    entry = duts.get(want)
+    if not isinstance(entry, dict):
+        return probs + [f"record {rid}: declared DUT {want!r} is not an entry of the "
+                        f"live {DUT_REGISTRY} registry"]
+    if entry.get("provenance") != ent.get("dut_provenance"):
+        probs.append(f"record {rid}: declared DUT {want!r} has provenance "
+                     f"{entry.get('provenance')!r} in {DUT_REGISTRY}, manifest declares "
+                     f"{ent.get('dut_provenance')!r}")
+    netlist_rel = entry.get("netlist")
+    if not isinstance(netlist_rel, str) or not netlist_rel:
+        return probs + [f"record {rid}: declared DUT {want!r} binds no netlist in {DUT_REGISTRY}"]
+    netlist = (root / "sim" / netlist_rel).resolve()
+    if not f["dut_netlist"]:
+        probs.append(f"record {rid}: bytes declare no DUT netlist path; cannot bind "
+                     f"them to declared DUT {want!r}")
+    elif (root / str(f["dut_netlist"])).resolve() != netlist:
+        probs.append(f"record {rid}: DUT netlist {f['dut_netlist']!r} != the netlist "
+                     f"declared DUT {want!r} binds ({netlist_rel})")
+    if entry.get("provenance") == "extracted":
+        return probs + extraction_problems(root, ent, rid, current_role)
+    if not f["dut_netlist_sha256"]:
+        return probs + [f"record {rid}: bytes declare no dut_netlist_sha256; cannot bind "
+                        f"them to the {netlist_rel} bytes they ran against"]
+    if not current_role:
+        return probs
+    if not netlist.is_file():
+        return probs + [f"record {rid}: declared DUT netlist {netlist_rel} is missing; "
+                        "cannot verify the schematic refresh contract"]
+    # Records stamp the bare hex digest (the same convention
+    # make_item5_envelope.py's validate_offset_tran compares against).
+    current = _sha_file(netlist).split(":", 1)[1]
+    if f["dut_netlist_sha256"] != current:
+        probs.append(f"record {rid}: dut_netlist_sha256 {f['dut_netlist_sha256']} != "
+                     f"the current {netlist_rel} bytes (sha256:{current}) -- refresh contract: "
+                     "the design changed; re-run, register the new record as current, "
+                     "re-role this one historical/diagnostic")
+    return probs
+
 
 class EvidenceChainError(Exception):
     """The characterization evidence chain is incomplete or inconsistent."""
@@ -88,6 +384,42 @@ class EvidenceChainError(Exception):
     def __init__(self, problems: list[str]):
         self.problems = problems
         super().__init__("; ".join(problems))
+
+
+def _load_claim_checker():
+    """Import scripts/check_claim_drift.py (stdlib only) next to this script."""
+    path = Path(__file__).resolve().parent.parent / "scripts" / "check_claim_drift.py"
+    spec = importlib.util.spec_from_file_location("_item8_claim_drift", path)
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def check_narrative_claims(root: Path, records: dict) -> list[str]:
+    """Registered report claims vs the manifest's pinned records (named diagnostics)."""
+    ccd = _load_claim_checker()
+    reg = root / ccd.REGISTRY
+    try:
+        claims = json.loads(reg.read_text())["claims"]
+        mine = [c for c in claims if isinstance(c, dict) and c.get("doc") == ccd.REPORT_DOC]
+    except (OSError, ValueError, KeyError, TypeError):
+        return [f"narrative claim registry {ccd.REGISTRY} missing or unreadable"]
+    probs: list[str] = []
+    by_path = {e.get("path"): rid for rid, e in records.items()}
+    covered: set[str] = set()
+    for c in mine:
+        rid = by_path.get(c.get("record"))
+        if rid is None:
+            probs.append(f"narrative claim {c.get('id')}: record {c.get('record')} is not in the source manifest")
+        elif c.get("scope") == "scored":
+            covered.add(rid)
+    for rid, ent in records.items():
+        if ent.get("summary_key") and rid not in covered:
+            probs.append(f"narrative claims: no scored claim registered against summary record {rid} "
+                         f"({ent['summary_key']})")
+    probs += [f"narrative {e}" for e in ccd.check_claims(root, mine)]
+    return probs
 
 
 def _sha_file(path: Path) -> str:
@@ -180,6 +512,23 @@ def validate_chain(root: Path = REPO_ROOT) -> tuple[dict, dict[str, tuple[int, i
     for rid, ent in records.items():
         if rid not in cited:
             problems.append(f"record {rid} is registered but required by no section")
+        # Declared qualification (issue #296): role and expected DUT identity
+        # are required of every entry, before anything else about the record.
+        role = ent.get("role")
+        if role not in ROLES:
+            problems.append(f"record {rid}: manifest declares role {role!r}, not one of "
+                            f"{'/'.join(ROLES)} (source qualification, issue #296)")
+            role = None
+        want_dut = ent.get("dut_id")
+        if not isinstance(want_dut, str) or not want_dut:
+            problems.append(f"record {rid}: manifest declares no dut_id "
+                            "(source qualification, issue #296)")
+            want_dut = None
+        key = ent.get("summary_key")
+        if key is not None and role != "current":
+            problems.append(f"record {rid}: role {role!r} cannot carry summary_key "
+                            f"{key!r} -- only a current record may back a scored summary row")
+            key = None
         path = root / ent.get("path", "")
         if not path.is_file():
             problems.append(f"record {rid}: {ent.get('path')} is missing")
@@ -205,11 +554,27 @@ def validate_chain(root: Path = REPO_ROOT) -> tuple[dict, dict[str, tuple[int, i
                                 ("dirty", dirty, False)):
             if got != want:
                 problems.append(f"record {rid}: scope {what} is {got!r}, expected {want!r}")
-        key = ent.get("summary_key")
+        # Qualification (issue #296): a current record whose bytes follow the
+        # fleet schema must be citable reference evidence with no refusal
+        # reasons; every record is bound to the DUT identity its entry declares.
+        if role == "current" and _fleet_schema(rec):
+            problems.extend(fleet_problems(rec, rid))
+        # Freshness against today's bytes applies to current records only; a
+        # malformed role (None) is held to the strict current checks.
+        if want_dut is not None:
+            problems.extend(dut_binding_problems(root, rec, ent, want_dut, rid,
+                                                 current_role=role in ("current", None)))
+        # Coverage (distinct expected PVT corners) before any summary is derived.
+        want, gprobs = expected_grid(ent, rid)
+        problems.extend(gprobs)
+        cprobs = check_coverage(rec, want, rid) if want is not None else []
+        problems.extend(cprobs)
         if key is None:
             continue
         if key not in SCORED:
             problems.append(f"record {rid}: unknown summary_key {key!r}")
+            continue
+        if want is None or cprobs:
             continue
         vals = _record_values(rec, key)
         if isinstance(vals, str):
@@ -222,6 +587,8 @@ def validate_chain(root: Path = REPO_ROOT) -> tuple[dict, dict[str, tuple[int, i
     for key in SCORED:
         if key not in counts and not any(p.startswith("record ") for p in problems):
             problems.append(f"no record registered for summary_key {key!r}")
+    if not problems:  # claims are checked against records already proven pinned
+        problems.extend(check_narrative_claims(root, records))
     if problems:
         raise EvidenceChainError(problems)
     return man, counts

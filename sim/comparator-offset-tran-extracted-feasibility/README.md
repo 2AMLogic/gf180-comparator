@@ -156,6 +156,60 @@ draw coverage and the population gates, then re-derives every statistic; the
 output matches the committed `campaign-<point>.json` (verified for
 `tt_27c_3.30v` and `ff_125c_3.63v`).
 
+### Clean-source rerun (issue #247) -- `campaign/20261011/`, 45/45 valid (experimental)
+
+The 20261010 run above is kept unchanged as exploratory evidence. This rerun
+repeats the same 45-point, N = 200, seed 20260909 campaign from a committed
+tree: the inputs (contract, extract copies, by-path binding) were committed as
+`265ab6f` before any fleet submission, and `campaign/20261011/source-bundle.json`
+records `dirty: false` at that commit. (`ea6ef5c` on the PR branch carries a
+byte-identical copy of the same inputs; the two were merged so `265ab6f` is
+reachable from the branch history.) The extract and `contract.json` are
+byte-identical to 20261010.
+
+All Monte Carlo points went through `KLT_SIM_BACKEND=batch klt sim`; no local
+Monte Carlo fallback was used. Seven submissions were refused by the fleet
+(`BATCH_MAX_CONCURRENT_INSTANCES=8`) and resubmitted to the batch fleet; the
+refusals are kept as `err-mc-<point>.attemptK.txt`. Probes are single-unit
+local runs, as in the recipe below. Result: `complete: true`, 45 valid, no
+failed or missing points, exactly 200 draws per corner,
+`ratified_total_offset_verdict: null`. Raw reports:
+`campaign/20261011/report-mc.tar.gz` (1.2 MB; the loose per-point reports and
+the `out*/` scratch decks are deliberately not committed, as in 20261010);
+replay as above with `campaign/20261011`. Replay of `tt_27c_3.30v` and `ff_125c_3.63v` on a scratch
+copy reproduces the committed `campaign-<point>.json` population statistics.
+
+Comparison with 20261010 (same seed, so near-identical by construction):
+
+| | 20261010 | 20261011 |
+|---|---|---|
+| systematic offset range | 1.75 .. 21.38 mV | 1.75 .. 21.38 mV |
+| random sigma range | 0.884 .. 1.192 mV | 0.884 .. 1.201 mV |
+| worst corner (both metrics) | `ff_125c_3.63v` | `ff_125c_3.63v` |
+| worst abs systematic + 3 sigma (informational) | 24.96 mV | 24.99 mV |
+
+42 of 45 corners are numerically identical. The three that differ:
+
+| corner | systematic mV (new / old) | random sigma mV (new / old) |
+|---|---|---|
+| `ff_125c_3.63v` | 21.3844 / 21.3816 | 1.2014 / 1.1917 |
+| `fs_27c_2.97v` | 6.1604 / 6.1584 | 0.9264 / 0.9289 |
+| `sf_125c_3.30v` | 11.5316 / 11.5312 | 0.9817 / 0.9815 |
+
+The largest delta is 0.0028 mV systematic and 0.0097 mV sigma, well inside
+SE(mean) and SE(sigma) (~0.06..0.085 and ~0.05..0.06 mV, worst at
+`ff_125c_3.63v`: 0.085 / 0.060). Why these three differ at all with the same
+seed is not isolated: all three ran on c7i.4xlarge, and other corners with the
+same client version came out identical; the differences are far below SE. No
+material change; the dirty tree of 20261010 did not affect the numbers.
+
+Versions: fleet runner klt 0.5.0 for every point in both runs, client
+0.7.0+g0301a1404ce8 (19 points) and 0.7.0+g0d0312b30708 (26 points) in
+20261011 vs 0.7.0+gf03eb675fa81 in 20261010; `runner_compatibility: mismatch`
+throughout, not normalized. ngspice engine version 46 in both. Fleet instances
+were c7i.4xlarge (41) and m6i.4xlarge (4) vs c7i/m6i/m7i (32/10/3). No
+production adapter, active binding, record or ratified bound was changed.
+
 The tool, PDK-free tests and fleet reproduction recipe below were delivered
 first (#236). This is an additive, experimental extension:
 it mints no record, repins no signoff item, and leaves the production adapter,
@@ -175,8 +229,13 @@ per-corner mismatch-free trip probe before centring; finite-value, coverage,
 endpoint-decision, trip-bracket, mismatch-exercised (sigma > 0), 3-step
 edge-margin and probe-bracketed gates; exactly 200 valid draws. A corner that
 fails any gate writes `refusal-<point>.json` and is **listed, never dropped**;
-`summary` reports `complete: true` only with 45/45 valid corners (exit 3
-otherwise, and no aggregate is produced).
+`summary` reports `complete: true` only with 45/45 valid corners whose point/run
+identity binding validates (issue #292: each `campaign-<point>.json` must embed
+its own `point`, seed, draw count, mismatch mode and contract/source hashes, and
+all 45 must agree; exit 3 otherwise, and no aggregate is produced). Pre-#292
+per-point artifacts lack the binding fields: re-summarizing them lists every
+point `IDENTITY_MISSING` (identity UNVERIFIED) and produces no aggregate; the
+committed evidence itself is never rewritten.
 
 Reported per corner, as separate numbers: the absolute mean trip (centre NOT
 subtracted; systematic offset = -mean trip) with SE(mean) = sigma/sqrt(N), and

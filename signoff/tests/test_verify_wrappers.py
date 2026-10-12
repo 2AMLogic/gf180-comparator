@@ -40,9 +40,13 @@ def _sha(path: Path) -> str:
 
 def make_tree(root: Path) -> None:
     for rel in ("signoff/make_item5_envelope.py", "signoff/make_item8_envelope.py",
+                "sim/harness/corners.py",  # #295: authoritative grids (stdlib-only)
+                "scripts/check_claim_drift.py", "spec/claim-registry.json",  # #295: narrative-claim check
                 WRAP5.NETLIST, "measurements/characterization-report.md",
                 "measurements/characterization-report.item8.json",
-                "measurements/characterization-report.sources.json"):  # #275
+                "measurements/characterization-report.sources.json",  # #275
+                "sim/dut.json", "layout/comparator.gds",  # #296: DUT identity
+                "layout/lvs/comparator.extract-rc.json"):  # #296: extracted binding
         dst = root / rel
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(REPO_ROOT / rel, dst)

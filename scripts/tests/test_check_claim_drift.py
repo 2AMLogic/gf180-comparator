@@ -200,5 +200,93 @@ class ClaimDrift(unittest.TestCase):
         self.assertEqual(rc, 0, out)
 
 
+RPT = "measurements/characterization-report.md"
+
+
+class ReportClaims(unittest.TestCase):
+    """#293: the characterization report is a registry-only claim doc."""
+
+    def tree(self, claim_over=None, text="| nominal 2.146 | range 2.146\u20133.146 | 1/2 within | 3.146 `ff` |\n"):
+        t = tempfile.TemporaryDirectory()
+        self.addCleanup(t.cleanup)
+        build(t.name)
+        root = Path(t.name)
+        (root / "measurements").mkdir()
+        (root / RPT).write_text(text)
+        rp = f"sim/{B}/records/{OLD}.json"
+        base = {"doc": RPT, "scope": "scored", "record": rp, "decimals": 3}
+        claims = [
+            dict(base, id="r-nom", literal="nominal 2.146", pointer="/derived/tt/m"),
+            dict(base, id="r-max", literal="range 2.146\u20133.146 | 1/2", pointer="/derived/*/m",
+                 agg="max"),
+            dict(base, id="r-corner", literal="3.146 `ff`", pointer="/derived/*/m", agg="max", corner="ff"),
+            dict(base, id="r-count", literal="1/2 within", pointer="/derived/*/m", agg="count_le",
+                 threshold=2.5, decimals=0),
+        ]
+        if claim_over:
+            claims = claim_over(claims) or claims
+        (root / "spec" / "claim-registry.json").write_text(json.dumps({"claims": claims}))
+        return root
+
+    def test_valid_report_claims_pass(self):
+        rc, out = run(self.tree())
+        self.assertEqual(rc, 0, out)
+
+    def test_each_mutation_names_the_claim(self):
+        for old, new, cid in (("nominal 2.146", "nominal 2.147", "r-nom"),
+                              ("3.146 | 1/2", "3.147 | 1/2", "r-max"),
+                              ("`ff`", "`tt`", "r-corner"),
+                              ("1/2 within", "2/2 within", "r-count")):
+            text = "| nominal 2.146 | range 2.146\u20133.146 | 1/2 within | 3.146 `ff` |\n".replace(old, new)
+            rc, out = run(self.tree(text=text))
+            self.assertEqual(rc, 1, cid)
+            self.assertIn(f"claim {cid}:", out)
+
+    def test_count_must_match_record(self):
+        def over(cs):
+            cs[3]["threshold"] = 1.5  # record has 0 values <= 1.5? tt=2.146 -> 0/2
+        rc, out = run(self.tree(claim_over=over))
+        self.assertEqual(rc, 1)
+        self.assertIn("claim r-count:", out)
+        self.assertIn("0/2", out)
+
+    def test_scope_required_and_validated(self):
+        for scope in (None, "current"):
+            def over(cs, scope=scope):
+                if scope is None:
+                    del cs[0]["scope"]
+                else:
+                    cs[0]["scope"] = scope
+            rc, out = run(self.tree(claim_over=over))
+            self.assertEqual(rc, 1)
+            self.assertIn("claim r-nom:", out)
+            self.assertIn("scope", out)
+
+    def test_count_claims_need_threshold_and_zero_decimals(self):
+        def over(cs):
+            del cs[3]["threshold"]
+        rc, out = run(self.tree(claim_over=over))
+        self.assertEqual(rc, 1)
+        self.assertIn("claim r-count:", out)
+
+        def over2(cs):
+            cs[3]["decimals"] = 1
+        rc, out = run(self.tree(claim_over=over2))
+        self.assertEqual(rc, 1)
+        self.assertIn("decimals 0", out)
+
+    def test_report_not_subject_to_citation_checks(self):
+        text = (f"| nominal 2.146 | range 2.146\u20133.146 | 1/2 within | 3.146 `ff` | "
+                f"sim/{B}/records/nonexistent.md |\n")
+        rc, out = run(self.tree(text=text))
+        self.assertEqual(rc, 0, out)
+
+    def test_real_report_claims_registered_with_scopes(self):
+        reg = json.loads((REPO / "spec" / "claim-registry.json").read_text())
+        mine = [c for c in reg["claims"] if c["doc"] == RPT]
+        self.assertGreater(len(mine), 30)
+        self.assertEqual({c["scope"] for c in mine}, {"scored", "diagnostic", "historical"})
+
+
 if __name__ == "__main__":
     unittest.main()

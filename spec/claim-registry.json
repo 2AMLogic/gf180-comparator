@@ -2,7 +2,8 @@
  "_comment": [
   "Headline-claim registry for scripts/check_claim_drift.py (issue #245).",
   "Each claim ties a literal in a named doc to a value in a record's JSON twin.",
-  "Add a row: see the script docstring. The check detects disagreement; it never edits a number."
+  "Add a row: see the script docstring. The check detects disagreement; it never edits a number.",
+  "Rows for measurements/characterization-report.md (issue #293) carry scope scored|diagnostic|historical and are also enforced by signoff/make_item8_envelope.py. Average power is deliberately not registered (UNSCORED)."
  ],
  "claims": [
   {
@@ -382,17 +383,396 @@
    "pointer": "/derived/*/sig_latch_mv",
    "decimals": 3,
    "agg": "max"
+  },
+  {
+   "id": "char-offset-hist-9pt-nominal",
+   "doc": "measurements/characterization-report.md",
+   "scope": "historical",
+   "literal": "3σ ≈ 3.15 mV (`tt_27c_3.30v`, 9-point record)",
+   "record": "sim/comparator-offset-tran/records/20261010-013540611508-4a4df37.json",
+   "pointer": "/derived/tt_27c_3.30v/vos_3sig_total_cons_mv",
+   "decimals": 2
+  },
+  {
+   "id": "char-offset-pre-nominal",
+   "doc": "measurements/characterization-report.md",
+   "scope": "diagnostic",
+   "literal": "preamp-only DC bench 2.80063 mV",
+   "record": "sim/comparator-offset-mc/records/20260910-124917-4805118.json",
+   "pointer": "/points/corner_id=tt_27c_3.30v/measurements/vos_3sig_mv",
+   "decimals": 5
+  },
+  {
+   "id": "char-offset-scored-row-min",
+   "doc": "measurements/characterization-report.md",
+   "scope": "scored",
+   "literal": "whole comparator (schematic, scored): 2.994–3.795 mV 3σ, binding `ff_125c_3.63v`",
+   "record": "sim/comparator-offset-tran/records/20261010-021500046481-d84e59d.json",
+   "pointer": "/derived/*/vos_3sig_total_cons_mv",
+   "decimals": 3,
+   "agg": "min"
+  },
+  {
+   "id": "char-offset-scored-row-max",
+   "doc": "measurements/characterization-report.md",
+   "scope": "scored",
+   "literal": "whole comparator (schematic, scored): 2.994–3.795 mV 3σ, binding `ff_125c_3.63v`",
+   "record": "sim/comparator-offset-tran/records/20261010-021500046481-d84e59d.json",
+   "pointer": "/derived/*/vos_3sig_total_cons_mv",
+   "decimals": 3,
+   "agg": "max",
+   "corner": "ff_125c_3.63v"
+  },
+  {
+   "id": "char-offset-pre-row-min",
+   "doc": "measurements/characterization-report.md",
+   "scope": "diagnostic",
+   "literal": "preamp-only DC bench 2.796–2.807 mV (diagnostic)",
+   "record": "sim/comparator-offset-mc/records/20260910-124917-4805118.json",
+   "pointer": "/summary/vos_3sig_mv/min",
+   "decimals": 3
+  },
+  {
+   "id": "char-offset-pre-row-max",
+   "doc": "measurements/characterization-report.md",
+   "scope": "diagnostic",
+   "literal": "preamp-only DC bench 2.796–2.807 mV (diagnostic)",
+   "record": "sim/comparator-offset-mc/records/20260910-124917-4805118.json",
+   "pointer": "/summary/vos_3sig_mv/max",
+   "decimals": 3
+  },
+  {
+   "id": "char-offset-count-stretch",
+   "doc": "measurements/characterization-report.md",
+   "scope": "scored",
+   "literal": "**meets target and stretch at 45/45 corners**",
+   "record": "sim/comparator-offset-tran/records/20261010-021500046481-d84e59d.json",
+   "pointer": "/derived/*/vos_3sig_total_cons_mv",
+   "decimals": 0,
+   "agg": "count_le",
+   "threshold": 8
+  },
+  {
+   "id": "char-offset-count-target",
+   "doc": "measurements/characterization-report.md",
+   "scope": "scored",
+   "literal": "**meets target and stretch at 45/45 corners**",
+   "record": "sim/comparator-offset-tran/records/20261010-021500046481-d84e59d.json",
+   "pointer": "/derived/*/vos_3sig_total_cons_mv",
+   "decimals": 0,
+   "agg": "count_le",
+   "threshold": 15
+  },
+  {
+   "id": "char-offset-scored-table-min",
+   "doc": "measurements/characterization-report.md",
+   "scope": "scored",
+   "literal": "**2.994–3.795 mV** | **`ff_125c_3.63v`**",
+   "record": "sim/comparator-offset-tran/records/20261010-021500046481-d84e59d.json",
+   "pointer": "/derived/*/vos_3sig_total_cons_mv",
+   "decimals": 3,
+   "agg": "min"
+  },
+  {
+   "id": "char-offset-scored-table-max",
+   "doc": "measurements/characterization-report.md",
+   "scope": "scored",
+   "literal": "**2.994–3.795 mV** | **`ff_125c_3.63v`**",
+   "record": "sim/comparator-offset-tran/records/20261010-021500046481-d84e59d.json",
+   "pointer": "/derived/*/vos_3sig_total_cons_mv",
+   "decimals": 3,
+   "agg": "max",
+   "corner": "ff_125c_3.63v"
+  },
+  {
+   "id": "char-offset-sim-table-min",
+   "doc": "measurements/characterization-report.md",
+   "scope": "diagnostic",
+   "literal": "| 2.808–3.515 mV | `ff_125c_3.63v` |",
+   "record": "sim/comparator-offset-tran/records/20261010-021500046481-d84e59d.json",
+   "pointer": "/derived/*/vos_3sig_tran_mv",
+   "decimals": 3,
+   "agg": "min"
+  },
+  {
+   "id": "char-offset-sim-table-max",
+   "doc": "measurements/characterization-report.md",
+   "scope": "diagnostic",
+   "literal": "| 2.808–3.515 mV | `ff_125c_3.63v` |",
+   "record": "sim/comparator-offset-tran/records/20261010-021500046481-d84e59d.json",
+   "pointer": "/derived/*/vos_3sig_tran_mv",
+   "decimals": 3,
+   "agg": "max",
+   "corner": "ff_125c_3.63v"
+  },
+  {
+   "id": "char-offset-pre-table-min",
+   "doc": "measurements/characterization-report.md",
+   "scope": "diagnostic",
+   "literal": "| 2.796–2.807 mV | `sf_125c_3.30v` |",
+   "record": "sim/comparator-offset-mc/records/20260910-124917-4805118.json",
+   "pointer": "/points/*/measurements/vos_3sig_mv",
+   "decimals": 3,
+   "agg": "min"
+  },
+  {
+   "id": "char-offset-pre-table-max",
+   "doc": "measurements/characterization-report.md",
+   "scope": "diagnostic",
+   "literal": "| 2.796–2.807 mV | `sf_125c_3.30v` |",
+   "record": "sim/comparator-offset-mc/records/20260910-124917-4805118.json",
+   "pointer": "/points/*/measurements/vos_3sig_mv",
+   "decimals": 3,
+   "agg": "max",
+   "corner": "sf_125c_3.30v"
+  },
+  {
+   "id": "char-noise-nominal",
+   "doc": "measurements/characterization-report.md",
+   "scope": "scored",
+   "literal": "| 91.25 µV rms | 66.82–128.83 µV rms |",
+   "record": "sim/comparator-preamp-noise/records/20260910-125200-4805118.json",
+   "pointer": "/points/corner_id=tt_27c_3.30v/measurements/vn_in_uv",
+   "decimals": 2
+  },
+  {
+   "id": "char-noise-range-min",
+   "doc": "measurements/characterization-report.md",
+   "scope": "scored",
+   "literal": "| 91.25 µV rms | 66.82–128.83 µV rms |",
+   "record": "sim/comparator-preamp-noise/records/20260910-125200-4805118.json",
+   "pointer": "/summary/vn_in_uv/min",
+   "decimals": 2
+  },
+  {
+   "id": "char-noise-range-max",
+   "doc": "measurements/characterization-report.md",
+   "scope": "scored",
+   "literal": "| 91.25 µV rms | 66.82–128.83 µV rms |",
+   "record": "sim/comparator-preamp-noise/records/20260910-125200-4805118.json",
+   "pointer": "/summary/vn_in_uv/max",
+   "decimals": 2
+  },
+  {
+   "id": "char-dec-sch-nominal",
+   "doc": "measurements/characterization-report.md",
+   "scope": "scored",
+   "literal": "schematic 0.708 ns; extracted 1.158 ns",
+   "record": "sim/comparator-regeneration/records/20260910-125206-4805118.json",
+   "pointer": "/points/corner_id=tt_27c_3.30v/measurements/td_od50_ns",
+   "decimals": 3
+  },
+  {
+   "id": "char-dec-ext-nominal",
+   "doc": "measurements/characterization-report.md",
+   "scope": "scored",
+   "literal": "schematic 0.708 ns; extracted 1.158 ns",
+   "record": "sim/comparator-regeneration/records/20261002-202641-baeffe5.json",
+   "pointer": "/points/corner_id=tt_27c_3.30v/measurements/td_od50_ns",
+   "decimals": 3
+  },
+  {
+   "id": "char-dec-sch-range-min",
+   "doc": "measurements/characterization-report.md",
+   "scope": "scored",
+   "literal": "schematic 0.464–1.237 ns;",
+   "record": "sim/comparator-regeneration/records/20260910-125206-4805118.json",
+   "pointer": "/summary/td_od50_ns/min",
+   "decimals": 3
+  },
+  {
+   "id": "char-dec-sch-range-max",
+   "doc": "measurements/characterization-report.md",
+   "scope": "scored",
+   "literal": "schematic 0.464–1.237 ns;",
+   "record": "sim/comparator-regeneration/records/20260910-125206-4805118.json",
+   "pointer": "/summary/td_od50_ns/max",
+   "decimals": 3
+  },
+  {
+   "id": "char-dec-ext-range-max",
+   "doc": "measurements/characterization-report.md",
+   "scope": "scored",
+   "literal": "extracted 1.553–2.034 ns at the 7 failing corners",
+   "record": "sim/comparator-regeneration/records/20261002-202641-baeffe5.json",
+   "pointer": "/summary/td_od50_ns/max",
+   "decimals": 3
+  },
+  {
+   "id": "char-dec-sch-count-target",
+   "doc": "measurements/characterization-report.md",
+   "scope": "scored",
+   "literal": "**schematic: meets target 45/45, misses stretch 16/45**",
+   "record": "sim/comparator-regeneration/records/20260910-125206-4805118.json",
+   "pointer": "/points/*/measurements/td_od50_ns",
+   "decimals": 0,
+   "agg": "count_le",
+   "threshold": 1.5
+  },
+  {
+   "id": "char-dec-sch-count-stretch-miss",
+   "doc": "measurements/characterization-report.md",
+   "scope": "scored",
+   "literal": "**schematic: meets target 45/45, misses stretch 16/45**",
+   "record": "sim/comparator-regeneration/records/20260910-125206-4805118.json",
+   "pointer": "/points/*/measurements/td_od50_ns",
+   "decimals": 0,
+   "agg": "count_gt",
+   "threshold": 0.8
+  },
+  {
+   "id": "char-dec-ext-count-target-miss",
+   "doc": "measurements/characterization-report.md",
+   "scope": "scored",
+   "literal": "**extracted: misses target at 7/45, stretch at 44/45**",
+   "record": "sim/comparator-regeneration/records/20261002-202641-baeffe5.json",
+   "pointer": "/points/*/measurements/td_od50_ns",
+   "decimals": 0,
+   "agg": "count_gt",
+   "threshold": 1.5
+  },
+  {
+   "id": "char-dec-ext-count-stretch-miss",
+   "doc": "measurements/characterization-report.md",
+   "scope": "scored",
+   "literal": "**extracted: misses target at 7/45, stretch at 44/45**",
+   "record": "sim/comparator-regeneration/records/20261002-202641-baeffe5.json",
+   "pointer": "/points/*/measurements/td_od50_ns",
+   "decimals": 0,
+   "agg": "count_gt",
+   "threshold": 0.8
+  },
+  {
+   "id": "char-dec-sch-worst",
+   "doc": "measurements/characterization-report.md",
+   "scope": "scored",
+   "literal": "(worst 1.237 ns at `ss_125c_2.97v`)",
+   "record": "sim/comparator-regeneration/records/20260910-125206-4805118.json",
+   "pointer": "/points/*/measurements/td_od50_ns",
+   "decimals": 3,
+   "agg": "max",
+   "corner": "ss_125c_2.97v"
+  },
+  {
+   "id": "char-dec-ext-worst",
+   "doc": "measurements/characterization-report.md",
+   "scope": "scored",
+   "literal": "(worst 2.034 ns at `ss_125c_2.97v`)",
+   "record": "sim/comparator-regeneration/records/20261002-202641-baeffe5.json",
+   "pointer": "/points/*/measurements/td_od50_ns",
+   "decimals": 3,
+   "agg": "max",
+   "corner": "ss_125c_2.97v"
+  },
+  {
+   "id": "char-kick-sch-nominal",
+   "doc": "measurements/characterization-report.md",
+   "scope": "scored",
+   "literal": "schematic 7.60 mV (positive node); extracted 10.03 mV",
+   "record": "sim/comparator-kickback/records/20260910-125341-4805118.json",
+   "pointer": "/points/corner_id=tt_27c_3.30v/measurements/kick_1k_peak_mv",
+   "decimals": 2
+  },
+  {
+   "id": "char-kick-ext-nominal",
+   "doc": "measurements/characterization-report.md",
+   "scope": "scored",
+   "literal": "schematic 7.60 mV (positive node); extracted 10.03 mV",
+   "record": "sim/comparator-kickback/records/20261002-211343-6346fad.json",
+   "pointer": "/points/corner_id=tt_27c_3.30v/measurements/kick_1k_peak_mv",
+   "decimals": 2
+  },
+  {
+   "id": "char-kick-sch-range-min",
+   "doc": "measurements/characterization-report.md",
+   "scope": "scored",
+   "literal": "schematic 4.53–10.01 mV positive node",
+   "record": "sim/comparator-kickback/records/20260910-125341-4805118.json",
+   "pointer": "/summary/kick_1k_peak_mv/min",
+   "decimals": 2
+  },
+  {
+   "id": "char-kick-ext-range-min",
+   "doc": "measurements/characterization-report.md",
+   "scope": "scored",
+   "literal": "extracted 8.49–14.58 mV",
+   "record": "sim/comparator-kickback/records/20261002-211343-6346fad.json",
+   "pointer": "/summary/kick_1k_peak_mv/min",
+   "decimals": 2
+  },
+  {
+   "id": "char-kick-sch-range-max",
+   "doc": "measurements/characterization-report.md",
+   "scope": "scored",
+   "literal": "schematic 4.53–10.01 mV positive node",
+   "record": "sim/comparator-kickback/records/20260910-125341-4805118.json",
+   "pointer": "/summary/kick_1k_peak_mv/max",
+   "decimals": 2
+  },
+  {
+   "id": "char-kick-ext-range-max",
+   "doc": "measurements/characterization-report.md",
+   "scope": "scored",
+   "literal": "extracted 8.49–14.58 mV",
+   "record": "sim/comparator-kickback/records/20261002-211343-6346fad.json",
+   "pointer": "/summary/kick_1k_peak_mv/max",
+   "decimals": 2
+  },
+  {
+   "id": "char-kick-sch-count-target-miss",
+   "doc": "measurements/characterization-report.md",
+   "scope": "scored",
+   "literal": "**schematic: misses target 44/45 (both-node record: 1/45 within target), stretch 45/45;",
+   "record": "sim/comparator-kickback/records/20260910-125341-4805118.json",
+   "pointer": "/points/*/measurements/kick_1k_peak_mv",
+   "decimals": 0,
+   "agg": "count_gt",
+   "threshold": 5.0
+  },
+  {
+   "id": "char-kick-both-count-target-within",
+   "doc": "measurements/characterization-report.md",
+   "scope": "scored",
+   "literal": "**schematic: misses target 44/45 (both-node record: 1/45 within target), stretch 45/45;",
+   "record": "sim/comparator-kickback/records/20261011-195826615490-7e20c78.json",
+   "pointer": "/derived/*/kick_1k_peak_mv",
+   "decimals": 0,
+   "agg": "count_le",
+   "threshold": 5.0
+  },
+  {
+   "id": "char-kick-sch-count-stretch-miss",
+   "doc": "measurements/characterization-report.md",
+   "scope": "scored",
+   "literal": "**schematic: misses target 44/45 (both-node record: 1/45 within target), stretch 45/45;",
+   "record": "sim/comparator-kickback/records/20260910-125341-4805118.json",
+   "pointer": "/points/*/measurements/kick_1k_peak_mv",
+   "decimals": 0,
+   "agg": "count_gt",
+   "threshold": 2.0
+  },
+  {
+   "id": "char-kick-ext-count-target-miss",
+   "doc": "measurements/characterization-report.md",
+   "scope": "scored",
+   "literal": "extracted: misses target 45/45, stretch 45/45**",
+   "record": "sim/comparator-kickback/records/20261002-211343-6346fad.json",
+   "pointer": "/points/*/measurements/kick_1k_peak_mv",
+   "decimals": 0,
+   "agg": "count_gt",
+   "threshold": 5.0
+  },
+  {
+   "id": "char-kick-ext-count-stretch-miss",
+   "doc": "measurements/characterization-report.md",
+   "scope": "scored",
+   "literal": "extracted: misses target 45/45, stretch 45/45**",
+   "record": "sim/comparator-kickback/records/20261002-211343-6346fad.json",
+   "pointer": "/points/*/measurements/kick_1k_peak_mv",
+   "decimals": 0,
+   "agg": "count_gt",
+   "threshold": 2.0
   }
  ],
- "known_drift": [
-  {
-   "doc": "spec/evidence-ledger.md",
-   "cited": "20260910-125341-4805118",
-   "newer": [
-    "20261008-224115765170-7e61c52",
-    "20261010-022609774981-bf851ec"
-   ],
-   "issue": "#252"
-  }
- ]
+ "known_drift": []
 }

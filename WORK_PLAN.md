@@ -25,11 +25,7 @@ _None._
 
 Issues currently being built (`loom:building`).
 
-- **#240**: Quantify solver-tolerance sensitivity of the common-mode offset window
-- **#247**: Regenerate the extracted-offset 45x200 campaign from a clean committed source (follow-up to PR #244)
-- **#266**: Protect committed parasitic study run archives from evidence rewrites
-- **#269**: Enforce the ngspice version floor when ingesting fleet reference records
-- **#273**: Publish structured latch decision correctness in fleet records
+_None._
 
 ## PRs Awaiting Review
 
@@ -42,7 +38,7 @@ _None._
 PRs that passed review and are queued for Champion auto-merge (`loom:pr`).
 
 - **#166**: sim(regeneration): reverse-polarity (HIGH->LOW) decision-time ladder across PVT (#158)
-- **#271**: fix: match complete numeric tokens in claim drift guard (#268)
+- **#285**: Publish structured latch decision correctness in fleet records (#273)
 
 ## Proposed
 
@@ -52,11 +48,12 @@ Issues carrying `loom:curated`.
 - **#125**: Define and measure the missing average-power operating condition for T1 *(curated)*
 - **#158**: Characterize reverse-polarity comparator delay across PVT *(curated)*
 - **#209**: Extend paired extracted preamp noise measurement to full PVT coverage *(curated)*
-- **#247**: Regenerate the extracted-offset 45x200 campaign from a clean committed source (follow-up to PR #244) *(curated)*
+- **#231**: Run an additive full-PVT extracted offset mismatch campaign after feasibility *(curated)*
+- **#273**: Publish structured latch decision correctness in fleet records *(curated)*
 
 ## Proposed (Architect / Hermit)
 
-- **#275**: Validate the characterization evidence chain before issuing item-8 pass *(architect)*
+_None._
 
 ## Epics
 
@@ -69,10 +66,10 @@ _None._
 | Operator merge-risk holds | 1 |
 | Operator priority | 1 |
 | Ready (`loom:issue`) | 0 |
-| In Progress (`loom:building`) | 5 |
+| In Progress (`loom:building`) | 0 |
 | PRs awaiting review | 0 |
 | Approved PRs awaiting merge | 2 |
-| Curated | 5 |
-| Architect / Hermit proposals | 1 |
+| Curated | 6 |
+| Architect / Hermit proposals | 0 |
 | Active epics | 0 |
 <!-- guide:plan-body:end -->

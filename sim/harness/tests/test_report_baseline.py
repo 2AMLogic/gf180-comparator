@@ -1,5 +1,8 @@
 """#262: post-layout delta baseline must be a comparable committed schematic
-record. PDK-free; git tracking is mocked, records are temp fixtures."""
+record. #301: the selector additionally qualifies candidates (and the
+comparison run itself) against recorded PDK variant / open_pdks revision and
+accepted toolchain drift. PDK-free; git tracking is mocked, records are temp
+fixtures."""
 
 from __future__ import annotations
 
@@ -17,11 +20,14 @@ from harness import dut as dut_mod  # noqa: E402
 from harness import report  # noqa: E402
 
 TB_PROV = {"manifest_sha256": "m", "netlist_sha256": "n"}
-CTX = {"dut_provenance": "extracted", "schematic_baseline_id": "base"}
+PDK = {"variant": "gf180mcuD", "open_pdks_version": "a" * 40}
+CHAIN = {"pins": {"open_pdks": "a" * 40}, "observed": {}, "drift": []}
+CTX = {"dut_provenance": "extracted", "schematic_baseline_id": "base",
+       "pdk": dict(PDK), "toolchain": dict(CHAIN)}
 
 
 def _write(d: Path, rid, *, dut="base", dirty=False, tb=TB_PROV, nominal=1.0,
-           mean=1.1, extra_point=False, prov="schematic"):
+           mean=1.1, extra_point=False, prov="schematic", pdk=PDK, chain=CHAIN):
     (d / "records").mkdir(parents=True, exist_ok=True)
     pts = [{"status": "ok", "corner": "tt", "temp_c": 27.0, "vdd": 3.3,
             "measurements": {"x": nominal}}]
@@ -31,6 +37,10 @@ def _write(d: Path, rid, *, dut="base", dirty=False, tb=TB_PROV, nominal=1.0,
     ctx = {"record_id": rid, "dut_provenance": prov, "dut_id": dut}
     if dirty is not None:
         ctx["dirty"] = dirty
+    if pdk is not None:
+        ctx["pdk"] = dict(pdk)
+    if chain is not None:
+        ctx["toolchain"] = dict(chain)
     (d / "records" / f"{rid}.json").write_text(json.dumps({
         "context": ctx, "testbench": tb, "points": pts,
         "summary": {"x": {"mean": mean}}}))
@@ -110,7 +120,8 @@ class BaselineTests(unittest.TestCase):
 
     def test_no_declared_baseline_identity_is_unavailable(self):
         _write(self.d, "20260101-000000-a")
-        text = self._lines({"dut_provenance": "extracted"})
+        text = self._lines({"dut_provenance": "extracted",
+                            "pdk": dict(PDK), "toolchain": dict(CHAIN)})
         self.assertIn("UNAVAILABLE", text)
         self.assertIn("no schematic baseline identity", text)
 
@@ -146,6 +157,77 @@ class BaselineTests(unittest.TestCase):
         before = p.read_bytes()
         self._lines()
         self.assertEqual(before, p.read_bytes())
+
+    # --- #301: PDK / toolchain qualification of the baseline selector ---
+
+    def test_newer_different_pdk_revision_cannot_displace_matching(self):
+        _write(self.d, "20260101-000000-a")
+        _write(self.d, "20260102-000000-b",
+               pdk={"variant": "gf180mcuD", "open_pdks_version": "b" * 40})
+        text = self._lines()
+        self.assertIn("20260101-000000-a", text)
+        self.assertIn("open_pdks revision", text)  # the newer one is named
+
+    def test_wrong_variant_rejected(self):
+        _write(self.d, "20260101-000000-a",
+               pdk={"variant": "gf180mcuC", "open_pdks_version": "a" * 40})
+        text = self._lines()
+        self.assertIn("UNAVAILABLE", text)
+        self.assertIn("PDK variant", text)
+        self.assertIn("gf180mcuC", text)
+
+    def test_accepted_drift_record_rejected(self):
+        _write(self.d, "20260101-000000-a",
+               chain={"pins": {}, "observed": {},
+                      "drift": ["open_pdks: pinned a, installed b"]})
+        text = self._lines()
+        self.assertIn("UNAVAILABLE", text)
+        self.assertIn("accepted toolchain drift", text)
+
+    def test_record_missing_pdk_provenance_rejected(self):
+        _write(self.d, "20260101-000000-a", pdk=None)
+        text = self._lines()
+        self.assertIn("UNAVAILABLE", text)
+        self.assertIn("lacks PDK provenance", text)
+
+    def test_record_missing_toolchain_provenance_rejected(self):
+        _write(self.d, "20260101-000000-a", chain=None)
+        text = self._lines()
+        self.assertIn("UNAVAILABLE", text)
+        self.assertIn("lacks toolchain provenance", text)
+
+    def test_pinned_record_cannot_bypass_qualification(self):
+        _write(self.d, "20260101-000000-a",
+               chain={"pins": {}, "observed": {},
+                      "drift": ["open_pdks: pinned a, installed b"]})
+        pinned = dict(CTX, schematic_baseline_record="20260101-000000-a")
+        text = self._lines(pinned)
+        self.assertIn("UNAVAILABLE", text)
+        self.assertIn("accepted toolchain drift", text)
+
+    def test_drifted_comparison_context_not_qualified(self):
+        _write(self.d, "20260101-000000-a")
+        drifted = dict(CTX, toolchain={"pins": {}, "observed": {},
+                                       "drift": ["open_pdks: pinned a, installed b"]})
+        text = self._lines(drifted)
+        self.assertIn("UNAVAILABLE", text)
+        self.assertIn("comparison run", text)
+        self.assertIn("toolchain drift", text)
+
+    def test_comparison_context_without_pdk_provenance_not_qualified(self):
+        _write(self.d, "20260101-000000-a")
+        text = self._lines({"dut_provenance": "extracted",
+                            "schematic_baseline_id": "base",
+                            "toolchain": dict(CHAIN)})
+        self.assertIn("UNAVAILABLE", text)
+        self.assertIn("lacks its own PDK provenance", text)
+
+    def test_matching_pdk_and_toolchain_still_reports_delta(self):
+        _write(self.d, "20260101-000000-a", mean=1.1)
+        row = [ln for ln in self._lines().splitlines()
+               if ln.startswith("  | `x`")][0]
+        self.assertIn("+100%", row)
+        self.assertIn("1.1", row)
 
 
 class DutBaselineTests(unittest.TestCase):

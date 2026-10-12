@@ -59,7 +59,7 @@ byte-for-byte as committed, and new records state their coverage in the
 **Evidence status (honest ledger).** Bench, scoring and regression tests
 (`sim/harness/tests/test_klt_record.py`, `KickbackBothNodes`) landed in #160.
 The schematic both-node 45-corner record is
-[`records/20261010-022609774981-bf851ec.md`](records/20261010-022609774981-bf851ec.md)
+[`records/20261011-195826615490-7e20c78.md`](records/20261011-195826615490-7e20c78.md)
 (all three supply legs minted through `klt sim` on the batch fleet; coverage
 `both`). Result: the aggregate is the maximum of the two node peaks at every
 corner; the positive node sets it at 45/45 corners (positive 4.528-10.010 mV,
@@ -69,6 +69,13 @@ and not relaxed: within the 5 mV target at 1/45 corners, 0/45 within the 2 mV
 stretch. Extracted-DUT both-node evidence is **PENDING** (follow-up, coordinate
 with #112); the older records above remain partial node coverage. Reproduce
 with `KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py comparator-kickback`.
+
+> **Re-qualified (#288).** The earlier `bf851ec` record (`20261010-022609774981-bf851ec`) ran on
+> `open_pdks f6eeac7`, not the `sim/toolchain.json` pin `c6d73a35`, so it is NOT
+> qualified and is superseded by `20261011-195826615490-7e20c78` (fleet-reported pin
+> `c6d73a35...`; every per-corner value identical). The superseded record is
+> kept byte-for-byte as history. See
+> [`../qualification-notes/20261011-288-open-pdks-requalification.md`](../qualification-notes/20261011-288-open-pdks-requalification.md).
 
 ### Beating the `meas` resolution floor
 

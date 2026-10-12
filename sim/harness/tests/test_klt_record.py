@@ -11,6 +11,7 @@ ngspice, no PDK, no network, and ``subprocess.Popen`` is mocked.
 
 from __future__ import annotations
 
+import dataclasses
 import io
 import json
 import math
@@ -30,6 +31,7 @@ sys.path.insert(0, str(SIM / "tools"))
 
 import klt_record as kr  # noqa: E402
 import mk_klt_request as mk  # noqa: E402
+from harness import report as hr  # noqa: E402
 from harness import testbench as htb  # noqa: E402
 from harness import toolchain as htc  # noqa: E402
 
@@ -144,9 +146,12 @@ class DeriveOffsetTran(unittest.TestCase):
             "ap_start": 3.3 - self.VDROP,
         }
 
+    guarded = False  # arithmetic tests use tiny synthetic populations: manifest floors off
+
     def _derive(self, draws):
         smp = {f"mc{i}": d for i, d in enumerate(draws)}
-        return kr.derive("comparator-offset-tran", self.tb, {"main": ({self.CID: smp}, [])})
+        tb = self.tb if self.guarded else dataclasses.replace(self.tb, checks={})
+        return kr.derive("comparator-offset-tran", tb, {"main": ({self.CID: smp}, [])})
 
     def test_trip_midpoint_preamp_offset_and_latch_difference(self):
         # level k=32 -> V = -5.04 + 0.16*32 = 0.08 mV; trip estimate = V - step/2 = 0.00 mV.
@@ -206,6 +211,62 @@ class DeriveOffsetTran(unittest.TestCase):
         self.assertEqual(set(res[self.CID]), set(self.tb.measure))
         self.assertIn(kr.SPEC["comparator-offset-tran"][1], self.tb.measure)
         self.assertEqual(kr.SPEC["comparator-offset-tran"][2:4], (15.0, 8.0))  # ratified bounds untouched
+
+
+class OffsetTranMismatchGuard(unittest.TestCase):
+    """Manifest `checks` floors are enforced on the klt ingest path (issue #309)."""
+
+    RECORD = SIM / "comparator-offset-tran/records/20261010-021500046481-d84e59d.json"
+
+    def setUp(self):
+        self.helper = DeriveOffsetTran("test_trip_midpoint_preamp_offset_and_latch_difference")
+        self.helper.setUp()
+        self.helper.guarded = True
+
+    def test_manifests_carry_the_floors(self):
+        tb = htb.load(SIM / "comparator-offset-tran")
+        self.assertEqual({k: v["min"] for k, v in tb.checks.items()},
+                         {"sig_vos_tran_raw_mv": 0.1, "sig_vos_tran_mv": 0.1, "sig_vos_pre_mv": 0.05})
+        fb = htb.load(SIM / "comparator-offset-tran-extracted-feasibility")
+        self.assertEqual({k: v["min"] for k, v in fb.checks.items()},
+                         {"sig_trip_raw_mv": 0.1, "sig_trip_mv": 0.1})
+        for t in (tb, fb):
+            for spec in t.checks.values():
+                self.assertIn("not a spec bound", spec["description"])
+                self.assertNotIn("max", spec)
+
+    def test_single_bin_collapse_fails_guard(self):
+        h = self.helper
+        res, problems = h._derive([h._draw(32, 0.0) for _ in range(20)])
+        self.assertEqual(res, {})
+        self.assertTrue(any(p.startswith("GUARD_FAILED") and "sig_vos_tran_raw_mv" in p for p in problems), problems)
+        self.assertTrue(any("sig_vos_pre_mv" in p for p in problems), problems)
+
+    def test_two_bin_collapse_fails_guard(self):
+        h = self.helper
+        res, problems = h._derive([h._draw(k, 0.0) for k in (31, 32) * 10])
+        self.assertEqual(res, {})
+        self.assertTrue(any(p.startswith("GUARD_FAILED") and "sig_vos_tran_mv" in p for p in problems), problems)
+
+    def test_real_spread_passes_guard(self):
+        h = self.helper
+        draws = [h._draw(32 + d, d * 0.2e-3) for d in range(-6, 7) for _ in range(3)]
+        res, problems = h._derive(draws)
+        self.assertEqual(problems, [])
+        self.assertIn(h.CID, res)
+
+    def test_committed_45_point_record_passes_guard_unmodified(self):
+        doc = json.loads(self.RECORD.read_text())
+        tb = htb.load(SIM / "comparator-offset-tran")
+        self.assertEqual(len(doc["derived"]), 45)
+        for cid, d in doc["derived"].items():
+            self.assertEqual(hr.scalar_bound_failures(tb.checks, d), [], cid)
+
+    def test_helper_semantics(self):
+        checks = {"a": {"min": 1.0}, "b": {"max": 2.0}, "c": {"max_spread_pct": 1}}
+        self.assertEqual(hr.scalar_bound_failures(checks, {"a": 1.0, "b": 2.0}), [])
+        self.assertEqual(len(hr.scalar_bound_failures(checks, {"a": 0.5, "b": 3.0})), 2)
+        self.assertEqual(len(hr.scalar_bound_failures(checks, {"a": float("nan")})), 2)
 
 
 class DeriveOtherBenches(unittest.TestCase):
@@ -431,9 +492,18 @@ def _bundle(work: Path) -> dict:
     return json.loads((work / mk.BUNDLE_NAME).read_text())
 
 
+PDK_REV = json.loads((SIM / "toolchain.json").read_text())["open_pdks"]
+
+
+def _prov(rev=PDK_REV, name="gf180mcuD") -> dict:
+    """The executor's provenance.pdk/deck shape, as in committed fleet reports."""
+    return {"pdk": {"name": name, "source": "search root: ~/.volare", "version": f"open_pdks {rev}"},
+            "deck": {"name": "sm141064.ngspice", "content_hash": "sha256:" + "6" * 64}}
+
+
 def _link_env(work: Path, b: dict, r: dict, closure=True, netlist_sha=True) -> dict:
     """The executor's report-to-input linkage for bundled request `r`."""
-    env = {"engine_version": "46", "remote": {"job_id": f"job-{r['request']}"}}
+    env = {"engine_version": "46", "models_lib_sha256": "6" * 64, "remote": {"job_id": f"job-{r['request']}"}}
     if netlist_sha:
         env["netlist_sha256"] = r["netlist_sha256"]
     if closure:
@@ -459,7 +529,8 @@ def _write_reports(work: Path, closure=True, netlist_sha=True) -> None:
                    for p in req["corners"]["process"] for t in req["corners"]["temperature_c"]]
         env = _link_env(work, b, r, closure, netlist_sha)
         (work / f"report-{n}.json").write_text(json.dumps(
-            {"corners": corners, "measurements": [{"name": m} for m in meas], "environment": env}))
+            {"corners": corners, "measurements": [{"name": m} for m in meas], "environment": env,
+             "provenance": _prov()}))
 
 
 def _committed_blob(commit, path):
@@ -1137,6 +1208,7 @@ class MainCoverageGate(unittest.TestCase):
                     rep["corners"].append(dict(rep["corners"][0]))
                 rep["measurements"] = [{"name": x["name"]} for x in req["measurements"]]
                 rep["environment"].update(_link_env(work, b, r))
+                rep["provenance"] = _prov()
                 (work / f"report-{n}.json").write_text(json.dumps(rep))
             err = io.StringIO()
             with mock.patch.object(sys, "stderr", err):
@@ -1216,7 +1288,7 @@ def _cm_index_work(td: Path, n: int = 2) -> Path:
         env["remote"] = {"runner_klt_version": "0.5.0", "runner_compatibility": "match"}
         (work / f"report-{name}.json").write_text(json.dumps(
             {"corners": corners, "measurements": [{"name": m["name"]} for m in req["measurements"]],
-             "environment": env}))
+             "environment": env, "provenance": _prov()}))
     return work
 
 
@@ -1273,8 +1345,9 @@ def _set_engine(work: Path, version, engine="ngspice", only=None, drop=False) ->
         f.write_text(json.dumps(rep))
 
 
-class EngineFloorIngest(unittest.TestCase):
-    """Issue #269: the ngspice floor is enforced on ingested fleet reports."""
+class _IngestMatrix(unittest.TestCase):
+    """Runs a case over both record writers (ordinary and common-mode index)."""
+
 
     def _cases(self):
         yield "ordinary", BENCH, _generate, lambda td, w: _write_reports(w)
@@ -1292,6 +1365,10 @@ class EngineFloorIngest(unittest.TestCase):
     def _no_evidence(self, td, bench):
         ev = td / "evidence" / bench
         return not any((ev / s).exists() and any((ev / s).iterdir()) for s in ("records", "corners", "netlist-snapshots"))
+
+
+class EngineFloorIngest(_IngestMatrix):
+    """Issue #269: the ngspice floor is enforced on ingested fleet reports."""
 
     def test_bundle_snapshots_floor_bound_to_commit(self):
         with tempfile.TemporaryDirectory() as td:
@@ -1383,6 +1460,205 @@ class EngineFloorIngest(unittest.TestCase):
     def test_engine_major_parsing(self):
         self.assertEqual([htc.engine_major(v) for v in ("46", "ngspice-46", "46.1", "ngspice 45")], [46, 46, 46, 45])
         self.assertEqual([htc.engine_major(v) for v in (None, "", "x46", "46x", 46)], [None] * 5)
+
+
+def _set_pdk(work: Path, only=None, drop=False, **kw) -> None:
+    for f in sorted(work.glob("report-*.json")):
+        if only and only not in f.name:
+            continue
+        rep = json.loads(f.read_text())
+        if drop:
+            rep.pop("provenance", None)
+        else:
+            rep["provenance"] = _prov(**kw)
+        f.write_text(json.dumps(rep))
+
+
+class PdkQualificationIngest(_IngestMatrix):
+    """Issue #283: executor-reported open_pdks revision / variant is enforced."""
+
+    def test_bundle_snapshots_pdk_requirement(self):
+        with tempfile.TemporaryDirectory() as td:
+            t = _bundle(_generate(Path(td)))["toolchain"]
+            self.assertEqual((t["open_pdks"], t["pdk_variant"]), (PDK_REV, "gf180mcuD"))
+
+    def test_matching_report_is_citable_and_recorded(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                rc, rec, _ = _ingest(td, work, bench=bench)
+                self.assertEqual(rc, 0)
+                self.assertTrue(rec["citable"], rec["not_citable_reasons"])
+                q = rec["ingest"]["pdk_qualification"]
+                self.assertEqual(q["required"], {"open_pdks": PDK_REV, "pdk_variant": "gf180mcuD"})
+                self.assertEqual(q["observed"], [{"pdk_variant": "gf180mcuD", "open_pdks": PDK_REV}])
+                self.assertEqual((q["required_source"], q["override"], q["model_lib_sha256"]),
+                                 ("source-bundle", False, ["6" * 64]))
+
+    def test_violations_refused_before_any_write(self):
+        cases = {"wrong-revision": dict(rev="f" * 40), "wrong-variant": dict(name="gf180mcuC"),
+                 "malformed": dict(rev="c6d73a"), "absent": dict(drop=True)}
+        for name, kw in cases.items():
+            for label, td, work, bench in self._each():
+                with self.subTest(case=name, writer=label):
+                    _set_pdk(work, **kw)
+                    rc, rec, _ = _ingest(td, work, bench=bench)
+                    self.assertIn("PDK_QUALIFICATION_FAILED", str(rc))
+                    self.assertIsNone(rec)
+                    self.assertTrue(self._no_evidence(td, bench))
+
+    def test_mixed_identities_refused(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                _set_pdk(work, only="v3.30", rev="f" * 40)
+                rc, rec, _ = _ingest(td, work, bench=bench)
+                self.assertIn("PDK_QUALIFICATION_FAILED", str(rc))
+                self.assertIn("mixed PDK identities", str(rc))
+                self.assertIsNone(rec)
+
+    def test_contradictory_model_hashes_refused(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                for f in work.glob("report-*.json"):
+                    rep = json.loads(f.read_text())
+                    rep["environment"]["models_lib_sha256"] = "7" * 64
+                    f.write_text(json.dumps(rep))
+                rc, rec, _ = _ingest(td, work, bench=bench)
+                self.assertIn("contradictory model hashes", str(rc))
+
+    def test_override_retains_non_citable_and_documents_it(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                _set_pdk(work, rev="f" * 40)
+                rc, rec, out = _ingest(td, work, "--allow-pdk-drift", bench=bench)
+                self.assertEqual(rc, 0)
+                self.assertFalse(rec["citable"] or rec["reference"])
+                q = rec["ingest"]["pdk_qualification"]
+                self.assertTrue(q["override"] and q["violations"])
+                self.assertTrue(any("PDK qualification override" in r for r in rec["not_citable_reasons"]))
+
+    def test_override_does_not_degrade_matching_set(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                rc, rec, _ = _ingest(td, work, "--allow-pdk-drift", bench=bench)
+                self.assertTrue(rec["citable"])
+
+    def test_later_pin_change_does_not_alter_bundle_requirement(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                with mock.patch.object(htc, "load_pins", return_value={"open_pdks": "e" * 40, "ngspice_min_major": 46}):
+                    rc, rec, _ = _ingest(td, work, bench=bench)
+                self.assertEqual(rc, 0)
+                self.assertEqual(rec["ingest"]["pdk_qualification"]["required"]["open_pdks"], PDK_REV)
+
+    def test_legacy_bundle_uses_checkout_pin_and_says_so(self):
+        for legacy in ("no-toolchain", "pre-283-toolchain"):
+            for label, td, work, bench in self._each():
+                with self.subTest(legacy=legacy, writer=label):
+                    b = _bundle(work)
+                    if legacy == "no-toolchain":
+                        b.pop("toolchain")
+                    else:
+                        b["toolchain"].pop("open_pdks")
+                        b["toolchain"].pop("pdk_variant")
+                    (work / mk.BUNDLE_NAME).write_text(json.dumps(b, indent=1) + "\n")
+                    rc, rec, _ = _ingest(td, work, bench=bench)
+                    self.assertEqual(rc, 0)
+                    q = rec["ingest"]["pdk_qualification"]
+                    self.assertEqual((q["required_source"], q["required"]["open_pdks"], q["required"]["pdk_variant"]),
+                                     ("ingest-checkout (legacy bundle)", PDK_REV, "gf180mcuD"))
+                    _set_pdk(work, rev="f" * 40)
+                    rc, rec, _ = _ingest(td, work, bench=bench)
+                    self.assertIn("PDK_QUALIFICATION_FAILED", str(rc))
+
+    def test_reproduce_guidance_names_qualification(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                _, rec, _ = _ingest(td, work, bench=bench)
+                md = (td / "evidence" / bench / "records" / f"{rec['record_id']}.md").read_text()
+                line = next(l for l in md.splitlines() if l.startswith("- **Reproduce**"))
+                self.assertIn(f"PDK qualification: required `gf180mcuD` / open_pdks `{PDK_REV}`", line)
+                self.assertIn("every leg matched", line)
+
+    def test_committed_fleet_report_shape_parses(self):
+        rep = json.loads(next((SIM / "comparator-offset-tran/corners").glob("*/report-main-v3.30.json")).read_text())
+        self.assertEqual(kr.report_pdk_identity(rep), ("gf180mcuD", PDK_REV, []))
+
+
+def _edit_snapshot(work: Path, **kw) -> None:
+    b = _bundle(work)
+    b["toolchain"].update(kw)
+    (work / mk.BUNDLE_NAME).write_text(json.dumps(b, indent=1) + "\n")
+
+
+class ToolchainSnapshotIdentity(_IngestMatrix):
+    """Issue #283 review: the bundle's toolchain snapshot is verified against
+    sim/toolchain.json at the clean origin commit, never merely trusted."""
+
+    def _refused(self, td, bench, rc, rec, code, needle=""):
+        self.assertIn(code, str(rc))
+        self.assertIn(needle, str(rc))
+        self.assertIsNone(rec)
+        self.assertTrue(self._no_evidence(td, bench))
+
+    def test_untampered_snapshot_is_verified_and_citable(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                rc, rec, _ = _ingest(td, work, bench=bench)
+                self.assertEqual(rc, 0)
+                self.assertTrue(rec["citable"], rec["not_citable_reasons"])
+
+    def test_tampered_open_pdks_refused(self):
+        # Executor reports agree with the tampered pin, so only the origin
+        # binding can catch it.
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                _edit_snapshot(work, open_pdks="f" * 40)
+                _set_pdk(work, rev="f" * 40)
+                rc, rec, _ = _ingest(td, work, bench=bench)
+                self._refused(td, bench, rc, rec, "SOURCE_COMMIT_MISMATCH", "open_pdks")
+
+    def test_tampered_ngspice_floor_refused(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                _edit_snapshot(work, ngspice_min_major=40)
+                rc, rec, _ = _ingest(td, work, bench=bench)
+                self._refused(td, bench, rc, rec, "SOURCE_COMMIT_MISMATCH", "ngspice_min_major")
+
+    def test_tampered_snapshot_commit_refused(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                _edit_snapshot(work, commit="0" * 40)
+                rc, rec, _ = _ingest(td, work, bench=bench)
+                self._refused(td, bench, rc, rec, "SOURCE_COMMIT_MISMATCH", "snapshot was taken")
+
+    def test_pin_file_hash_mismatch_at_origin_refused(self):
+        def blob(commit, path):
+            data = _committed_blob(commit, path)
+            return data + b"\n" if path == "sim/toolchain.json" else data
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                rc, rec, _ = _ingest(td, work, blob=blob, bench=bench)
+                self._refused(td, bench, rc, rec, "SOURCE_COMMIT_MISMATCH", "sim/toolchain.json")
+
+    def test_pin_file_unreadable_at_origin_is_non_citable(self):
+        def blob(commit, path):
+            return None if path == "sim/toolchain.json" else _committed_blob(commit, path)
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                rc, rec, _ = _ingest(td, work, blob=blob, bench=bench)
+                self.assertFalse(rec["citable"] or rec["reference"])
+                self.assertTrue(any("sim/toolchain.json" in r and "not readable" in r
+                                    for r in rec["not_citable_reasons"]), rec["not_citable_reasons"])
+
+    def test_snapshot_variant_contradicting_requests_refused(self):
+        # Reports agree with the tampered snapshot; the requests (hash-verified)
+        # still select gf180mcuD, so the bundle contradicts itself.
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                _edit_snapshot(work, pdk_variant="gf180mcuC")
+                _set_pdk(work, name="gf180mcuC")
+                rc, rec, _ = _ingest(td, work, "--allow-pdk-drift", bench=bench)
+                self._refused(td, bench, rc, rec, "SOURCE_BUNDLE_INCONSISTENT", "models.pdk")
 
 
 class ReproduceGuidance(unittest.TestCase):

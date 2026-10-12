@@ -570,6 +570,25 @@ class BothNodeKickbackScoring(unittest.TestCase):
         # Ratified bounds and counts are unaffected.
         self.assertEqual((row["target_max"], row["stretch_max"]), (5.0, 2.0))
         self.assertEqual((row["corners_within_target"], row["corners_within_stretch"]), (1, 0))
+        # Structured coverage matches the disclosure (issue #303): the row is
+        # incomplete, unscored per corner, in the skipped work and the rollup.
+        self.assertEqual(row["coverage"], "incomplete", row)
+        self.assertEqual(row["coverage_reason"], self.mod.KICKBACK_FALLBACK_REASON)
+        self.assertIn("POSITIVE-NODE-ONLY", row["label"])
+        self.assertEqual(env["eligibility"]["coverage"], "incomplete")
+        self.assertIn(self.mod.KICKBACK_ROW, env["eligibility"]["incomplete_rows"])
+        skipped = {(s["id"], s["reason"]) for s in env["coverage"]["skipped"]}
+        for idx, c in enumerate(env["corners"]):
+            self.assertIn(self.mod.KICKBACK_ROW, c["unscored_rows"], c["corner_id"])
+            self.assertIn(
+                (self.mod.work_id("spec_row", idx, c["corner_id"], self.mod.KICKBACK_ROW),
+                 self.mod.KICKBACK_FALLBACK_REASON),
+                skipped,
+            )
+        # The committed values miss, so numerical failure precedes the partial
+        # coverage: fail, never pass_partial.
+        self.assertEqual(env["eligibility"]["numerical"], "fail")
+        self.assertEqual(env["status"], "fail")
 
     def test_both_node_record_used_when_valid(self) -> None:
         env = self.mod.build_envelope()
@@ -580,23 +599,32 @@ class BothNodeKickbackScoring(unittest.TestCase):
         self.assertEqual((row["target_max"], row["stretch_max"]), (5.0, 2.0))
         self.assertEqual((row["corners_within_target"], row["corners_within_stretch"]), (1, 0))
         self.assertEqual(env["failed"], 44)
+        # A valid both-node record keeps the row complete with no extra
+        # skipped work (issue #303): only average power stays unscored.
+        self.assertEqual(row["coverage"], "complete")
+        self.assertNotIn("coverage_reason", row)
+        self.assertNotIn(self.mod.KICKBACK_ROW, env["eligibility"]["incomplete_rows"])
+        self.assertEqual(env["eligibility"]["incomplete_rows"], [self.mod.AVG_POWER_ROW])
+        self.assertNotIn(self.mod.KICKBACK_FALLBACK_REASON, {s["reason"] for s in env["coverage"]["skipped"]})
+        self.assertTrue(all(c["unscored_rows"] == [self.mod.AVG_POWER_ROW] for c in env["corners"]))
         rec = json.loads(self.rec.read_text())
         for cid, m in self.kick_values(env).items():
             self.assertEqual(m["value"], rec["derived"][cid]["kick_1k_peak_mv"])
         self.assertIn(f"{self.mod.KICKBACK_BOTH_RECORD_ID}.json", " ".join(s["path"] for s in env["source_records"]))
 
     def test_revision_suffix_and_name(self) -> None:
-        self.assertEqual(self.mod.SCORING_REVISION, 4)
+        self.assertEqual(self.mod.SCORING_REVISION, 6)
         out = self.mod.output_path()
-        self.assertTrue(out.name.endswith("-r4.json"))
+        self.assertTrue(out.name.endswith("-r6.json"))
         self.assertIn(self.mod.KICKBACK_BOTH_RECORD_ID, out.name)
-        self.assertEqual(self.mod.build_envelope()["scoring_revision"], 4)
+        self.assertEqual(self.mod.build_envelope()["scoring_revision"], 6)
 
     def test_older_envelopes_remain_committed(self) -> None:
         real = load_wrapper(REPO_ROOT)
         self.assertTrue(real.predecessor_path().is_file())
         self.assertTrue(real.supersedes_path().is_file())
-        self.assertTrue(real.supersedes_path().name.endswith("-r3.json"))
+        self.assertTrue(real.supersedes_path().name.endswith("-r5.json"))
+        self.assertIn(real.KICKBACK_BOTH_SUPERSEDED_RECORD_ID, real.supersedes_path().name)
 
     def test_shuffled_corner_keys_still_valid(self) -> None:
         self.mutate(lambda r: r.update(derived=dict(reversed(list(r["derived"].items())))))
@@ -637,6 +665,86 @@ class BothNodeKickbackScoring(unittest.TestCase):
     def test_wrong_point_count(self) -> None:
         self.mutate(lambda r: r.update(expected_points=44))
         self.assert_fallback("expected_points")
+
+
+class KickbackFallbackIncompleteCoverage(_FixtureCase):
+    """Issue #303: the positive-node-only fallback itself is unscored work.
+
+    Every measured value passes here, so the fallback's coverage gap alone
+    caps the envelope at ``pass_partial``; a measured miss under the fallback
+    still fails outright (numerical failure precedes partial coverage)."""
+
+    kickback_mv = 1.0  # every measured row would pass -- coverage is the only gap
+
+    def setUp(self) -> None:
+        super().setUp()
+        # Break the both-node record so the wrapper falls back (absent record).
+        (self.root / "sim" / self.mod.KICKBACK_BENCH / "records"
+         / f"{self.mod.KICKBACK_BOTH_RECORD_ID}.json").unlink()
+        self.env = self.mod.build_envelope()
+
+    def kick_row(self, env: dict | None = None) -> dict:
+        env = env or self.env
+        return [r for r in env["spec_rows"] if r["name"] == self.mod.KICKBACK_ROW][0]
+
+    def test_fallback_alone_caps_at_pass_partial(self) -> None:
+        self.assertEqual(self.env["eligibility"]["numerical"], "pass")
+        self.assertEqual(self.env["eligibility"]["coverage"], "incomplete")
+        self.assertFalse(self.env["eligibility"]["eligible"])
+        self.assertEqual(self.env["status"], "pass_partial")
+        self.assertEqual(self.env["failed"], 0)
+        self.assertTrue(all(c["status"] == "pass_partial" for c in self.env["corners"]))
+
+    def test_incomplete_rows_and_skipped_work(self) -> None:
+        self.assertEqual(self.env["eligibility"]["incomplete_rows"],
+                         [self.mod.KICKBACK_ROW, self.mod.AVG_POWER_ROW])
+        self.assertEqual(self.env["coverage"]["spec_rows_incomplete"],
+                         [self.mod.KICKBACK_ROW, self.mod.AVG_POWER_ROW])
+        skipped = self.env["coverage"]["skipped"]
+        self.assertEqual(len(skipped), 90)  # 45 kickback + 45 average power
+        self.assertEqual({s["reason"] for s in skipped},
+                         {self.mod.KICKBACK_FALLBACK_REASON, self.mod.AVG_POWER_SKIP_REASON})
+        kick_ids = {s["id"] for s in skipped if s["reason"] == self.mod.KICKBACK_FALLBACK_REASON}
+        self.assertEqual(kick_ids, {
+            self.mod.work_id("spec_row", idx, c["corner_id"], self.mod.KICKBACK_ROW)
+            for idx, c in enumerate(self.env["corners"])})
+        for c in self.env["corners"]:
+            self.assertEqual(c["unscored_rows"], [self.mod.KICKBACK_ROW, self.mod.AVG_POWER_ROW])
+
+    def test_row_incomplete_but_values_and_bounds_kept(self) -> None:
+        row = self.kick_row()
+        self.assertEqual(row["coverage"], "incomplete")
+        self.assertEqual(row["coverage_reason"], self.mod.KICKBACK_FALLBACK_REASON)
+        self.assertEqual((row["target_max"], row["stretch_max"]), (5.0, 2.0))
+        self.assertEqual(row["corners_total"], 45)
+        self.assertEqual(row["corners_within_target"], 45)
+        self.assertEqual(row["corners_within_stretch"], 45)
+        self.assertEqual(row["record_id"], dict(self.mod.RECORDS)["comparator-kickback"])
+        self.assertIn("POSITIVE-NODE-ONLY", row["label"])
+        # Checked count still covers the measurement itself (it is carried,
+        # just not scored as a complete both-node claim).
+        self.assertEqual(len(self.env["coverage"]["checked"]), 45 * len(self.mod.MEASURED))
+
+    def test_rollup_discloses_limited_scope(self) -> None:
+        src = self.env["kickback_source"]
+        self.assertEqual(src["input_node_coverage"], "positive_node_only")
+        self.assertTrue(src["partial_node_coverage"])
+        self.assertEqual(src["fallback_reason"], self.mod.KICKBACK_FALLBACK_REASON)
+        self.assertTrue(all(m["partial_node_coverage"] for c in self.env["corners"]
+                            for m in c["measurements"] if m["name"] == self.mod.KICKBACK_ROW))
+
+    def test_measured_miss_under_fallback_still_fails(self) -> None:
+        p = (self.root / "sim" / self.mod.KICKBACK_BENCH / "records"
+             / f"{dict(self.mod.RECORDS)['comparator-kickback']}.json")
+        rec = json.loads(p.read_text())
+        for pt in rec["points"]:
+            pt["measurements"]["kick_1k_peak_mv"] = 9.0  # above the 5 mV target
+        p.write_text(json.dumps(rec, indent=2) + "\n")
+        env = self.mod.build_envelope()
+        self.assertEqual(env["eligibility"]["numerical"], "fail")
+        self.assertEqual(env["status"], "fail")
+        self.assertNotEqual(env["status"], "pass_partial")
+        self.assertEqual(self.kick_row(env)["coverage"], "incomplete")
 
 
 class HistoricalEvidenceUnchanged(unittest.TestCase):

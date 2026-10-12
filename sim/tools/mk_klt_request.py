@@ -80,6 +80,10 @@ from harness import toolchain as htc  # noqa: E402
 #: widen so sub-microvolt kickback differences are not quantised away.
 NGSPICE_INIT = ["set measureprec=12", "set numdgt=12"]
 
+#: The gf180mcu variant every generated request selects (`models.pdk`). Also
+#: snapshotted into the bundle as the variant fleet reports must confirm (#283).
+PDK_VARIANT = "gf180mcuD"
+
 OFFSET_MC_SEED = 20260909
 OFFSET_MC_N = 200
 #: Seconds `klt sim --backend batch` keeps re-launching after a
@@ -203,6 +207,27 @@ def cm_window_leg(mc_n: int) -> dict:
 #: and does not change what is simulated, only how many threads simulate it.
 SINGLE_THREAD_BENCHES = ("comparator-offset-tran",)
 SINGLE_THREAD_CONTROL = [".control", "set num_threads=1", ".endc"]
+
+#: Solver-tolerance profiles for the bounded convergence probe (issue #240),
+#: ordered baseline -> progressively tighter. `baseline` writes ngspice 46's
+#: documented defaults EXPLICITLY, so it reproduces the campaign's (uncontrolled)
+#: solver settings but is visible in the body. Ordered tuples: the card order is
+#: part of the identity. Only comparator-offset-cm-index accepts a profile; a
+#: request generated without one is byte-identical to the historical campaign's.
+TOLERANCE_PROFILES = {
+    "baseline": (("reltol", 1e-3), ("abstol", 1e-12), ("vntol", 1e-6)),
+    "tight": (("reltol", 1e-5), ("abstol", 1e-14), ("vntol", 1e-9)),
+    "tighter": (("reltol", 1e-7), ("abstol", 1e-16), ("vntol", 1e-11)),
+}
+TOLERANCE_PROFILE_ORDER = tuple(TOLERANCE_PROFILES)
+
+
+def tolerance_option_lines(profile: str) -> list[str]:
+    """The exact `.options` cards a profile puts in the body (one per line)."""
+    if profile not in TOLERANCE_PROFILES:
+        raise SystemExit(f"UNKNOWN_TOLERANCE_PROFILE: {profile!r} not in {list(TOLERANCE_PROFILES)}")
+    return [f".options {k}={v!r}" for k, v in TOLERANCE_PROFILES[profile]]
+
 
 #: The source bundle written beside the requests (issue #151).
 BUNDLE_NAME = "source-bundle.json"
@@ -400,7 +425,15 @@ def main() -> int:
     ap.add_argument("--supply-tolerance", type=float, default=None)
     ap.add_argument("--mc-n", type=int, default=OFFSET_MC_N)
     ap.add_argument("--dut", default=None)
+    ap.add_argument("--tolerance-profile", default=None, choices=list(TOLERANCE_PROFILES),
+                    help="issue #240 probe only (comparator-offset-cm-index): write this profile's "
+                         "`.options reltol/abstol/vntol` cards into the body and bind them in the bundle")
+    ap.add_argument("--supply-v", nargs="*", type=float, default=None,
+                    help="restrict to these supply points (must be among the tolerance rails)")
     a = ap.parse_args()
+
+    if a.tolerance_profile and a.bench != CM_INDEX_BENCH:
+        raise SystemExit(f"--tolerance-profile is defined for {CM_INDEX_BENCH} only (issue #240)")
 
     if a.bench == CM_WINDOW_BENCH:
         # Refused BEFORE anything is staged (issue #182): no request set,
@@ -425,6 +458,12 @@ def main() -> int:
     corner_list = hc.resolve_corners(a.corners or list(tb.corners))
     tol = tb.supply_tolerance if a.supply_tolerance is None else a.supply_tolerance
     vdds = hc.supply_points(tb.nominal_supply_v, tol)
+    if a.supply_v:
+        bad = [v for v in a.supply_v if not any(abs(v - r) < 1e-9 for r in vdds)]
+        if bad:
+            raise SystemExit(f"--supply-v {bad} is not among the supply points {vdds}")
+        vdds = [r for r in vdds if any(abs(v - r) < 1e-9 for v in a.supply_v)]
+    tol_lines = tolerance_option_lines(a.tolerance_profile) if a.tolerance_profile else []
     temps = list(a.temps) if a.temps else [float(t) for t in tb.temperatures_c]
 
     def body_for(vdd: float) -> list[str]:
@@ -450,6 +489,7 @@ def main() -> int:
         # off-host runner does not expand the harness's absolute PDK path.
         '.include "design.ngspice"',
         *(f".options {o}" for o in tb.options),
+        *tol_lines,
         # The STAGED copies (issue #151), relative like design.ngspice: the
         # bytes simulated are the bytes the source bundle hashes, not a
         # checkout path that can change before the record is minted.
@@ -476,7 +516,7 @@ def main() -> int:
             req = {
                 "netlist": f"body-{vtag}.spice",
                 "engine": "ngspice",
-                "models": {"pdk": "gf180mcuD", "lib": "libs.tech/ngspice/sm141064.ngspice"},
+                "models": {"pdk": PDK_VARIANT, "lib": "libs.tech/ngspice/sm141064.ngspice"},
                 "corners": {"process": process, "temperature_c": temps},
                 # The fleet image's klt can lag the submitting client; run anyway
                 # and let the record state the runner/client versions it saw.
@@ -512,6 +552,9 @@ def main() -> int:
         "corners": [c.name for c in corner_list], "temperatures_c": temps,
         "supply_tolerance": tol, "supply_v": vdds,
         "mc_n": a.mc_n if a.bench in MC_BENCHES else None,
+        **({"tolerance_profile": {"name": a.tolerance_profile,
+                                  "options": [[k, v] for k, v in TOLERANCE_PROFILES[a.tolerance_profile]],
+                                  "cards": tol_lines}} if a.tolerance_profile else {}),
     }, requests)
     print(f"wrote {out}/{BUNDLE_NAME} (commit {commit[:7]}"
           + (f", DIRTY: {', '.join(dirty_paths)})" if dirty_paths else ", clean)"))
@@ -528,7 +571,11 @@ def toolchain_snapshot(commit: str, path: Path | None = None) -> dict:
     path = path or htc.TOOLCHAIN_JSON
     pins = htc.load_pins(path)
     return {"file": repo_rel(path) or str(path), "sha256": sha256_file(path),
-            "commit": commit, "ngspice_min_major": pins.get("ngspice_min_major")}
+            "commit": commit, "ngspice_min_major": pins.get("ngspice_min_major"),
+            # Issue #283: the exact open_pdks revision and PDK variant the
+            # requests below select; ingestion qualifies every executor
+            # report against THESE, never today's checkout.
+            "open_pdks": pins.get("open_pdks"), "pdk_variant": PDK_VARIANT}
 
 
 def write_bundle(out: Path, bench: str, tb, dut, binding, selector, staged: dict,

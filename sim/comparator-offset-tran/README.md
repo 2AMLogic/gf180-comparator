@@ -189,6 +189,15 @@ the first level above that draw's trip point:
 `step^2/12` (sigma 0.046 mV) to the population. It is **subtracted in
 quadrature**, and the uncorrected value is reported as `sig_vos_tran_raw_mv`.
 
+**Mismatch-on guard.** `testbench/tb.json` `checks` carry sanity floors
+(`sig_vos_tran_raw_mv` and `sig_vos_tran_mv` >= 0.1 mV, `sig_vos_pre_mv` >=
+0.05 mV): a collapsed (mismatch-free) population reads 0 or at most 0.080 mV
+raw (two adjacent staircase bins), so 0.1 mV catches it while sitting ~9x below
+the smallest committed value (0.937 mV). They are **not spec bounds**; the
+ratified 15/8 mV bounds are scored separately. `sim/tools/klt_record.py`
+enforces them at ingest: a failing point is dropped with a named
+`GUARD_FAILED` problem. Committed records are not rewritten.
+
 **Same-draw preamp offset (how the latch is quantified).** The preamp
 differential output is sampled at the end of the reset phase of the first
 cycle (input -5.04 mV) and the last cycle (+5.04 mV) of the *same draw*:

@@ -391,6 +391,13 @@ cover an omitted corner, missing draws, a saturation/incomplete record,
 non-finite derivation, dirty/uncitable provenance, stale DUT, a relaxed bound
 and a missing record. The r2 file stays committed unchanged.
 
+> **Re-qualified (#288):** the kickback record named below (`...-bf851ec`)
+> was simulated on `open_pdks f6eeac7`, not the pinned `c6d73a35`. Revisions
+> 4 and 5 therefore rest on a non-qualifying revision; **revision 6** scores
+> the same row on the re-minted `20261011-195826615490-7e20c78` (pin `c6d73a35...`, identical
+> per-corner values, same verdict). The r4/r5 files stay committed as history;
+> see `sim/qualification-notes/20261011-288-open-pdks-requalification.md`.
+
 **Revision 4 (issue #204): the kickback row is scored on the both-node
 record.** `item5-corner-matrix-<offset-mc id>-<noise id>-<regen id>-<kickback id>-<offset-tran id>-r4.json`
 scores `kickback_1k_peak_mv` on
@@ -406,6 +413,26 @@ the older record and says so (`partial_node_coverage`, reason
 unchanged: 1/45 within target, 0/45 within stretch. Bounds untouched; the
 r1/r2/r3 files stay committed unchanged. Extracted-DUT both-node evidence is
 out of scope (#112).
+
+**Revision 5 (issue #303): the positive-node-only fallback is incomplete
+coverage, not just a disclosure.** Revision 4 kept the kickback row
+`coverage: complete` with only a `partial_node_coverage` flag when
+`validate_kickback_both` failed — contradictory machine-readable statements.
+Revision 5 marks the row `coverage: "incomplete"` (`coverage_reason:
+"kickback_partial_node_coverage"`), adds `kickback_1k_peak_mv` to every
+affected corner's `unscored_rows`, appends one skipped-work entry per corner
+to `coverage.skipped`, and includes the row in `eligibility.incomplete_rows` —
+the same structured treatment the offset fallback and the average-power row
+already get. The positive-node values, verdict counts and the ratified 5 / 2
+mV bounds are unchanged (`kickback_source` still discloses the limited
+positive-node scope), and a measured kickback miss still fails outright:
+numerical failure precedes partial coverage, so the fallback never turns a
+miss into `pass_partial`. A valid both-node record keeps the row `complete`
+with no extra skipped work. Regression fixtures cover an absent, malformed,
+non-citable, partial-node, stale-DUT, relaxed-bound and wrong-point-count
+both-node record, plus the all-values-pass fallback (capped at
+`pass_partial`) and a measured miss under fallback (still `fail`). The
+r1–r4 files stay committed unchanged.
 
 **Append-only identity.** The file name is the four record ids plus
 `-r<SCORING_REVISION>`: a new record set *or* a new scoring revision mints a
@@ -571,7 +598,28 @@ Before emitting `pass`, `make_item8_envelope.py` validates
 non-empty, contain each required section heading, cite each section's
 declared `sim/*/records/` ids and keep average power explicitly `UNSCORED`;
 every registered record must exist, match its pinned sha256 and declared
-scope (bench, DUT provenance, point count, clean tree). Failures print named
+scope (bench, DUT provenance, point count, clean tree). Source qualification
+([#296](https://github.com/2AMLogic/gf180-comparator/issues/296)): each
+registered record also declares a `role` — `current` scored evidence, or
+`historical`/`diagnostic` context (only a `current` record may carry a
+`summary_key`) — and the `dut_id` it is expected to characterize, resolved
+against the live `sim/dut.json` registry. Every role must name that DUT, its
+registry provenance and netlist path (schematic records also stamp a
+`dut_netlist_sha256`; extracted records declare a committed
+`extraction_report` that pins an input layout hash). Freshness against
+today's bytes is checked on `current` records only: a `current` schematic
+record must stamp the current bytes of that entry's netlist, and a `current`
+extracted record's `extraction_report` input hash must still match the
+committed layout bytes (the regenerated scratch netlist is never required).
+`historical`/`diagnostic` records are context for the design they ran
+against and are not compared with today's bytes — that is what makes the
+refresh contract satisfiable: the design changed — re-run, register the new
+record as `current`, re-role the old one `historical`/`diagnostic` (it stays
+citable as context but can never back a scored summary row). A `current` record whose bytes carry fleet
+provenance fields must be citable reference evidence with no refusal reasons
+(legacy local records carry no fleet fields and qualify through their
+committed context). A SHA pin proves which record bytes were read; these
+checks prove they are eligible for the current claim. Failures print named
 `evidence-chain:` diagnostics and write nothing, even if the report hash was
 refreshed. The envelope `summary`'s per-row counts are derived from the pinned
 records, so a changed record cannot leave a stale summary. This does not

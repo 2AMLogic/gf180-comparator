@@ -86,6 +86,7 @@
     "notes": [
       "SUPPLEMENTAL AND UNSCORED. There is no ratified CMRR bound; the consumer's rejection verdict stays Unknown until a decision record says otherwise.",
       "FULL 45-POINT COVERAGE IS CLAIMED ONLY BY A COMPLETE APPEND-ONLY RECORD. See README.md for the current status.",
+      "SOLVER TOLERANCE. `options` stays empty: the production bench keeps ngspice's default tolerances. The bounded convergence probe (issue #240, sim/tools/cm_tolerance_probe.py) injects named reltol/abstol/vntol profiles at request generation (mk_klt_request.py --tolerance-profile) and binds them in the source bundle; it never changes this manifest's default behaviour. See README.md.",
       "WHAT THIS IS NOT. Schematic preamp DC offset vs common mode: not whole-comparator transient behaviour, not extracted-layout common-mode rejection, and it carries no load-resistor mismatch (the PDK models none; see sim/comparator-offset-mc/)."
     ]
   }
