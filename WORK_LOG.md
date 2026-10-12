@@ -2,6 +2,12 @@
 
 Chronological record of merged pull requests and closed issues. Newest entries appear first.
 
+### 2026-10-12
+
+- **PR #313**: docs(extracted-campaign): record #292 identity-gate completion assessment
+- **Issue #231** (closed): Run an additive full-PVT extracted offset mismatch campaign after feasibility
+- **Issue #273** (closed): Publish structured latch decision correctness in fleet records
+
 ### 2026-10-11
 
 - **PR #310**: feat(sim): mismatch-on guard floors for transient offset benches (#309)

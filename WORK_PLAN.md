@@ -9,11 +9,17 @@ Judge-approved PRs stuck under a `loom:operator` merge-risk hold — implementat
 
 - **#166**: sim(regeneration): reverse-polarity (HIGH->LOW) decision-time ladder across PVT (#158)
 
-## Operator Priority
+## Very Important
 
-Issues the operator starred (`loom:operator-priority`); land these first.
+`loom:very-important` (one counts per workspace); every stage takes these first.
 
-- **#3**: Gap-to-T1 tracker: gf180-comparator artifact-presence survey
+_None._
+
+## Important
+
+`loom:important`; taken before unlabelled work.
+
+_None._
 
 ## Ready
 
@@ -38,7 +44,6 @@ _None._
 PRs that passed review and are queued for Champion auto-merge (`loom:pr`).
 
 - **#166**: sim(regeneration): reverse-polarity (HIGH->LOW) decision-time ladder across PVT (#158)
-- **#285**: Publish structured latch decision correctness in fleet records (#273)
 
 ## Proposed
 
@@ -48,8 +53,6 @@ Issues carrying `loom:curated`.
 - **#125**: Define and measure the missing average-power operating condition for T1 *(curated)*
 - **#158**: Characterize reverse-polarity comparator delay across PVT *(curated)*
 - **#209**: Extend paired extracted preamp noise measurement to full PVT coverage *(curated)*
-- **#231**: Run an additive full-PVT extracted offset mismatch campaign after feasibility *(curated)*
-- **#273**: Publish structured latch decision correctness in fleet records *(curated)*
 
 ## Proposed (Architect / Hermit)
 
@@ -61,15 +64,16 @@ _None._
 
 ## Backlog Balance
 
-| Tier | Count |
+| Bucket | Count |
 |------|-------|
 | Operator merge-risk holds | 1 |
-| Operator priority | 1 |
+| Very important | 0 |
+| Important | 0 |
 | Ready (`loom:issue`) | 0 |
 | In Progress (`loom:building`) | 0 |
 | PRs awaiting review | 0 |
-| Approved PRs awaiting merge | 2 |
-| Curated | 6 |
+| Approved PRs awaiting merge | 1 |
+| Curated | 4 |
 | Architect / Hermit proposals | 0 |
 | Active epics | 0 |
 <!-- guide:plan-body:end -->
