@@ -48,6 +48,7 @@ Issues carrying `loom:curated`.
 - **#125**: Define and measure the missing average-power operating condition for T1 *(curated)*
 - **#158**: Characterize reverse-polarity comparator delay across PVT *(curated)*
 - **#209**: Extend paired extracted preamp noise measurement to full PVT coverage *(curated)*
+- **#231**: Run an additive full-PVT extracted offset mismatch campaign after feasibility *(curated)*
 - **#273**: Publish structured latch decision correctness in fleet records *(curated)*
 
 ## Proposed (Architect / Hermit)
@@ -68,7 +69,7 @@ _None._
 | In Progress (`loom:building`) | 0 |
 | PRs awaiting review | 0 |
 | Approved PRs awaiting merge | 2 |
-| Curated | 5 |
+| Curated | 6 |
 | Architect / Hermit proposals | 0 |
 | Active epics | 0 |
 <!-- guide:plan-body:end -->
