@@ -17,7 +17,10 @@ goes to the fleet via `sim/tools/klt_record.py`). Two decks:
             the output never has to fall). The point MUST FAIL -- no
             `fall=1 td=35n` crossing exists, so `td_*_rev_ns` cannot be
             produced, and `dout_*_rev_end` stays high. If it passes, the
-            reverse timing is not measuring the second decision.
+            reverse timing is not measuring the second decision. A crashed
+            sim is NOT a valid negative: the run must not be a hard crash
+            (`status != "error"`) and the ends must be OBSERVED high -- a
+            measurement, not a missing value -- or the controls are BROKEN.
 
 Exit 0 only if the positive control passes its reverse checks and the
 negative control fails them. Nothing is written under sim/ (both runs are
@@ -142,11 +145,17 @@ def main() -> int:
             print(f"\n[{label}] status={res.status} {res.message or ''}")
             for k, v in vals.items():
                 print(f"  {k:22s} {v!r:>24}" + (f"   FAIL: {'; '.join(fails[k])}" if k in fails else ""))
-            # The negative control must fail FOR THE RIGHT REASON: the timed
-            # fall is gone and the mirrored outputs are still HIGH at the end.
+            # The negative control must fail FOR THE RIGHT REASON: the sim
+            # ran to completion (not a crash/timeout -- status "error"), the
+            # timed fall is gone, and the mirrored outputs were OBSERVED
+            # still HIGH at the end (a measured value, never a missing one:
+            # a crashed sim produces all-None evidence and must be BROKEN,
+            # not a passing negative). The run status itself is "failed" by
+            # design here -- the suppressed fall makes tdr_* unmeasurable.
             ends = [vals[k] for k in REVERSE_PROOF if k.endswith("_end")]
-            right_reason = (any(vals[k] is None for k in REVERSE_TIMING)
-                            and all(v is None or v > 0.1 for v in ends))
+            right_reason = (res.status != "error"
+                            and any(vals[k] is None for k in REVERSE_TIMING)
+                            and all(v is not None and v > 0.1 for v in ends))
             good = (not fails and res.status == "ok") if must_pass else (bool(fails) and right_reason)
             verdict = "as required" if good else "WRONG"
             print(f"[{label}] reverse checks {'PASS' if not fails else 'FAIL'} -- {verdict}")
