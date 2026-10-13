@@ -733,6 +733,91 @@ def power_uw(bench: str, cid: str, d: dict) -> float | None:
     return d["i_static_ua"] * float(cid.rsplit("_", 1)[1].rstrip("v"))
 
 
+#: Reverse-polarity supplement (issue #158): rung -> (forward measure, reverse
+#: measure, reverse-minus-forward delta). SUPPLEMENTAL ONLY -- never scored;
+#: SPEC above keeps scoring the forward `td_od50_ns`.
+REVERSE_RUNGS = (
+    ("50 mV", "td_od50_ns", "td_od50_rev_ns", "dtd_od50_rev_ps"),
+    ("1 mV", "td_od1_ns", "td_od1_rev_ns", "dtd_od1_rev_ps"),
+    ("0.1 mV", "td_od01_ns", "td_od01_rev_ns", "dtd_od01_rev_ps"),
+)
+REVERSE_PROOF_FIRST = ("dout_od50_rev_first", "dout_od1_rev_first", "dout_od01_rev_first")
+REVERSE_PROOF_END = ("dout_od50_rev_end", "dout_od1_rev_end", "dout_od01_rev_end")
+
+
+def reverse_polarity_summary(derived: dict) -> dict | None:
+    """Per-direction binding corners and direction deltas (issue #158).
+
+    `derived` is {corner_id: {measure: value}}. Returns None when the
+    record's bench carries no reverse ladder (records minted before #158),
+    so older work dirs ingest exactly as before. The binding corner of a
+    direction is the PVT point with the LONGEST delay at that rung; the
+    delta is reverse minus forward in ps (positive = reverse slower). The
+    polarity proof lists every corner whose mirrored sequence did not go
+    HIGH (first strobe, >= 0.9) then LOW (second strobe, <= 0.1) -- such a
+    corner's reverse delay is not a HIGH->LOW decision time."""
+    rows = [d for d in derived.values() if "td_od50_rev_ns" in d]
+    if not rows:
+        return None
+    rungs = []
+    for label, fwd, rev, delta in REVERSE_RUNGS:
+        f = {cid: d[fwd] for cid, d in derived.items() if fwd in d}
+        r = {cid: d[rev] for cid, d in derived.items() if rev in d}
+        dl = {cid: d[delta] for cid, d in derived.items() if delta in d}
+        if not (f and r and dl):
+            continue
+        fw, rw = max(f, key=f.get), max(r, key=r.get)
+        lo, hi = min(dl, key=dl.get), max(dl, key=dl.get)
+        rungs.append({
+            "rung": label, "forward": fwd, "reverse": rev, "delta": delta,
+            "forward_binding": {"corner": fw, "ns": f[fw]},
+            "reverse_binding": {"corner": rw, "ns": r[rw]},
+            "delta_ps": {"min": dl[lo], "min_corner": lo, "max": dl[hi], "max_corner": hi},
+            "slower_direction_at_binding": "reverse" if r[rw] > f[fw] else "forward",
+        })
+    bad = sorted(
+        cid for cid, d in derived.items()
+        if any(d.get(k, 0.0) < 0.9 for k in REVERSE_PROOF_FIRST)
+        or any(d.get(k, 1.0) > 0.1 for k in REVERSE_PROOF_END)
+    )
+    tau = {cid: d["tau_rev_ps"] for cid, d in derived.items() if "tau_rev_ps" in d}
+    out = {"scored": False, "rungs": rungs, "polarity_proof_failing_corners": bad}
+    if tau:
+        w = max(tau, key=tau.get)
+        out["tau_rev_binding"] = {"corner": w, "ps": tau[w]}
+    return out
+
+
+def reverse_polarity_lines(summary: dict | None) -> list[str]:
+    """Markdown bullets for the supplemental reverse-polarity section."""
+    if summary is None:
+        return []
+    lines = [
+        "- **Supplemental: reverse-polarity (HIGH->LOW) decision time** (issue #158) -- "
+        "CHARACTERIZATION ONLY, NOT SCORED: the score line above reads the forward "
+        "(LOW->HIGH) `td_od50_ns` exactly as before; no spec row, signoff envelope or "
+        "DR-0005 metric reads these columns.",
+    ]
+    for r in summary["rungs"]:
+        lines.append(
+            f"  - {r['rung']}: forward binding `{r['forward']}` {r['forward_binding']['ns']:.6g} ns "
+            f"@ `{r['forward_binding']['corner']}`; reverse binding `{r['reverse']}` "
+            f"{r['reverse_binding']['ns']:.6g} ns @ `{r['reverse_binding']['corner']}`; "
+            f"`{r['delta']}` (reverse - forward) {r['delta_ps']['min']:.4g} ps "
+            f"@ `{r['delta_ps']['min_corner']}` .. {r['delta_ps']['max']:.4g} ps "
+            f"@ `{r['delta_ps']['max_corner']}`; slower direction at binding: {r['slower_direction_at_binding']}."
+        )
+    if "tau_rev_binding" in summary:
+        t = summary["tau_rev_binding"]
+        lines.append(f"  - `tau_rev_ps` max {t['ps']:.6g} ps @ `{t['corner']}`.")
+    bad = summary["polarity_proof_failing_corners"]
+    lines.append(
+        "  - Reverse-sequence polarity proof (`dout_*_rev_first` >= 0.9 then "
+        f"`dout_*_rev_end` <= 0.1 at all three rungs): failing corners: {bad or 'none'}."
+    )
+    return lines
+
+
 #: Issue #273: the latch-decision polarity measurements each bench REQUIRES
 #: to be evaluated before a record may claim functional correctness. Only the
 #: NAMES live here; the thresholds always come from the generation-time
@@ -1772,6 +1857,8 @@ def main() -> int:
         lines.append(f"- **Static power** (`i_static_ua` x vdd): min {min(pw.values()):.4g} uW, max {max(pw.values()):.4g} uW; within the {POWER_TARGET_UW:g} uW target at {sum(p <= POWER_TARGET_UW for p in pw.values())}/{len(pw)} corners.")
     if decisions is not None:
         lines += decision_lines(decisions, a.bench)
+    if a.bench == "comparator-regeneration":
+        lines += reverse_polarity_lines(reverse_polarity_summary(derived))
     if a.bench == "comparator-kickback":
         lines.append(f"- **Input-node coverage** (issue #160): {node_coverage_line(derived)}")
     lines += [
@@ -1793,6 +1880,7 @@ def main() -> int:
         "complete": complete, "outcome": "complete" if complete else "incomplete", "expected_points": expected,
         "reference": reference,
         "within_target": n_t, "within_stretch": n_s, "points": len(vals), "problems": problems,
+        **({"supplemental_reverse_polarity": rev} if (rev := reverse_polarity_summary(derived)) else {}),
         "derived": derived,
         **({"input_node_coverage": node_coverage(derived)} if a.bench == "comparator-kickback" else {}),
         **({"decision_correctness": decisions} if decisions is not None else {}),

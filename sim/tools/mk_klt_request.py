@@ -316,6 +316,11 @@ def git_state(paths: list[str], repo: Path = REPO) -> tuple[str, list[str]]:
     return sha, dirty
 
 
+def reverse_ladder_include(staged: dict) -> list[str]:
+    """The staged supplemental fragment's `.include` line (issue #158)."""
+    return ['.include "' + staged["reverse_ladder_netlist"] + '"']
+
+
 def stage_sources(out: Path, tb, dut, binding: tuple[Path, str | None, dict], selector: str | None) -> dict:
     """Copy the DUT, testbench and binding into OUTDIR/sources/ -> paths."""
     src = out / SOURCES_DIR
@@ -333,12 +338,16 @@ def stage_sources(out: Path, tb, dut, binding: tuple[Path, str | None, dict], se
         "config": repo_rel(config) or str(config), "selector": selector,
         "key": key, "entry": entry,
     }, indent=2, sort_keys=True) + "\n")
-    return {
+    staged = {
         "dut": f"{SOURCES_DIR}/dut/{dut.netlist.name}",
         "testbench_dir": f"{SOURCES_DIR}/testbench",
         "testbench_netlist": f"{SOURCES_DIR}/testbench/{tb.netlist.name}",
         "binding": f"{SOURCES_DIR}/dut-binding.json",
     }
+    if tb.reverse_ladder:
+        staged["reverse_ladder_netlist"] = (
+            f"{SOURCES_DIR}/testbench/{tb.reverse_ladder['netlist']}")
+    return staged
 
 
 def source_sha_lines(out: Path) -> list[str]:
@@ -358,9 +367,14 @@ def declared_source_shas(body_text: str) -> dict[str, str]:
 
 
 def tran_meas_cards(tb) -> list[dict]:
-    """`meas tran ...` analysis lines -> klt `.meas` measurement entries."""
+    """`meas tran ...` analysis lines -> klt `.meas` measurement entries.
+
+    The forward `analyses` cards first, then any supplemental
+    reverse-ladder cards (tb.json `reverse_ladder.analyses`) -- the fleet
+    request must measure everything the local harness deck measures."""
     out = []
-    for line in tb.analyses[1:]:
+    cards = list(tb.analyses[1:]) + list(tb.reverse_ladder.get("analyses", ()))
+    for line in cards:
         parts = line.split()
         if parts[0] != "meas":
             raise SystemExit(f"{tb.name}: unexpected analysis card {line!r}")
@@ -495,6 +509,11 @@ def main() -> int:
         # checkout path that can change before the record is minted.
         f'.include "{staged["dut"]}"',
         f'.include "{staged["testbench_netlist"]}"',
+        # The supplemental reverse-polarity ladder (issue #158): a second
+        # staged fragment, so the fleet transient matches the local harness
+        # deck and every reverse `.meas` card has its instance.
+        *(reverse_ladder_include(staged)
+          if staged.get("reverse_ladder_netlist") else []),
         *(SINGLE_THREAD_CONTROL if a.bench in SINGLE_THREAD_BENCHES else []),
         "",
     ]
@@ -621,6 +640,9 @@ def write_bundle(out: Path, bench: str, tb, dut, binding, selector, staged: dict
             "netlist_sha256": tb.netlist_sha256,
             "manifest_sha256": tb.manifest_sha256,
             "staged_dir": staged["testbench_dir"],
+            **({"reverse_ladder_netlist": tb.reverse_ladder["netlist"],
+                "reverse_ladder_netlist_sha256": sha256_file(tb.reverse_ladder_path)}
+               if tb.reverse_ladder else {}),
         },
         "toolchain": toolchain_snapshot(commit),
         "parameters": parameters,

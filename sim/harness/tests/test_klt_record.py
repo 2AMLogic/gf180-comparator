@@ -406,7 +406,10 @@ class MkKltRequest(unittest.TestCase):
         for req in reqs.values():
             self.assertNotIn("monte_carlo", req)
             self.assertEqual(req["analysis"], {"kind": kind, "args": args})
-            self.assertEqual(len(req["measurements"]), len(tb.analyses) - 1)
+            # Forward cards + the supplemental reverse-ladder cards (issue
+            # #158): the fleet request measures everything the deck measures.
+            self.assertEqual(len(req["measurements"]),
+                             len(tb.analyses) - 1 + len(tb.reverse_ladder["analyses"]))
             self.assertTrue(all(m["spice"].startswith(".meas tran ") for m in req["measurements"]))
 
     def test_offset_tran_is_tran_monte_carlo_on_the_full_grid(self):
@@ -2266,8 +2269,15 @@ class CmWindowDerivation(unittest.TestCase):
 
 #: Raw `.meas` ingredients of each bench's decision measurements (tb.json `measure`).
 _DECISION_RAW = {
+    # The reverse-polarity raws (issue #158) carry the MIRRORED polarity: the
+    # mirrored instances decide HIGH at the first strobe (>= 0.9) and LOW at
+    # the second (<= 0.1), so the manifest's supplemental `dout_*_rev_*`
+    # bounds -- evaluated by decision_correctness like any other `dout_*`
+    # bound -- hold for a correctly-deciding record.
     "comparator-regeneration": {"da_first": 0.0, "db_first": 0.0, "dc_first": 0.0,
-                                "da_end": 1.0, "db_end": 1.0, "dc_end": 1.0},
+                                "da_end": 1.0, "db_end": 1.0, "dc_end": 1.0,
+                                "dra_first": 1.0, "drb_first": 1.0, "drc_first": 1.0,
+                                "dra_end": 0.0, "drb_end": 0.0, "drc_end": 0.0},
     "comparator-kickback": {"da_end": 1.0, "db_end": 1.0, "dc_end": 1.0},
 }
 

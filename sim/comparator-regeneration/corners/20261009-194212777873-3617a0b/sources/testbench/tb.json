@@ -1,0 +1,187 @@
+{
+  "name": "comparator-regeneration",
+  "description": "Decision time versus input overdrive over PVT at 50 mV / 1 mV / 0.1 mV, the regeneration time constant tau extracted from the two small rungs, the near-metastable behaviour at 0.1 mV, and the switching energy and static current per decision. Supplemental (issue #158): a mirrored reverse-polarity ladder at the same three rungs times the HIGH->LOW output decision, so both output directions are characterized; it is reported, never scored.",
+  "claim": "REFERENCE, NOT VERDICT. The DUT binding is whatever sim/dut.json selects: by default the schematic comparator-dr0001 (design/comparator.spice, topology per spec/decision-records/DR-0001-comparator-topology.md), or the post-layout extracted binding comparator-dr0001-layout (--dut comparator-dr0001-layout, issue #23) whose records document their schematic-vs-extracted delta. This bench measures README.md#target-specification's Decision-time-vs-overdrive row (<= 1.5 ns at 50 mV overdrive, 3.3 V; <= 0.8 ns stretch) and supplies the tau that any metastability statement in this repo is computed from -- but that row is still DRAFT -- no decision record ratifies it -- so a measured pass or miss here is same-PDK/same-design context for the eventual ratification, not a pass/fail claim against a ratified spec. The reverse-polarity quantities (*_rev_* and the dtd_*/dtau_* direction deltas, issue #158) are SUPPLEMENTAL characterization: no spec row, signoff envelope or DR-0005 metric reads them, and td_od50_ns remains the positive-direction (LOW->HIGH) decision time it always was.",
+  "netlist": "tb_regeneration.spice",
+  "nominal_supply_v": 3.3,
+  "supply_tolerance": 0.1,
+  "temperatures_c": [
+    -40,
+    27,
+    125
+  ],
+  "corners": [
+    "mos"
+  ],
+  "analyses": [
+    "tran 5p 60n",
+    "meas tran vsup_v find v(vdd) at=25n",
+    "meas tran td_a trig v(clkn) val=0.5 rise=2 targ v(dan) val=0.5 rise=1 td=35n",
+    "meas tran td_b trig v(clkn) val=0.5 rise=2 targ v(dbn) val=0.5 rise=1 td=35n",
+    "meas tran td_c trig v(clkn) val=0.5 rise=2 targ v(dcn) val=0.5 rise=1 td=35n",
+    "meas tran da_first find v(dan) at=18n",
+    "meas tran db_first find v(dbn) at=18n",
+    "meas tran dc_first find v(dcn) at=18n",
+    "meas tran da_end find v(dan) at=55n",
+    "meas tran db_end find v(dbn) at=55n",
+    "meas tran dc_end find v(dcn) at=55n",
+    "meas tran i_stat avg i(vsupa) from=25n to=29n",
+    "meas tran q_dec integ i(vsupa) from=39.9n to=48n",
+    "meas tran tdr_a trig v(clkn) val=0.5 rise=2 targ v(dran) val=0.5 fall=1 td=35n",
+    "meas tran tdr_b trig v(clkn) val=0.5 rise=2 targ v(drbn) val=0.5 fall=1 td=35n",
+    "meas tran tdr_c trig v(clkn) val=0.5 rise=2 targ v(drcn) val=0.5 fall=1 td=35n",
+    "meas tran dra_first find v(dran) at=18n",
+    "meas tran drb_first find v(drbn) at=18n",
+    "meas tran drc_first find v(drcn) at=18n",
+    "meas tran dra_end find v(dran) at=55n",
+    "meas tran drb_end find v(drbn) at=55n",
+    "meas tran drc_end find v(drcn) at=55n"
+  ],
+  "measure": {
+    "td_od50_ns": "td_a*1e9",
+    "td_od1_ns": "td_b*1e9",
+    "td_od01_ns": "td_c*1e9",
+    "tau_ps": "(td_c-td_b)/ln(10)*1e12",
+    "td_od1_over_tau": "td_b/((td_c-td_b)/ln(10))",
+    "resolve_decades": "td_b/((td_c-td_b)/ln(10))",
+    "dout_od50_end": "da_end",
+    "dout_od1_end": "db_end",
+    "dout_od01_end": "dc_end",
+    "dout_od50_first": "da_first",
+    "dout_od1_first": "db_first",
+    "dout_od01_first": "dc_first",
+    "i_static_ua": "abs(i_stat)*1e6",
+    "e_dec_fj": "abs(q_dec - i_stat*8.1e-9)*vsup_v*1e15",
+    "td_od50_rev_ns": "tdr_a*1e9",
+    "td_od1_rev_ns": "tdr_b*1e9",
+    "td_od01_rev_ns": "tdr_c*1e9",
+    "tau_rev_ps": "(tdr_c-tdr_b)/ln(10)*1e12",
+    "dout_od50_rev_first": "dra_first",
+    "dout_od1_rev_first": "drb_first",
+    "dout_od01_rev_first": "drc_first",
+    "dout_od50_rev_end": "dra_end",
+    "dout_od1_rev_end": "drb_end",
+    "dout_od01_rev_end": "drc_end",
+    "dtd_od50_rev_ps": "(tdr_a-td_a)*1e12",
+    "dtd_od1_rev_ps": "(tdr_b-td_b)*1e12",
+    "dtd_od01_rev_ps": "(tdr_c-td_c)*1e12",
+    "dtau_rev_ps": "((tdr_c-tdr_b)-(td_c-td_b))/ln(10)*1e12"
+  },
+  "checks": {
+    "td_od50_ns": {
+      "min": 0.001,
+      "max": 25.0,
+      "min_spread_pct_by_axis": {
+        "process": 8.0,
+        "temperature": 10.0
+      },
+      "description": "PRIMARY CORNER-SENSITIVITY ANCHOR as well as the row-facing number. The min/max pair is a sanity envelope, not the spec bound: 1 ps would mean the delay measurement latched onto a numerical artefact, and 25 ns is most of the strobe window (a decision that has not completed by then did not complete at all). The SPEC bound (<= 1.5 ns at 50 mV, README.md) is deliberately NOT encoded while sim/dut.json binds a placeholder. The per-axis floors are what make `--sabotage-corners` fail: regeneration speed is set by device transconductance, which is the most corner- and temperature-sensitive quantity in the whole campaign. Floors calibrated from the full 45-point mos grid measured in this experiment's first committed record (named in this experiment's README.md), with ~45 % margin below the observed weakest slice, following the sibling repo's calibrate-from-a-cited-clean-tree-record convention. Observed weakest slices there: process 15.16 %, temperature 20.05 %. The supply axis is unfloored because the delay threshold is supply-normalized on purpose (see the deck header), which removes most of the supply dependence from the measurement by construction."
+    },
+    "tau_ps": {
+      "min": 0.1,
+      "max": 20000.0,
+      "description": "Regeneration time constant, extracted from the (1 mV, 0.1 mV) pair -- both inside the logarithmic region, one decade apart, so tau = (t(0.1 mV) - t(1 mV))/ln(10). Bounds are a sanity envelope: a negative or sub-0.1 ps tau means the two delays came out in the wrong order (a broken measurement, not a fast latch), and 20 ns means the structure is not regenerating on the timescale of the strobe. Everything this repo says about metastability is computed from this number, so it is recorded at every PVT point rather than quoted once."
+    },
+    "td_od1_over_tau": {
+      "min": 1.0,
+      "description": "Ratio of the FULL 1 mV clock-to-output delay to the regeneration time constant, td_od1 / tau, in E-FOLDS (natural-log units; divide by ln(10) = 2.303 for decades). It is NOT the number of e-folds of regeneration available in a decision phase: td_od1 includes the fixed, non-regenerative part of the delay (t0 in t = t0 + tau*ln(V_logic/(A*V_in))), so it overstates the regenerative lever arm. Per spec/decision-records/DR-0005-metastability-target.md it is a report-only diagnostic and scores nothing. The floor is a plumbing check: below 1 the structure is not resolving by regeneration at all and no metastability claim derived from tau would be meaningful."
+    },
+    "resolve_decades": {
+      "min": 1.0,
+      "description": "DEPRECATED ALIAS of td_od1_over_tau (issue #141) -- identical expression and floor, kept for one release so records written before the rename stay comparable; read td_od1_over_tau instead. Despite the name this is NOT a count of decades: it is td_od1 / tau in e-folds (natural-log units), the full clock-to-output delay over tau, fixed non-regenerative delay included."
+    },
+    "dout_od50_end": {
+      "min": 0.9,
+      "description": "POLARITY CHECK: after the second strobe the 50 mV instance must hold the POSITIVE answer (dout normalized to its own supply, so this is supply-independent). Together with dout_od50_first below it proves the same instance decided BOTH ways within one run, which is what makes the delay measurement independent of the starting state."
+    },
+    "dout_od1_end": {
+      "min": 0.9,
+      "description": "the same at 1 mV overdrive."
+    },
+    "dout_od01_end": {
+      "min": 0.9,
+      "description": "the same at 0.1 mV overdrive -- i.e. the near-metastable rung still resolves to the CORRECT answer within the strobe window, which is the statement the metastability row rests on."
+    },
+    "dout_od50_first": {
+      "max": 0.1,
+      "description": "the OPPOSITE-polarity half of the same proof: at the first strobe the input was negative, so the held output must be low."
+    },
+    "dout_od1_first": {
+      "max": 0.1,
+      "description": "the same at 1 mV overdrive."
+    },
+    "dout_od01_first": {
+      "max": 0.1,
+      "description": "the same at 0.1 mV overdrive."
+    },
+    "i_static_ua": {
+      "min": 0.1,
+      "description": "Static supply current of one instance with the strobe low. A floor only: zero would mean the bias never came up and every dynamic number in this record was taken on a dead circuit. No ceiling while a placeholder is bound -- README.md's power row is a spec bound, not a plumbing check."
+    },
+    "td_od50_rev_ns": {
+      "min": 0.001,
+      "max": 25.0,
+      "description": "SUPPLEMENTAL REVERSE-POLARITY decision time (issue #158): clock (second strobe, rising) to the supply-normalized output FALLING through 0.5, at 50 mV overdrive BELOW the trip point. Same sanity envelope as td_od50_ns and nothing more -- no spec bound, no per-axis floor (td_od50_ns stays the corner-sensitivity anchor), and nothing scored reads it. The `fall=1 td=35n` window is what makes it the second decision: the power-up resolution and the first (positive) decision both happen before 35 ns."
+    },
+    "tau_rev_ps": {
+      "min": 0.1,
+      "max": 20000.0,
+      "description": "Reverse-polarity regeneration time constant, (t_rev(0.1 mV) - t_rev(1 mV))/ln(10) -- the same extraction and sanity envelope as tau_ps, on the HIGH->LOW decision. Supplemental (issue #158); DR-0005's metric is still computed from tau_ps."
+    },
+    "dout_od50_rev_first": {
+      "min": 0.9,
+      "description": "REVERSE-SEQUENCE POLARITY PROOF, first half: at the first strobe the mirrored input was POSITIVE, so the held output must be HIGH. Without it the timed fall could be from a state the first decision never established."
+    },
+    "dout_od1_rev_first": {
+      "min": 0.9,
+      "description": "the same at 1 mV overdrive."
+    },
+    "dout_od01_rev_first": {
+      "min": 0.9,
+      "description": "the same at 0.1 mV overdrive."
+    },
+    "dout_od50_rev_end": {
+      "max": 0.1,
+      "description": "REVERSE-SEQUENCE POLARITY PROOF, second half: after the second strobe the mirrored instance must hold the NEGATIVE answer. Together with dout_od50_rev_first it proves the same instance decided HIGH then LOW, i.e. that td_od50_rev_ns timed an actual HIGH->LOW decision."
+    },
+    "dout_od1_rev_end": {
+      "max": 0.1,
+      "description": "the same at 1 mV overdrive."
+    },
+    "dout_od01_rev_end": {
+      "max": 0.1,
+      "description": "the same at 0.1 mV overdrive -- the near-metastable rung resolves to the correct NEGATIVE answer within the strobe window."
+    }
+  },
+  "evidence": {
+    "record_kind": "corner-matrix",
+    "notes": [
+      "MISMATCH-FREE BY CONSTRUCTION. sw_stat_mismatch is left at the PDK default (0), so every device is nominal. Regeneration time and offset are separable effects and are budgeted separately; combining them here would make neither attributable.",
+      "THE DELAY IS MEASURED ON THE SECOND STROBE, where the output must actively flip a latch holding the opposite answer. That is why every instance is driven by a PWL that changes sign between the two strobes, and why dout_*_first / dout_*_end are checked as a pair: together they prove one instance decided both ways in one run, so no delay in this record depends on which state the output happened to start in.",
+      "TIMING THRESHOLDS ARE SUPPLY-NORMALIZED (each output divided by its own supply, crossed at 0.5). A fixed absolute threshold would turn the +/-10 % supply axis into a measurement artefact rather than a measurement.",
+      "METASTABILITY IS A FIRST-CLASS ROW HERE, not a note. tau and td_od1_over_tau (the full 1 mV clock-to-output delay over tau, in e-folds; resolve_decades is its deprecated alias) are recorded at every PVT point precisely so that any metastability statement this repo makes is computed from a measured time constant at the worst corner rather than asserted from a typical-corner delay.",
+      "e_dec_fj CARRIES NO CHECK, DELIBERATELY. The placeholder DUT's decision stage is behavioural and draws no supply current at all, so the switching energy measured here is the FRONT END's alone and what remains of the charge integral is dominated by numerical residue (it moves over three orders of magnitude across the grid, which is a property of the integral, not of the circuit). Rather than invent a floor that would pass for the wrong reason, the number is recorded and left unchecked; a check belongs here the moment a transistor-level decision stage is bound in sim/dut.json.",
+      "THE 20 ns INPUT-FLIP INSTANT IS NOT ARBITRARY. The front end's output pole is roughly (load resistance x load capacitance); flipping the input 20 ns before the second strobe leaves it more than ten time constants to settle, so the decision is taken on a settled overdrive rather than on a transient. A bench that strobed too soon would report the settling time, not the regeneration time.",
+      "SOLVER TOLERANCES. reltol = 1e-4 and vntol = 1e-9 are tightened from the ngspice defaults so that a sub-nanosecond delay difference between two overdrives is resolved rather than smeared. abstol is 1e-13 and NOT the 1e-15 the kickback deck uses: at 1e-15 six of the 45 points of this grid fail to take their first transient step at all (`Timestep too small ... trouble with node eanc#branch`, at t < 1e-13 s), because the three PWL-driven controlled sources here present branch currents far below that floor at t = 0. A re-run that changes any of these three is not bit-comparable with this record.",
+      "THE TARG SEARCHES START AT td=35n, AND THAT IS LOAD-BEARING, NOT COSMETIC. A real comparator's output SR latch is a bistable with NO defined power-up state: at t = 0 its DC operating point can be the metastable one, and the transient then resolves it to whichever rail numerical asymmetry picks, typically within the first few nanoseconds. That resolution is a legitimate 0.5-crossing, so an unwindowed `targ ... rise=1` locks onto it instead of onto the decision under test and reports a NEGATIVE delay (observed: -38.2 ns) on whichever instances happened to resolve upward. 35 ns is after the first strobe has completed and after the 20-21 ns input flip has settled, and before the second strobe at 40 ns, so the window contains exactly the transition this bench says it measures ('THE DELAY IS MEASURED ON THE SECOND STROBE'). It relaxes no bound -- td_od50_ns's envelope, the per-axis floors and the dout_*_first/dout_*_end polarity pair are all unchanged. gf180-sar-adc's equivalent deck carries the identical idiom (td=71n against a strobe at 72.5 ns) for the identical reason. Records written before this change (the placeholder-DUT record named in this experiment's README.md) used an unwindowed search and are therefore not bit-comparable with records written after it -- the placeholder's behavioural decision stage starts from a defined output state, so its numbers were unaffected either way.",
+      "OFFSET-REFERRED LADDER FOR EXTRACTED DUTS (issue #23). A flat extracted netlist carries the layout's own deterministic asymmetry (per-net parasitic R and C differ between the two sides -- this layout's aop/aon nets differ by ~10 % R and ~14 % C), which shows up as a systematic input-referred offset several times the Monte-Carlo 3-sigma. A 0 V-referenced overdrive ladder is meaningless against such a DUT: the small rungs sit INSIDE the offset and the instances stop deciding both ways (the first post-layout smoke run showed exactly that). Against an extracted binding the harness therefore probes the trip point first (tb_vosprobe.spice, per PVT point) and centres the three ladders on it via the dut_vos param, so each rung is a true dv_* overdrive above the comparator's own trip point -- the convention gf180-sar-adc's extracted-regeneration record 20260814-215626-f613571 established. Against the schematic binding the probe does not run and dut_vos is 0, leaving the schematic measurement byte-equivalent to the pre-#23 deck.",
+      "REVERSE-POLARITY MIRROR LADDER (issue #158), SUPPLEMENTAL. Instances RA/RB/RC repeat the A/B/C rungs with the stimulus sign mirrored (positive for the first strobe, negative for the second), so tdr_* time the HIGH->LOW decision on the same second strobe with the same trigger, the same supply-normalized 0.5 threshold and the same td=35n window as td_*; dout_*_rev_first (>= 0.9) and dout_*_rev_end (<= 0.1) prove the HIGH-then-LOW sequence actually happened. The dtd_*_rev_ps and dtau_rev_ps columns are reverse minus forward, per PVT point, in the same transient. For an extracted DUT the mirrored ladder is centred on the same probed dut_vos, so each reverse rung is dv_* BELOW the trip point (the probe locates the LOW->HIGH trip point; a hysteretic DUT whose HIGH->LOW trip point differs would show up as a failed rev polarity check, not as an inferred symmetry). Nothing scored reads these columns: td_od50_ns, tau_ps and td_od1_over_tau keep their names, expressions and meaning, and any change of scoring scope needs its own decision record."
+    ]
+  },
+  "options": [
+    "reltol=1e-4",
+    "vntol=1e-9",
+    "abstol=1e-13"
+  ],
+  "offset_probe": {
+    "netlist": "tb_vosprobe.spice",
+    "analyses": [
+      "tran 100n 80u 0 100n",
+      "meas tran t_flip when v(dn)=0.5 rise=1 td=8u",
+      "meas tran vos_v find v(rmp) at=t_flip"
+    ],
+    "measure": {
+      "dut_vos": "vos_v"
+    }
+  }
+}

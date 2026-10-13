@@ -1,0 +1,105 @@
+{
+ "schema": "gf180-comparator/klt-source-bundle",
+ "version": 2,
+ "generator": "sim/tools/mk_klt_request.py",
+ "generated_utc": "2026-10-09T19:09:42Z",
+ "bench": "comparator-regeneration",
+ "origin": {
+  "commit": "3617a0bc6c0531c825dfd36dd78863b97a71ef3d",
+  "dirty": false,
+  "dirty_paths": [],
+  "checked_paths": [
+   "design",
+   "sim/tools",
+   "sim/harness",
+   "sim/comparator-regeneration/testbench",
+   "sim/dut.json",
+   "design/comparator.spice"
+  ]
+ },
+ "dut": {
+  "selector": null,
+  "key": "comparator-dr0001",
+  "dut_id": "comparator-dr0001",
+  "provenance": "schematic",
+  "netlist": "design/comparator.spice",
+  "netlist_sha256": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a",
+  "params": {
+   "dut_ib": 1e-05,
+   "dut_vcm": 1.65
+  },
+  "binding_config": "sim/dut.json",
+  "binding_entry_sha256": "77228add0ad0b1b62eda65cfcfd0f79c62b5d289ecd7eb1caa1522de9afb274e",
+  "staged_netlist": "sources/dut/comparator.spice",
+  "staged_binding": "sources/dut-binding.json"
+ },
+ "testbench": {
+  "experiment": "comparator-regeneration",
+  "dir": "sim/comparator-regeneration/testbench",
+  "netlist": "tb_regeneration.spice",
+  "netlist_sha256": "2e257696e3b20bb3f80353650415f3b53379d96e0f514fb243d6d0b6d2c6769c",
+  "manifest_sha256": "6d0974a016ec444377d11c7037ec5308406c828b3f563eb63a6fdee583958879",
+  "staged_dir": "sources/testbench"
+ },
+ "parameters": {
+  "corners": [
+   "tt",
+   "ff",
+   "ss",
+   "fs",
+   "sf"
+  ],
+  "temperatures_c": [
+   -40.0,
+   27.0,
+   125.0
+  ],
+  "supply_tolerance": 0.1,
+  "supply_v": [
+   2.97,
+   3.3,
+   3.63
+  ],
+  "mc_n": null
+ },
+ "requests": {
+  "main-v2.97": {
+   "leg": "main",
+   "vdd": 2.97,
+   "request": "request-main-v2.97.json",
+   "request_sha256": "1161e1d869a62e5b47fc1bff9219a5d29d005bab9df8f2607691c7b36c7e3848",
+   "netlist": "body-v2.97.spice",
+   "netlist_sha256": "d60a9d391822830feec317fadd2e394172ebca009e813fdeda9deb207d17e8dc"
+  },
+  "main-v3.30": {
+   "leg": "main",
+   "vdd": 3.3,
+   "request": "request-main-v3.30.json",
+   "request_sha256": "11f9f911561672a484029743f83f3cc932baf798d84111d23803a3c4ffd373fc",
+   "netlist": "body-v3.30.spice",
+   "netlist_sha256": "3d47448275c8e286119e1cf60aa9be3dd22b58cd39017fadddd6be8042ac5254"
+  },
+  "main-v3.63": {
+   "leg": "main",
+   "vdd": 3.63,
+   "request": "request-main-v3.63.json",
+   "request_sha256": "0402172d4236c9d1583b9d88443e069714166ca65714d06b96a73f71a881c341",
+   "netlist": "body-v3.63.spice",
+   "netlist_sha256": "f5d53e8ab5dfbae8f777fad4aaddafc84064d4af3e320a20785cca07cadf6e68"
+  }
+ },
+ "staged": {
+  "body-v2.97.spice": "d60a9d391822830feec317fadd2e394172ebca009e813fdeda9deb207d17e8dc",
+  "body-v3.30.spice": "3d47448275c8e286119e1cf60aa9be3dd22b58cd39017fadddd6be8042ac5254",
+  "body-v3.63.spice": "f5d53e8ab5dfbae8f777fad4aaddafc84064d4af3e320a20785cca07cadf6e68",
+  "design.ngspice": "091cb530bf85160a1f07878fb81f789ca367d018991c8ab41a584cd1a85c6692",
+  "request-main-v2.97.json": "1161e1d869a62e5b47fc1bff9219a5d29d005bab9df8f2607691c7b36c7e3848",
+  "request-main-v3.30.json": "11f9f911561672a484029743f83f3cc932baf798d84111d23803a3c4ffd373fc",
+  "request-main-v3.63.json": "0402172d4236c9d1583b9d88443e069714166ca65714d06b96a73f71a881c341",
+  "sources/dut/comparator.spice": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a",
+  "sources/dut-binding.json": "9ed024b2e635e241570e47b0e48c2fbe8719c0c4dbd38c92b7e97c1b06e49701",
+  "sources/testbench/tb.json": "6d0974a016ec444377d11c7037ec5308406c828b3f563eb63a6fdee583958879",
+  "sources/testbench/tb_regeneration.spice": "2e257696e3b20bb3f80353650415f3b53379d96e0f514fb243d6d0b6d2c6769c",
+  "sources/testbench/tb_vosprobe.spice": "56475d33709d034f209970fe4cecd0d8095e2b9a0c9aaa078569dadf9674a0d0"
+ }
+}

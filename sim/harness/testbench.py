@@ -143,6 +143,15 @@ class Testbench:
     #: an ``extracted``-provenance DUT; the measured offset is injected into
     #: the main deck as the ``dut_vos`` parameter.
     offset_probe: dict = field(default_factory=dict)
+    #: Supplemental reverse-polarity ladder (issue #158): a second netlist
+    #: fragment + `.meas` cards the harness appends to the SAME transient,
+    #: timing the HIGH->LOW decision on mirrored instances. DELIBERATELY
+    #: outside `analyses` and the main netlist: those are consumed fields
+    #: pinned by hash in layout/pex (pex_measure.PINNED_SHA256 /
+    #: TB_JSON_DECK_SHA256, parasitic_attribution.TB_JSON_CONSUMED_SHA256),
+    #: and committed parasitic-attribution evidence must keep re-verifying
+    #: against the deck it actually ran. Reported, never scored.
+    reverse_ladder: dict = field(default_factory=dict)
 
     @property
     def experiment(self) -> str:
@@ -199,8 +208,15 @@ class Testbench:
             options=self.options,
         )
 
+    @property
+    def reverse_ladder_path(self) -> Path:
+        """The declared reverse-ladder fragment, or None when undeclared."""
+        if not self.reverse_ladder:
+            return None
+        return self.directory / self.reverse_ladder["netlist"]
+
     def provenance(self) -> dict:
-        return {
+        prov = {
             "name": self.name,
             "description": self.description,
             "claim": self.claim,
@@ -212,6 +228,12 @@ class Testbench:
             "nominal_supply_v": self.nominal_supply_v,
             "supply_tolerance": self.supply_tolerance,
         }
+        if self.reverse_ladder:
+            frag = self.reverse_ladder_path
+            prov["reverse_ladder_netlist"] = frag.name
+            prov["reverse_ladder_netlist_sha256"] = hashlib.sha256(
+                frag.read_bytes()).hexdigest()
+        return prov
 
 
 def _require(manifest: dict, key: str, path: Path):
@@ -414,24 +436,44 @@ def load(directory: str | Path) -> Testbench:
         options=tuple(manifest.get("options", ())),
         evidence=evidence,
         offset_probe=dict(manifest.get("offset_probe", {})),
+        reverse_ladder=dict(manifest.get("reverse_ladder", {})),
     )
     check_reserved_params(tb.params, f"{manifest_path}: params")
     validate_netlist(tb)
     probe = tb.offset_probe_testbench()
     if probe is not None:
         validate_netlist(probe)
+    if tb.reverse_ladder:
+        decl = tb.reverse_ladder
+        if not isinstance(decl.get("netlist"), str) or not isinstance(
+                decl.get("analyses"), list) or not decl["analyses"] or not all(
+                    isinstance(a, str) and a.strip() for a in decl["analyses"]):
+            raise ValueError(
+                f"{manifest_path}: reverse_ladder must declare a non-empty "
+                "`analyses` list of `.meas` card strings and the supplemental "
+                "`netlist` fragment they run against"
+            )
+        if not tb.reverse_ladder_path.is_file():
+            raise FileNotFoundError(
+                f"{manifest_path}: reverse_ladder names "
+                f"{tb.reverse_ladder_path}, which does not exist"
+            )
+        validate_netlist(tb.reverse_ladder_path)
     return tb
 
 
-def validate_netlist(tb: Testbench) -> None:
+def validate_netlist(tb: "Testbench | Path") -> None:
     """Reject fragments that try to own what the harness owns.
 
-    Catching this here is much friendlier than debugging a duplicated
-    ``.end`` or a hardcoded ``.temp 27`` that silently pins every corner to
-    room temperature.
+    Accepts a :class:`Testbench` (validates its main fragment) or a bare
+    netlist path (validates that fragment -- e.g. a supplemental
+    reverse-ladder include). Catching this here is much friendlier than
+    debugging a duplicated ``.end`` or a hardcoded ``.temp 27`` that silently
+    pins every corner to room temperature.
     """
+    path = tb if isinstance(tb, Path) else tb.netlist
     problems: list[str] = []
-    text = tb.netlist.read_text()
+    text = path.read_text()
     owned = [
         f"  line {lineno}: .param {name} (harness-owned)"
         for lineno, name in _param_assignments(text)
@@ -439,7 +481,7 @@ def validate_netlist(tb: Testbench) -> None:
     ]
     if owned:
         raise ValueError(
-            f"{tb.netlist}: netlist fragments must not define harness-owned "
+            f"{path}: netlist fragments must not define harness-owned "
             f"parameters ({', '.join(sorted(RESERVED_PARAMS))}):\n" + "\n".join(owned)
         )
     for lineno, raw in enumerate(text.splitlines(), start=1):
@@ -451,7 +493,7 @@ def validate_netlist(tb: Testbench) -> None:
             problems.append(f"  line {lineno}: {raw.strip()}")
     if problems:
         raise ValueError(
-            f"{tb.netlist}: netlist fragments must not contain "
+            f"{path}: netlist fragments must not contain "
             f"{', '.join(FORBIDDEN_DIRECTIVES)} -- the harness supplies the models, "
             "corner libs, temperature, the DUT netlist and the control block:\n"
             + "\n".join(problems)
