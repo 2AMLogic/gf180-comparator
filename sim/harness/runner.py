@@ -132,6 +132,13 @@ def compose_deck(
         "",
         "* ---- testbench ------------------------------------------------------",
         f'.include "{tb.netlist}"',
+    ]
+    if tb.reverse_ladder:
+        lines += [
+            "* ---- supplemental reverse-polarity ladder (tb.json reverse_ladder) --",
+            f'.include "{tb.reverse_ladder_path}"',
+        ]
+    lines += [
         "",
         "* ---- measurement ----------------------------------------------------",
         ".control",
@@ -141,6 +148,8 @@ def compose_deck(
     if num_threads:
         lines.append(f"set num_threads={num_threads}")
     lines += [f"  {analysis}" for analysis in tb.analyses]
+    if tb.reverse_ladder:
+        lines += [f"  {analysis}" for analysis in tb.reverse_ladder["analyses"]]
     for name, expr in tb.measure.items():
         lines.append(f"  let m_{name} = {expr}")
     for name in tb.measure:

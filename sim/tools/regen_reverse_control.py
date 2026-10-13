@@ -80,12 +80,16 @@ def suppress_reverse_flip(text: str) -> str:
 
 def stage(src_tb_dir: Path, root: Path, mutate=None) -> Path:
     """Copy the bench's testbench/ to root/<bench>/testbench (optionally
-    rewriting the fragment) and return the copy's experiment dir."""
+    rewriting the reverse-ladder fragment) and return the copy's experiment
+    dir. The rewrite targets tb.json's `reverse_ladder` fragment (issue #158
+    review): the supplemental ladder must never live in the forward netlist,
+    whose consumed fields layout/pex pins by hash."""
     dst = root / BENCH / htb.TESTBENCH_DIRNAME
     shutil.copytree(src_tb_dir, dst)
     if mutate is not None:
         tb = htb.load(dst)
-        tb.netlist.write_text(mutate(tb.netlist.read_text()))
+        frag = tb.reverse_ladder_path
+        frag.write_text(mutate(frag.read_text()))
     return dst.parent
 
 

@@ -55,8 +55,9 @@ Two design decisions make the measurement robust:
   ±10 % supply axis into a measurement artefact.
 
 The three rungs above time the **LOW→HIGH** output decision only. Since issue
-#158 the same deck also carries a **mirrored, supplemental reverse-polarity
-ladder** (HIGH→LOW). See
+#158 the same transient also carries a **mirrored, supplemental reverse-polarity
+ladder** (HIGH→LOW), as a separate fragment (`tb_regeneration_reverse.spice`,
+declared under tb.json's `reverse_ladder` key). See
 [Reverse-polarity decision time](#reverse-polarity-decision-time-issue-158--supplemental-not-scored)
 below. It changes no forward card, expression, check or name.
 
@@ -181,12 +182,18 @@ existing ones.
 Every row above times the **LOW→HIGH** output decision: `td_a/b/c` are
 `targ ... rise=1 td=35n`. The `dout_*_first` samples prove that the forward
 ladder decided both ways. They do **not** time the HIGH→LOW direction. Since
-#158 the deck carries a **mirrored ladder** to measure it:
+#158 the transient carries a **mirrored ladder** to measure it: the mirrored
+instances live in `tb_regeneration_reverse.spice` and their `.meas` cards in
+tb.json's `reverse_ladder.analyses` — deliberately a separate fragment and
+key, NOT more of `tb_regeneration.spice`/`analyses`, because layout/pex pins
+those consumed fields by hash and re-grades committed parasitic-attribution
+evidence from them (a supplemental bench extension must never change what
+committed evidence ran):
 
 | instances | stimulus | timed edge | columns |
 |---|---|---|---|
 | `Xa/Xb/Xc` (unchanged) | −dv on strobe 1, **+dv** on strobe 2 | output **rise**, 2nd strobe | `td_od*_ns`, `tau_ps`, `dout_*_first/_end` |
-| `Xra/Xrb/Xrc` (new) | +dv on strobe 1, **−dv** on strobe 2 | output **fall**, 2nd strobe | `td_od*_rev_ns`, `tau_rev_ps`, `dout_*_rev_first/_end` |
+| `Xra/Xrb/Xrc` (new, supplemental fragment) | +dv on strobe 1, **−dv** on strobe 2 | output **fall**, 2nd strobe | `td_od*_rev_ns`, `tau_rev_ps`, `dout_*_rev_first/_end` |
 
 - **Same method, mirrored.** The reverse ladder uses the same rungs (50 mV,
   1 mV and 0.1 mV), the same `t_flip`, the same `trig v(clkn) rise=2`, the

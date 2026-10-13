@@ -26,16 +26,7 @@
     "meas tran db_end find v(dbn) at=55n",
     "meas tran dc_end find v(dcn) at=55n",
     "meas tran i_stat avg i(vsupa) from=25n to=29n",
-    "meas tran q_dec integ i(vsupa) from=39.9n to=48n",
-    "meas tran tdr_a trig v(clkn) val=0.5 rise=2 targ v(dran) val=0.5 fall=1 td=35n",
-    "meas tran tdr_b trig v(clkn) val=0.5 rise=2 targ v(drbn) val=0.5 fall=1 td=35n",
-    "meas tran tdr_c trig v(clkn) val=0.5 rise=2 targ v(drcn) val=0.5 fall=1 td=35n",
-    "meas tran dra_first find v(dran) at=18n",
-    "meas tran drb_first find v(drbn) at=18n",
-    "meas tran drc_first find v(drcn) at=18n",
-    "meas tran dra_end find v(dran) at=55n",
-    "meas tran drb_end find v(drbn) at=55n",
-    "meas tran drc_end find v(drcn) at=55n"
+    "meas tran q_dec integ i(vsupa) from=39.9n to=48n"
   ],
   "measure": {
     "td_od50_ns": "td_a*1e9",
@@ -165,7 +156,9 @@
       "SOLVER TOLERANCES. reltol = 1e-4 and vntol = 1e-9 are tightened from the ngspice defaults so that a sub-nanosecond delay difference between two overdrives is resolved rather than smeared. abstol is 1e-13 and NOT the 1e-15 the kickback deck uses: at 1e-15 six of the 45 points of this grid fail to take their first transient step at all (`Timestep too small ... trouble with node eanc#branch`, at t < 1e-13 s), because the three PWL-driven controlled sources here present branch currents far below that floor at t = 0. A re-run that changes any of these three is not bit-comparable with this record.",
       "THE TARG SEARCHES START AT td=35n, AND THAT IS LOAD-BEARING, NOT COSMETIC. A real comparator's output SR latch is a bistable with NO defined power-up state: at t = 0 its DC operating point can be the metastable one, and the transient then resolves it to whichever rail numerical asymmetry picks, typically within the first few nanoseconds. That resolution is a legitimate 0.5-crossing, so an unwindowed `targ ... rise=1` locks onto it instead of onto the decision under test and reports a NEGATIVE delay (observed: -38.2 ns) on whichever instances happened to resolve upward. 35 ns is after the first strobe has completed and after the 20-21 ns input flip has settled, and before the second strobe at 40 ns, so the window contains exactly the transition this bench says it measures ('THE DELAY IS MEASURED ON THE SECOND STROBE'). It relaxes no bound -- td_od50_ns's envelope, the per-axis floors and the dout_*_first/dout_*_end polarity pair are all unchanged. gf180-sar-adc's equivalent deck carries the identical idiom (td=71n against a strobe at 72.5 ns) for the identical reason. Records written before this change (the placeholder-DUT record named in this experiment's README.md) used an unwindowed search and are therefore not bit-comparable with records written after it -- the placeholder's behavioural decision stage starts from a defined output state, so its numbers were unaffected either way.",
       "OFFSET-REFERRED LADDER FOR EXTRACTED DUTS (issue #23). A flat extracted netlist carries the layout's own deterministic asymmetry (per-net parasitic R and C differ between the two sides -- this layout's aop/aon nets differ by ~10 % R and ~14 % C), which shows up as a systematic input-referred offset several times the Monte-Carlo 3-sigma. A 0 V-referenced overdrive ladder is meaningless against such a DUT: the small rungs sit INSIDE the offset and the instances stop deciding both ways (the first post-layout smoke run showed exactly that). Against an extracted binding the harness therefore probes the trip point first (tb_vosprobe.spice, per PVT point) and centres the three ladders on it via the dut_vos param, so each rung is a true dv_* overdrive above the comparator's own trip point -- the convention gf180-sar-adc's extracted-regeneration record 20260814-215626-f613571 established. Against the schematic binding the probe does not run and dut_vos is 0, leaving the schematic measurement byte-equivalent to the pre-#23 deck.",
-      "REVERSE-POLARITY MIRROR LADDER (issue #158), SUPPLEMENTAL. Instances RA/RB/RC repeat the A/B/C rungs with the stimulus sign mirrored (positive for the first strobe, negative for the second), so tdr_* time the HIGH->LOW decision on the same second strobe with the same trigger, the same supply-normalized 0.5 threshold and the same td=35n window as td_*; dout_*_rev_first (>= 0.9) and dout_*_rev_end (<= 0.1) prove the HIGH-then-LOW sequence actually happened. The dtd_*_rev_ps and dtau_rev_ps columns are reverse minus forward, per PVT point, in the same transient. For an extracted DUT the mirrored ladder is centred on the same probed dut_vos, so each reverse rung is dv_* BELOW the trip point (the probe locates the LOW->HIGH trip point; a hysteretic DUT whose HIGH->LOW trip point differs would show up as a failed rev polarity check, not as an inferred symmetry). Nothing scored reads these columns: td_od50_ns, tau_ps and td_od1_over_tau keep their names, expressions and meaning, and any change of scoring scope needs its own decision record."
+      "REVERSE-POLARITY MIRROR LADDER (issue #158), SUPPLEMENTAL. Instances RA/RB/RC repeat the A/B/C rungs with the stimulus sign mirrored (positive for the first strobe, negative for the second), so tdr_* time the HIGH->LOW decision on the same second strobe with the same trigger, the same supply-normalized 0.5 threshold and the same td=35n window as td_*; dout_*_rev_first (>= 0.9) and dout_*_rev_end (<= 0.1) prove the HIGH-then-LOW sequence actually happened. The dtd_*_rev_ps and dtau_rev_ps columns are reverse minus forward, per PVT point, in the same transient. For an extracted DUT the mirrored ladder is centred on the same probed dut_vos, so each reverse rung is dv_* BELOW the trip point (the probe locates the LOW->HIGH trip point; a hysteretic DUT whose HIGH->LOW trip point differs would show up as a failed rev polarity check, not as an inferred symmetry). Nothing scored reads these columns: td_od50_ns, tau_ps and td_od1_over_tau keep their names, expressions and meaning, and any change of scoring scope needs its own decision record.",
+      "WHY THE LADDER IS A SEPARATE FRAGMENT AND A SEPARATE `reverse_ladder` KEY, NOT MORE `analyses` (issue #158 review). `analyses` and tb_regeneration.spice are CONSUMED FIELDS: layout/pex's re-expression pins them by hash (pex_measure.py TB_JSON_DECK_SHA256 / PINNED_SHA256, parasitic_attribution.py TB_JSON_CONSUMED_SHA256) and re-grades committed parasitic-attribution and ground-c-budget campaigns by regenerating decks from this bench, so an appended `analyses` card or mirrored instance would change every regenerated deck's hash and invalidate committed evidence that was never run with it (the failure `test_source_edit_alone_cannot_break_committed_verification` exists to catch; re-pinning those hashes is not an option -- sim/ evidence is append-only and the committed campaigns ran the forward deck). The mirrored instances therefore live in tb_regeneration_reverse.spice and their nine `.meas` cards in reverse_ladder.analyses, and the harness appends that fragment (one more `.include`) and those cards to the SAME transient -- measure/checks above are unchanged and the forward deck fields stay byte-identical to what the committed evidence cites. The reverse fragment is validated like the main one (no harness-owned params, no forbidden directives) and its sha256 is recorded in each record's provenance."
+
     ]
   },
   "options": [
@@ -183,5 +176,19 @@
     "measure": {
       "dut_vos": "vos_v"
     }
+  },
+  "reverse_ladder": {
+    "netlist": "tb_regeneration_reverse.spice",
+    "analyses": [
+      "meas tran tdr_a trig v(clkn) val=0.5 rise=2 targ v(dran) val=0.5 fall=1 td=35n",
+      "meas tran tdr_b trig v(clkn) val=0.5 rise=2 targ v(drbn) val=0.5 fall=1 td=35n",
+      "meas tran tdr_c trig v(clkn) val=0.5 rise=2 targ v(drcn) val=0.5 fall=1 td=35n",
+      "meas tran dra_first find v(dran) at=18n",
+      "meas tran drb_first find v(drbn) at=18n",
+      "meas tran drc_first find v(drcn) at=18n",
+      "meas tran dra_end find v(dran) at=55n",
+      "meas tran drb_end find v(drbn) at=55n",
+      "meas tran drc_end find v(drcn) at=55n"
+    ]
   }
 }

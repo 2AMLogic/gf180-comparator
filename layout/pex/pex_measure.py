@@ -126,13 +126,13 @@ SCHEMATIC_NETLIST = os.path.join(REPO_ROOT, "design", "comparator.spice")
 #:    checks for rows this adapter emits (GRADED_CHECK_ROWS). Supplemental
 #:    checks for rows it does not emit (e.g. td_od1_over_tau) may float.
 PINNED_SHA256 = {
-    TB_MAIN: "2e257696e3b20bb3f80353650415f3b53379d96e0f514fb243d6d0b6d2c6769c",
+    TB_MAIN: "ef3dc3be1476a8cbacf2afc13c33abb3b116dd7e7fd7e3e81219f0f12edf66da",
     TB_PROBE: "56475d33709d034f209970fe4cecd0d8095e2b9a0c9aaa078569dadf9674a0d0",
 }
 
 #: Canonical sha256 of tb.json's deck fields (see _tb_deck_sha256); same
 #: encoding as parasitic_attribution.tb_consumed_sha256.
-TB_JSON_DECK_SHA256 = "33bdf0ef87788f778f30cfbc29c4f1cb08b2b5b86480c3905d6713e0c85b2b3c"
+TB_JSON_DECK_SHA256 = "462b79b389613fbc06de8037311ed54b0820a60f48778e1a1322c48c94a13f74"
 
 #: Rows this adapter emits that are graded by a tb.json check.
 GRADED_CHECK_ROWS = (
@@ -308,20 +308,6 @@ def _main_body() -> str:
             f"Bs{inst} s{inst} 0 v = 'v(s{inst}u)+v(vos)'"
         )
         text = _replace_once(text, old, new, "tb_regeneration.spice")
-    # The mirrored reverse-polarity sources (issue #158) start POSITIVE and
-    # flip DOWN at the second strobe -- the same unit-PWL + v(vos) split with
-    # the sign pattern reversed.
-    for inst, rung in (("ra", "dv_big"), ("rb", "dv_mid"), ("rc", "dv_tiny")):
-        old = (
-            f"vs{inst} s{inst} 0 pwl(0 {{dut_vos+{rung}}} {{t_flip}} "
-            f"{{dut_vos+{rung}}} {{t_flip+1n}} {{dut_vos-{rung}}})"
-        )
-        new = (
-            f"vs{inst}u s{inst}u 0 pwl(0 {{{rung}}} {{t_flip}} {{{rung}}} "
-            f"{{t_flip+1n}} {{-{rung}}})\n"
-            f"Bs{inst} s{inst} 0 v = 'v(s{inst}u)+v(vos)'"
-        )
-        text = _replace_once(text, old, new, "tb_regeneration.spice")
     if "dut_vos" in text:
         sys.exit("tb_regeneration.spice: a dut_vos reference survived the rewrite")
     _assert_vdd_val_only_on_supplies(text, ("vsup", "vsupa"), "tb_regeneration.spice")
@@ -408,18 +394,6 @@ MAIN_MEAS = [
     ("dc_end", "meas tran dc_end find v(dcn) at=55n"),
     ("i_stat", "meas tran i_stat avg i(vsupa) from=25n to=29n"),
     ("q_dec", "meas tran q_dec integ i(vsupa) from=39.9n to=48n"),
-    # Supplemental reverse-polarity cards (issue #158): measured like any
-    # other card (MAIN_MEAS mirrors the manifest verbatim), but none of them
-    # is a GRADED_CHECK_ROWS row -- the reverse quantities stay unscored.
-    ("tdr_a", "meas tran tdr_a trig v(clkn) val=0.5 rise=2 targ v(dran) val=0.5 fall=1 td=35n"),
-    ("tdr_b", "meas tran tdr_b trig v(clkn) val=0.5 rise=2 targ v(drbn) val=0.5 fall=1 td=35n"),
-    ("tdr_c", "meas tran tdr_c trig v(clkn) val=0.5 rise=2 targ v(drcn) val=0.5 fall=1 td=35n"),
-    ("dra_first", "meas tran dra_first find v(dran) at=18n"),
-    ("drb_first", "meas tran drb_first find v(drbn) at=18n"),
-    ("drc_first", "meas tran drc_first find v(drcn) at=18n"),
-    ("dra_end", "meas tran dra_end find v(dran) at=55n"),
-    ("drb_end", "meas tran drb_end find v(drbn) at=55n"),
-    ("drc_end", "meas tran drc_end find v(drcn) at=55n"),
 ]
 PROBE_MEAS = [("t_flip", "meas tran t_flip when v(dn)=0.5 rise=1 td=8u")]
 

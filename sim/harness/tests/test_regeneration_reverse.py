@@ -183,7 +183,11 @@ class ForwardUnchanged(unittest.TestCase):
         self.tb = htb.load(BENCH_DIR)
 
     def test_forward_cards_are_byte_identical_and_first(self):
-        self.assertEqual(list(self.tb.analyses[:len(FORWARD_ANALYSES)]), FORWARD_ANALYSES)
+        # FULL equality, not a prefix: the reverse cards live in
+        # reverse_ladder.analyses, never back in `analyses` -- options/
+        # analyses/offset_probe.analyses are hashed consumed fields that
+        # layout/pex pins against committed evidence (issue #158 review).
+        self.assertEqual(list(self.tb.analyses), FORWARD_ANALYSES)
 
     def test_forward_expressions_unchanged(self):
         for k, v in FORWARD_MEASURE.items():
@@ -217,16 +221,30 @@ class ReverseStructure(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.tb = htb.load(BENCH_DIR)
-        cls.text = cls.tb.netlist.read_text()
-        cls.cards = {line.split()[2]: line for line in cls.tb.analyses[1:]}
+        cls.text = cls.tb.netlist.read_text()          # the FORWARD fragment
+        cls.rev_text = cls.tb.reverse_ladder_path.read_text()
+        cls.cards = {line.split()[2]: line
+                     for line in cls.tb.reverse_ladder["analyses"]}
+        cls.fwd_cards = {line.split()[2]: line for line in cls.tb.analyses[1:]}
 
     def _param(self, name):
         return si(re.search(rf"^\.param {name}=(\S+)", self.text, re.M).group(1))
 
+    def test_ladder_lives_in_the_supplemental_fragment_not_the_forward_one(self):
+        # layout/pex pins the forward fragment and tb.json's consumed fields
+        # by hash and re-grades committed evidence from them: the mirrored
+        # instances must stay out of both (issue #158 review).
+        self.assertEqual(self.tb.reverse_ladder["netlist"],
+                         "tb_regeneration_reverse.spice")
+        for inst in REVERSE:
+            with self.subTest(inst=inst):
+                self.assertNotIn(f"vs{inst} ", self.text)
+                self.assertNotRegex(self.text, rf"(?m)^X{inst}\s")
+
     def test_mirrored_stimulus(self):
         for inst, (rung, twin, _, _) in REVERSE.items():
             with self.subTest(inst=inst):
-                self.assertEqual(self.text.count(ctl.reverse_pwl(inst, rung)), 1)
+                self.assertEqual(self.rev_text.count(ctl.reverse_pwl(inst, rung)), 1)
                 fwd = (f"vs{twin}  s{twin} 0 pwl(0 {{dut_vos-{rung}}} {{t_flip}} "
                        f"{{dut_vos-{rung}}} {{t_flip+1n}} {{dut_vos+{rung}}})")
                 self.assertEqual(self.text.count(fwd), 1, "forward twin changed")
@@ -234,14 +252,14 @@ class ReverseStructure(unittest.TestCase):
     def test_reverse_node_is_supply_normalized_output_of_reverse_instance(self):
         for inst, (_, _, _, node) in REVERSE.items():
             with self.subTest(inst=inst):
-                self.assertRegex(self.text, rf"(?m)^X{inst}\s+ap{inst} an{inst} clk ibn{inst} dout{inst} \S+ vdd 0 comparator_dut$")
-                self.assertRegex(self.text, rf"(?m)^B\w+\s+{node}\s+0 v = 'v\(dout{inst}\)/v\(vdd\)'$")
+                self.assertRegex(self.rev_text, rf"(?m)^X{inst}\s+ap{inst} an{inst} clk ibn{inst} dout{inst} \S+ vdd 0 comparator_dut$")
+                self.assertRegex(self.rev_text, rf"(?m)^B\w+\s+{node}\s+0 v = 'v\(dout{inst}\)/v\(vdd\)'$")
 
     def test_reverse_cards_select_second_strobe_falling_edge(self):
         for inst, (_, twin, name, node) in REVERSE.items():
             with self.subTest(card=name):
                 c = parse_card(self.cards[name])
-                f = parse_card(self.cards[f"td_{twin}"])
+                f = parse_card(self.fwd_cards[f"td_{twin}"])
                 self.assertEqual(c["targ"]["node"], node)
                 self.assertEqual((c["targ"]["edge"], c["targ"]["n"], c["targ"]["val"]), ("fall", 1, 0.5))
                 # identical trigger and window to the forward twin
@@ -297,7 +315,7 @@ class ReverseStructure(unittest.TestCase):
                          [c.split()[2] for c in FORWARD_ANALYSES[1:]])
 
     def test_negative_control_rewrite_applies_once_per_rung(self):
-        out = ctl.suppress_reverse_flip(self.text)
+        out = ctl.suppress_reverse_flip(self.rev_text)
         for inst, (rung, *_rest) in REVERSE.items():
             self.assertEqual(out.count(ctl.reverse_pwl(inst, rung)), 0)
             self.assertEqual(out.count(ctl.reverse_pwl(inst, rung, flip=False)), 1)
@@ -311,7 +329,8 @@ class ReverseWindowBehaviour(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         tb = htb.load(BENCH_DIR)
-        cls.cards = {line.split()[2]: line for line in tb.analyses[1:]}
+        cls.cards = {line.split()[2]: line
+                     for line in tb.reverse_ladder["analyses"]}
 
     def _waves(self, out):
         return {"clkn": CLKN, "dran": out}
@@ -346,6 +365,58 @@ class ReverseWindowBehaviour(unittest.TestCase):
         w = self._waves(reverse_out(40.75 * N))
         self.assertGreaterEqual(evaluate(self.cards["dra_first"], w), 0.9)
         self.assertLessEqual(evaluate(self.cards["dra_end"], w), 0.1)
+
+
+class HarnessDeckComposition(unittest.TestCase):
+    """The composed deck carries the supplemental fragment and its cards.
+
+    One transient: the forward fragment's `.include`, its `analyses` cards,
+    then the reverse fragment's `.include` and the reverse cards -- and only
+    then the `let m_*` expressions, which read vectors from both fragments.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        import tempfile
+        import json as _json
+        from harness import dut as hdut
+        from harness.corners import CORNERS, PvtPoint
+        from harness.runner import compose_deck
+        cls.tb = htb.load(BENCH_DIR)
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            dut_netlist = root / "comparator.spice"
+            dut_netlist.write_text(
+                "* stub DUT (never simulated here)\n"
+                ".subckt comparator_dut vinp vinn clk ibias dout doutb vdd vss\n"
+                "Xdut vinp vinn ibias dout doutb vdd vss comparator_dut_analog\n"
+                ".ends\n"
+                ".subckt comparator_dut_analog vinp vinn ibias aop aon vdd vss\n"
+                ".ends\n"
+                ".subckt comparator_dut_latch inp inn clk dout doutb vdd vss\n"
+                ".ends\n")
+            binding = root / "binding.json"
+            binding.write_text(_json.dumps({
+                "duts": {"the-dut": {
+                    "netlist": str(dut_netlist), "id": "the-dut",
+                    "provenance": "schematic"}},
+                "active": "the-dut",
+            }))
+            pdk = type("Pdk", (), {"variant": "gf180mcuD",
+                                   "version": "deadbeefdeadbeef",
+                                   "design_include": root / "design.ngspice",
+                                   "model_lib": root / "models.ngspice"})()
+            cls.deck = compose_deck(cls.tb, pdk, hdut.load(binding),
+                                    PvtPoint(corner=CORNERS["tt"], temp_c=27.0,
+                                             vdd=3.3, index=0))
+
+    def test_fragment_included_and_cards_appended_in_order(self):
+        self.assertIn(f'.include "{self.tb.reverse_ladder_path}"', self.deck)
+        first_rev = self.deck.index(self.tb.reverse_ladder["analyses"][0])
+        last_fwd = self.deck.index(FORWARD_ANALYSES[-1])
+        first_let = self.deck.index("  let m_")
+        self.assertLess(last_fwd, first_rev)
+        self.assertLess(first_rev, first_let)
 
 
 def _raw(td_a=0.70e-9, td_b=0.90e-9, td_c=1.05e-9, slow=0.0, missing=()):

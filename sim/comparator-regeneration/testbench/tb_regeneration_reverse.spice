@@ -1,0 +1,52 @@
+* Supplemental REVERSE-POLARITY MIRROR LADDER (issue #158) --------------
+* Declared by tb.json's `reverse_ladder` key and appended by the harness to
+* the SAME transient as the forward bench (one more .include; the fragment's
+* `.meas` cards are tb.json reverse_ladder.analyses).
+*
+* DELIBERATELY A SEPARATE FRAGMENT, NOT MORE OF tb_regeneration.spice AND
+* NOT MORE `analyses`: those are consumed fields, pinned by hash in
+* layout/pex (pex_measure.py PINNED_SHA256 / TB_JSON_DECK_SHA256,
+* parasitic_attribution.py TB_JSON_CONSUMED_SHA256), and the committed
+* parasitic-attribution / ground-c-budget campaigns are re-graded by
+* regenerating decks from the forward bench. A mirrored instance here or an
+* appended `analyses` card would change every regenerated deck's hash and
+* invalidate committed evidence that never ran with it (the failure
+* test_source_edit_alone_cannot_break_committed_verification exists to
+* catch). Supplemental characterization only: nothing scored reads these
+* quantities (spec/decision-records/DR-0005-metastability-target.md is
+* unchanged).
+*
+* Instances RA/RB/RC are A/B/C with the stimulus sign MIRRORED: POSITIVE for
+* the first strobe, NEGATIVE for the second, so the timed second decision
+* actively pulls DOWN an output the first strobe established HIGH. Same
+* rungs, same dut_vos centring (so for an extracted DUT each rung is a true
+* dv_* overdrive BELOW the probed trip point), same clock, same t_flip, same
+* supply-normalized 0.5 threshold, and the manifest times them with
+* `targ ... fall=1 td=35n` -- the same second-strobe window as A/B/C, so
+* neither the power-up resolution nor the first (positive) decision can be
+* picked up. The dv_*/dut_vos/t_flip parameters are defined by the forward
+* fragment (tb_regeneration.spice); this one only consumes them. The
+* mirrored instances share the main `vdd` rail (ideal source), so instance
+* A's separately integrated supply charge is unaffected.
+vsra sra 0 pwl(0 {dut_vos+dv_big} {t_flip} {dut_vos+dv_big} {t_flip+1n} {dut_vos-dv_big})
+Eapra apra cm sra 0 0.5
+Eanra anra cm sra 0 -0.5
+ibra vdd ibnra dc {dut_ib}
+Xra  apra anra clk ibnra doutra doutbra vdd 0 comparator_dut
+
+vsrb srb 0 pwl(0 {dut_vos+dv_mid} {t_flip} {dut_vos+dv_mid} {t_flip+1n} {dut_vos-dv_mid})
+Eaprb aprb cm srb 0 0.5
+Eanrb anrb cm srb 0 -0.5
+ibrb vdd ibnrb dc {dut_ib}
+Xrb  aprb anrb clk ibnrb doutrb doutbrb vdd 0 comparator_dut
+
+vsrc src 0 pwl(0 {dut_vos+dv_tiny} {t_flip} {dut_vos+dv_tiny} {t_flip+1n} {dut_vos-dv_tiny})
+Eaprc aprc cm src 0 0.5
+Eanrc anrc cm src 0 -0.5
+ibrc vdd ibnrc dc {dut_ib}
+Xrc  aprc anrc clk ibnrc doutrc doutbrc vdd 0 comparator_dut
+
+* ---- supply-normalized probes (mirrored outputs) -----------------------
+Bdran dran 0 v = 'v(doutra)/v(vdd)'
+Bdrbn drbn 0 v = 'v(doutrb)/v(vdd)'
+Bdrcn drcn 0 v = 'v(doutrc)/v(vdd)'
