@@ -9,17 +9,11 @@ Judge-approved PRs stuck under a `loom:operator` merge-risk hold — implementat
 
 - **#166**: sim(regeneration): reverse-polarity (HIGH->LOW) decision-time ladder across PVT (#158)
 
-## Very Important
+## Operator Priority
 
-`loom:very-important` (one counts per workspace); every stage takes these first.
+Issues the operator starred (`loom:operator-priority`); land these first.
 
-_None._
-
-## Important
-
-`loom:important`; taken before unlabelled work.
-
-_None._
+- **#3**: Gap-to-T1 tracker: gf180-comparator artifact-presence survey
 
 ## Ready
 
@@ -64,11 +58,10 @@ _None._
 
 ## Backlog Balance
 
-| Bucket | Count |
+| Tier | Count |
 |------|-------|
 | Operator merge-risk holds | 1 |
-| Very important | 0 |
-| Important | 0 |
+| Operator priority | 1 |
 | Ready (`loom:issue`) | 0 |
 | In Progress (`loom:building`) | 0 |
 | PRs awaiting review | 0 |
