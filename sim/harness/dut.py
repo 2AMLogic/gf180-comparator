@@ -102,6 +102,9 @@ class Dut:
     params: dict[str, float] = field(default_factory=dict)
     notes: tuple[str, ...] = ()
     available_ids: tuple[str, ...] = ()
+    #: Explicit schematic baseline identity (a ``dut_id``) an ``extracted``
+    #: binding is to be compared against (issue #262). Empty = none declared.
+    schematic_baseline: str = ""
 
     @property
     def netlist_sha256(self) -> str:
@@ -132,6 +135,8 @@ class Dut:
             "dut_netlist": str(self.netlist.relative_to(REPO_ROOT)),
             "dut_netlist_sha256": self.netlist_sha256,
             "dut_params": dict(sorted(self.params.items())),
+            **({"schematic_baseline_id": self.schematic_baseline}
+               if self.schematic_baseline else {}),
         }
 
 
@@ -255,4 +260,5 @@ def load(path: str | Path | None = None, select: str | None = None) -> Dut:
         params=params,
         notes=tuple(config.get("notes") or ()),
         available_ids=available,
+        schematic_baseline=str(config.get("schematic_baseline") or ""),
     )

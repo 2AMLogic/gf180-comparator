@@ -82,7 +82,9 @@ def main() -> int:
     print(f"deck={report['provenance']['deck']['name']} "
           f"content_hash={report['provenance']['deck']['content_hash']} "
           f"klt_version={report['provenance']['klt_version']}")
-    return 0 if report["status"] == "clean" else exit_code
+    # Fail closed: any non-clean status is a non-zero exit, even if klt
+    # itself exited 0 (#184).
+    return 0 if report["status"] == "clean" else (exit_code or 1)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,105 @@
+{
+ "schema": "gf180-comparator/klt-source-bundle",
+ "version": 2,
+ "generator": "sim/tools/mk_klt_request.py",
+ "generated_utc": "2026-10-10T01:56:52Z",
+ "bench": "comparator-kickback",
+ "origin": {
+  "commit": "bf851ecbb701cac8117b06b306b280ecc9c8f3e9",
+  "dirty": false,
+  "dirty_paths": [],
+  "checked_paths": [
+   "design",
+   "sim/tools",
+   "sim/harness",
+   "sim/comparator-kickback/testbench",
+   "sim/dut.json",
+   "design/comparator.spice"
+  ]
+ },
+ "dut": {
+  "selector": null,
+  "key": "comparator-dr0001",
+  "dut_id": "comparator-dr0001",
+  "provenance": "schematic",
+  "netlist": "design/comparator.spice",
+  "netlist_sha256": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a",
+  "params": {
+   "dut_ib": 1e-05,
+   "dut_vcm": 1.65
+  },
+  "binding_config": "sim/dut.json",
+  "binding_entry_sha256": "77228add0ad0b1b62eda65cfcfd0f79c62b5d289ecd7eb1caa1522de9afb274e",
+  "staged_netlist": "sources/dut/comparator.spice",
+  "staged_binding": "sources/dut-binding.json"
+ },
+ "testbench": {
+  "experiment": "comparator-kickback",
+  "dir": "sim/comparator-kickback/testbench",
+  "netlist": "tb_kickback.spice",
+  "netlist_sha256": "f42495917522fa2c726d29ad6ef053284482489c93da3b9bc2236678fea4e090",
+  "manifest_sha256": "b4a30133de89cda6459ec8f2ed2bedadb2ad942c09cf503757ae7e5f58e3a0e1",
+  "staged_dir": "sources/testbench"
+ },
+ "parameters": {
+  "corners": [
+   "tt",
+   "ff",
+   "ss",
+   "fs",
+   "sf"
+  ],
+  "temperatures_c": [
+   -40.0,
+   27.0,
+   125.0
+  ],
+  "supply_tolerance": 0.1,
+  "supply_v": [
+   2.97,
+   3.3,
+   3.63
+  ],
+  "mc_n": null
+ },
+ "requests": {
+  "main-v2.97": {
+   "leg": "main",
+   "vdd": 2.97,
+   "request": "request-main-v2.97.json",
+   "request_sha256": "6bfe9b28c3f2f20450631d8c3bb7136819ebc075e2d6ccd18053acd035277104",
+   "netlist": "body-v2.97.spice",
+   "netlist_sha256": "479f7bc990c15b676160b4faeab42c37848684f153efe0a65e8a24bb7e5aea62"
+  },
+  "main-v3.30": {
+   "leg": "main",
+   "vdd": 3.3,
+   "request": "request-main-v3.30.json",
+   "request_sha256": "088728e9f685413132c3a861fdbc11bbc2456a0c39c52708dc7cea5fe3fb86b9",
+   "netlist": "body-v3.30.spice",
+   "netlist_sha256": "cb3847ecbf2339f238d7a52d0a0f464c18d0418df65ebf89c4ebcf5f161b06a5"
+  },
+  "main-v3.63": {
+   "leg": "main",
+   "vdd": 3.63,
+   "request": "request-main-v3.63.json",
+   "request_sha256": "a902ae670b549623fca18690ca0c56cfec468a521d1d98f29a32dcda64da3a16",
+   "netlist": "body-v3.63.spice",
+   "netlist_sha256": "74c494a8e4844847b07e6eef6356a35a8ea752d05753d435bdba14c75b4d0f52"
+  }
+ },
+ "staged": {
+  "body-v2.97.spice": "479f7bc990c15b676160b4faeab42c37848684f153efe0a65e8a24bb7e5aea62",
+  "body-v3.30.spice": "cb3847ecbf2339f238d7a52d0a0f464c18d0418df65ebf89c4ebcf5f161b06a5",
+  "body-v3.63.spice": "74c494a8e4844847b07e6eef6356a35a8ea752d05753d435bdba14c75b4d0f52",
+  "design.ngspice": "091cb530bf85160a1f07878fb81f789ca367d018991c8ab41a584cd1a85c6692",
+  "request-main-v2.97.json": "6bfe9b28c3f2f20450631d8c3bb7136819ebc075e2d6ccd18053acd035277104",
+  "request-main-v3.30.json": "088728e9f685413132c3a861fdbc11bbc2456a0c39c52708dc7cea5fe3fb86b9",
+  "request-main-v3.63.json": "a902ae670b549623fca18690ca0c56cfec468a521d1d98f29a32dcda64da3a16",
+  "sources/dut/comparator.spice": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a",
+  "sources/dut-binding.json": "9ed024b2e635e241570e47b0e48c2fbe8719c0c4dbd38c92b7e97c1b06e49701",
+  "sources/testbench/tb.json": "b4a30133de89cda6459ec8f2ed2bedadb2ad942c09cf503757ae7e5f58e3a0e1",
+  "sources/testbench/tb_kickback.spice": "f42495917522fa2c726d29ad6ef053284482489c93da3b9bc2236678fea4e090",
+  "sources/testbench/tb_vosprobe.spice": "3a1bd8f03483f1028effeb71342f46e468aa007a4f4902cbc0c0ec25c5bf9632"
+ }
+}

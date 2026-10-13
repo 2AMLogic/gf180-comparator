@@ -41,7 +41,8 @@ every job travels with the evidence.
 THE BENCH IS THE COMMITTED ONE, MECHANICALLY RE-EXPRESSED
 ---------------------------------------------------------
 The two bench fragments are read from `sim/comparator-regeneration/
-testbench/` (pinned by sha256 below) and rewritten by exact-match line
+testbench/` (SPICE fragments pinned whole-file by sha256 below; tb.json pinned
+by its deck fields and graded-check bounds, not whole-file) and rewritten by exact-match line
 substitutions, each asserted to apply exactly once. The rewrites exist only
 because `klt sim` sets the supply corner with `alter <source>=<dc>`, which
 cannot reach a `{vdd_val}` parameter inside a PULSE/PWL source:
@@ -101,6 +102,7 @@ import shlex
 import subprocess
 import sys
 import tempfile
+from pathlib import Path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(os.path.dirname(HERE))
@@ -111,14 +113,37 @@ TB_PROBE = os.path.join(BENCH_DIR, "tb_vosprobe.spice")
 DUT_JSON = os.path.join(REPO_ROOT, "sim", "dut.json")
 SCHEMATIC_NETLIST = os.path.join(REPO_ROOT, "design", "comparator.spice")
 
-#: The committed bench files this re-expression was written against. A
-#: changed fragment fails loudly here instead of being silently re-expressed
-#: by rewrite rules written for a different text.
+#: The committed SPICE fragments this re-expression was written against, pinned
+#: WHOLE-FILE. A changed fragment fails loudly here instead of being silently
+#: re-expressed by rewrite rules written for a different text.
+#:
+#: tb.json is NOT pinned whole-file (its claim/description text and
+#: supplemental checks legitimately evolve). Two narrower contracts apply:
+#:  * deck fields (TB_JSON_DECK_SHA256): `options`, `analyses` and
+#:    `offset_probe.analyses`, the only manifest fields that reach a deck or
+#:    a `klt sim` request;
+#:  * grading subset (TB_JSON_GRADING_SHA256): the `min`/`max` bounds of the
+#:    checks for rows this adapter emits (GRADED_CHECK_ROWS). Supplemental
+#:    checks for rows it does not emit (e.g. td_od1_over_tau) may float.
 PINNED_SHA256 = {
-    TB_JSON: "e2418d7b77608291036bdaca675d3bba95d0ed3724fcaf034b53eefa4d190704",
     TB_MAIN: "ef3dc3be1476a8cbacf2afc13c33abb3b116dd7e7fd7e3e81219f0f12edf66da",
     TB_PROBE: "56475d33709d034f209970fe4cecd0d8095e2b9a0c9aaa078569dadf9674a0d0",
 }
+
+#: Canonical sha256 of tb.json's deck fields (see _tb_deck_sha256); same
+#: encoding as parasitic_attribution.tb_consumed_sha256.
+TB_JSON_DECK_SHA256 = "462b79b389613fbc06de8037311ed54b0820a60f48778e1a1322c48c94a13f74"
+
+#: Rows this adapter emits that are graded by a tb.json check.
+GRADED_CHECK_ROWS = (
+    "td_od50_ns", "tau_ps", "resolve_decades",
+    "dout_od50_end", "dout_od1_end", "dout_od01_end",
+    "dout_od50_first", "dout_od1_first", "dout_od01_first",
+    "i_static_ua",
+)
+#: Canonical sha256 of the `min`/`max` bounds of GRADED_CHECK_ROWS' checks
+#: (see _tb_grading_sha256).
+TB_JSON_GRADING_SHA256 = "aabcb437b756bc07269fb27b4e0f75681aa924e3af4257c2d3919fb04229e1d3"
 
 #: The PDK `design.ngspice` global switches the harness `.include`s ahead of
 #: every corner section (sim/harness/corners.py), inlined verbatim because a
@@ -166,7 +191,56 @@ def corner_id(process: str, temp_c: float, vdd: float) -> str:
 
 
 def _sha256(path: str) -> str:
-    return hashlib.sha256(open(path, "rb").read()).hexdigest()
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def _load_tb() -> dict:
+    """tb.json, or exit naming the failing contract (before any fleet work)."""
+    rel = os.path.relpath(TB_JSON, REPO_ROOT)
+    try:
+        tb = json.loads(Path(TB_JSON).read_text())
+    except (OSError, ValueError) as e:
+        sys.exit(f"{rel}: cannot be read as JSON ({e}) -- the manifest contract "
+                 "(deck fields, grading subset) cannot be checked")
+    if not isinstance(tb, dict):
+        sys.exit(f"{rel}: top level is not a JSON object")
+    return tb
+
+
+def _tb_deck_sha256(tb: dict) -> str:
+    """Canonical hash of the manifest fields that reach a deck or request.
+
+    Same encoding as parasitic_attribution.tb_consumed_sha256 (not imported:
+    the production adapter must not depend on the attribution campaign).
+    """
+    try:
+        fields = {"options": tb["options"], "analyses": tb["analyses"],
+                  "offset_probe_analyses": tb["offset_probe"]["analyses"]}
+    except (KeyError, TypeError) as e:
+        sys.exit(f"{os.path.relpath(TB_JSON, REPO_ROOT)}: required deck field "
+                 f"missing or malformed ({e!r}): need options, analyses, "
+                 "offset_probe.analyses")
+    if not (isinstance(fields["options"], list) and isinstance(fields["analyses"], list)
+            and isinstance(fields["offset_probe_analyses"], list)):
+        sys.exit(f"{os.path.relpath(TB_JSON, REPO_ROOT)}: deck fields malformed "
+                 "(options and both analyses must be lists)")
+    return hashlib.sha256(json.dumps(fields, sort_keys=True).encode()).hexdigest()
+
+
+def _tb_grading_sha256(tb: dict) -> str:
+    """Canonical hash of the min/max bounds of the checks of emitted rows."""
+    checks = tb.get("checks")
+    if not isinstance(checks, dict):
+        sys.exit(f"{os.path.relpath(TB_JSON, REPO_ROOT)}: required `checks` "
+                 "missing or not an object")
+    subset = {}
+    for name in GRADED_CHECK_ROWS:
+        check = checks.get(name)
+        if not isinstance(check, dict):
+            sys.exit(f"{os.path.relpath(TB_JSON, REPO_ROOT)}: graded check "
+                     f"{name!r} missing or malformed")
+        subset[name] = {k: check[k] for k in ("min", "max") if k in check}
+    return hashlib.sha256(json.dumps(subset, sort_keys=True).encode()).hexdigest()
 
 
 def _check_pins() -> None:
@@ -174,11 +248,28 @@ def _check_pins() -> None:
         got = _sha256(path)
         if got != want:
             sys.exit(
-                f"{os.path.relpath(path, REPO_ROOT)}: sha256 {got} is not the "
-                f"pinned {want} this re-expression was written against -- "
+                f"{os.path.relpath(path, REPO_ROOT)}: SPICE fragment sha256 {got} is "
+                f"not the pinned {want} this re-expression was written against -- "
                 "update the rewrite rules in layout/pex/pex_measure.py and "
                 "re-pin, do not just re-pin"
             )
+    tb = _load_tb()
+    got = _tb_deck_sha256(tb)
+    if got != TB_JSON_DECK_SHA256:
+        sys.exit(
+            f"{os.path.relpath(TB_JSON, REPO_ROOT)}: deck-field contract broken: "
+            f"options/analyses/offset_probe.analyses hash {got}, not the pinned "
+            f"{TB_JSON_DECK_SHA256} -- update the rewrite rules and MAIN_MEAS/"
+            "PROBE_MEAS, do not just re-pin"
+        )
+    got = _tb_grading_sha256(tb)
+    if got != TB_JSON_GRADING_SHA256:
+        sys.exit(
+            f"{os.path.relpath(TB_JSON, REPO_ROOT)}: grading-subset contract broken: "
+            f"min/max of the emitted rows' checks hash {got}, not the pinned "
+            f"{TB_JSON_GRADING_SHA256} -- a graded bound changed; review the "
+            "scored-row semantics before re-pinning"
+        )
 
 
 def _replace_once(text: str, old: str, new: str, where: str) -> str:
@@ -204,7 +295,7 @@ _CLOCK_NEW = (
 
 
 def _main_body() -> str:
-    text = _strip_comments(open(TB_MAIN).read())
+    text = _strip_comments(Path(TB_MAIN).read_text())
     text = _replace_once(text, _CLOCK_OLD, _CLOCK_NEW, "tb_regeneration.spice")
     for inst, rung in (("a", "dv_big"), ("b", "dv_mid"), ("c", "dv_tiny")):
         old = (
@@ -224,7 +315,7 @@ def _main_body() -> str:
 
 
 def _probe_body() -> str:
-    text = _strip_comments(open(TB_PROBE).read())
+    text = _strip_comments(Path(TB_PROBE).read_text())
     text = _replace_once(text, _CLOCK_OLD, _CLOCK_NEW, "tb_vosprobe.spice")
     _assert_vdd_val_only_on_supplies(text, ("vsup",), "tb_vosprobe.spice")
     return text
@@ -257,7 +348,7 @@ def _vos_source(vos_by_point: dict[tuple[float, float], float]) -> str:
 
 
 def _dut_params() -> list[str]:
-    duts = json.load(open(DUT_JSON))["duts"]
+    duts = json.loads(Path(DUT_JSON).read_text())["duts"]
     params = duts["comparator-dr0001"]["params"]
     layout_params = duts["comparator-dr0001-layout"]["params"]
     if params != layout_params:
@@ -266,7 +357,7 @@ def _dut_params() -> list[str]:
 
 
 def _flatten(dut_netlist_text: str, body: str, extra: list[str]) -> str:
-    tb = json.load(open(TB_JSON))
+    tb = json.loads(Path(TB_JSON).read_text())
     lines = [
         "* GENERATED by layout/pex/pex_measure.py (issue #81) -- do not edit",
         DESIGN_SWITCHES,
@@ -309,7 +400,10 @@ PROBE_MEAS = [("t_flip", "meas tran t_flip when v(dn)=0.5 rise=1 td=8u")]
 
 def _check_meas_against_manifest() -> None:
     """The `.meas` cards above are the manifest's own analyses, verbatim."""
-    tb = json.load(open(TB_JSON))
+    tb = _load_tb()
+    if not isinstance(tb.get("analyses"), list) or not isinstance(
+            tb.get("offset_probe", {}).get("analyses"), list):
+        sys.exit("tb.json analyses / offset_probe.analyses missing or malformed")
     if [c for _, c in MAIN_MEAS] != tb["analyses"][1:] or tb["analyses"][0] != "tran 5p 60n":
         sys.exit("tb.json analyses changed -- MAIN_MEAS no longer mirrors them")
     probe = tb["offset_probe"]["analyses"]
@@ -439,7 +533,7 @@ def _dut_text(side: str, netlist: str, workdir: str) -> tuple[str, str]:
     if side == "schematic":
         if os.path.realpath(netlist) != os.path.realpath(SCHEMATIC_NETLIST):
             sys.exit(f"schematic side got {netlist}, expected design/comparator.spice")
-        text = open(netlist).read()
+        text = Path(netlist).read_text()
         return text, _sha256(netlist)
     # run_extract_sim imports its sibling `layout_common` by bare name.
     sys.path.insert(0, os.path.join(REPO_ROOT, "layout"))
@@ -450,7 +544,7 @@ def _dut_text(side: str, netlist: str, workdir: str) -> tuple[str, str]:
     dut_path = os.path.join(workdir, "comparator.dut-layout.spice")
     mod._adapt_netlist(netlist, dut_path)
     mod._check_interface_contract(dut_path)
-    return open(dut_path).read(), _sha256(dut_path)
+    return Path(dut_path).read_text(), _sha256(dut_path)
 
 
 def measure(side: str, netlist: str, workdir: str, backend: str,
@@ -458,7 +552,7 @@ def measure(side: str, netlist: str, workdir: str, backend: str,
     _check_pins()
     _check_meas_against_manifest()
     os.makedirs(workdir, exist_ok=True)
-    checks = json.load(open(TB_JSON))["checks"]
+    checks = _load_tb()["checks"]
     client = _klt_identity()
     dut_text, dut_sha = _dut_text(side, netlist, workdir)
     processes = [only[0]] if only else list(PROCESS_BUNDLES)

@@ -1,0 +1,421 @@
+{
+  "brackets": [
+    {
+      "axis": "fraction_c",
+      "fails_at": 1.0,
+      "fails_id": "ctrl",
+      "fraction_r": 1.0,
+      "meets_at": 0.75,
+      "meets_id": "cgr-0750-1000",
+      "point": "tt_125c_2.97v"
+    }
+  ],
+  "candidates": [],
+  "controls": {
+    "ctrl@ss_125c_2.97v": {
+      "abs_diff_ns": 0.0,
+      "cited_dut_vos_v": -0.005186500000000004,
+      "cited_td_od50_ns": 2.02956,
+      "reproduces": true,
+      "rerun_dut_vos_v": -0.005186500000000004,
+      "rerun_td_od50_ns": 2.02956
+    },
+    "ctrl@tt_125c_2.97v": {
+      "abs_diff_ns": 0.0,
+      "cited_dut_vos_v": -0.0089074,
+      "cited_td_od50_ns": 1.58774,
+      "reproduces": true,
+      "rerun_dut_vos_v": -0.0089074,
+      "rerun_td_od50_ns": 1.58774
+    },
+    "sch@ss_125c_2.97v": {
+      "abs_diff_ns": 0.0,
+      "cited_td_od50_ns": 1.23747,
+      "reproduces": true,
+      "rerun_td_od50_ns": 1.23747
+    },
+    "sch@tt_125c_2.97v": {
+      "abs_diff_ns": 0.0,
+      "cited_td_od50_ns": 0.986719,
+      "reproduces": true,
+      "rerun_td_od50_ns": 0.986719
+    }
+  },
+  "controls_from": null,
+  "fastest_scaled_per_point": {
+    "ss_125c_2.97v": {
+      "id": "cgr-0250-0500",
+      "margin_to_1p5ns_ns": -0.006199999999999983,
+      "td_od50_ns": 1.5062
+    },
+    "tt_125c_2.97v": {
+      "id": "cgr-0250-0500",
+      "margin_to_1p5ns_ns": 0.30191999999999997,
+      "td_od50_ns": 1.19808
+    }
+  },
+  "generated_by": "layout/pex/parasitic_attribution.py combo-analyze",
+  "issue": 264,
+  "kind": "grid",
+  "missing": [],
+  "non_monotonic_per_point": {
+    "ss_125c_2.97v": false,
+    "tt_125c_2.97v": false
+  },
+  "outcome": "no tested cell meets 1.5 ns at every stage point and no every-point crossing bracket exists (tested (f_c, f_r): (0.75, 1), (0.5, 1), (0.25, 1), (0.75, 0.5), (0.5, 0.5), (0.25, 0.5))",
+  "points": [
+    "tt_125c_2.97v",
+    "ss_125c_2.97v"
+  ],
+  "scope": "diagnostic only: every extracted ground-C card x f_c and every series-R leg card x f_r, f_c and f_r in (0, 1]; coupling C, device geometry and the vsubs tie fixed; each variant centred on its own probed trip point; no spec row scored, T1 item 7 unchanged",
+  "selected_candidate": null,
+  "source_sha256": {
+    "attribution_json_229": "08b2a55136b943c7cbc91c7b881c3df9bb2629857c551dc3fe164e8ef76b633b",
+    "cited_report": "385fadcf7cd74c60508e01b3cd0341df7b64341479f437c0446c09bd07497dd8",
+    "extracted_dut": "a7ca3c00ea4db8a2b00cad69f2edc2d9320738499049cfa9c7faec517b7b5f45",
+    "ground_c_budget_243_readme": "1fdc0c1f773c26004145c2122694197c04a5c7413ebc794e7319b76daef5ee7d",
+    "parasitic_attribution_py": "e1d26edf047f97b99424f8feac005fd03d319a3c645047bcaf5833d6906fcdcf",
+    "pex_measure_py": "f901d756a36c6520b12f2e9b3066aef0061306241fecf11aca897b5d8e78a7b2",
+    "schematic_dut": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a",
+    "tb_json_consumed_fields": "462b79b389613fbc06de8037311ed54b0820a60f48778e1a1322c48c94a13f74"
+  },
+  "study_valid": true,
+  "variants": [
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "dout_od50_end": 0.999968,
+          "dut_vos_shift_v": 0.0,
+          "dut_vos_v": -0.005186500000000004,
+          "job_ids": [
+            "klt-sim-5724084d1464"
+          ],
+          "ladder_netlist_sha256": "f71d3b365d4fdef93ffae4223816b87718bd418108c89967d53e5f511b506410",
+          "margin_to_1p5ns_ns": -0.52956,
+          "meets_1p5ns": false,
+          "probe_job_ids": [
+            "klt-sim-15b59ed12c68"
+          ],
+          "tau_ps": 222.15465632797049,
+          "td_od01_ns": 3.2256,
+          "td_od1_ns": 2.71407,
+          "td_od50_ns": 2.02956,
+          "unresolved_count": 0
+        },
+        "tt_125c_2.97v": {
+          "dout_od50_end": 0.999951,
+          "dut_vos_shift_v": 0.0,
+          "dut_vos_v": -0.0089074,
+          "job_ids": [
+            "klt-sim-fe58a58e3d0e"
+          ],
+          "ladder_netlist_sha256": "6722364fb6609621e4789b8352ab584678bd2ddab08b61b72cf28e484d9bdd07",
+          "margin_to_1p5ns_ns": -0.08773999999999993,
+          "meets_1p5ns": false,
+          "probe_job_ids": [
+            "klt-sim-15b59ed12c68"
+          ],
+          "tau_ps": 130.07988321966207,
+          "td_od01_ns": 2.35539,
+          "td_od1_ns": 2.0558699999999996,
+          "td_od50_ns": 1.58774,
+          "unresolved_count": 0
+        }
+      },
+      "fraction_c": 1.0,
+      "fraction_r": 1.0,
+      "id": "ctrl",
+      "probe_deck_sha256": "171b9eace488887991790ec89f3d9bad981a8f810b4a4ad53840801bf41bdb9f",
+      "total_ground_c_ff": 493.511545,
+      "total_series_r_ohm": 3380.12169999932
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "dout_od50_end": 0.999973,
+          "dut_vos_shift_v": 0.0008396999999999988,
+          "dut_vos_v": -0.004346800000000005,
+          "job_ids": [
+            "klt-sim-2029a2f79675"
+          ],
+          "ladder_netlist_sha256": "947d8ebd74e4fcba0b5e697ff17e6bc45586223165d8cd3024d492d8da7ef334",
+          "margin_to_1p5ns_ns": -0.35389000000000004,
+          "meets_1p5ns": false,
+          "probe_job_ids": [
+            "klt-sim-7948d32a58c9"
+          ],
+          "tau_ps": 185.03984990451863,
+          "td_od01_ns": 2.9086600000000002,
+          "td_od1_ns": 2.4825899999999996,
+          "td_od50_ns": 1.85389,
+          "unresolved_count": 0
+        },
+        "tt_125c_2.97v": {
+          "dout_od50_end": 0.999959,
+          "dut_vos_shift_v": 0.001499799999999999,
+          "dut_vos_v": -0.0074076,
+          "job_ids": [
+            "klt-sim-928b336d7991"
+          ],
+          "ladder_netlist_sha256": "1087c3e937da41d2a8093bc1ec34efe86d25203a0ba7daf250af5aa24f511069",
+          "margin_to_1p5ns_ns": 0.039919999999999956,
+          "meets_1p5ns": true,
+          "probe_job_ids": [
+            "klt-sim-7948d32a58c9"
+          ],
+          "tau_ps": 119.98253651541133,
+          "td_od01_ns": 2.1630000000000003,
+          "td_od1_ns": 1.8867300000000002,
+          "td_od50_ns": 1.46008,
+          "unresolved_count": 0
+        }
+      },
+      "fraction_c": 0.75,
+      "fraction_r": 1.0,
+      "id": "cgr-0750-1000",
+      "probe_deck_sha256": "3c848781dcc08aacc7446eab64cd183f60819c0aee887ab709b031b486d71ab4",
+      "total_ground_c_ff": 370.13365875,
+      "total_series_r_ohm": 3380.12169999932
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "dout_od50_end": 0.999979,
+          "dut_vos_shift_v": 0.001859600000000003,
+          "dut_vos_v": -0.0033269000000000007,
+          "job_ids": [
+            "klt-sim-b6ba0ff04104"
+          ],
+          "ladder_netlist_sha256": "5b7dfd0e15bc1e7dc0e06c10d290ef72286cee2549d4d01fddda0b99772a8d44",
+          "margin_to_1p5ns_ns": -0.18457999999999997,
+          "meets_1p5ns": false,
+          "probe_job_ids": [
+            "klt-sim-0bbf21dc13c6"
+          ],
+          "tau_ps": 159.7421963336541,
+          "td_od01_ns": 2.62637,
+          "td_od1_ns": 2.2585499999999996,
+          "td_od50_ns": 1.68458,
+          "unresolved_count": 0
+        },
+        "tt_125c_2.97v": {
+          "dout_od50_end": 0.999969,
+          "dut_vos_shift_v": 0.0032995999999999963,
+          "dut_vos_v": -0.005607800000000003,
+          "job_ids": [
+            "klt-sim-1502a6a0861c"
+          ],
+          "ladder_netlist_sha256": "3622d6cbf0c6b3f9de977b78476609c3dc731b8bec721211c935132f9eaddb4a",
+          "margin_to_1p5ns_ns": 0.16520999999999986,
+          "meets_1p5ns": true,
+          "probe_job_ids": [
+            "klt-sim-0bbf21dc13c6"
+          ],
+          "tau_ps": 111.7179125247925,
+          "td_od01_ns": 1.9785700000000002,
+          "td_od1_ns": 1.72133,
+          "td_od50_ns": 1.3347900000000001,
+          "unresolved_count": 0
+        }
+      },
+      "fraction_c": 0.5,
+      "fraction_r": 1.0,
+      "id": "cgr-0500-1000",
+      "probe_deck_sha256": "8707b18f5da7387885d180f6e92fa24e21b0858b0b08db427a0f36a15882e2d2",
+      "total_ground_c_ff": 246.7557725,
+      "total_series_r_ohm": 3380.12169999932
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "dout_od50_end": 0.999988,
+          "dut_vos_shift_v": 0.003149100000000002,
+          "dut_vos_v": -0.0020374000000000017,
+          "job_ids": [
+            "klt-sim-a403db1283a9"
+          ],
+          "ladder_netlist_sha256": "1d452f94241930192a276cf68c7b9cfacd6174efc39f59b938d74b7858f6aca9",
+          "margin_to_1p5ns_ns": -0.022029999999999994,
+          "meets_1p5ns": false,
+          "probe_job_ids": [
+            "klt-sim-6ece492b4767"
+          ],
+          "tau_ps": 130.9615010179256,
+          "td_od01_ns": 2.3405,
+          "td_od1_ns": 2.03895,
+          "td_od50_ns": 1.52203,
+          "unresolved_count": 0
+        },
+        "tt_125c_2.97v": {
+          "dout_od50_end": 0.999983,
+          "dut_vos_shift_v": 0.0055195,
+          "dut_vos_v": -0.0033878999999999992,
+          "job_ids": [
+            "klt-sim-32b43a09b9f0"
+          ],
+          "ladder_netlist_sha256": "e8a2019bcc4a5367bee505068ec8655c7629a68da3e5e54605b8284a963f1621",
+          "margin_to_1p5ns_ns": 0.2882,
+          "meets_1p5ns": true,
+          "probe_job_ids": [
+            "klt-sim-6ece492b4767"
+          ],
+          "tau_ps": 104.05695786401917,
+          "td_od01_ns": 1.79899,
+          "td_od1_ns": 1.5593899999999998,
+          "td_od50_ns": 1.2118,
+          "unresolved_count": 0
+        }
+      },
+      "fraction_c": 0.25,
+      "fraction_r": 1.0,
+      "id": "cgr-0250-1000",
+      "probe_deck_sha256": "343c03624dc5f4bf8393686d2198dfcde5cabf6715a555577f03cb7c258e6964",
+      "total_ground_c_ff": 123.3778862,
+      "total_series_r_ohm": 3380.12169999932
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "dout_od50_end": 0.999973,
+          "dut_vos_shift_v": 0.0010497000000000006,
+          "dut_vos_v": -0.004136800000000003,
+          "job_ids": [
+            "klt-sim-d03e6825735b"
+          ],
+          "ladder_netlist_sha256": "7dc17f2dce8e380bc4e54b32dd42ea6ab5c2c860af9b052a8635b5aafe114278",
+          "margin_to_1p5ns_ns": -0.33472000000000013,
+          "meets_1p5ns": false,
+          "probe_job_ids": [
+            "klt-sim-88424566fed6"
+          ],
+          "tau_ps": 183.60667811423767,
+          "td_od01_ns": 2.8796,
+          "td_od1_ns": 2.45683,
+          "td_od50_ns": 1.8347200000000001,
+          "unresolved_count": 0
+        },
+        "tt_125c_2.97v": {
+          "dout_od50_end": 0.99996,
+          "dut_vos_shift_v": 0.0017697999999999985,
+          "dut_vos_v": -0.007137600000000001,
+          "job_ids": [
+            "klt-sim-bb754d9e8774"
+          ],
+          "ladder_netlist_sha256": "f82e2af706bf0807c9455b43bce2543839407fab7974c83b88059558c2befcb2",
+          "margin_to_1p5ns_ns": 0.05606,
+          "meets_1p5ns": true,
+          "probe_job_ids": [
+            "klt-sim-88424566fed6"
+          ],
+          "tau_ps": 123.28317457787615,
+          "td_od01_ns": 2.1507300000000003,
+          "td_od1_ns": 1.86686,
+          "td_od50_ns": 1.44394,
+          "unresolved_count": 0
+        }
+      },
+      "fraction_c": 0.75,
+      "fraction_r": 0.5,
+      "id": "cgr-0750-0500",
+      "probe_deck_sha256": "06223692a9e815b329f1be0256af79a1442e927a2727fe9cbf36be638e094b49",
+      "total_ground_c_ff": 370.13365875,
+      "total_series_r_ohm": 1690.06084999997
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "dout_od50_end": 0.99998,
+          "dut_vos_shift_v": 0.0020698000000000036,
+          "dut_vos_v": -0.0031167,
+          "job_ids": [
+            "klt-sim-279d9b75047e"
+          ],
+          "ladder_netlist_sha256": "06220535f5f09fc6b85afb87edb7aef1643615b65d1b338c0af4ab45a3f5a6c4",
+          "margin_to_1p5ns_ns": -0.16711999999999994,
+          "meets_1p5ns": false,
+          "probe_job_ids": [
+            "klt-sim-65a8ad05bc53"
+          ],
+          "tau_ps": 159.23841473464634,
+          "td_od01_ns": 2.60184,
+          "td_od1_ns": 2.23518,
+          "td_od50_ns": 1.66712,
+          "unresolved_count": 0
+        },
+        "tt_125c_2.97v": {
+          "dout_od50_end": 0.99997,
+          "dut_vos_shift_v": 0.0035696999999999986,
+          "dut_vos_v": -0.005337700000000001,
+          "job_ids": [
+            "klt-sim-c884193fb068"
+          ],
+          "ladder_netlist_sha256": "04110ba5c5b6a3d0f870f176d82b875f0934ff8ff4bab265e60b3913762fb37f",
+          "margin_to_1p5ns_ns": 0.18011,
+          "meets_1p5ns": true,
+          "probe_job_ids": [
+            "klt-sim-65a8ad05bc53"
+          ],
+          "tau_ps": 114.98380702870496,
+          "td_od01_ns": 1.9678499999999999,
+          "td_od1_ns": 1.70309,
+          "td_od50_ns": 1.31989,
+          "unresolved_count": 0
+        }
+      },
+      "fraction_c": 0.5,
+      "fraction_r": 0.5,
+      "id": "cgr-0500-0500",
+      "probe_deck_sha256": "34649d3a49587a30e5e47147a1e53d146029b7f46a7b02cfb769aa1d0fb543dd",
+      "total_ground_c_ff": 246.7557725,
+      "total_series_r_ohm": 1690.06084999997
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "dout_od50_end": 0.999988,
+          "dut_vos_shift_v": 0.0033591000000000037,
+          "dut_vos_v": -0.0018273999999999999,
+          "job_ids": [
+            "klt-sim-6f66a29f6fec"
+          ],
+          "ladder_netlist_sha256": "0a1c4f77054c805fde27eb878ffd119bea18036a44cba19c74385e1b871a650c",
+          "margin_to_1p5ns_ns": -0.006199999999999983,
+          "meets_1p5ns": false,
+          "probe_job_ids": [
+            "klt-sim-aa4482646869"
+          ],
+          "tau_ps": 131.50002617548557,
+          "td_od01_ns": 2.32083,
+          "td_od1_ns": 2.01804,
+          "td_od50_ns": 1.5062,
+          "unresolved_count": 0
+        },
+        "tt_125c_2.97v": {
+          "dout_od50_end": 0.999983,
+          "dut_vos_shift_v": 0.005819299999999996,
+          "dut_vos_v": -0.0030881000000000033,
+          "job_ids": [
+            "klt-sim-7b8e216656bb"
+          ],
+          "ladder_netlist_sha256": "2e93ead75e14dfced8260f76b7443d3b867d1d9c20312274b3116f4c9b0ea056",
+          "margin_to_1p5ns_ns": 0.30191999999999997,
+          "meets_1p5ns": true,
+          "probe_job_ids": [
+            "klt-sim-aa4482646869"
+          ],
+          "tau_ps": 96.01816700398999,
+          "td_od01_ns": 1.76059,
+          "td_od1_ns": 1.5394999999999999,
+          "td_od50_ns": 1.19808,
+          "unresolved_count": 0
+        }
+      },
+      "fraction_c": 0.25,
+      "fraction_r": 0.5,
+      "id": "cgr-0250-0500",
+      "probe_deck_sha256": "8ba6952dccf519afb79dd4854314354ad8ce5ede5e7f9930412c22ea203ce64d",
+      "total_ground_c_ff": 123.3778862,
+      "total_series_r_ohm": 1690.06084999997
+    }
+  ]
+}

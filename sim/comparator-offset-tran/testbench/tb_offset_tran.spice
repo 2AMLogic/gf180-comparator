@@ -1,0 +1,106 @@
+* tb_offset_tran -- TOTAL input-referred offset of the whole comparator, by
+* transient Monte Carlo: preamp + StrongARM latch + SR output latch, with the
+* latch's own mismatch included (issue #157).
+*
+* Netlist FRAGMENT. The harness supplies the models, the corner .lib
+* sections, .temp, the DUT netlist, the .control block and .end
+* (sim/harness/README.md). Parameters from the harness: vdd_val, vdd_nom,
+* temp_c, dut_ib, dut_vcm.
+*
+* WHY THIS BENCH EXISTS. sim/comparator-offset-mc/ is a DC-sweep bench on the
+* analog partition (comparator_dut_analog): the StrongARM latch has no DC
+* operating point, so that bench cannot see the latch's offset by
+* construction, and its own manifest says so. This bench clocks the WHOLE
+* comparator (comparator_dut) through real decisions, so every mismatch the
+* PDK models -- preamp pair, tail mirror, latch pair, latch regeneration
+* pair, SR latch -- is in the trip point. It is additive: the DC bench stays
+* as the preamp-only number.
+*
+* METHOD: A STAIRCASE SWEEP, ONE DECISION PER LEVEL. The differential input
+* is a 64-level staircase from -5.04 mV to +5.04 mV in 0.16 mV steps
+* (vsd below), one level per clock period, preceded by 2 extra cycles at the
+* first level and followed by 3 cycles on the last. Each period the
+* comparator decides once; its output (dn = dout / vdd, supply-normalised)
+* holds across the reset phase (the NOR SR latch keeps its state), so dn is a
+* clean 0 -> 1 step at the first level above the trip point. The trip point
+* of one draw is therefore the input level of the first cycle whose decision
+* is 1, minus half a step (the unbiased midpoint of the one-step bracket).
+* The staircase steps during the clock-LOW (reset) phase, 1 ns after the
+* clock falls, so the preamp has ~15 ns to settle before the next decision.
+*
+*   cycle c      : clock rises at  t0 + c*T          (t0 = 4 ns, T = 24 ns)
+*   level index  : k = c - 2   (clamped to 0..63)    V_k = -5.04 mV + 0.16 mV*k
+*   t_trip       : time dn crosses 0.5 rising, searched from 71 ns (cycle 3)
+*   trip estimate: V_k(c) - 0.08 mV, c = floor((t_trip - t0)/T)
+*
+* All of the arithmetic (cycle index, midpoint, quantisation correction) is
+* done by sim/tools/klt_record.py from the raw .meas values listed in
+* tb.json; this fragment only produces the waveforms.
+*
+* SAME DRAW, TWO MEASUREMENTS (this is what lets the latch term be QUANTIFIED
+* rather than inferred from a difference of two populations). The preamp
+* output differential dd = v(aop)-v(aon) is also sampled at the end of the
+* reset phase of the first cycle (input -5.04 mV) and of the last cycle
+* (input +5.04 mV). Both points are on the SAME Monte-Carlo draw as the
+* trip point, so
+*      A_v      = (dd_end - dd_start) / 10.08 mV
+*      Vos_pre  = 5.04 mV - dd_end / A_v          (the DC-equivalent preamp offset)
+* is the DC bench's quantity measured on the draw that also produced the
+* total trip point, and (trip - Vos_pre) is that draw's decision-stage
+* (latch + clocking) contribution. A population of those differences needs no
+* cross-bench pairing of unrelated draws.
+*
+* MISMATCH IS TURNED ON HERE, IN THE FRAGMENT (same reason as the DC bench:
+* design.ngspice defaults sw_stat_mismatch = 0 and the harness emits manifest
+* params ahead of the model includes).
+
+.param sw_stat_mismatch=1
+
+* ---- supply, clock, common mode ---------------------------------------
+vsup vdd 0 dc {vdd_val}
+vclk clk 0 pulse(0 {vdd_val} 4n 100p 100p 8n 24n)
+vcm  cm  0 dc {dut_vcm}
+
+* ---- differential staircase (generated; see the header) ---------------
+* Levels V_k = -5.04m + 0.16m*k, k = 0..63, level changes at t0 + c*T + 9n
+* (1 ns edge), c = 0..66. Cycles c = 0..2 sit on k = 0; cycles 65..67 on k = 63.
+vsd sd 0 pwl(0n -5.04m 13n -5.04m 14n -5.04m 37n -5.04m 38n -5.04m 61n -5.04m
++ 62n -4.88m 85n -4.88m 86n -4.72m 109n -4.72m 110n -4.56m 133n -4.56m
++ 134n -4.40m 157n -4.40m 158n -4.24m 181n -4.24m 182n -4.08m 205n -4.08m
++ 206n -3.92m 229n -3.92m 230n -3.76m 253n -3.76m 254n -3.60m 277n -3.60m
++ 278n -3.44m 301n -3.44m 302n -3.28m 325n -3.28m 326n -3.12m 349n -3.12m
++ 350n -2.96m 373n -2.96m 374n -2.80m 397n -2.80m 398n -2.64m 421n -2.64m
++ 422n -2.48m 445n -2.48m 446n -2.32m 469n -2.32m 470n -2.16m 493n -2.16m
++ 494n -2.00m 517n -2.00m 518n -1.84m 541n -1.84m 542n -1.68m 565n -1.68m
++ 566n -1.52m 589n -1.52m 590n -1.36m 613n -1.36m 614n -1.20m 637n -1.20m
++ 638n -1.04m 661n -1.04m 662n -0.88m 685n -0.88m 686n -0.72m 709n -0.72m
++ 710n -0.56m 733n -0.56m 734n -0.40m 757n -0.40m 758n -0.24m 781n -0.24m
++ 782n -0.08m 805n -0.08m 806n 0.08m 829n 0.08m 830n 0.24m 853n 0.24m
++ 854n 0.40m 877n 0.40m 878n 0.56m 901n 0.56m 902n 0.72m 925n 0.72m
++ 926n 0.88m 949n 0.88m 950n 1.04m 973n 1.04m 974n 1.20m 997n 1.20m
++ 998n 1.36m 1021n 1.36m 1022n 1.52m 1045n 1.52m 1046n 1.68m 1069n 1.68m
++ 1070n 1.84m 1093n 1.84m 1094n 2.00m 1117n 2.00m 1118n 2.16m 1141n 2.16m
++ 1142n 2.32m 1165n 2.32m 1166n 2.48m 1189n 2.48m 1190n 2.64m 1213n 2.64m
++ 1214n 2.80m 1237n 2.80m 1238n 2.96m 1261n 2.96m 1262n 3.12m 1285n 3.12m
++ 1286n 3.28m 1309n 3.28m 1310n 3.44m 1333n 3.44m 1334n 3.60m 1357n 3.60m
++ 1358n 3.76m 1381n 3.76m 1382n 3.92m 1405n 3.92m 1406n 4.08m 1429n 4.08m
++ 1430n 4.24m 1453n 4.24m 1454n 4.40m 1477n 4.40m 1478n 4.56m 1501n 4.56m
++ 1502n 4.72m 1525n 4.72m 1526n 4.88m 1549n 4.88m 1550n 5.04m 1573n 5.04m
++ 1574n 5.04m 1597n 5.04m 1598n 5.04m
++ )
+Eap ap cm sd 0 0.5
+Ean an cm sd 0 -0.5
+
+* ---- device under test: the WHOLE comparator --------------------------
+ib   vdd ibn dc {dut_ib}
+Xa   ap an clk ibn dout doutb vdd 0 comparator_dut
+
+* ---- probes -----------------------------------------------------------
+* Supply-normalised output (crossed at 0.5), as in the regeneration bench.
+Bdn dn 0 v = 'v(dout)/v(vdd)'
+* Preamp differential output. A high-Z VCVS because the fleet runner's .meas
+* cannot evaluate v(a)-v(b) (same workaround as the DC offset bench).
+Eddprobe dd 0 xa.aop xa.aon 1
+* Preamp positive-output node, for the load-drop (I_D*R) that the resistor
+* hand budget scales with (derived per corner, not assumed).
+Eapo apo 0 xa.aop 0 1

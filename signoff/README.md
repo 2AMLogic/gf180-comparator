@@ -21,6 +21,8 @@ directory for exactly that reason).
 | `signoff-report.json` | the committed output of the grading run — the graded T1 item table, per item `met`/`unmet` + machine-readable `reason` |
 | `design-evidence-tiers.md` | the vendored, verbatim copy of the **11-item** T1 rulebook the report is graded under (see "The two pins" below) |
 | `verify-report.py` | the anti-rot verifier CI runs on every push and PR (see below) |
+| `design-evidence-tiers.md.sha256` | the machine-readable sha256 pin of the vendored rulebook (`sha256sum` format); the single expected value `check_rulebook_pin.py` enforces |
+| `check_rulebook_pin.py` | the shared rulebook byte-identity check run by `regenerate.sh`, `verify-report.py` and the PDK-free test entrypoint (`tests/test_check_rulebook_pin.py` covers it) |
 | `regenerate.sh` | re-grades the manifest with the pinned grader distribution and rewrites the committed report |
 | `make_item5_envelope.py` | wraps the four committed corner records into the `klt sim`-shaped item-5 corner-matrix envelope under `sim/corner-matrix/` (`--check` detects drift); see the item-5 section |
 | `tests/test_item5_envelope.py` | PDK-free regressions for the item-5 wrapper: all-measured-targets-pass fixture must still grade item 5 `unmet` (`partial_coverage`) under the pinned `klt`; append-only identity; historical bytes (`python3 signoff/tests/test_item5_envelope.py`, run in CI) |
@@ -58,8 +60,7 @@ Grading this report reproducibly depends on two pinned things, and
    CI ever grades with whatever `klt` happens to be on PATH. CI installs the
    same pin (`.github/workflows/signoff.yml`); keep the two pins in sync.
 2. **The rulebook: `design-evidence-tiers.md`, vendored at klayout-tools
-   commit `31a3e3c4` (sha256
-   `c7a1e7e10627fae396007e0ff951734f37d95028b8f49f2e21e802e9f552f318`).**
+   commit `31a3e3c4` (sha256 pinned in `design-evidence-tiers.md.sha256`).**
    The checklist grew its **eleventh item** — *Power delivery (structural)*
    — on 2026-09-17 (klayout-tools
    [#2025](https://github.com/2AMLogic/klayout-tools/issues/2025)), *after*
@@ -69,11 +70,30 @@ Grading this report reproducibly depends on two pinned things, and
    `partition_boundary` paragraph and `degenerate_well_assertion`), so the
    vendored copy and `--tiers-doc` stay until a deliberate re-vendor. Every grade here — regenerate, verifier,
    CI — passes `--tiers-doc signoff/design-evidence-tiers.md`; the file is a
-   verbatim copy of that commit's `docs/design-evidence-tiers.md` (its
-   sha256 above is the human-facing identity pin — the pinned wheel predates
-   klayout-tools#2191, so it cannot itself hash the governing doc into the
-   report). Re-vendoring the doc (dropping `--tiers-doc`) is a separate,
-   deliberate step: it changes `source_doc` and the verifier's expectations.
+   verbatim copy of that commit's `docs/design-evidence-tiers.md`. Its
+   byte identity is machine-enforced (issue
+   [#168](https://github.com/2AMLogic/gf180-comparator/issues/168)):
+   `design-evidence-tiers.md.sha256` (`sha256sum` format) is the **only**
+   place the expected hash lives, and `check_rulebook_pin.py` is the one
+   shared check — `regenerate.sh` runs it before installing or grading,
+   `verify-report.py` runs it before anything else (check 0), and
+   `scripts/run-pdk-free-tests.sh` runs it as the `rulebook-pin` step. The
+   grade-drift comparison only sees the rendered item table, so without
+   this a prose-only rulebook edit that leaves item ids, counts, statuses
+   and reasons unchanged would pass; with it, it fails as a named
+   `rulebook hash mismatch`. A missing rulebook or pin file fails too —
+   nothing falls back to the wheel's bundled copy. Where a report carries
+   `source_doc_content_hash`, the verifier also requires it to equal the pin.
+
+   **Re-vendoring the rulebook** is deliberate and lands as one change:
+   (1) copy the new verbatim `docs/design-evidence-tiers.md` in and review
+   its diff; (2) refresh the pin with
+   `sha256sum signoff/design-evidence-tiers.md > signoff/design-evidence-tiers.md.sha256`;
+   (3) re-grade with `./signoff/regenerate.sh`; (4) run
+   `python3 signoff/verify-report.py` (the grade-drift checks still apply);
+   (5) commit rulebook, pin and report together. Dropping `--tiers-doc` in
+   favour of the wheel's bundled copy is a further separate step: it changes
+   `source_doc` and the verifier's expectations.
 
 ## How to re-run the grading
 
@@ -169,7 +189,8 @@ them, regenerated on change". The only candidate, the item-4 LVS envelope,
 pins `design/comparator.spice` (`environment.reference_sha256`) but shows
 layout-vs-netlist equivalence, not that the netlist derives from the
 schematic. `./design/netlist.sh --check` does check that, but it is a script
-whose result is not an envelope and CI does not run it. Citing the LVS report
+whose result is not an envelope; the PDK-free merge gate does not run it
+(a separate non-gating weekly/manual workflow, `selftest.yml`, does). Citing the LVS report
 would flip the grade on a claim it does not show, so the row stays
 `no_evidence`. Tool gap filed:
 [klayout-tools#2844](https://github.com/2AMLogic/klayout-tools/issues/2844).
@@ -244,6 +265,18 @@ committed logs and cross-checks them against the record's mean/sigma. Result:
 (target) / 8.5 (stretch), `sample_size.verdict: sufficient` and the negative
 control `detected` at all 45 points.
 
+**Item-6 support for the total-offset metric (issue #200 assessment).** The
+citation above remains the **preamp-only** DC samples; it has not been
+relabelled and is not evidence for the whole-comparator total. The
+whole-comparator record has per-draw simulated trip points (raw `.meas` in
+`sim/comparator-offset-tran/corners/20261010-021500046481-d84e59d/report-main-v*.json`),
+but (a) the scored total adds a *derived* load-resistor allowance that is not a
+per-draw sample, so it cannot be presented as simulated samples to `klt yield`;
+(b) only the simulated whole-comparator part could be wrapped, in a separate,
+explicitly labelled yield report with its own adapter, which this change does
+not add. Item 6 therefore stays on preamp-only evidence; a total-offset yield
+report is a candidate follow-up, not claimed here.
+
 **"Met" is weaker than it looks.** The pinned 0.6.0 grader reads the report's
 `status` (`reported`: no `target_yield` is declared, so it cannot fail); it
 does not grade the checklist's prose sub-requirements. The disclosed gaps,
@@ -269,7 +302,7 @@ Item 5 accepts only a `klt sim` envelope (`measurements` + `corner_count`;
 generic and every other kind render `wrong_kind`). The committed corner
 records are this repo's harness format, so
 `signoff/make_item5_envelope.py` **wraps them without re-simulating**:
-`sim/corner-matrix/item5-corner-matrix-<four record ids>-r2.json`, the 45-point
+`sim/corner-matrix/item5-corner-matrix-<four record ids>-r2.json` (revision 3, below, appends the whole-comparator record id), the 45-point
 PVT grid of the four records DR-0002 ratified
 (`20260910-{124917,125200,125206,125341}-4805118`), every value copied
 verbatim, each source record pinned by sha256 in `source_records`. The
@@ -331,6 +364,75 @@ a measured per-decision energy the bench actually checks). The manifest pin is
 the DUT netlist (`provenance.input`, role `netlist`, `design/comparator.spice`),
 which `verify-report.py` re-hashes; `python3 signoff/make_item5_envelope.py
 --check` re-derives the envelope from the four records and fails on drift.
+
+**Revision 3 (issue #200): the offset row is scored on the whole-comparator
+record.** `item5-corner-matrix-<four ids>-<offset-tran id>-r3.json` scores
+`offset_3sigma_mv` on `sim/comparator-offset-tran/records/20261010-021500046481-d84e59d`
+(45 PVT points x N = 200, fleet jobs `klt-sim-ee7ad68415d2`,
+`klt-sim-a503009e268a`, `klt-sim-031f74d456a0`), value `vos_3sig_total_cons_mv`
+= simulated whole-comparator mismatch (latch included) plus a **derived, not
+simulated** conservative load-resistor budget (the PDK models none). Result:
+2.994-3.795 mV, 45/45 within target and stretch, binding corner
+`ff_125c_3.63v`. The record is used **only** if `validate_offset_tran` finds
+complete supported coverage and valid provenance (`complete`, no named problem
+such as `TRIP_OUT_OF_RANGE`, 45 expected corners, exactly 200 finite draws per
+point, `citable` + `reference` + clean source bundle, DUT netlist hash = current,
+unchanged 15 / 8 mV bounds). Otherwise the offset row falls back to the
+preamp-only DC value, is marked `coverage: incomplete` (reason
+`offset_whole_comparator_not_substantiated`, problems listed), is added to
+`coverage.skipped` and the corners' `unscored_rows`, and the envelope cannot
+exceed `pass_partial`. Each offset measurement discloses `simulated` and
+`derived_not_simulated` terms; the preamp-only value rides along as
+`diagnostic_preamp_only_3sigma_mv` (per corner) and `preamp_only_diagnostic`
+(row). Unrelated unmet items are unchanged: kickback still fails (44/45
+corners `fail`) and average power stays unscored, so item 5 remains `unmet`
+(`check_failed`). Regression fixtures in `signoff/tests/test_item5_envelope.py`
+cover an omitted corner, missing draws, a saturation/incomplete record,
+non-finite derivation, dirty/uncitable provenance, stale DUT, a relaxed bound
+and a missing record. The r2 file stays committed unchanged.
+
+> **Re-qualified (#288):** the kickback record named below (`...-bf851ec`)
+> was simulated on `open_pdks f6eeac7`, not the pinned `c6d73a35`. Revisions
+> 4 and 5 therefore rest on a non-qualifying revision; **revision 6** scores
+> the same row on the re-minted `20261011-195826615490-7e20c78` (pin `c6d73a35...`, identical
+> per-corner values, same verdict). The r4/r5 files stay committed as history;
+> see `sim/qualification-notes/20261011-288-open-pdks-requalification.md`.
+
+**Revision 4 (issue #204): the kickback row is scored on the both-node
+record.** `item5-corner-matrix-<offset-mc id>-<noise id>-<regen id>-<kickback id>-<offset-tran id>-r4.json`
+scores `kickback_1k_peak_mv` on
+`sim/comparator-kickback/records/20261010-022609774981-bf851ec` (klt-record
+format, `input_node_coverage` = `both`) instead of the positive-node-only
+`20260910-125341-4805118`. The record is used **only** if
+`validate_kickback_both` passes (45 points, complete, citable + reference,
+clean tree, DUT netlist hash = current, unchanged 5 / 2 mV bounds, coverage
+`both`, finite `kick_1k_peak_mv` everywhere); otherwise the row falls back to
+the older record and says so (`partial_node_coverage`, reason
+`kickback_partial_node_coverage`, problems listed). Values shift by at most
+2.22 uV (worst `sf_-40c_3.63v`: 10.00758 -> 10.00980 mV); verdicts are
+unchanged: 1/45 within target, 0/45 within stretch. Bounds untouched; the
+r1/r2/r3 files stay committed unchanged. Extracted-DUT both-node evidence is
+out of scope (#112).
+
+**Revision 5 (issue #303): the positive-node-only fallback is incomplete
+coverage, not just a disclosure.** Revision 4 kept the kickback row
+`coverage: complete` with only a `partial_node_coverage` flag when
+`validate_kickback_both` failed — contradictory machine-readable statements.
+Revision 5 marks the row `coverage: "incomplete"` (`coverage_reason:
+"kickback_partial_node_coverage"`), adds `kickback_1k_peak_mv` to every
+affected corner's `unscored_rows`, appends one skipped-work entry per corner
+to `coverage.skipped`, and includes the row in `eligibility.incomplete_rows` —
+the same structured treatment the offset fallback and the average-power row
+already get. The positive-node values, verdict counts and the ratified 5 / 2
+mV bounds are unchanged (`kickback_source` still discloses the limited
+positive-node scope), and a measured kickback miss still fails outright:
+numerical failure precedes partial coverage, so the fallback never turns a
+miss into `pass_partial`. A valid both-node record keeps the row `complete`
+with no extra skipped work. Regression fixtures cover an absent, malformed,
+non-citable, partial-node, stale-DUT, relaxed-bound and wrong-point-count
+both-node record, plus the all-values-pass fallback (capped at
+`pass_partial`) and a measured miss under fallback (still `fail`). The
+r1–r4 files stay committed unchanged.
 
 **Append-only identity.** The file name is the four record ids plus
 `-r<SCORING_REVISION>`: a new record set *or* a new scoring revision mints a
@@ -417,6 +519,47 @@ Disclosures (the report's own `extraction.model` limits, stated, not hidden):
 * Mismatch is off (deterministic corners); this is not a Monte-Carlo
   post-layout claim.
 
+Findings: parasitic attribution of the misses
+([#229](https://github.com/2AMLogic/gf180-comparator/issues/229); diagnostic
+only, **item 7 stays `unmet`**, the citation above is unchanged):
+
+* **What was run.** The cited extracted DUT was re-measured at
+  `ss_125c_2.97v` and `tt_125c_2.97v`, using `pex_measure.py`'s own decks
+  with 52 netlist variants. Each of the 20 extracted nets gets one variant
+  with its series R removed and one with its ground C removed. There are
+  also aggregate R/C/coupling variants, a device-geometry variant, and
+  centring legs. All 154 `klt sim` requests went to the batch fleet. Evidence:
+  [`layout/pex/artifacts/parasitic-attribution/20261010-120720-230574b/`](../layout/pex/artifacts/parasitic-attribution/20261010-120720-230574b/README.md),
+  produced by `layout/pex/parasitic_attribution.py`.
+* **Controls.** The control decks are byte-identical to the cited decks. Both
+  the extracted and the schematic control reproduce the cited rows exactly
+  (1.58774 / 2.02956 ns and 0.986719 / 1.23747 ns). Removing every parasitic
+  *and* setting the schematic's S/D junction geometry reproduces the schematic
+  leg. So the gap has exactly two sources: extracted RC and extracted
+  junction geometry.
+* **Dominant contributor: ground C on a few nets.** Removing all ground C
+  closes 83 % of the gap (tt 82.6 %, ss 83.6 %). The star-model series R
+  accounts for about 5.5 % (largest single net: `ltail`, 2.6 %). The
+  vertical-overlap coupling C accounts for about 0.5 %. Four nets on the
+  decision-to-output path explain about 71 % together: `sn` 21.8 %, `doutb`
+  19.2 %, `qn` 15.2 % and `dout` 14.7 %. `sn` carries about 3x the ground C
+  of its mirror `sp` (20.8 vs 7.1 fF). The remaining ~14 % is the extracted
+  S/D junction geometry (AS/AD = 0.5 um x W against the schematic's 0.18 um
+  x W). Tying the extraction's floating `vsubs` node to ground slows the
+  decision slightly (-2 %), so it is not a contributor.
+* **Centring confound: ruled out.** Centring the extracted ladder at 0 V
+  (the schematic's convention) would make the extracted leg *faster* by about
+  4 % of the gap, because 0 V centring over-drives by |dut_vos|. Centring
+  the schematic at its own probed trip point (+32 uV) moves `td_od50_ns` by
+  at most 0.11 ps. None of the +60 % comes from the convention.
+* **What the data points to: a layout change.** The data points to reducing
+  routing ground C on `sn`, `doutb`, `qn` and `dout`, and to shorter or
+  shared S/D diffusions. A DR-0004-era re-layout would target the same nets.
+  The data does not point to a new decision record: the miss is a physical
+  loading effect, not a measurement artefact. Any layout change or decision
+  record is a separate issue. No variant here was graded against the spec,
+  and nothing here relaxes it.
+
 ### met — item 8 (Characterization report): generic envelope around the narrative report
 
 **Cited and graded `met` as of
@@ -449,8 +592,43 @@ evidence record, is the report's own
 narrative report and its evidence chain are unchanged by this citation
 (read-only wrap, per #80's scope).
 
+**Evidence-chain validation ([#275](https://github.com/2AMLogic/gf180-comparator/issues/275)).**
+Before emitting `pass`, `make_item8_envelope.py` validates
+`measurements/characterization-report.sources.json`: the report must be
+non-empty, contain each required section heading, cite each section's
+declared `sim/*/records/` ids and keep average power explicitly `UNSCORED`;
+every registered record must exist, match its pinned sha256 and declared
+scope (bench, DUT provenance, point count, clean tree). Source qualification
+([#296](https://github.com/2AMLogic/gf180-comparator/issues/296)): each
+registered record also declares a `role` — `current` scored evidence, or
+`historical`/`diagnostic` context (only a `current` record may carry a
+`summary_key`) — and the `dut_id` it is expected to characterize, resolved
+against the live `sim/dut.json` registry. Every role must name that DUT, its
+registry provenance and netlist path (schematic records also stamp a
+`dut_netlist_sha256`; extracted records declare a committed
+`extraction_report` that pins an input layout hash). Freshness against
+today's bytes is checked on `current` records only: a `current` schematic
+record must stamp the current bytes of that entry's netlist, and a `current`
+extracted record's `extraction_report` input hash must still match the
+committed layout bytes (the regenerated scratch netlist is never required).
+`historical`/`diagnostic` records are context for the design they ran
+against and are not compared with today's bytes — that is what makes the
+refresh contract satisfiable: the design changed — re-run, register the new
+record as `current`, re-role the old one `historical`/`diagnostic` (it stays
+citable as context but can never back a scored summary row). A `current` record whose bytes carry fleet
+provenance fields must be citable reference evidence with no refusal reasons
+(legacy local records carry no fleet fields and qualify through their
+committed context). A SHA pin proves which record bytes were read; these
+checks prove they are eligible for the current claim. Failures print named
+`evidence-chain:` diagnostics and write nothing, even if the report hash was
+refreshed. The envelope `summary`'s per-row counts are derived from the pinned
+records, so a changed record cannot leave a stale summary. This does not
+require all targets met: disclosed misses still pass. CI runs it as the
+`item8` step of `scripts/run-pdk-free-tests.sh`; regressions are in
+`signoff/tests/test_item8_evidence_chain.py`.
+
 Refresh contract for this citation: the report is the artifact — if it
-changes, re-run `python3 signoff/make_item8_envelope.py` (or its `--check`
+changes (or a registered record is re-pinned in the sources manifest), re-run `python3 signoff/make_item8_envelope.py` (or its `--check`
 mode to detect drift), re-pin the item-8 `content_hash` in
 `block-manifest.json`, and re-grade via `./signoff/regenerate.sh` in one
 change.
@@ -476,11 +654,45 @@ Tool gap: klayout-tools#2844.
 **Re-audited in #89 (DR-0003); still deliberately uncited.** `README.md`
 (with the target-spec table and reproduction commands), `CLAUDE.md`, `spec/`
 and a LICENSE exist. The item also demands CI that keeps the harness and
-evidence formats valid. The only CI is `signoff.yml` (anti-rot on the signoff
-evidence); it does not run the harness tests (`sim/harness/tests`) or
-`design/netlist.sh --check`, and no CI run evidence is committed. So the CI
-leg is only partly met and unevidenced; the row stays `no_evidence`. Adding
-those CI steps is the path to a citable claim. Tool gap: klayout-tools#2844.
+evidence formats valid. The one workflow, `signoff.yml`, now runs
+`scripts/run-pdk-free-tests.sh`, the single PDK-free entrypoint
+([#129](https://github.com/2AMLogic/gf180-comparator/issues/129)) that
+`npm test` also runs, on every push to `main` and every PR. Its steps
+include the harness unittest suite (`sim/harness/tests`, step `harness`,
+[#110](https://github.com/2AMLogic/gf180-comparator/issues/110)), the
+netlist source-pin check (`design/verify-netlist-pins.py --check`, step
+`netlist-pin`,
+[#120](https://github.com/2AMLogic/gf180-comparator/issues/120)), the
+append-only `sim/` evidence guard (step `evidence`), the grader and rulebook
+pin checks, the re-grade (`verify-report.py`), the integrator manifest
+verifier and the remaining PDK-free unit tests and `--check` verifiers. The
+script's `--list` output is the authoritative step list.
+
+Three limits keep the row uncited:
+
+- **Source pinning is not derivation.** The `netlist-pin` step only re-hashes
+  the committed schematic inputs, generation inputs and
+  `design/comparator.spice` against `design/comparator.sources.json`. It
+  never runs xschem, so it shows that nobody edited one side without
+  re-running `./design/netlist.sh`. It does not show that the netlist is
+  xschem's output for those schematics. Only `./design/netlist.sh --check`
+  (xschem + PDK) proves that. The merge-gating job does not run it because it
+  is PDK-free by design; the separate non-gating weekly/manual workflow
+  `.github/workflows/selftest.yml` (#280) does run it, but as a log-only check.
+- **The merge gate runs no simulations.** `sim/selftest.sh` (nominal points
+  plus the sabotage negative control) runs only in that scheduled/manual,
+  non-required workflow. Full characterization (`sim/characterize.sh`, the PVT
+  grids) is not run in CI at all.
+- **No CI-produced evidence envelope exists.** CI (including the scheduled
+  runtime checks, whose output stays in workflow logs) passes or fails a run,
+  but no CI run is committed as an envelope the grader reads (tool gap:
+  klayout-tools#2844). Committing a generic envelope without a supported
+  claim would reverse DR-0003's claim policy.
+
+So the CI execution leg is now largely in place but has no evidence the grader
+can read, and the row deliberately stays `no_evidence`. Adding more CI steps
+would not change that. A citable claim needs a CI-produced envelope that backs
+this item's claim.
 
 ### met — item 11 (Power delivery, structural): ties[] declared (#103)
 
@@ -579,7 +791,12 @@ push and PR (`.github/workflows/signoff.yml`):
    hand-edited envelope fails even though the netlist pin is unchanged.
 4. **The vendored rulebook is what graded.** The fresh
    grade's `source_doc` must be `signoff/design-evidence-tiers.md`; a grade
-   that ran against the wheel's bundled 10-item copy instead fails by name.
+   that ran against the wheel's bundled copy instead fails by name (under
+   0.6.0 that copy is an 11-item rulebook, but its bytes differ from the
+   vendored one; see "The two pins").
+   Before any of the above, the rulebook's bytes must match
+   `design-evidence-tiers.md.sha256` (`check_rulebook_pin.py`, see "The two
+   pins"), so a prose-only rulebook edit cannot pass.
 
 **Refresh contract.** Any change to a cited evidence envelope or to the
 cited artifacts means: re-run the producing flow (e.g.

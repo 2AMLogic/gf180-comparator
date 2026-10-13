@@ -1,0 +1,54 @@
+{
+  "netlist": "probe.spice",
+  "models": {
+    "pdk": "gf180mcuD",
+    "lib": "libs.tech/ngspice/sm141064.ngspice"
+  },
+  "corners": {
+    "process": [
+      {
+        "name": "tt",
+        "sections": [
+          "typical",
+          "res_typical",
+          "bjt_typical",
+          "diode_typical",
+          "moscap_typical",
+          "mimcap_typical"
+        ]
+      },
+      {
+        "name": "ss",
+        "sections": [
+          "ss",
+          "res_ss",
+          "bjt_ss",
+          "diode_ss",
+          "moscap_ss",
+          "mimcap_ss"
+        ]
+      }
+    ],
+    "supply_v": {
+      "vsup": [
+        2.97
+      ]
+    },
+    "temperature_c": [
+      125.0
+    ]
+  },
+  "analysis": {
+    "kind": "tran",
+    "args": "100n 80u 0 100n"
+  },
+  "measurements": [
+    {
+      "name": "t_flip",
+      "spice": ".meas tran t_flip when v(dn)=0.5 rise=1 td=8u"
+    }
+  ],
+  "options": {
+    "timeout_s": 1800
+  }
+}

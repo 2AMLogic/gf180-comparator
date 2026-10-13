@@ -1,0 +1,323 @@
+{
+  "brackets_per_corner": {
+    "ss_125c_2.97v": [],
+    "tt_125c_2.97v": [
+      {
+        "fails_at": 1.0,
+        "meets_at": 0.125
+      }
+    ]
+  },
+  "controls": {
+    "ctrl@ss_125c_2.97v": {
+      "abs_diff_ns": 0.0,
+      "cited_dut_vos_v": -0.005186500000000004,
+      "cited_td_od50_ns": 2.02956,
+      "reproduces": true,
+      "rerun_dut_vos_v": -0.005186500000000004,
+      "rerun_td_od50_ns": 2.02956
+    },
+    "ctrl@tt_125c_2.97v": {
+      "abs_diff_ns": 0.0,
+      "cited_dut_vos_v": -0.0089074,
+      "cited_td_od50_ns": 1.58774,
+      "reproduces": true,
+      "rerun_dut_vos_v": -0.0089074,
+      "rerun_td_od50_ns": 1.58774
+    },
+    "sch@ss_125c_2.97v": {
+      "abs_diff_ns": 0.0,
+      "cited_td_od50_ns": 1.23747,
+      "reproduces": true,
+      "rerun_td_od50_ns": 1.23747
+    },
+    "sch@tt_125c_2.97v": {
+      "abs_diff_ns": 0.0,
+      "cited_td_od50_ns": 0.986719,
+      "reproduces": true,
+      "rerun_td_od50_ns": 0.986719
+    }
+  },
+  "fractions_meeting_all_points": [],
+  "generated_by": "layout/pex/parasitic_attribution.py budget-analyze",
+  "issue": 243,
+  "missing": [],
+  "nets": [
+    "sn",
+    "doutb",
+    "qn",
+    "dout"
+  ],
+  "non_monotonic_per_corner": {
+    "ss_125c_2.97v": false,
+    "tt_125c_2.97v": false
+  },
+  "outcome": "no-crossing: no tested fraction clears the bound at every stage point (tested: 0.125, 0.0625, 0.03125, 0.015625)",
+  "points": [
+    "tt_125c_2.97v",
+    "ss_125c_2.97v"
+  ],
+  "scope": "diagnostic only: joint ground-C scaling of sn, doutb, qn, dout; series R, coupling C, device geometry fixed; each variant centred on its own probed trip point; no spec row scored, T1 item 7 unchanged",
+  "source_sha256": {
+    "attribution_json_229": "08b2a55136b943c7cbc91c7b881c3df9bb2629857c551dc3fe164e8ef76b633b",
+    "cited_report": "385fadcf7cd74c60508e01b3cd0341df7b64341479f437c0446c09bd07497dd8",
+    "extracted_dut": "a7ca3c00ea4db8a2b00cad69f2edc2d9320738499049cfa9c7faec517b7b5f45",
+    "parasitic_attribution_py": "1a6778080e5e6c65b9cf795b22a9b32d83aa81bf07b2e5f420d790beffea4ea9",
+    "pex_measure_py": "91fd1aaad696a0c71b364b9aea8420b758c6560d182be032db19b8108c2093b4",
+    "schematic_dut": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a",
+    "tb_json_consumed_fields": "462b79b389613fbc06de8037311ed54b0820a60f48778e1a1322c48c94a13f74"
+  },
+  "study_valid": true,
+  "variants": [
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "dout_od50_end": 0.999968,
+          "dut_vos_shift_v": 0.0,
+          "dut_vos_v": -0.005186500000000004,
+          "job_ids": [
+            "klt-sim-495372cc5979"
+          ],
+          "ladder_netlist_sha256": "f71d3b365d4fdef93ffae4223816b87718bd418108c89967d53e5f511b506410",
+          "margin_to_1p5ns_ns": -0.52956,
+          "meets_1p5ns": false,
+          "probe_job_ids": [
+            "klt-sim-673dbc775c6d"
+          ],
+          "tau_ps": 222.15465632797049,
+          "td_od01_ns": 3.2256,
+          "td_od1_ns": 2.71407,
+          "td_od50_ns": 2.02956,
+          "unresolved": false
+        },
+        "tt_125c_2.97v": {
+          "dout_od50_end": 0.999951,
+          "dut_vos_shift_v": 0.0,
+          "dut_vos_v": -0.0089074,
+          "job_ids": [
+            "klt-sim-a8cf16677681"
+          ],
+          "ladder_netlist_sha256": "6722364fb6609621e4789b8352ab584678bd2ddab08b61b72cf28e484d9bdd07",
+          "margin_to_1p5ns_ns": -0.08773999999999993,
+          "meets_1p5ns": false,
+          "probe_job_ids": [
+            "klt-sim-673dbc775c6d"
+          ],
+          "tau_ps": 130.07988321966207,
+          "td_od01_ns": 2.35539,
+          "td_od1_ns": 2.0558699999999996,
+          "td_od50_ns": 1.58774,
+          "unresolved": false
+        }
+      },
+      "fraction": 1.0,
+      "id": "ctrl",
+      "retained_ground_c_ff": {
+        "dout": 22.656011,
+        "doutb": 27.305946,
+        "qn": 30.94521,
+        "sn": 20.83313
+      }
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "dout_od50_end": 0.999993,
+          "dut_vos_shift_v": -0.006570699999999999,
+          "dut_vos_v": -0.011757200000000002,
+          "job_ids": [
+            "klt-sim-a2c5d0a9726e"
+          ],
+          "ladder_netlist_sha256": "e01586cf356495ecf7a5d52eb92e997831454ae7a5dc5b62b99daff7994b04ae",
+          "margin_to_1p5ns_ns": -0.06669999999999998,
+          "meets_1p5ns": false,
+          "probe_job_ids": [
+            "klt-sim-061b24093987"
+          ],
+          "tau_ps": 79.95795706320754,
+          "td_od01_ns": 2.28117,
+          "td_od1_ns": 2.0970600000000004,
+          "td_od50_ns": 1.5667,
+          "unresolved": false
+        },
+        "tt_125c_2.97v": {
+          "dout_od50_end": 0.999988,
+          "dut_vos_shift_v": -0.010770400000000003,
+          "dut_vos_v": -0.019677800000000002,
+          "job_ids": [
+            "klt-sim-b5d15acd8679"
+          ],
+          "ladder_netlist_sha256": "98a28292626c7f3b19a27bf0a7cc69563e2b251a6e30f8f7293cb4c1c4b75328",
+          "margin_to_1p5ns_ns": 0.27319000000000004,
+          "meets_1p5ns": true,
+          "probe_job_ids": [
+            "klt-sim-061b24093987"
+          ],
+          "tau_ps": 57.46584584543828,
+          "td_od01_ns": 1.72339,
+          "td_od1_ns": 1.59107,
+          "td_od50_ns": 1.22681,
+          "unresolved": false
+        }
+      },
+      "fraction": 0.125,
+      "id": "cgs-0125",
+      "retained_ground_c_ff": {
+        "dout": 2.83200138,
+        "doutb": 3.41324325,
+        "qn": 3.86815125,
+        "sn": 2.60414125
+      }
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "dout_od50_end": 0.999995,
+          "dut_vos_shift_v": -0.007110799999999997,
+          "dut_vos_v": -0.0122973,
+          "job_ids": [
+            "klt-sim-06979fb8e3f3"
+          ],
+          "ladder_netlist_sha256": "f9ebe9983c483ecf04012a72b459961184d9054addb90c32841161ee63b540be",
+          "margin_to_1p5ns_ns": -0.03308999999999984,
+          "meets_1p5ns": false,
+          "probe_job_ids": [
+            "klt-sim-4e70535ba986"
+          ],
+          "tau_ps": 73.51302695176352,
+          "td_od01_ns": 2.2201400000000002,
+          "td_od1_ns": 2.0508699999999997,
+          "td_od50_ns": 1.5330899999999998,
+          "unresolved": false
+        },
+        "tt_125c_2.97v": {
+          "dout_od50_end": 0.999991,
+          "dut_vos_shift_v": -0.011610600000000002,
+          "dut_vos_v": -0.020518,
+          "job_ids": [
+            "klt-sim-c3042f325f11"
+          ],
+          "ladder_netlist_sha256": "0643311fceac6904405f73fbbd8279f6000fc6aedb1928822bc697a88683314d",
+          "margin_to_1p5ns_ns": 0.29933999999999994,
+          "meets_1p5ns": true,
+          "probe_job_ids": [
+            "klt-sim-4e70535ba986"
+          ],
+          "tau_ps": 50.12192615645434,
+          "td_od01_ns": 1.66783,
+          "td_od1_ns": 1.55242,
+          "td_od50_ns": 1.20066,
+          "unresolved": false
+        }
+      },
+      "fraction": 0.0625,
+      "id": "cgs-0062",
+      "retained_ground_c_ff": {
+        "dout": 1.41600069,
+        "doutb": 1.7066216300000001,
+        "qn": 1.9340756300000002,
+        "sn": 1.30207062
+      }
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "dout_od50_end": 0.999996,
+          "dut_vos_shift_v": -0.007380899999999999,
+          "dut_vos_v": -0.012567400000000003,
+          "job_ids": [
+            "klt-sim-5d0453bcfca2"
+          ],
+          "ladder_netlist_sha256": "98402d002979f6b31f6fa5cb4f4b2beb225e88cf308a70860d4b2c7110fb8ea7",
+          "margin_to_1p5ns_ns": -0.016170000000000018,
+          "meets_1p5ns": false,
+          "probe_job_ids": [
+            "klt-sim-ff8dad5e15fa"
+          ],
+          "tau_ps": 69.41328704259668,
+          "td_od01_ns": 2.18632,
+          "td_od1_ns": 2.02649,
+          "td_od50_ns": 1.51617,
+          "unresolved": false
+        },
+        "tt_125c_2.97v": {
+          "dout_od50_end": 0.999993,
+          "dut_vos_shift_v": -0.012060500000000002,
+          "dut_vos_v": -0.0209679,
+          "job_ids": [
+            "klt-sim-051e7caba61a"
+          ],
+          "ladder_netlist_sha256": "b839805c77bff4ad9246b9514a7e5dc11e3f6dc7abeae3bbd1502cd08439ce8f",
+          "margin_to_1p5ns_ns": 0.3123799999999999,
+          "meets_1p5ns": true,
+          "probe_job_ids": [
+            "klt-sim-ff8dad5e15fa"
+          ],
+          "tau_ps": 49.00578933796293,
+          "td_od01_ns": 1.6486999999999998,
+          "td_od1_ns": 1.53586,
+          "td_od50_ns": 1.1876200000000001,
+          "unresolved": false
+        }
+      },
+      "fraction": 0.03125,
+      "id": "cgs-0031",
+      "retained_ground_c_ff": {
+        "dout": 0.708000344,
+        "doutb": 0.853310813,
+        "qn": 0.967037813,
+        "sn": 0.651035312
+      }
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "dout_od50_end": 0.999996,
+          "dut_vos_shift_v": -0.007530700000000001,
+          "dut_vos_v": -0.012717200000000005,
+          "job_ids": [
+            "klt-sim-67df66215b39"
+          ],
+          "ladder_netlist_sha256": "8062c4ff6924f59337d09d7452c8f9d37b9349d11d54d5f95ac2fd0d623681c4",
+          "margin_to_1p5ns_ns": -0.007789999999999964,
+          "meets_1p5ns": false,
+          "probe_job_ids": [
+            "klt-sim-a8c8a3c5f835"
+          ],
+          "tau_ps": 69.63477722836734,
+          "td_od01_ns": 2.17709,
+          "td_od1_ns": 2.01675,
+          "td_od50_ns": 1.50779,
+          "unresolved": false
+        },
+        "tt_125c_2.97v": {
+          "dout_od50_end": 0.999994,
+          "dut_vos_shift_v": -0.012270300000000001,
+          "dut_vos_v": -0.0211777,
+          "job_ids": [
+            "klt-sim-a52b79c886c4"
+          ],
+          "ladder_netlist_sha256": "1217afa57509ccf52c730914e67496784d707469eb997482670a3fed2f99284e",
+          "margin_to_1p5ns_ns": 0.31897,
+          "meets_1p5ns": true,
+          "probe_job_ids": [
+            "klt-sim-a8c8a3c5f835"
+          ],
+          "tau_ps": 47.255582575892895,
+          "td_od01_ns": 1.63481,
+          "td_od1_ns": 1.5259999999999998,
+          "td_od50_ns": 1.18103,
+          "unresolved": false
+        }
+      },
+      "fraction": 0.015625,
+      "id": "cgs-0016",
+      "retained_ground_c_ff": {
+        "dout": 0.354000172,
+        "doutb": 0.426655406,
+        "qn": 0.483518906,
+        "sn": 0.325517656
+      }
+    }
+  ]
+}

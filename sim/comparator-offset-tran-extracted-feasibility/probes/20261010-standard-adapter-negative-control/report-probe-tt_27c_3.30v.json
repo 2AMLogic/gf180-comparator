@@ -1,0 +1,160 @@
+{
+  "schema_version": 3,
+  "netlist": {
+    "path": null,
+    "scope": "external"
+  },
+  "status": "pass",
+  "corner_count": 1,
+  "passed": 1,
+  "failed": 0,
+  "errored": 0,
+  "inconclusive": 0,
+  "diagnostic_counts": {
+    "by_code": {},
+    "by_severity": {},
+    "corners_with_diagnostics": 0
+  },
+  "metrics": {
+    "sim__corner__count": 1,
+    "sim__corner__passed_count": 1,
+    "sim__corner__failed_count": 0,
+    "sim__corner__errored_count": 0,
+    "sim__corner__inconclusive_count": 0
+  },
+  "environment": {
+    "engine": "ngspice",
+    "engine_version": "42",
+    "ngspice_binary": "/usr/bin/ngspice",
+    "models_lib": {
+      "path": null,
+      "scope": "external"
+    },
+    "models_lib_sha256": "6edba54d23b38a2c60f8ffdbaa3eb75a7568c615e4820808969bd1121b77b1aa",
+    "netlist_sha256": "8752e8678155e7ff71851a17f8147beff2be89f30bfe72c11a709351961d5fb3",
+    "netlist_closure": [
+      {
+        "path": null,
+        "scope": "external",
+        "sha256": "8752e8678155e7ff71851a17f8147beff2be89f30bfe72c11a709351961d5fb3"
+      },
+      {
+        "path": null,
+        "scope": "external",
+        "sha256": "091cb530bf85160a1f07878fb81f789ca367d018991c8ab41a584cd1a85c6692"
+      },
+      {
+        "path": null,
+        "scope": "external",
+        "sha256": "8ffe4ec2380516d266aea4284527771e9c96b7384780aea93477c11929f8348e"
+      },
+      {
+        "path": null,
+        "scope": "external",
+        "sha256": "6ae89e60cdc0904d2ae938e2810d3be61e2c5385170a246d31df82a4365ee245"
+      }
+    ]
+  },
+  "coverage": {
+    "corners_simulated": 1,
+    "measurements_declared": 2,
+    "measurements_with_limits": 0,
+    "unrecognized_limit_keys": [],
+    "schema_version": 1,
+    "known": true,
+    "checked": [
+      "measurement:[0,\"tt/novdd/27C\",\"t_flip\"]/observation",
+      "measurement:[0,\"tt/novdd/27C\",\"vos_v\"]/observation"
+    ],
+    "skipped": [],
+    "inapplicable": [
+      {
+        "id": "measurement:[0,\"tt/novdd/27C\",\"t_flip\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/27C\",\"vos_v\"]/limits",
+        "reason": "characterization_without_limits"
+      }
+    ],
+    "unknown": [],
+    "nothing_checked": false,
+    "nothing_checked_reasons": []
+  },
+  "provenance": {
+    "klt_version": "0.7.0+g8eec069c7576",
+    "klayout_version": "0.30.12",
+    "pdk": {
+      "name": "gf180mcuD",
+      "source": "search root: ~/.volare",
+      "version": "open_pdks c6d73a35f524070e85faff4a6a9eef49553ebc2b"
+    },
+    "deck": {
+      "name": "sm141064.ngspice",
+      "content_hash": "sha256:6edba54d23b38a2c60f8ffdbaa3eb75a7568c615e4820808969bd1121b77b1aa",
+      "released": false
+    },
+    "input": {
+      "content_hash": "sha256:8752e8678155e7ff71851a17f8147beff2be89f30bfe72c11a709351961d5fb3",
+      "role": "netlist"
+    }
+  },
+  "measurements": [
+    {
+      "name": "t_flip",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C",
+        "value": 3.1782e-05,
+        "margin": null
+      }
+    },
+    {
+      "name": "vos_v",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C",
+        "value": -0.00821805,
+        "margin": null
+      }
+    }
+  ],
+  "corners": [
+    {
+      "corner_id": "tt/novdd/27C",
+      "process": "tt",
+      "supply_v": {},
+      "temperature_c": 27.0,
+      "status": "pass",
+      "runtime_s": 36.494,
+      "measurements": [
+        {
+          "name": "t_flip",
+          "value": 3.1782e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "vos_v",
+          "value": -0.00821805,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/tmp/feas219/out-probe-tt/tt_novdd_27C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/tmp/feas219/out-probe-tt/tt_novdd_27C/corner.cir"
+      },
+      "monte_carlo": null
+    }
+  ]
+}

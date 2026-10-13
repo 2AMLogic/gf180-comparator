@@ -26,6 +26,7 @@ import sys
 import tempfile
 import types
 import unittest
+from unittest import mock
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
@@ -251,7 +252,18 @@ class CompatibilityCheckTest(_Fixture):
             )
 
 
+_CTX = {"dut_provenance": "extracted", "schematic_baseline_id": "fixture-dut",
+        "pdk": {"variant": "gf180mcuD", "open_pdks_version": "a" * 40},
+        "toolchain": {"pins": {}, "observed": {}, "drift": []}}
+
+
 class PostlayoutDeltaTest(_Fixture):
+    def setUp(self):
+        super().setUp()
+        p = mock.patch.object(report_mod, "_is_committed", return_value=True)
+        p.start()
+        self.addCleanup(p.stop)
+
     def _tb(self, directory: Path):
         directory.mkdir(parents=True, exist_ok=True)
         netlist = directory / "tb.spice"
@@ -262,6 +274,7 @@ class PostlayoutDeltaTest(_Fixture):
             netlist=netlist,
             nominal_supply_v=3.3,
             measure={"td_od50_ns": "td_a*1e9"},
+            provenance=lambda: {"manifest_sha256": "m", "netlist_sha256": "n"},
         )
 
     def _record(self, directory: Path, rid: str, provenance: str, nominal: float,
@@ -275,7 +288,12 @@ class PostlayoutDeltaTest(_Fixture):
                         "record_id": rid,
                         "dut_provenance": provenance,
                         "dut_id": "fixture-dut",
+                        "dirty": False,
+                        "pdk": {"variant": "gf180mcuD",
+                                "open_pdks_version": "a" * 40},
+                        "toolchain": {"pins": {}, "observed": {}, "drift": []},
                     },
+                    "testbench": {"manifest_sha256": "m", "netlist_sha256": "n"},
                     "points": [
                         {
                             "status": "ok",
@@ -316,7 +334,7 @@ class PostlayoutDeltaTest(_Fixture):
             self._record(directory, "20260102-000000-bbbbbbb", "extracted", 0.9, 0.95)
             results, summaries = self._results(0.780)
             lines = report_mod._postlayout_delta_lines(
-                self._tb(directory), results, summaries, {"dut_provenance": "extracted"}
+                self._tb(directory), results, summaries, _CTX
             )
             text = "\n".join(lines)
             self.assertIn("20260101-000000-aaaaaaa", text)
@@ -330,9 +348,9 @@ class PostlayoutDeltaTest(_Fixture):
             directory = Path(tmp) / "fixture-bench"
             results, summaries = self._results(0.780)
             lines = report_mod._postlayout_delta_lines(
-                self._tb(directory), results, summaries, {"dut_provenance": "extracted"}
+                self._tb(directory), results, summaries, _CTX
             )
-            self.assertTrue(any("NO schematic-provenance counterpart" in ln for ln in lines))
+            self.assertTrue(any("UNAVAILABLE" in ln for ln in lines))
 
 
 class ComposeDeckExtraParamsTest(_Fixture):
@@ -370,6 +388,40 @@ class ComposeDeckExtraParamsTest(_Fixture):
                             extra_params={"dut_vos": 8.1e-3})
         self.assertIn(".param dut_vos=0.0081", deck)
         self.assertLess(deck.index(".param dut_vos"), deck.index(".param dv=1"))
+
+    def _compose(self, params, extra=None):
+        from harness.corners import CORNERS, PvtPoint
+        from harness.runner import compose_deck
+        from harness.testbench import Testbench
+
+        netlist = self.root / "tb.spice"
+        netlist.write_text("* tb\nXa v v c i d db vdd 0 comparator_dut\n")
+        tb = Testbench(
+            directory=self.root, name="fixture", netlist=netlist,
+            measure={"td": "t*1e9"}, params=params,
+        )
+        pdk = types.SimpleNamespace(
+            variant="gf180mcuD", version="deadbeefdeadbeef",
+            design_include=self.root / "design.ngspice",
+            model_lib=self.root / "models.ngspice",
+        )
+        point = PvtPoint(corner=CORNERS["tt"], temp_c=27.0, vdd=3.3, index=0)
+        return compose_deck(tb, pdk, self._dut(), point, extra_params=extra)
+
+    def test_dut_vos_has_exactly_one_definition(self):
+        deck = self._compose({"dv": 1}, {"dut_vos": 8.1e-3})
+        defs = [ln for ln in deck.splitlines() if ln.lower().startswith(".param dut_vos=")]
+        self.assertEqual(defs, [".param dut_vos=0.0081"])
+
+    def test_tb_param_cannot_override_harness_owned_names(self):
+        for name in ("dut_vos", "DUT_VOS", "vdd_val", "Temp_C", "vdd_nom"):
+            with self.assertRaises(ValueError, msg=name) as cm:
+                self._compose({name: 1}, {"dut_vos": 8.1e-3})
+            self.assertIn(name, str(cm.exception))
+
+    def test_extra_params_cannot_override_pvt_names(self):
+        with self.assertRaises(ValueError):
+            self._compose({}, {"VDD_VAL": 1.0})
 
     def test_offset_probe_testbench_requires_dut_vos_measure(self):
         from harness.testbench import Testbench

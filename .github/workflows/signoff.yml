@@ -28,7 +28,11 @@ name: Signoff
 # claim honest: manifests/verify-integrator.py fails unless
 # manifests/integrator.json's maturity.rung equals the committed report's
 # tier (null or a supported T1-T4 ladder value) -- the structured manifest
-# can never advertise a tier the verdict of record does not support.
+# can never advertise a tier the verdict of record does not support. Issue
+# #161 extends it to the structural fields: published paths resolve to tracked
+# files, netlist path/top subckt/ordered ports agree with the active DUT
+# binding (sim/dut.json via sim/harness/dut.py), and top_cell/area agree with
+# the placement envelope's bbox within documented rounding tolerances.
 #
 # A klt-free `evidence` step (issue #135) enforces sim/ append-only evidence:
 # signoff/check_append_only_evidence.py fails if any committed protected sim
@@ -44,13 +48,19 @@ name: Signoff
 #     release whose byte-identical wheel graded the committed report;
 #     same-version snapshots grade differently);
 #   - the rulebook: the vendored signoff/design-evidence-tiers.md, the
-#     11-item checklist including item 11 (Power delivery, structural,
-#     klayout-tools#2025) which shipped after the 0.5.0 release -- the
-#     wheel's bundled copy is the older 10-item one, so grading without the
-#     vendored doc would disagree with the verdict of record on
-#     t1_item_count and the verifier fails it by name.
-# When a klayout-tools release carrying the 11-item rulebook ships, move
-# both pins forward and re-grade per signoff/README.md's refresh contract.
+#     11-item checklist (item 11, Power delivery, structural,
+#     klayout-tools#2025, shipped after the 0.5.0 release) verbatim at
+#     klayout-tools commit 31a3e3c4. The pinned 0.6.0 wheel bundles an
+#     11-item rulebook too, but its bytes differ from the vendored copy (it
+#     is newer), so every grade passes --tiers-doc with the vendored file and
+#     the verifier fails, by name, any grade whose source_doc is the wheel's
+#     bundled copy. The vendored bytes are pinned by
+#     signoff/design-evidence-tiers.md.sha256 and checked by
+#     signoff/check_rulebook_pin.py (issue #168: the `rulebook-pin` step and
+#     check 0 of verify-report.py), so a prose-only edit fails too.
+# Re-vendoring the rulebook, or dropping --tiers-doc in favour of the wheel's
+# bundled copy, is a deliberate separate change that re-grades per
+# signoff/README.md ("The two pins" and its refresh contract).
 
 on:
   pull_request:

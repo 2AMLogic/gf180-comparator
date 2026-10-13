@@ -245,6 +245,14 @@ def git_short_sha() -> str:
 _EVIDENCE_DIRS = ("/records/", "/corners/", "/netlist-snapshots/")
 
 
+class GitInspectionError(RuntimeError):
+    """Git could not establish whether the working tree is clean.
+
+    Distinct from a verified clean tree: callers must not treat this as
+    ``[]`` (issue #260).
+    """
+
+
 def dirty_paths() -> list[str]:
     """Working-tree paths that would make a record non-citable.
 
@@ -253,14 +261,25 @@ def dirty_paths() -> list[str]:
     too -- an untracked testbench fragment would be a genuinely uncitable
     record -- EXCEPT under the harness's own evidence directories, which a
     run unavoidably writes into before it can stamp its own header.
+
+    Raises :class:`GitInspectionError` if git is missing, times out, or exits
+    nonzero: an uninspectable tree is not a clean tree.
     """
     try:
         out = subprocess.run(
             ["git", "-C", str(REPO_ROOT), "status", "--porcelain"],
             capture_output=True, text=True, check=False, timeout=60,
         )
-    except (FileNotFoundError, subprocess.TimeoutExpired):  # pragma: no cover
-        return []
+    except FileNotFoundError as exc:
+        raise GitInspectionError(f"git executable not found: {exc}") from exc
+    except subprocess.TimeoutExpired as exc:
+        raise GitInspectionError(
+            f"git status timed out after {exc.timeout}s") from exc
+    except OSError as exc:
+        raise GitInspectionError(f"git status could not run: {exc}") from exc
+    if out.returncode != 0:
+        raise GitInspectionError(
+            f"git status exited {out.returncode}: {(out.stderr or '').strip()}")
     offenders: list[str] = []
     for line in out.stdout.splitlines():
         if not line.strip():
@@ -327,14 +346,127 @@ def _write_new(path: Path, text: str) -> None:
         fh.write(text)
 
 
-def _latest_schematic_record(tb: Testbench) -> tuple[str, dict] | None:
-    """The newest committed record of this experiment measured against a
-    ``schematic``-provenance DUT -- the counterpart a post-layout
-    (``extracted``) record documents its delta against. Record ids sort
-    lexicographically by mint time (``YYYYMMDD-HHMMSS-<sha>``), so a plain
-    max() over the parsed ``context.record_id`` picks the latest.
+def _is_committed(path: Path) -> bool:
+    """Whether ``path`` is tracked by git. Fails closed: any inability to
+    inspect git means "not committed" (the record is then not selected)."""
+    try:
+        out = subprocess.run(
+            ["git", "-C", str(REPO_ROOT), "ls-files", "--error-unmatch", str(path)],
+            capture_output=True, text=True, check=False, timeout=60,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    return out.returncode == 0
+
+
+def _point_keys(doc: dict) -> frozenset:
+    return frozenset(
+        (p.get("corner"), float(p.get("temp_c", float("nan"))),
+         float(p.get("vdd", float("nan"))))
+        for p in doc.get("points", []) if p.get("status") == "ok"
+    )
+
+
+def _methodology_mismatch(tb: Testbench, doc: dict) -> str | None:
+    """Reason the record's measurement definitions are not provably those of
+    ``tb`` (None = comparable). Missing provenance is disclosed, not assumed."""
+    prov = getattr(tb, "provenance", None)
+    if prov is None:
+        return "current testbench provenance unavailable"
+    now = prov()
+    then = doc.get("testbench") or {}
+    for key in ("manifest_sha256", "netlist_sha256"):
+        if not then.get(key):
+            return f"record lacks testbench {key} (legacy provenance)"
+        if then[key] != now.get(key):
+            return f"testbench {key} differs"
+    return None
+
+
+def _pdk_provenance(ctx: dict) -> tuple[str | None, str | None]:
+    """``(variant, open_pdks_version)`` a context records, either side
+    ``None`` when absent."""
+    pdk = ctx.get("pdk") or {}
+    return pdk.get("variant") or None, pdk.get("open_pdks_version") or None
+
+
+def _comparison_unqualified(context: dict) -> str | None:
+    """Why THIS run's context cannot host a qualified schematic-baseline
+    comparison (None = qualified). A run that accepted toolchain drift, or
+    whose own PDK provenance is missing, keeps its diagnostics -- but its
+    deltas against a pinned-toolchain baseline would not be like-for-like
+    (see toolchain.py: a different open_pdks hash is a different set of
+    device models, and nothing in the numbers would look wrong)."""
+    variant, version = _pdk_provenance(context)
+    if not variant or not version:
+        return ("comparison run lacks its own PDK provenance "
+                "(variant/open_pdks_version) -- a qualified baseline "
+                "comparison cannot be stated")
+    if (context.get("toolchain") or {}).get("drift"):
+        return ("comparison run itself was taken under accepted toolchain "
+                "drift (`--allow-toolchain-drift`) -- its delta against a "
+                "pinned-toolchain baseline would not be like-for-like")
+    return None
+
+
+def _baseline_unqualified(context: dict, doc: dict) -> str | None:
+    """Why a candidate baseline record's recorded provenance does not qualify
+    against the comparison run's (None = qualified). The PDK variant and the
+    EXACT open_pdks revision must match this run's, and the record must not
+    carry accepted toolchain drift. Missing qualification metadata is
+    unqualified with the miss named -- never assumed fine."""
+    want_variant, want_version = _pdk_provenance(context)
+    have = doc.get("context") or {}
+    have_variant, have_version = _pdk_provenance(have)
+    if not have_variant or not have_version:
+        return ("record lacks PDK provenance (variant/open_pdks_version) -- "
+                "cannot qualify it as a baseline")
+    if have_variant != want_variant:
+        return (f"record PDK variant `{have_variant}` differs from this "
+                f"run's `{want_variant}`")
+    if have_version != want_version:
+        return (f"record open_pdks revision `{have_version}` differs from "
+                f"this run's `{want_version}` -- the hash IS the device "
+                "models (toolchain.py)")
+    chain = have.get("toolchain")
+    if not isinstance(chain, dict) or "drift" not in chain:
+        return "record lacks toolchain provenance (cannot check for accepted drift)"
+    if chain.get("drift"):
+        return ("record was taken under accepted toolchain drift "
+                "(`--allow-toolchain-drift`)")
+    return None
+
+
+def _schematic_baseline(
+    tb: Testbench, context: dict
+) -> tuple[tuple[str, dict, str] | None, list[str]]:
+    """Select the schematic baseline an extracted record is compared against.
+
+    Returns ``((record_id, doc, basis), rejections)``; the selection is None
+    when no candidate qualifies, with ``rejections`` naming why each was
+    skipped. A candidate must: be schematic-provenance; carry the declared
+    baseline DUT identity (``context['schematic_baseline_id']`` -- extracted
+    and schematic netlist hashes legitimately differ, so identity is by
+    declared id, never hash); be non-dirty; be tracked in git; share the
+    testbench manifest/fragment hashes; and be qualified against this run's
+    recorded PDK variant and exact open_pdks revision with no accepted
+    toolchain drift (#301 -- displaying drift is not refusing it). The
+    comparison run's own context must be qualified the same way: a drifted
+    run keeps its diagnostics but presents no baseline delta.
+    ``context['schematic_baseline_record']`` pins an exact record id (still
+    validated -- a pin cannot bypass qualification). Never "newest file
+    wins" among qualifying candidates only.
     """
-    best: tuple[str, dict] | None = None
+    want_id = context.get("schematic_baseline_id")
+    pinned = context.get("schematic_baseline_record")
+    run_unqualified = _comparison_unqualified(context)
+    if run_unqualified:
+        return None, [run_unqualified]
+    if not want_id:
+        return None, ["no schematic baseline identity declared for this DUT "
+                      "binding (set 'schematic_baseline' in sim/dut.json)"]
+    best: tuple[str, dict, Path] | None = None
+    rejections: list[str] = []
     for path in sorted((tb.experiment_dir / "records").glob("*.json")):
         try:
             doc = json.loads(path.read_text())
@@ -344,9 +476,35 @@ def _latest_schematic_record(tb: Testbench) -> tuple[str, dict] | None:
         if ctx.get("dut_provenance") != "schematic":
             continue
         rid = str(ctx.get("record_id") or path.stem)
+        if pinned and rid != pinned:
+            continue
+        if ctx.get("dut_id") != want_id:
+            rejections.append(f"`{rid}`: different DUT `{ctx.get('dut_id')}`")
+            continue
+        if ctx.get("dirty") is not False:
+            rejections.append(f"`{rid}`: dirty or cleanliness not recorded")
+            continue
+        if not _is_committed(path):
+            rejections.append(f"`{rid}`: not committed")
+            continue
+        why = _methodology_mismatch(tb, doc)
+        if why:
+            rejections.append(f"`{rid}`: {why}")
+            continue
+        why = _baseline_unqualified(context, doc)
+        if why:
+            rejections.append(f"`{rid}`: {why}")
+            continue
         if best is None or rid > best[0]:
-            best = (rid, doc)
-    return best
+            best = (rid, doc, path)
+    if best is None:
+        return None, rejections
+    basis = (f"declared baseline DUT `{want_id}`, clean, committed, "
+             "same testbench manifest and fragment hashes, same PDK variant "
+             "and open_pdks revision, no accepted toolchain drift"
+             + ("; pinned by schematic_baseline_record" if pinned else
+                "; newest of the qualifying records"))
+    return (best[0], best[1], basis), rejections
 
 
 def _nominal_measurement(doc: dict, tb: Testbench, name: str) -> float | None:
@@ -377,23 +535,35 @@ def _postlayout_delta_lines(
     in isolation -- the convention gf180-sar-adc's `Supersedes` delta
     summaries follow, stated here as a table instead of prose).
     """
-    counterpart = _latest_schematic_record(tb)
+    counterpart, rejections = _schematic_baseline(tb, context)
     if counterpart is None:
         return [
             "",
-            "- **Post-layout delta**: NO schematic-provenance counterpart record "
-            "exists under records/ -- the delta this section exists to document "
-            "cannot be computed. This record stands alone, which is weaker "
-            "evidence than the convention asks for.",
+            "- **Post-layout delta**: UNAVAILABLE -- NO comparable "
+            "schematic-provenance counterpart record exists under records/ "
+            "(must be the declared baseline DUT, clean, committed, same "
+            "testbench, matching PDK variant and open_pdks revision, and "
+            "carry no accepted toolchain drift). The delta this section "
+            "exists to document cannot be computed; this record stands "
+            "alone, which is weaker evidence than the convention asks for."
+            + (" Disqualifications: " + "; ".join(rejections) + "."
+               if rejections else ""),
         ]
-    rid, doc = counterpart
+    rid, doc, basis = counterpart
     ok = [r for r in results if r.status == "ok"]
+    now_keys = frozenset(
+        (r.point.corner.name, float(r.point.temp_c), float(r.point.vdd)) for r in ok)
+    same_grid = now_keys == _point_keys(doc)
     lines = [
         "",
         f"- **Post-layout delta** vs schematic record `{rid}` "
         f"(`{doc['context'].get('dut_id', '?')}`): nominal column is the "
         f"`tt_27c_{tb.nominal_supply_v:.2f}v` point of each record; mean column "
-        "is each record's whole-grid mean.",
+        "is each record's whole-grid mean"
+        + ("." if same_grid else
+           " -- OMITTED (—): the two records cover different corner/temperature/"
+           "supply sets, so a whole-grid mean delta would not be like-for-like.")
+        + f" Baseline basis: {basis}.",
         "",
         "  | measurement | schematic nominal | post-layout nominal | Δ nominal | schematic mean | post-layout mean | Δ mean |",
         "  |---|---|---|---|---|---|---|",
@@ -415,6 +585,13 @@ def _postlayout_delta_lines(
         if now_nom is None or then_nom is None or then_mean is None:
             lines.append(f"  | `{name}` | — | — | — | — | — | — |")
             continue
+        if not same_grid:
+            d_nom = (now_nom - then_nom) / abs(then_nom) * 100.0 if then_nom else float("nan")
+            lines.append(
+                f"  | `{name}` | {_fmt(then_nom)} | {_fmt(now_nom)} | "
+                f"{d_nom:+.6g}% | — | — | — (corner sets differ) |"
+            )
+            continue
         d_nom = (now_nom - then_nom) / abs(then_nom) * 100.0 if then_nom else float("nan")
         d_mean = (s.mean - then_mean) / abs(then_mean) * 100.0 if then_mean else float("nan")
         lines.append(
@@ -423,6 +600,42 @@ def _postlayout_delta_lines(
         )
     return lines
 
+
+
+def scalar_bound_failures(checks: dict, values: dict) -> list[str]:
+    """Point-local scalar `min` / `max` verdict of `checks` against `values`.
+
+    Shared by the corner-grid report (`point_check_outcome`) and the klt
+    ingest path (`sim/tools/klt_record.py`), so a manifest floor means the
+    same thing on both. Only per-point bounds are evaluated; grid-spread and
+    per-axis checks need the whole grid. A required value that is absent or
+    non-finite never passes."""
+    failures: list[str] = []
+    for name, spec in checks.items():
+        if "min" not in spec and "max" not in spec:
+            continue
+        value = values.get(name)
+        if value is None or not _is_finite(value):
+            failures.append(f"{name} missing or non-finite")
+            continue
+        if "min" in spec and value < spec["min"]:
+            failures.append(f"{name} {value:g} < required min {spec['min']:g}")
+        if "max" in spec and value > spec["max"]:
+            failures.append(f"{name} {value:g} > allowed max {spec['max']:g}")
+    return failures
+
+
+def point_check_outcome(tb: Testbench, result: PointResult) -> dict:
+    """Point-local min/max verdict for one completed point.
+
+    Only the per-point bounds (`min` / `max`) can be attributed to a single
+    corner; grid spread and per-axis checks stay in the aggregate verdict.
+    A required measurement that is absent or non-finite never passes.
+    """
+    if result.status != "ok":
+        return {"status": "not_evaluated", "failures": []}
+    failures = scalar_bound_failures(tb.checks, result.measurements)
+    return {"status": "fail" if failures else "pass", "failures": failures}
 
 
 def _fmt(value: float) -> str:
@@ -540,13 +753,29 @@ def render_record(
                 + " |"
             )
             continue
-        cells = " | ".join(_fmt(result.measurements[n]) for n in names)
-        verdict = "PASS"
+        cells = " | ".join(
+            _fmt(result.measurements[n]) if n in result.measurements else "—"
+            for n in names
+        )
+        outcome = point_check_outcome(tb, result)
+        verdict = (
+            "PASS" if outcome["status"] == "pass"
+            else f"**FAIL**: {'; '.join(outcome['failures'])}"
+        )
         if result.warnings:
             verdict += f" (⚠ {len(result.warnings)} warning(s): {'; '.join(result.warnings)})"
         lines.append(f"  | `{result.point.corner_id}` | {cells} | {verdict} |")
 
-    lines += ["", "  Spread across the grid:", ""]
+    lines += [
+        "",
+        "  The pass/fail column is the point-local `min`/`max` verdict for that",
+        "  corner only. Grid-spread and per-axis checks are aggregate checks over",
+        "  the whole grid, not per-corner verdicts; they are reported under",
+        "  **Check failures** below.",
+        "",
+        "  Spread across the grid:",
+        "",
+    ]
     lines += [
         "  | measurement | min | max | mean | spread % | limits |",
         "  |---|---|---|---|---|---|",
@@ -697,7 +926,10 @@ def write_record(
                 "context": context,
                 "testbench": tb.provenance(),
                 "checks": tb.checks,
-                "points": [r.as_dict() for r in results],
+                "points": [
+                    {**r.as_dict(), "check_outcome": point_check_outcome(tb, r)}
+                    for r in results
+                ],
                 "summary": {
                     name: {
                         "min": s.minimum if s.values else None,

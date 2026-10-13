@@ -1,0 +1,22 @@
+{
+ "points": [
+  {
+   "key": "tt_27c_3.30v",
+   "process": "tt",
+   "temperature_c": 27.0,
+   "supply_v": 3.3
+  },
+  {
+   "key": "ss_125c_2.97v",
+   "process": "ss",
+   "temperature_c": 125.0,
+   "supply_v": 2.97,
+   "spread_uv": 1.1317577880580605,
+   "rule": "highest temperature present; largest max(sig_dvos_dn_uv, sig_dvos_up_uv); ties by corner id"
+  }
+ ],
+ "draws": 8,
+ "hot_rule": "highest temperature present; largest max(sig_dvos_dn_uv, sig_dvos_up_uv); ties by corner id",
+ "selection_record": "sim/comparator-offset-cm-index/records/20261010-130605300890-d8e9253.json",
+ "selection_record_sha256": "4a921ab7c877e940952c09840068953f1eed7becce7ac7238c7e09493d61756e"
+}

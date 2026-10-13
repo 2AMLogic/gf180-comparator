@@ -1,0 +1,330 @@
+{
+  "brackets_per_corner": {
+    "ss_125c_2.97v": [
+      {
+        "fails_at": 0.25,
+        "meets_at": 0.0
+      }
+    ],
+    "tt_125c_2.97v": [
+      {
+        "fails_at": 1.0,
+        "meets_at": 0.75
+      }
+    ]
+  },
+  "controls": {
+    "ctrl@ss_125c_2.97v": {
+      "abs_diff_ns": 0.0,
+      "cited_dut_vos_v": -0.005186500000000004,
+      "cited_td_od50_ns": 2.02956,
+      "reproduces": true,
+      "rerun_dut_vos_v": -0.005186500000000004,
+      "rerun_td_od50_ns": 2.02956
+    },
+    "ctrl@tt_125c_2.97v": {
+      "abs_diff_ns": 0.0,
+      "cited_dut_vos_v": -0.0089074,
+      "cited_td_od50_ns": 1.58774,
+      "reproduces": true,
+      "rerun_dut_vos_v": -0.0089074,
+      "rerun_td_od50_ns": 1.58774
+    },
+    "sch@ss_125c_2.97v": {
+      "abs_diff_ns": 0.0,
+      "cited_td_od50_ns": 1.23747,
+      "reproduces": true,
+      "rerun_td_od50_ns": 1.23747
+    },
+    "sch@tt_125c_2.97v": {
+      "abs_diff_ns": 0.0,
+      "cited_td_od50_ns": 0.986719,
+      "reproduces": true,
+      "rerun_td_od50_ns": 0.986719
+    }
+  },
+  "fractions_meeting_all_points": [
+    0.0
+  ],
+  "generated_by": "layout/pex/parasitic_attribution.py budget-analyze",
+  "issue": 243,
+  "missing": [],
+  "nets": [
+    "sn",
+    "doutb",
+    "qn",
+    "dout"
+  ],
+  "non_monotonic_per_corner": {
+    "ss_125c_2.97v": false,
+    "tt_125c_2.97v": false
+  },
+  "outcome": "no finite tested fraction clears the bound at every stage point; only zero ground C does (tested: 0.75, 0.5, 0.25, 0)",
+  "points": [
+    "tt_125c_2.97v",
+    "ss_125c_2.97v"
+  ],
+  "scope": "diagnostic only: joint ground-C scaling of sn, doutb, qn, dout; series R, coupling C, device geometry fixed; each variant centred on its own probed trip point; no spec row scored, T1 item 7 unchanged",
+  "source_sha256": {
+    "attribution_json_229": "08b2a55136b943c7cbc91c7b881c3df9bb2629857c551dc3fe164e8ef76b633b",
+    "cited_report": "385fadcf7cd74c60508e01b3cd0341df7b64341479f437c0446c09bd07497dd8",
+    "extracted_dut": "a7ca3c00ea4db8a2b00cad69f2edc2d9320738499049cfa9c7faec517b7b5f45",
+    "parasitic_attribution_py": "1a6778080e5e6c65b9cf795b22a9b32d83aa81bf07b2e5f420d790beffea4ea9",
+    "pex_measure_py": "91fd1aaad696a0c71b364b9aea8420b758c6560d182be032db19b8108c2093b4",
+    "schematic_dut": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a",
+    "tb_json_consumed_fields": "462b79b389613fbc06de8037311ed54b0820a60f48778e1a1322c48c94a13f74"
+  },
+  "study_valid": true,
+  "variants": [
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "dout_od50_end": 0.999968,
+          "dut_vos_shift_v": 0.0,
+          "dut_vos_v": -0.005186500000000004,
+          "job_ids": [
+            "klt-sim-aa9d4557dd77"
+          ],
+          "ladder_netlist_sha256": "f71d3b365d4fdef93ffae4223816b87718bd418108c89967d53e5f511b506410",
+          "margin_to_1p5ns_ns": -0.52956,
+          "meets_1p5ns": false,
+          "probe_job_ids": [
+            "klt-sim-6df841359723"
+          ],
+          "tau_ps": 222.15465632797049,
+          "td_od01_ns": 3.2256,
+          "td_od1_ns": 2.71407,
+          "td_od50_ns": 2.02956,
+          "unresolved": false
+        },
+        "tt_125c_2.97v": {
+          "dout_od50_end": 0.999951,
+          "dut_vos_shift_v": 0.0,
+          "dut_vos_v": -0.0089074,
+          "job_ids": [
+            "klt-sim-da3c8c60e257"
+          ],
+          "ladder_netlist_sha256": "6722364fb6609621e4789b8352ab584678bd2ddab08b61b72cf28e484d9bdd07",
+          "margin_to_1p5ns_ns": -0.08773999999999993,
+          "meets_1p5ns": false,
+          "probe_job_ids": [
+            "klt-sim-6df841359723"
+          ],
+          "tau_ps": 130.07988321966207,
+          "td_od01_ns": 2.35539,
+          "td_od1_ns": 2.0558699999999996,
+          "td_od50_ns": 1.58774,
+          "unresolved": false
+        }
+      },
+      "fraction": 1.0,
+      "id": "ctrl",
+      "retained_ground_c_ff": {
+        "dout": 22.656011,
+        "doutb": 27.305946,
+        "qn": 30.94521,
+        "sn": 20.83313
+      }
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "dout_od50_end": 0.999974,
+          "dut_vos_shift_v": -0.0017099000000000003,
+          "dut_vos_v": -0.006896400000000004,
+          "job_ids": [
+            "klt-sim-2f4a55f87417"
+          ],
+          "ladder_netlist_sha256": "932ab172dbf65d24a772d1bc4e0db16fb6dfb7bdf120fad74a61bbb45e602ba5",
+          "margin_to_1p5ns_ns": -0.39870000000000005,
+          "meets_1p5ns": false,
+          "probe_job_ids": [
+            "klt-sim-06e79f42a5f5"
+          ],
+          "tau_ps": 184.03662965132207,
+          "td_od01_ns": 2.9713100000000003,
+          "td_od1_ns": 2.5475499999999998,
+          "td_od50_ns": 1.8987,
+          "unresolved": false
+        },
+        "tt_125c_2.97v": {
+          "dout_od50_end": 0.999961,
+          "dut_vos_shift_v": -0.002850000000000002,
+          "dut_vos_v": -0.011757400000000001,
+          "job_ids": [
+            "klt-sim-bbb5fdfa9d5e"
+          ],
+          "ladder_netlist_sha256": "74da8eddcc8d9d9c78bab6b867013fdcd95bf0c2ecb83135e000982830e2a47f",
+          "margin_to_1p5ns_ns": 0.01471,
+          "meets_1p5ns": true,
+          "probe_job_ids": [
+            "klt-sim-06e79f42a5f5"
+          ],
+          "tau_ps": 115.6786781997501,
+          "td_od01_ns": 2.19706,
+          "td_od1_ns": 1.9306999999999999,
+          "td_od50_ns": 1.48529,
+          "unresolved": false
+        }
+      },
+      "fraction": 0.75,
+      "id": "cgs-0750",
+      "retained_ground_c_ff": {
+        "dout": 16.9920083,
+        "doutb": 20.4794595,
+        "qn": 23.208907500000002,
+        "sn": 15.6248475
+      }
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "dout_od50_end": 0.999981,
+          "dut_vos_shift_v": -0.0035402000000000003,
+          "dut_vos_v": -0.008726700000000004,
+          "job_ids": [
+            "klt-sim-af7bf691fc84"
+          ],
+          "ladder_netlist_sha256": "bfa97c600a2b4a379b8053f1af7b1c3564248c68dc4a078cfd66d4d941b816ca",
+          "margin_to_1p5ns_ns": -0.26681999999999984,
+          "meets_1p5ns": false,
+          "probe_job_ids": [
+            "klt-sim-da509039208e"
+          ],
+          "tau_ps": 134.12750779100026,
+          "td_od01_ns": 2.68054,
+          "td_od1_ns": 2.3717,
+          "td_od50_ns": 1.7668199999999998,
+          "unresolved": false
+        },
+        "tt_125c_2.97v": {
+          "dout_od50_end": 0.999971,
+          "dut_vos_shift_v": -0.005850300000000003,
+          "dut_vos_v": -0.014757700000000002,
+          "job_ids": [
+            "klt-sim-923e2d2a2d0d"
+          ],
+          "ladder_netlist_sha256": "4034d865bcbad7a220f08a64812e2fe267da787caba1b0fbfd8447397ffc0b66",
+          "margin_to_1p5ns_ns": 0.11764999999999981,
+          "meets_1p5ns": true,
+          "probe_job_ids": [
+            "klt-sim-da509039208e"
+          ],
+          "tau_ps": 86.02939392021518,
+          "td_od01_ns": 1.99379,
+          "td_od1_ns": 1.7956999999999999,
+          "td_od50_ns": 1.3823500000000002,
+          "unresolved": false
+        }
+      },
+      "fraction": 0.5,
+      "id": "cgs-0500",
+      "retained_ground_c_ff": {
+        "dout": 11.3280055,
+        "doutb": 13.652973,
+        "qn": 15.472605,
+        "sn": 10.416565
+      }
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "dout_od50_end": 0.999989,
+          "dut_vos_shift_v": -0.0055206000000000005,
+          "dut_vos_v": -0.010707100000000004,
+          "job_ids": [
+            "klt-sim-21bc8421432c"
+          ],
+          "ladder_netlist_sha256": "3fbb39196f619a189761d6f99ab575b8ec563f3f7367ed1a4d4ad074506e1721",
+          "margin_to_1p5ns_ns": -0.13383999999999996,
+          "meets_1p5ns": false,
+          "probe_job_ids": [
+            "klt-sim-99869df01e4f"
+          ],
+          "tau_ps": 96.50457682372168,
+          "td_od01_ns": 2.41288,
+          "td_od1_ns": 2.19067,
+          "td_od50_ns": 1.63384,
+          "unresolved": false
+        },
+        "tt_125c_2.97v": {
+          "dout_od50_end": 0.999982,
+          "dut_vos_shift_v": -0.009090200000000003,
+          "dut_vos_v": -0.017997600000000002,
+          "job_ids": [
+            "klt-sim-01e0e44abf70"
+          ],
+          "ladder_netlist_sha256": "b151777ddde474f8c67f6338193093b8a9b2fee4a63bf7db6d2a1be868b11c53",
+          "margin_to_1p5ns_ns": 0.22110000000000007,
+          "meets_1p5ns": true,
+          "probe_job_ids": [
+            "klt-sim-99869df01e4f"
+          ],
+          "tau_ps": 68.388352065305,
+          "td_od01_ns": 1.8194,
+          "td_od1_ns": 1.6619300000000001,
+          "td_od50_ns": 1.2789,
+          "unresolved": false
+        }
+      },
+      "fraction": 0.25,
+      "id": "cgs-0250",
+      "retained_ground_c_ff": {
+        "dout": 5.66400275,
+        "doutb": 6.8264865,
+        "qn": 7.7363025,
+        "sn": 5.2082825
+      }
+    },
+    {
+      "corners": {
+        "ss_125c_2.97v": {
+          "dout_od50_end": 0.999997,
+          "dut_vos_shift_v": -0.007650999999999998,
+          "dut_vos_v": -0.012837500000000002,
+          "job_ids": [
+            "klt-sim-117f623782f9"
+          ],
+          "ladder_netlist_sha256": "b677db2d9af3175fb35eb5eeedc802ead209657f207d9bf80d81bc34a90c60e5",
+          "margin_to_1p5ns_ns": 0.0008000000000001339,
+          "meets_1p5ns": true,
+          "probe_job_ids": [
+            "klt-sim-24ee53206a2b"
+          ],
+          "tau_ps": 65.16588700958289,
+          "td_od01_ns": 2.15164,
+          "td_od1_ns": 2.0015899999999998,
+          "td_od50_ns": 1.4991999999999999,
+          "unresolved": false
+        },
+        "tt_125c_2.97v": {
+          "dout_od50_end": 0.999995,
+          "dut_vos_shift_v": -0.012480500000000002,
+          "dut_vos_v": -0.0213879,
+          "job_ids": [
+            "klt-sim-3140cb7ecd81"
+          ],
+          "ladder_netlist_sha256": "a75237c0049a9b6d140b9032b479401c4f6a82731e5e80e7276ca7b43ad33294",
+          "margin_to_1p5ns_ns": 0.32555,
+          "meets_1p5ns": true,
+          "probe_job_ids": [
+            "klt-sim-24ee53206a2b"
+          ],
+          "tau_ps": 45.6530359376698,
+          "td_od01_ns": 1.62134,
+          "td_od1_ns": 1.51622,
+          "td_od50_ns": 1.17445,
+          "unresolved": false
+        }
+      },
+      "fraction": 0.0,
+      "id": "cgs-0000",
+      "retained_ground_c_ff": {
+        "dout": 0.0,
+        "doutb": 0.0,
+        "qn": 0.0,
+        "sn": 0.0
+      }
+    }
+  ]
+}

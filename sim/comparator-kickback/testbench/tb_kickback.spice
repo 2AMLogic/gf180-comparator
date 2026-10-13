@@ -113,6 +113,13 @@ Xc   cpp cpn clk ibnc doutc doutbc vdd 0 comparator_dut
 * ad: instantaneous disturbance of A's + input relative to its own driving
 *     source, so the peak is measured against what the node WOULD have been.
 Bad ad 0 v = 'v(apa)-v(asp)'
+* adn: the same probe on A's - input (issue #160). The row is stated at "the
+*     input nodes", and layout asymmetry means the two nodes' peaks cannot be
+*     assumed equal, so the negative 1 kohm node is measured against ITS OWN
+*     driving source (asn) exactly as ad measures apa against asp. The
+*     row-facing peak is the maximum over both nodes; the positive-node-only
+*     quantities stay in the record for comparison with earlier records.
+Badn adn 0 v = 'v(ana)-v(asn)'
 * bd/cd: differential input voltage of the floating instances, a ~1 mV and
 *     ~100 mV quantity rather than a ~1.2 V one.
 Bbd bd 0 v = 'v(bpp)-v(bpn)'

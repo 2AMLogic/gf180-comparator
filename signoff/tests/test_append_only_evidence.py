@@ -14,9 +14,11 @@ import importlib.util
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -32,7 +34,10 @@ SNAP = "sim/comparator-regeneration/netlist-snapshots/20260910-125206-4805118.sp
 YIELD = "sim/comparator-offset-mc/yield/20260910-125341-4805118.json"
 ENVELOPE = "sim/corner-matrix/item5-corner-matrix-20260910-124917-4805118.json"
 NEW_EXP = "sim/comparator-brand-new/records/20261009-000000-abcdef0.md"
-PROTECTED = [REC, LOG, SNAP, YIELD, ENVELOPE, NEW_EXP]
+PROBE = "sim/comparator-offset-x/probes/20261010-negative-control/report-mc-tt.json"
+PROBE_SRC = "sim/comparator-offset-x/probes/20261010-negative-control/sources/testbench/tb.spice"
+PROBE_LOG = "sim/comparator-offset-x/probes/20261010-negative-control/err-mc-tt.attempt1.txt"
+PROTECTED = [REC, LOG, SNAP, YIELD, ENVELOPE, NEW_EXP, PROBE, PROBE_SRC, PROBE_LOG]
 UNPROTECTED = [
     "sim/comparator-offset-mc/README.md",
     "sim/comparator-offset-mc/testbench/tb.json",
@@ -40,6 +45,9 @@ UNPROTECTED = [
     "sim/harness/run.py",
     "sim/dut.json",
     "sim/corner-matrix/README.md",
+    "sim/comparator-offset-x/README.md",
+    "sim/comparator-offset-x/testbench/tb.spice",
+    "sim/probes/x.json",
     "layout/reports/drc-summary.json",
     "signoff/block-manifest.json",
     "signoff/signoff-report.json",
@@ -58,7 +66,33 @@ def base_env() -> dict[str, str]:
         "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@example.invalid",
         "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@example.invalid",
     })
+    env.update(GIT_QUIET_MAINTENANCE)
     return env
+
+
+# Newer git can spawn detached auto-gc/maintenance after `git commit`; that
+# background process keeps writing into .git and races TemporaryDirectory
+# teardown (CI: OSError ENOTEMPTY on <tmp>/.git). Keep the fixtures synchronous.
+GIT_QUIET_MAINTENANCE = {
+    "GIT_CONFIG_COUNT": "3",
+    "GIT_CONFIG_KEY_0": "gc.auto", "GIT_CONFIG_VALUE_0": "0",
+    "GIT_CONFIG_KEY_1": "maintenance.auto", "GIT_CONFIG_VALUE_1": "false",
+    "GIT_CONFIG_KEY_2": "gc.autoDetach", "GIT_CONFIG_VALUE_2": "false",
+}
+
+
+def rmtree_retry(path: str, attempts: int = 5) -> None:
+    """rmtree that tolerates a transient writer (retry, then raise)."""
+    for i in range(attempts):
+        try:
+            shutil.rmtree(path)
+            return
+        except FileNotFoundError:
+            return
+        except OSError:
+            if i == attempts - 1:
+                raise
+            time.sleep(0.2 * (i + 1))
 
 
 class Repo:
@@ -92,9 +126,9 @@ class Repo:
 
 class Base(unittest.TestCase):
     def setUp(self):
-        self._tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(self._tmp.cleanup)
-        self.r = Repo(Path(self._tmp.name))
+        tmp = tempfile.mkdtemp()
+        self.addCleanup(rmtree_retry, tmp)
+        self.r = Repo(Path(tmp))
         for rel in PROTECTED + UNPROTECTED:
             self.r.write(rel, f"original {rel}\n")
         self.base = self.r.commit("baseline")
@@ -145,13 +179,14 @@ class TreeComparisonTests(Base):
 
     def test_additions_pass_in_every_family(self):
         for rel in PROTECTED:
-            self.r.write(rel.replace("4805118", "9999999").replace("abcdef0", "1234567"), "new\n")
+            self.r.write(rel.replace("4805118", "9999999").replace("abcdef0", "1234567")
+                         .replace("20261010-negative-control", "20261011-new-probe"), "new\n")
         self.r.write("sim/corner-matrix/item5-corner-matrix-r3.json", "{}\n")
         self.r.write("sim/comparator-other/records/first.md", "new experiment\n")
         self.r.commit()
         rc, out = self.check()
         self.assertEqual(rc, 0, out)
-        self.assertIn("8 protected path(s) added", out)
+        self.assertIn("11 protected path(s) added", out)
 
     def test_unprotected_changes_pass(self):
         for rel in UNPROTECTED:
@@ -167,6 +202,36 @@ class TreeComparisonTests(Base):
                 self.r.write(rel, "rewritten\n")
                 self.r.commit()
                 self.assertFailsNaming(self.check(), rel, "modified")
+
+    def test_probe_artifact_modification_deletion_fails(self):
+        for rel in (PROBE, PROBE_SRC, PROBE_LOG):
+            with self.subTest(rel=rel):
+                self.r.git("checkout", "-q", "-B", "work", self.base)
+                self.r.write(rel, "rewritten\n")
+                self.r.commit()
+                self.assertFailsNaming(self.check(), rel, "modified")
+                self.r.git("checkout", "-q", "-B", "work2", self.base)
+                self.r.git("rm", "-q", rel)
+                self.r.commit()
+                self.assertFailsNaming(self.check(), rel, "deleted")
+
+    def test_probe_rename_and_mode_change_fail(self):
+        self.r.git("mv", PROBE, PROBE.replace("report", "report2"))
+        self.r.commit()
+        self.assertFailsNaming(self.check(), PROBE, "moved/renamed")
+        self.r.git("checkout", "-q", "-B", "work", self.base)
+        os.chmod(self.r.root / PROBE_LOG, 0o755)
+        self.r.commit()
+        self.assertFailsNaming(self.check(), PROBE_LOG, "mode changed")
+
+    def test_new_probe_and_experiment_docs_edit_pass(self):
+        self.r.write("sim/comparator-offset-x/probes/20261011-corrected/report.json", "n\n")
+        self.r.write("sim/comparator-offset-x/README.md", "edited docs\n")
+        self.r.write("sim/comparator-offset-x/testbench/tb.spice", "edited tb\n")
+        self.r.commit()
+        rc, out = self.check()
+        self.assertEqual(rc, 0, out)
+        self.assertIn("1 protected path(s) added", out)
 
     def test_deletion_fails(self):
         self.r.git("rm", "-q", ENVELOPE)
@@ -457,6 +522,88 @@ class CiBaselineTests(Base):
         rc, out = self.ci(GITHUB_EVENT_NAME="push",
                           GITHUB_EVENT_PATH=str(self.r.root / "missing-event.json"))
         self.assertEqual(rc, 2, out)
+
+
+ARCH_PA = "layout/pex/artifacts/parasitic-attribution/20261010-120720-230574b"
+ARCH_GC = "layout/pex/artifacts/ground-c-budget/20261010-154019-b9fff0f"
+ARCHIVED = [
+    ARCH_PA + "/attribution.json",
+    ARCH_PA + "/ctrl-ctr0/ladder-tt.report.json",
+    ARCH_PA + "/README.md",
+    ARCH_PA + "/sources/netlist.cir",
+    ARCH_GC + "/README.md",
+    ARCH_GC + "/stage1/manifest.txt",
+]
+ARCH_EDITABLE = [
+    "layout/pex/artifacts/parasitic-attribution/README.md",
+    "layout/pex/artifacts/ground-c-budget/README.md",
+    "layout/pex/parasitic_attribution.py",
+    "layout/reports/drc-summary.json",
+    "layout/pex/artifacts/measure/schematic/summary.json",
+    "layout/pex/artifacts/preamp-noise/record.json",
+    "layout/pex/artifacts/combined-budget/20261010-233444-c49a3f1/README.md",
+    "layout/pex/artifacts/parasitic-attribution/notes/x.json",
+]
+
+
+class ArchiveRootTests(Base):
+    """Parasitic-study run archives are immutable (issue #266)."""
+
+    def setUp(self):
+        super().setUp()
+        for rel in ARCHIVED + ARCH_EDITABLE:
+            self.r.write(rel, f"original {rel}\n")
+        self.base = self.r.commit("archives")
+
+    def test_policy(self):
+        for p in ARCHIVED:
+            self.assertTrue(CHECK.is_protected(p), p)
+        for p in ARCH_EDITABLE:
+            self.assertFalse(CHECK.is_protected(p), p)
+        self.assertFalse(CHECK.is_protected(ARCH_PA))
+        self.assertFalse(CHECK.is_protected(
+            "layout/pex/artifacts/ground-c-budget/20261011-000000-abc/x.json"))
+        self.assertTrue(CHECK.is_protected(
+            "layout/pex/artifacts/ground-c-budget/20261011-000000-abcdef0/a/b/c.bin"))
+
+    def test_modification_deletion_fail(self):
+        for rel in ARCHIVED:
+            with self.subTest(rel=rel):
+                self.r.git("checkout", "-q", "-B", "w1", self.base)
+                self.r.write(rel, "rewritten\n")
+                self.r.commit()
+                self.assertFailsNaming(self.check(), rel, "modified")
+                self.r.git("checkout", "-q", "-B", "w2", self.base)
+                self.r.git("rm", "-q", rel)
+                self.r.commit()
+                self.assertFailsNaming(self.check(), rel, "deleted")
+
+    def test_rename_fails(self):
+        rel = ARCHIVED[0]
+        self.r.git("mv", rel, rel + ".moved")
+        self.r.commit()
+        self.assertFailsNaming(self.check(), rel, "moved/renamed")
+
+    def test_mode_change_fails(self):
+        os.chmod(self.r.root / ARCHIVED[1], 0o755)
+        self.r.commit()
+        self.assertFailsNaming(self.check(), ARCHIVED[1], "mode changed")
+
+    def test_symlink_replacement_fails(self):
+        (self.r.root / ARCHIVED[0]).unlink()
+        os.symlink("elsewhere.json", self.r.root / ARCHIVED[0])
+        self.r.commit()
+        self.assertFailsNaming(self.check(), ARCHIVED[0], "type changed (file -> symlink)")
+
+    def test_new_run_and_editable_edits_pass(self):
+        self.r.write("layout/pex/artifacts/parasitic-attribution/20261011-090000-1234567/a.json")
+        self.r.write("layout/pex/artifacts/ground-c-budget/20261011-090000-1234567/r/b.json")
+        for rel in ARCH_EDITABLE:
+            self.r.write(rel, "edited\n")
+        self.r.commit()
+        rc, out = self.check()
+        self.assertEqual(rc, 0, out)
+        self.assertIn("2 protected path(s) added", out)
 
 
 class WorkflowWiringTests(unittest.TestCase):

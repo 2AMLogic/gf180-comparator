@@ -1,7 +1,7 @@
 {
   "name": "comparator-preamp-noise",
   "description": "Input-referred noise of the comparator front end over PVT via ngspice .noise, reported as total integrated OUTPUT noise divided by the measured DC gain, split into a full band (1 Hz .. 1 GHz) and a >1 kHz band so the flicker content is visible rather than buried.",
-  "claim": "REFERENCE, NOT VERDICT. sim/dut.json binds design/comparator.spice (id comparator-dr0001, provenance schematic -- topology per spec/decision-records/DR-0001-comparator-topology.md). This bench measures README.md#target-specification's Input-referred-noise row (<= 1.0 mV rms differential, <= 0.6 mV stretch), and, with sim/comparator-regeneration/'s tau, the noise floor half of the metastability story -- but that row is still DRAFT -- no decision record ratifies it -- so a measured pass or miss here is same-PDK/same-design context for the eventual ratification, not a pass/fail claim against a ratified spec.",
+  "claim": "REFERENCE, NOT VERDICT. sim/dut.json binds design/comparator.spice (id comparator-dr0001, provenance schematic -- topology per spec/decision-records/DR-0001-comparator-topology.md). This bench measures README.md#target-specification's Input-referred-noise row (<= 1.0 mV rms differential, <= 0.6 mV stretch), and, with sim/comparator-regeneration/'s tau, the noise floor half of the metastability story -- and that row is RATIFIED (DR-0002, spec/decision-records/DR-0002-target-spec-ratification.md; no bound changed). The checks in this manifest are measurement-sanity checks and corner-sensitivity anchors, not the ratified bound: the pass/fail verdict against the ratified row is scored separately (README.md#target-specification-ratified-via-dr-0002, spec/evidence-ledger.md), so a check passing here is not itself a spec verdict.",
   "netlist": "tb_preamp_noise.spice",
   "nominal_supply_v": 3.3,
   "supply_tolerance": 0.1,
@@ -42,7 +42,7 @@
     },
     "vn_in_uv": {
       "min": 0.1,
-      "description": "THE HEADLINE NUMBER, and the one README.md's noise row is stated against: total integrated output noise (1 Hz .. 1 GHz) DIVIDED BY THE MEASURED DC GAIN. The floor only catches a degenerate analysis (a `.noise` that returned nothing, or a gain so large the division collapses the result); the SPEC bound is deliberately not encoded while a placeholder is bound. Read the units caution in the testbench header: ngspice's own inoise_total is recorded separately as inoise_band_uv precisely so the two referrals can be compared rather than conflated."
+      "description": "THE HEADLINE NUMBER, and the one README.md's noise row is stated against: total integrated output noise (1 Hz .. 1 GHz) DIVIDED BY THE MEASURED DC GAIN. The floor only catches a degenerate analysis (a `.noise` that returned nothing, or a gain so large the division collapses the result); the ratified bound (README.md, DR-0002) is deliberately not encoded in this manifest and is scored separately. (Historical: this note was first written while a placeholder DUT was bound; the active binding is now the schematic comparator-dr0001 per sim/dut.json.) Read the units caution in the testbench header: ngspice's own inoise_total is recorded separately as inoise_band_uv precisely so the two referrals can be compared rather than conflated."
     },
     "inoise_band_uv": {
       "min": 0.1,

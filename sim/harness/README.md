@@ -43,6 +43,14 @@ The fragment gets these `.param`s, in this order:
 Then the models, then `.temp`, then `.options`, then the DUT netlist, then
 the fragment.
 
+**Reserved names.** `vdd_nom`, `vdd_val`, `temp_c` (the PVT point) and
+`dut_vos` (the measured offset referral) are harness-owned: a fragment may
+reference them but must not define them, in any case, on a `.param` line
+(including multi-assignment and `+` continuation lines). `testbench.load()`
+rejects them in manifest `params` and `validate_netlist()` in fragments;
+`compose_deck` re-checks before emitting a deck. Other `.param`s, notably the
+`sw_stat_mismatch` override, stay allowed.
+
 **One consequence worth knowing.** Anything that must override a value set by
 `design.ngspice` — `sw_stat_mismatch` is the case that matters — has to be a
 `.param` **in the fragment**, not in the manifest's `params` map, because

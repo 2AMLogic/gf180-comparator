@@ -2,7 +2,8 @@
 """PDK-free regressions for verify-report.py's wrapper --check step (#111).
 
 Each case builds a temporary copy of just the files the two wrappers read
-(netlist, the four cited item-5 records, the item-5 envelopes, the item-8
+(netlist, the four cited item-5 records, the #200 offset-tran and #204
+both-node kickback records, the item-5 envelopes, the item-8
 report and envelope, and the wrapper scripts), mutates the copy, and runs
 ``verify_wrappers(root)``. Committed evidence is never touched.
 
@@ -39,8 +40,13 @@ def _sha(path: Path) -> str:
 
 def make_tree(root: Path) -> None:
     for rel in ("signoff/make_item5_envelope.py", "signoff/make_item8_envelope.py",
+                "sim/harness/corners.py",  # #295: authoritative grids (stdlib-only)
+                "scripts/check_claim_drift.py", "spec/claim-registry.json",  # #295: narrative-claim check
                 WRAP5.NETLIST, "measurements/characterization-report.md",
-                "measurements/characterization-report.item8.json"):
+                "measurements/characterization-report.item8.json",
+                "measurements/characterization-report.sources.json",  # #275
+                "sim/dut.json", "layout/comparator.gds",  # #296: DUT identity
+                "layout/lvs/comparator.extract-rc.json"):  # #296: extracted binding
         dst = root / rel
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(REPO_ROOT / rel, dst)
@@ -48,6 +54,14 @@ def make_tree(root: Path) -> None:
         rel = f"sim/{bench}/records/{rid}.json"
         (root / rel).parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(REPO_ROOT / rel, root / rel)
+    for rel in (f"sim/{WRAP5.OFFSET_TRAN_BENCH}/records/{WRAP5.OFFSET_TRAN_RECORD_ID}.json",  # #200
+                f"sim/{WRAP5.KICKBACK_BENCH}/records/{WRAP5.KICKBACK_BOTH_RECORD_ID}.json"):  # #204
+        (root / rel).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(REPO_ROOT / rel, root / rel)
+    for ent in json.loads((REPO_ROOT / "measurements/characterization-report.sources.json").read_text())["records"]:
+        dst = root / ent["path"]  # #275: item-8 source records
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(REPO_ROOT / ent["path"], dst)
     for rel in (WRAP5.output_path(), WRAP5.predecessor_path()):
         rel = rel.relative_to(REPO_ROOT)
         (root / rel).parent.mkdir(parents=True, exist_ok=True)
@@ -80,8 +94,11 @@ class FixtureDrift(unittest.TestCase):
         rec = self.root / f"sim/{bench}/records/{rid}.json"
         rec.write_text(rec.read_text() + "\n")
         problems = VERIFY.verify_wrappers(self.root)
-        self.assertEqual(len(problems), 1, problems)
+        # The offset-mc record is also a pinned item-8 source (#275), so both
+        # wrappers flag the same drift.
+        self.assertEqual(len(problems), 2, problems)
         self.assertIn("item 5 wrapper drift", problems[0])
+        self.assertIn("item 8 wrapper drift", problems[1])
         self.assertEqual(_sha(self.root / WRAP5.NETLIST), _sha(REPO_ROOT / WRAP5.NETLIST))
 
     def test_item5_envelope_value_edit_fails(self) -> None:

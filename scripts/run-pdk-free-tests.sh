@@ -20,11 +20,13 @@ set -u
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT" || exit 2
 PY="${PYTHON:-python3}"
+# An unclosed file handle fails the step instead of scrolling past (issue #212).
+export PYTHONWARNINGS="error::ResourceWarning"
 
 # Directories whose test files are run one by one as scripts (each is a
 # stdlib unittest / self-checking script). sim/harness/tests is run through
 # `unittest discover` instead (see the `harness` step).
-TEST_DIRS=(design/tests signoff/tests manifests layout/tests)
+TEST_DIRS=(design/tests signoff/tests manifests layout/tests scripts/tests)
 UNITTEST_DIRS=(sim/harness/tests)
 
 have_klt() {
@@ -81,11 +83,16 @@ step discovery   "Test-file discovery coverage"                      0 'check_di
 step harness     "Run harness regression tests (PDK-free)"           0 'run_unittest_dirs'
 step netlist-pin "Netlist source-pin check (PDK-free)"               0 "$PY design/verify-netlist-pins.py --check"
 step klt-pin     "Grader pin consistency check"                      0 "$PY signoff/check_klt_pin.py"
-step evidence    "Append-only sim evidence check (base comparison)"  0 "$PY signoff/check_append_only_evidence.py"
-step integrator  "Verify integrator manifest maturity consistency"   0 "$PY manifests/verify-integrator.py"
+step rulebook-pin "Vendored signoff rulebook byte-identity check"    0 "$PY signoff/check_rulebook_pin.py"
+step evidence   "Append-only sim evidence check (base comparison)"  0 "$PY signoff/check_append_only_evidence.py"
+step sim-size   "Protected sim/ evidence size budget"            0 "$PY signoff/check_sim_size_budget.py"
+step integrator  "Verify integrator manifest (maturity, paths, ports, area)" 0 "$PY manifests/verify-integrator.py"
 step regrade     "Re-grade the manifest and verify the committed pins" 1 "$PY signoff/verify-report.py"
 step item5       "Item-5 corner-matrix wrapper freshness check"      0 "$PY signoff/make_item5_envelope.py --check"
+step item8       "Item-8 characterization evidence chain + envelope check" 0 "$PY signoff/make_item8_envelope.py --check"
 step routing-tbl "Layout README routing table freshness check"      0 "$PY layout/routing_table.py --check"
+step bench-inventory "sim bench inventory vs characterize.sh coverage" 0 "$PY scripts/check_bench_inventory.py"
+step claim-drift "Published headline claims vs committed records (registry)" 0 "$PY scripts/check_claim_drift.py"
 step unit-tests  "Unit tests: design/tests, signoff/tests, manifests, layout/tests" 0 'run_test_dirs'
 # ---- END STEPS --------------------------------------------------------------
 
@@ -101,12 +108,26 @@ CI="${GITHUB_ACTIONS:-}"
 group()    { [ -n "$CI" ] && echo "::group::$1" || echo "=== $1"; }
 endgroup() { [ -n "$CI" ] && echo "::endgroup::"; return 0; }
 
+# Run a command, echo its output, and fail if it exited non-zero or printed a
+# ResourceWarning. One finalizer-time warning is printed but never changes the
+# exit code, so the output is scanned (single-file runs and named steps alike).
+checked() {
+  local out rc=0
+  out="$("$@" 2>&1)" || rc=1
+  printf '%s\n' "$out"
+  if [[ "$out" == *ResourceWarning* ]]; then
+    echo "ResourceWarning in output (unclosed file handle): $*"; rc=1
+  fi
+  return "$rc"
+}
+
 # A path to a single test file: run just that.
 if [ -n "$TARGET" ] && [ -f "$TARGET" ]; then
   case "$TARGET" in
-    sim/harness/tests/*) exec "$PY" -m unittest discover -s sim/harness/tests -p "$(basename "$TARGET")" -v ;;
-    *) exec "$PY" "$TARGET" ;;
+    sim/harness/tests/*) checked "$PY" -m unittest discover -s sim/harness/tests -p "$(basename "$TARGET")" -v ;;
+    *) checked "$PY" "$TARGET" ;;
   esac
+  exit $?
 fi
 
 FAILED=(); SKIPPED=(); RAN=0
@@ -124,7 +145,14 @@ for i in "${!STEP_IDS[@]}"; do
   fi
   RAN=$((RAN + 1))
   group "$name"
-  if eval "${STEP_CMDS[$i]}"; then rc=0; else rc=1; fi
+  # A ResourceWarning raised in a finalizer is printed but never changes the
+  # exit code, so scan the step's output for it and fail the step ourselves.
+  OUT="$(eval "${STEP_CMDS[$i]}" 2>&1 && echo "@@rc=0" || echo "@@rc=1")"
+  printf '%s\n' "${OUT%@@rc=*}"
+  if [ "${OUT##*@@rc=}" = 0 ]; then rc=0; else rc=1; fi
+  if [[ "$OUT" == *ResourceWarning* ]]; then
+    echo "ResourceWarning in step output (unclosed file handle): $name"; rc=1
+  fi
   endgroup
   if [ "$rc" != 0 ]; then
     [ -n "$CI" ] && echo "::error title=$name::step failed"

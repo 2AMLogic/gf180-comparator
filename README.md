@@ -11,7 +11,7 @@ The design is a static differential preamplifier into a StrongARM latch
 [DR-0001](spec/decision-records/DR-0001-comparator-topology.md)), bound into
 `sim/dut.json` as `comparator-dr0001` (`provenance: schematic`) with a
 parasitic-extracted layout entry alongside. [`layout/`](layout/) holds the
-GDS plus DRC, LVS, ERC and post-layout extraction evidence; the four benches
+GDS plus DRC, LVS, ERC and post-layout extraction evidence; the four corner-grid benches
 under [`sim/`](sim/) have schematic records, and the regeneration
 (decision-time) and kickback benches also have post-layout (extracted-DUT)
 records; the
@@ -55,20 +55,38 @@ publishes what this block takes and exposes (consumer requirement rows:
 ## Verification harness
 
 Every row of the table below has a testbench, a committed PVT corner matrix,
-and a one-command way to reproduce it — see [`sim/`](sim/).
+and a documented way to reproduce it — see [`sim/`](sim/). `sim/` holds eight bench directories: four corner-grid benches
+(`comparator-offset-mc`, `comparator-preamp-noise`, `comparator-regeneration`,
+`comparator-kickback`) that `characterize.sh` runs, the fleet-only
+`comparator-offset-tran` (whole-comparator offset evidence), the
+supplemental, unscored `comparator-offset-cm-window` (no record yet) and its
+monotonic-index variant `comparator-offset-cm-index` (unscored; complete
+45-point record, verdict Unknown), and `comparator-offset-tran-extracted-feasibility`
+(bounded, unscored, fleet-only feasibility probe; no record).
 
 ```bash
 python3 sim/run_corners.py --check-env   # PDK, pinned toolchain, DUT contract
-./sim/characterize.sh smoke              # every bench, nominal point, seconds
-./sim/characterize.sh characterize       # the full 45-point PVT campaign
+./sim/characterize.sh smoke              # the four corner-grid benches, nominal point, seconds
+./sim/characterize.sh characterize       # their full 45-point PVT campaign
 ./sim/selftest.sh                        # the harness's own acceptance test
 ```
+
+`characterize.sh` does **not** run `comparator-offset-tran`: it is not wired
+into `run_corners.py` and is fleet-only. To reproduce its record (the
+whole-comparator total-offset evidence), submit it to the Spot batch fleet:
+
+```bash
+KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py comparator-offset-tran --label "<text>"
+```
+
+Details and limits: [`sim/README.md`](sim/README.md#reproducing-one-record).
+Do not hand-launch the grid on a shared worker.
 
 **`sim/dut.json` now binds the real schematic** (`design/comparator.spice`,
 `id: comparator-dr0001`, `provenance: schematic`) — see
 [`spec/decision-records/DR-0001-comparator-topology.md`](spec/decision-records/DR-0001-comparator-topology.md)
 for the topology decision and [`sim/dut/README.md`](sim/dut/README.md) for
-the binding contract. The four benches' new records carry no placeholder
+the binding contract. The four corner-grid benches' new records carry no placeholder
 banner; the earlier placeholder-DUT records remain committed (`sim/` is
 append-only evidence) but are superseded as the current reference.
 
@@ -98,7 +116,7 @@ Basis column keeps the method and the current verdict.
 
 | Parameter | Target | Stretch | Basis |
 |---|---|---|---|
-| Offset sigma | ≤ 15 mV, 3σ (input-referred, post-calibration-free) | ≤ 8 mV, 3σ | Monte Carlo via gf180mcu's `sw_stat_mismatch` local-mismatch models: N = 200 mismatch-only draws per corner, `setseed 20260909` common across all 45 corners, 1σ reported alongside 3σ, precision 1/√(2N) = 5.0 %; bound matches the sg13g2/sky130 twin set. **Verdict — meets target and stretch at every corner** (2.796–2.807 mV 3σ; nominal 2.80063 mV). Record, methodology provenance and negative control: [ledger](spec/evidence-ledger.md#offset-sigma). |
+| Offset sigma | ≤ 15 mV, 3σ (input-referred, post-calibration-free) | ≤ 8 mV, 3σ | Monte Carlo via gf180mcu's `sw_stat_mismatch` local-mismatch models: N = 200 mismatch-only draws per corner, `setseed 20260909` common across all 45 corners, 1σ reported alongside 3σ, precision 1/√(2N) = 5.0 %; bound matches the sg13g2/sky130 twin set. **Verdict — meets target and stretch at every corner** (2.796–2.807 mV 3σ; nominal 2.80063 mV). Scope: DC-sweep, preamp-only (a lower bound). **Whole-comparator total** (additive bench `sim/comparator-offset-tran/`, #157): transient MC on the full 45-point PVT grid (tt/ss/ff/fs/sf × −40/27/125 °C × 2.97/3.30/3.63 V), N = 200 draws per point, seed 20260909, with the latch measured and a conservative load-R hand budget (derived, not simulated). The scored total is **3.146 mV 3σ at nominal `tt_27c_3.30v` and 2.994–3.795 mV across all 45 points (binding corner `ff_125c_3.63v`); meets target and stretch at 45/45**. The purely simulated whole-comparator mismatch alone is 2.808–3.515 mV 3σ; the load-R term is added on top as a derived budget. The latch adds a paired 0.184–0.659 mV 1σ. Schematic DUT, single seed; no extracted-layout or layout-systematic offset is claimed. The earlier nine-point reduced-grid run (3.146–3.725 mV, 9/9) is history. Record, methodology provenance and negative control: [ledger](spec/evidence-ledger.md#offset-sigma). |
 | Input-referred noise | ≤ 1.0 mV rms, differential | ≤ 0.6 mV rms, differential | ngspice `.noise` on the preamplifier with the latch held in reset, total integrated output noise **divided by measured DC gain** (the `gf180-sar-adc` `sim/comparator-preamp-noise/` methodology and units caution). **Verdict — meets target and stretch at every corner** (91.25 µV rms nominal, 128.8 µV rms worst case; worst case clears target 7.8× and stretch 4.7×; scoring pass [#75](https://github.com/2AMLogic/gf180-comparator/issues/75)). Records and provenance: [ledger](spec/evidence-ledger.md#input-referred-noise). |
 | Decision time vs. overdrive | ≤ 1.5 ns at 50 mV overdrive, 3.3 V | ≤ 0.8 ns at 50 mV overdrive | Transient decision-time-vs-overdrive sweep mirroring `gf180-sar-adc`'s `sim/comparator-regeneration/` (schematic, plus extracted post-layout). **Verdict — misses the ratified target at 7 of 45 post-layout corners (worst 2.034 ns); recorded miss, accepted as known at ratification** per [DR-0002](spec/decision-records/DR-0002-target-spec-ratification.md) Option A (schematic meets target at all 45 corners, worst 1.237 ns; stretch missed at 16 of 45 schematic and 44 of 45 post-layout corners; scoring pass [#75](https://github.com/2AMLogic/gf180-comparator/issues/75)). Relaxes nothing. Records and delta detail: [ledger](spec/evidence-ledger.md#decision-time-vs-overdrive). |
 | Kickback | ≤ 5 mV disturbance into a 1 kΩ source impedance at the input nodes, single decision edge | ≤ 2 mV | Floating high-impedance bias through a realistic RC, never an ideal source (`gf180-sar-adc` `sim/comparator-kickback/` methodology). **Verdict — misses the ratified target at every post-layout corner (and at 44 of 45 schematic corners); recorded miss, accepted as known at ratification** per [DR-0002](spec/decision-records/DR-0002-target-spec-ratification.md) Option A (post-layout 8.49–14.58 mV, nominal 10.03 mV; schematic 4.53–10.01 mV, nominal 7.60 mV; stretch missed everywhere in both records; scoring pass [#75](https://github.com/2AMLogic/gf180-comparator/issues/75)). Relaxes nothing. Records and delta detail: [ledger](spec/evidence-ledger.md#kickback). |

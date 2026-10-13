@@ -1,0 +1,158 @@
+{
+  "schema_version": 3,
+  "netlist": {
+    "path": "layout/pex/artifacts/parasitic-attribution/20261010-120720-230574b/r0-nb/probe.spice",
+    "scope": "repo"
+  },
+  "status": "pass",
+  "corner_count": 2,
+  "passed": 2,
+  "failed": 0,
+  "errored": 0,
+  "metrics": {
+    "sim__corner__count": 2,
+    "sim__corner__passed_count": 2,
+    "sim__corner__failed_count": 0,
+    "sim__corner__errored_count": 0
+  },
+  "environment": {
+    "engine": "ngspice",
+    "engine_version": "46",
+    "models_lib": {
+      "path": null,
+      "scope": "external"
+    },
+    "models_lib_sha256": "f6f4a96e18fc5ad11270ad3451aaecc7ac37fc81eb61e15b0d7d94c7bc594a24",
+    "netlist_sha256": "2b517f13ba8ce2a351a01609ec784da87f8314577bdec7debefe7542705c8f3f",
+    "remote": {
+      "provider": "aws-batch-fleet",
+      "job_id": "klt-sim-a1b42d6bc7dc",
+      "bucket": "2am-batch-jobs-221082181346",
+      "region": "us-east-1",
+      "instance_id": "i-0da390db550929989",
+      "instance_type": "c7i.4xlarge",
+      "availability_zone": "us-east-1d",
+      "ami_id": "ami-0e40e3245f1923ac8",
+      "lifecycle": "spot",
+      "spot": true,
+      "state": "done",
+      "exit_code": "0",
+      "concurrency": "1",
+      "physical_cores": "8",
+      "elapsed_seconds": 38
+    }
+  },
+  "coverage": {
+    "corners_simulated": 2,
+    "measurements_declared": 1,
+    "measurements_with_limits": 0,
+    "unrecognized_limit_keys": [],
+    "schema_version": 1,
+    "known": true,
+    "checked": [
+      "measurement:[0,\"tt/2.970V/125C\",\"t_flip\"]/observation",
+      "measurement:[1,\"ss/2.970V/125C\",\"t_flip\"]/observation"
+    ],
+    "skipped": [],
+    "inapplicable": [
+      {
+        "id": "measurement:[0,\"tt/2.970V/125C\",\"t_flip\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"ss/2.970V/125C\",\"t_flip\"]/limits",
+        "reason": "characterization_without_limits"
+      }
+    ],
+    "unknown": [],
+    "nothing_checked": false,
+    "nothing_checked_reasons": []
+  },
+  "provenance": {
+    "klt_version": "0.6.0",
+    "klayout_version": "0.30.12",
+    "pdk": {
+      "name": "gf180mcuD",
+      "source": "search root: ~/.ciel",
+      "version": "open_pdks f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7"
+    },
+    "deck": {
+      "name": "sm141064.ngspice",
+      "content_hash": "sha256:f6f4a96e18fc5ad11270ad3451aaecc7ac37fc81eb61e15b0d7d94c7bc594a24",
+      "released": false
+    },
+    "input": {
+      "content_hash": "sha256:2b517f13ba8ce2a351a01609ec784da87f8314577bdec7debefe7542705c8f3f",
+      "role": "netlist"
+    }
+  },
+  "measurements": [
+    {
+      "name": "t_flip",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/2.970V/125C",
+        "value": 3.10926e-05,
+        "margin": null
+      }
+    }
+  ],
+  "corners": [
+    {
+      "corner_id": "tt/2.970V/125C",
+      "process": "tt",
+      "supply_v": {
+        "vsup": 2.97
+      },
+      "temperature_c": 125.0,
+      "status": "pass",
+      "runtime_s": 30.729,
+      "measurements": [
+        {
+          "name": "t_flip",
+          "value": 3.10926e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "ss/2.970V/125C",
+      "process": "ss",
+      "supply_v": {
+        "vsup": 2.97
+      },
+      "temperature_c": 125.0,
+      "status": "pass",
+      "runtime_s": 32.07,
+      "measurements": [
+        {
+          "name": "t_flip",
+          "value": 3.48135e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": null,
+        "raw": null,
+        "waveform": null,
+        "deck": null
+      },
+      "monte_carlo": null
+    }
+  ]
+}

@@ -1,0 +1,147 @@
+{
+  "netlist": "body-extracted-v3.30.spice",
+  "engine": "ngspice",
+  "models": {
+    "pdk": "gf180mcuD",
+    "lib": "libs.tech/ngspice/sm141064.ngspice"
+  },
+  "corners": {
+    "process": [
+      {
+        "name": "tt",
+        "sections": [
+          "typical",
+          "res_typical",
+          "bjt_typical",
+          "diode_typical",
+          "moscap_typical",
+          "mimcap_typical"
+        ]
+      }
+    ],
+    "temperature_c": [
+      27.0
+    ]
+  },
+  "batch": {
+    "runner_version_check": "enforce",
+    "capacity_wait_s": 1800
+  },
+  "analysis_steps": [
+    {
+      "name": "op",
+      "analysis": {
+        "kind": "op",
+        "args": ""
+      },
+      "measurements": [
+        {
+          "name": "vbias_mv",
+          "expr": "v(ibn)*1e3"
+        },
+        {
+          "name": "dc_p",
+          "expr": "v(xdut.xlayout_dut.aop)"
+        },
+        {
+          "name": "dc_n",
+          "expr": "v(xdut.xlayout_dut.aon)"
+        }
+      ]
+    },
+    {
+      "name": "nfull",
+      "analysis": {
+        "kind": "noise",
+        "args": "v(xdut.xlayout_dut.aop,xdut.xlayout_dut.aon) vd dec 20 1 1e9"
+      },
+      "measurements": [
+        {
+          "name": "onoise",
+          "expr": "onoise_total"
+        },
+        {
+          "name": "inoise",
+          "expr": "inoise_total"
+        }
+      ]
+    },
+    {
+      "name": "nhf",
+      "analysis": {
+        "kind": "noise",
+        "args": "v(xdut.xlayout_dut.aop,xdut.xlayout_dut.aon) vd dec 20 1e3 1e9"
+      },
+      "measurements": [
+        {
+          "name": "onoise",
+          "expr": "onoise_total"
+        }
+      ]
+    },
+    {
+      "name": "nwhite",
+      "analysis": {
+        "kind": "noise",
+        "args": "v(xdut.xlayout_dut.aop,xdut.xlayout_dut.aon) vd lin 11 995000 1.005e+06"
+      },
+      "measurements": [
+        {
+          "name": "onoise",
+          "expr": "onoise_total"
+        }
+      ]
+    },
+    {
+      "name": "ac",
+      "analysis": {
+        "kind": "ac",
+        "args": "dec 20 1 1e9"
+      },
+      "measurements": [
+        {
+          "name": "av_dc",
+          "expr": "mag(v(xdut.xlayout_dut.aop)-v(xdut.xlayout_dut.aon))[0]"
+        }
+      ]
+    }
+  ],
+  "measurements": [
+    {
+      "name": "vn_in_uv",
+      "expr": "nfull.onoise/ac.av_dc*1e6"
+    },
+    {
+      "name": "vn_in_hf_uv",
+      "expr": "nhf.onoise/ac.av_dc*1e6"
+    },
+    {
+      "name": "onoise_uv",
+      "expr": "nfull.onoise*1e6"
+    },
+    {
+      "name": "onoise_hf_uv",
+      "expr": "nhf.onoise*1e6"
+    },
+    {
+      "name": "inoise_band_uv",
+      "expr": "nfull.inoise*1e6"
+    },
+    {
+      "name": "white_nv_rthz",
+      "expr": "nwhite.onoise/sqrt(10000)*1e9"
+    },
+    {
+      "name": "enbw_mhz",
+      "expr": "nfull.onoise^2/(nwhite.onoise^2/10000)/1e6"
+    }
+  ],
+  "options": {
+    "timeout_s": 900,
+    "keep_artifacts": true,
+    "ngspice_init": [
+      "set measureprec=12",
+      "set numdgt=12"
+    ]
+  }
+}

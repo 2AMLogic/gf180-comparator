@@ -90,6 +90,7 @@ import json
 import os
 import re
 import sys
+from pathlib import Path
 
 from layout_common import HERE, INTERFACE_PINS, REPO_ROOT, TOP, run_extract
 from run_lvs import DEVICE_GEOMETRY_MAP
@@ -182,7 +183,7 @@ def _adapt_netlist(raw_netlist: str = RAW_NETLIST, dut_netlist: str = DUT_NETLIS
     """
     rewritten = 0
     out: list[str] = []
-    for raw in open(raw_netlist).read().splitlines():
+    for raw in Path(raw_netlist).read_text().splitlines():
         line = raw
         m = _MOS_RE.match(line)
         if m:
@@ -246,7 +247,7 @@ def _check_interface_contract(dut_netlist: str = DUT_NETLIST) -> None:
     time, restated here so a broken adaptation fails at generation time,
     not at the first simulated point."""
     declared: dict[str, tuple[str, ...]] = {}
-    for raw in open(dut_netlist).read().splitlines():
+    for raw in Path(dut_netlist).read_text().splitlines():
         line = raw.strip()
         if not line.lower().startswith(".subckt"):
             continue
@@ -269,7 +270,7 @@ def main() -> int:
     _check_report(report)
     rewritten = _adapt_netlist()
     _check_interface_contract()
-    digest = hashlib.sha256(open(DUT_NETLIST, "rb").read()).hexdigest()
+    digest = hashlib.sha256(Path(DUT_NETLIST).read_bytes()).hexdigest()
     parasitics = report["parasitics"]
     print(f"extracted + adapted post-layout DUT netlist:")
     print(f"  raw netlist : {os.path.relpath(RAW_NETLIST, REPO_ROOT)} (scratch)")

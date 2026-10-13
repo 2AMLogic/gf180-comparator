@@ -1,0 +1,133 @@
+{
+ "backend": "local",
+ "client_klt": "klt 0.7.0+g8eec069c7576",
+ "issue": 209,
+ "klt_rc": {
+  "extracted-v3.30": 0,
+  "schematic-v3.30": 0
+ },
+ "nominal_vs_202": {
+  "legs": {
+   "extracted": {
+    "comparison": {
+     "av_dc": {
+      "ok": true,
+      "record_202": 17.930004575,
+      "rel": 3.9040211797272375e-12,
+      "request": 17.93000457507
+     },
+     "enbw_mhz": {
+      "ok": true,
+      "record_202": 25.423286815,
+      "rel": -4.603820331474358e-07,
+      "request": 25.423275110575528
+     },
+     "inoise_band_uv": {
+      "ok": true,
+      "record_202": 340.1149753,
+      "rel": 1.381881052877059e-11,
+      "request": 340.1149753047
+     },
+     "onoise_hf_uv": {
+      "ok": true,
+      "record_202": 1264.5913876,
+      "rel": -3.321231742708014e-11,
+      "request": 1264.591387558
+     },
+     "onoise_uv": {
+      "ok": true,
+      "record_202": 1271.177692,
+      "rel": 1.4946790335164882e-11,
+      "request": 1271.177692019
+     },
+     "vn_in_hf_uv": {
+      "ok": true,
+      "record_202": 70.529339926,
+      "rel": 6.4468277733021256e-12,
+      "request": 70.5293399264547
+     },
+     "vn_in_uv": {
+      "ok": true,
+      "record_202": 70.896674158,
+      "rel": 6.9329774453734814e-12,
+      "request": 70.89667415849152
+     },
+     "white_nv_rthz": {
+      "ok": true,
+      "record_202": 252.11019847,
+      "rel": 2.3018188222707078e-07,
+      "request": 252.1102565012
+     }
+    },
+    "issues": [],
+    "source": {
+     "corner_id": "tt/novdd/27C",
+     "netlist_sha256": "f60b60e540c0a91ed3eff5e4327ad4442c91e07eb6a116f680fc9648baee0e3d",
+     "report": "report-extracted-v3.30.json",
+     "request": "request-extracted-v3.30.json"
+    }
+   },
+   "schematic": {
+    "comparison": {
+     "av_dc": {
+      "ok": true,
+      "record_202": 18.012264932,
+      "rel": 2.3872575104978465e-11,
+      "request": 18.01226493243
+     },
+     "enbw_mhz": {
+      "ok": true,
+      "record_202": 54.885564198,
+      "rel": -4.95162375977249e-07,
+      "request": 54.88553702073362
+     },
+     "inoise_band_uv": {
+      "ok": true,
+      "record_202": 329.51715214,
+      "rel": 7.283341617077667e-12,
+      "request": 329.5171521424
+     },
+     "onoise_hf_uv": {
+      "ok": true,
+      "record_202": 1849.0909045,
+      "rel": 1.5683339643541114e-11,
+      "request": 1849.090904529
+     },
+     "onoise_uv": {
+      "ok": true,
+      "record_202": 1853.6435298,
+      "rel": -1.8881654790675144e-11,
+      "request": 1853.643529765
+     },
+     "vn_in_hf_uv": {
+      "ok": true,
+      "record_202": 102.6573233,
+      "rel": -2.5520957405428876e-12,
+      "request": 102.65732329973801
+     },
+     "vn_in_uv": {
+      "ok": true,
+      "record_202": 102.9100747,
+      "rel": 2.828926046645847e-11,
+      "request": 102.91007470291125
+     },
+     "white_nv_rthz": {
+      "ok": true,
+      "record_202": 250.20567344,
+      "rel": 2.4756992576152855e-07,
+      "request": 250.2057353834
+     }
+    },
+    "issues": [],
+    "source": {
+     "corner_id": "tt/novdd/27C",
+     "netlist_sha256": "90d978214d8779da5d910335f6e541146fc8db03f32b1e3e802f85857933034b",
+     "report": "report-schematic-v3.30.json",
+     "request": "request-schematic-v3.30.json"
+    }
+   }
+  },
+  "tolerance_rel": 0.0001,
+  "within_tolerance": true
+ }
+}

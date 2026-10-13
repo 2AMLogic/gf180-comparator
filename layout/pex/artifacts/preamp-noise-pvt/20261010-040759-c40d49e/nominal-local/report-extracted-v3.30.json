@@ -1,0 +1,545 @@
+{
+  "schema_version": 3,
+  "netlist": {
+    "path": "layout/pex/artifacts/preamp-noise-pvt/20261010-040759-c40d49e/nominal-local/body-extracted-v3.30.spice",
+    "scope": "repo"
+  },
+  "status": "pass",
+  "corner_count": 1,
+  "passed": 1,
+  "failed": 0,
+  "errored": 0,
+  "inconclusive": 0,
+  "diagnostic_counts": {
+    "by_code": {},
+    "by_severity": {},
+    "corners_with_diagnostics": 0
+  },
+  "metrics": {
+    "sim__corner__count": 1,
+    "sim__corner__passed_count": 1,
+    "sim__corner__failed_count": 0,
+    "sim__corner__errored_count": 0,
+    "sim__corner__inconclusive_count": 0
+  },
+  "environment": {
+    "engine": "ngspice",
+    "engine_version": "46",
+    "ngspice_binary": "/home/ubuntu/.local/bin/ngspice",
+    "models_lib": {
+      "path": null,
+      "scope": "external"
+    },
+    "models_lib_sha256": "6edba54d23b38a2c60f8ffdbaa3eb75a7568c615e4820808969bd1121b77b1aa",
+    "netlist_sha256": "f60b60e540c0a91ed3eff5e4327ad4442c91e07eb6a116f680fc9648baee0e3d",
+    "netlist_closure": [
+      {
+        "path": "layout/pex/artifacts/preamp-noise-pvt/20261010-040759-c40d49e/nominal-local/body-extracted-v3.30.spice",
+        "scope": "repo",
+        "sha256": "f60b60e540c0a91ed3eff5e4327ad4442c91e07eb6a116f680fc9648baee0e3d"
+      },
+      {
+        "path": "layout/pex/artifacts/preamp-noise-pvt/20261010-040759-c40d49e/nominal-local/design.ngspice",
+        "scope": "repo",
+        "sha256": "091cb530bf85160a1f07878fb81f789ca367d018991c8ab41a584cd1a85c6692"
+      },
+      {
+        "path": "layout/pex/artifacts/preamp-noise-pvt/20261010-040759-c40d49e/nominal-local/sources/extracted/comparator.dut-layout.cir",
+        "scope": "repo",
+        "sha256": "a7ca3c00ea4db8a2b00cad69f2edc2d9320738499049cfa9c7faec517b7b5f45"
+      }
+    ]
+  },
+  "coverage": {
+    "corners_simulated": 1,
+    "measurements_declared": 15,
+    "measurements_with_limits": 0,
+    "unrecognized_limit_keys": [],
+    "schema_version": 1,
+    "known": true,
+    "checked": [
+      "measurement:[0,\"tt/novdd/27C\",\"ac.av_dc\"]/observation",
+      "measurement:[0,\"tt/novdd/27C\",\"enbw_mhz\"]/observation",
+      "measurement:[0,\"tt/novdd/27C\",\"inoise_band_uv\"]/observation",
+      "measurement:[0,\"tt/novdd/27C\",\"nfull.inoise\"]/observation",
+      "measurement:[0,\"tt/novdd/27C\",\"nfull.onoise\"]/observation",
+      "measurement:[0,\"tt/novdd/27C\",\"nhf.onoise\"]/observation",
+      "measurement:[0,\"tt/novdd/27C\",\"nwhite.onoise\"]/observation",
+      "measurement:[0,\"tt/novdd/27C\",\"onoise_hf_uv\"]/observation",
+      "measurement:[0,\"tt/novdd/27C\",\"onoise_uv\"]/observation",
+      "measurement:[0,\"tt/novdd/27C\",\"op.dc_n\"]/observation",
+      "measurement:[0,\"tt/novdd/27C\",\"op.dc_p\"]/observation",
+      "measurement:[0,\"tt/novdd/27C\",\"op.vbias_mv\"]/observation",
+      "measurement:[0,\"tt/novdd/27C\",\"vn_in_hf_uv\"]/observation",
+      "measurement:[0,\"tt/novdd/27C\",\"vn_in_uv\"]/observation",
+      "measurement:[0,\"tt/novdd/27C\",\"white_nv_rthz\"]/observation"
+    ],
+    "skipped": [],
+    "inapplicable": [
+      {
+        "id": "measurement:[0,\"tt/novdd/27C\",\"ac.av_dc\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/27C\",\"enbw_mhz\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/27C\",\"inoise_band_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/27C\",\"nfull.inoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/27C\",\"nfull.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/27C\",\"nhf.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/27C\",\"nwhite.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/27C\",\"onoise_hf_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/27C\",\"onoise_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/27C\",\"op.dc_n\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/27C\",\"op.dc_p\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/27C\",\"op.vbias_mv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/27C\",\"vn_in_hf_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/27C\",\"vn_in_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/27C\",\"white_nv_rthz\"]/limits",
+        "reason": "characterization_without_limits"
+      }
+    ],
+    "unknown": [],
+    "nothing_checked": false,
+    "nothing_checked_reasons": []
+  },
+  "provenance": {
+    "klt_version": "0.7.0+g8eec069c7576",
+    "klayout_version": "0.30.12",
+    "pdk": {
+      "name": "gf180mcuD",
+      "source": "search root: ~/.volare",
+      "version": "open_pdks c6d73a35f524070e85faff4a6a9eef49553ebc2b"
+    },
+    "deck": {
+      "name": "sm141064.ngspice",
+      "content_hash": "sha256:6edba54d23b38a2c60f8ffdbaa3eb75a7568c615e4820808969bd1121b77b1aa",
+      "released": false
+    },
+    "input": {
+      "content_hash": "sha256:f60b60e540c0a91ed3eff5e4327ad4442c91e07eb6a116f680fc9648baee0e3d",
+      "role": "netlist"
+    }
+  },
+  "measurements": [
+    {
+      "name": "op.vbias_mv",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C",
+        "value": 1001.666944805,
+        "margin": null
+      },
+      "step": "op"
+    },
+    {
+      "name": "op.dc_p",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C",
+        "value": 2.050379771327,
+        "margin": null
+      },
+      "step": "op"
+    },
+    {
+      "name": "op.dc_n",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C",
+        "value": 2.044336923159,
+        "margin": null
+      },
+      "step": "op"
+    },
+    {
+      "name": "nfull.onoise",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C",
+        "value": 0.001271177692019,
+        "margin": null
+      },
+      "step": "nfull"
+    },
+    {
+      "name": "nfull.inoise",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C",
+        "value": 0.0003401149753047,
+        "margin": null
+      },
+      "step": "nfull"
+    },
+    {
+      "name": "nhf.onoise",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C",
+        "value": 0.001264591387558,
+        "margin": null
+      },
+      "step": "nhf"
+    },
+    {
+      "name": "nwhite.onoise",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C",
+        "value": 2.521102565012e-05,
+        "margin": null
+      },
+      "step": "nwhite"
+    },
+    {
+      "name": "ac.av_dc",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C",
+        "value": 17.93000457507,
+        "margin": null
+      },
+      "step": "ac"
+    },
+    {
+      "name": "vn_in_uv",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C",
+        "value": 70.89667415846,
+        "margin": null
+      },
+      "derived_from": [
+        "nfull.onoise",
+        "ac.av_dc"
+      ]
+    },
+    {
+      "name": "vn_in_hf_uv",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C",
+        "value": 70.52933992643,
+        "margin": null
+      },
+      "derived_from": [
+        "nhf.onoise",
+        "ac.av_dc"
+      ]
+    },
+    {
+      "name": "onoise_uv",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C",
+        "value": 1271.177692019,
+        "margin": null
+      },
+      "derived_from": [
+        "nfull.onoise"
+      ]
+    },
+    {
+      "name": "onoise_hf_uv",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C",
+        "value": 1264.591387558,
+        "margin": null
+      },
+      "derived_from": [
+        "nhf.onoise"
+      ]
+    },
+    {
+      "name": "inoise_band_uv",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C",
+        "value": 340.1149753047,
+        "margin": null
+      },
+      "derived_from": [
+        "nfull.inoise"
+      ]
+    },
+    {
+      "name": "white_nv_rthz",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C",
+        "value": 252.1102565012,
+        "margin": null
+      },
+      "derived_from": [
+        "nwhite.onoise"
+      ]
+    },
+    {
+      "name": "enbw_mhz",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/27C",
+        "value": 25.42327511056,
+        "margin": null
+      },
+      "derived_from": [
+        "nfull.onoise",
+        "nwhite.onoise"
+      ]
+    }
+  ],
+  "corners": [
+    {
+      "corner_id": "tt/novdd/27C",
+      "process": "tt",
+      "supply_v": {},
+      "temperature_c": 27.0,
+      "status": "pass",
+      "runtime_s": 0.115,
+      "measurements": [
+        {
+          "name": "op.vbias_mv",
+          "value": 1001.666944805,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "op.dc_p",
+          "value": 2.050379771327,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "op.dc_n",
+          "value": 2.044336923159,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "nfull.onoise",
+          "value": 0.001271177692019,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nfull"
+        },
+        {
+          "name": "nfull.inoise",
+          "value": 0.0003401149753047,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nfull"
+        },
+        {
+          "name": "nhf.onoise",
+          "value": 0.001264591387558,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nhf"
+        },
+        {
+          "name": "nwhite.onoise",
+          "value": 2.521102565012e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nwhite"
+        },
+        {
+          "name": "ac.av_dc",
+          "value": 17.93000457507,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "ac"
+        },
+        {
+          "name": "vn_in_uv",
+          "value": 70.89667415846,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise",
+            "ac.av_dc"
+          ]
+        },
+        {
+          "name": "vn_in_hf_uv",
+          "value": 70.52933992643,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nhf.onoise",
+            "ac.av_dc"
+          ]
+        },
+        {
+          "name": "onoise_uv",
+          "value": 1271.177692019,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise"
+          ]
+        },
+        {
+          "name": "onoise_hf_uv",
+          "value": 1264.591387558,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nhf.onoise"
+          ]
+        },
+        {
+          "name": "inoise_band_uv",
+          "value": 340.1149753047,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.inoise"
+          ]
+        },
+        {
+          "name": "white_nv_rthz",
+          "value": 252.1102565012,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nwhite.onoise"
+          ]
+        },
+        {
+          "name": "enbw_mhz",
+          "value": 25.42327511056,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise",
+            "nwhite.onoise"
+          ]
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-209/layout/pex/artifacts/preamp-noise-pvt/20261010-040759-c40d49e/nominal-local/out-extracted-v3.30/tt_novdd_27C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-209/layout/pex/artifacts/preamp-noise-pvt/20261010-040759-c40d49e/nominal-local/out-extracted-v3.30/tt_novdd_27C/corner.cir"
+      },
+      "monte_carlo": null,
+      "steps": [
+        {
+          "name": "op",
+          "kind": "op",
+          "status": "ok"
+        },
+        {
+          "name": "nfull",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "nhf",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "nwhite",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "ac",
+          "kind": "ac",
+          "status": "ok"
+        }
+      ]
+    }
+  ]
+}

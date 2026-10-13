@@ -1,0 +1,73 @@
+{
+  "netlist": "body-mc-ss_27c_2.97v.spice",
+  "engine": "ngspice",
+  "models": {
+    "pdk": "gf180mcuD",
+    "lib": "libs.tech/ngspice/sm141064.ngspice"
+  },
+  "corners": {
+    "process": [
+      {
+        "name": "ss",
+        "sections": [
+          "ss",
+          "res_ss",
+          "bjt_ss",
+          "diode_ss",
+          "moscap_ss",
+          "mimcap_ss"
+        ]
+      }
+    ],
+    "temperature_c": [
+      27.0
+    ]
+  },
+  "batch": {
+    "runner_version_check": "warn",
+    "capacity_wait_s": 1800
+  },
+  "analysis": {
+    "kind": "tran",
+    "args": "300p 1636n 0 300p"
+  },
+  "measurements": [
+    {
+      "name": "t_trip",
+      "spice": ".meas tran t_trip when v(dn)=0.5 rise=1 td=71n"
+    },
+    {
+      "name": "dn_start",
+      "spice": ".meas tran dn_start find v(dn) at=27n"
+    },
+    {
+      "name": "dn_end",
+      "spice": ".meas tran dn_end find v(dn) at=1635n"
+    },
+    {
+      "name": "dd_start",
+      "spice": ".meas tran dd_start find v(dd) at=27.5n"
+    },
+    {
+      "name": "dd_end",
+      "spice": ".meas tran dd_end find v(dd) at=1635.5n"
+    },
+    {
+      "name": "ap_start",
+      "spice": ".meas tran ap_start find v(apo) at=27.5n"
+    }
+  ],
+  "options": {
+    "timeout_s": 3000,
+    "keep_artifacts": true,
+    "ngspice_init": [
+      "set measureprec=12",
+      "set numdgt=12"
+    ]
+  },
+  "monte_carlo": {
+    "n": 200,
+    "seed": 20260909,
+    "vary": "mismatch"
+  }
+}

@@ -1,0 +1,108 @@
+{
+ "schema": "gf180-comparator/klt-source-bundle",
+ "version": 2,
+ "generator": "sim/tools/mk_klt_request.py",
+ "generated_utc": "2026-10-10T07:35:57Z",
+ "bench": "comparator-offset-tran-extracted-feasibility",
+ "origin": {
+  "commit": "66d4f52a3fe478de1820250bc0ef7d65f6fc1bdf",
+  "dirty": true,
+  "dirty_paths": [
+   "/tmp/feas219b/dut-binding.json (outside the repository)",
+   "/tmp/feas219b/extract/comparator.dut-layout-mm.spice (outside the repository)",
+   "sim/comparator-offset-tran-extracted-feasibility/testbench/tb.json",
+   "sim/comparator-offset-tran-extracted-feasibility/testbench/tb_offset_tran_extracted.spice",
+   "sim/comparator-offset-tran-extracted-feasibility/testbench/tb_trip_probe.spice",
+   "sim/harness/tests/test_extracted_tran_feasibility.py",
+   "sim/tools/extracted_tran_feasibility.py"
+  ],
+  "checked_paths": [
+   "design",
+   "sim/tools",
+   "sim/harness",
+   "sim/comparator-offset-tran-extracted-feasibility/testbench",
+   "/tmp/feas219b/dut-binding.json",
+   "/tmp/feas219b/extract/comparator.dut-layout-mm.spice"
+  ]
+ },
+ "dut": {
+  "selector": "/tmp/feas219b/dut-binding.json",
+  "key": null,
+  "dut_id": "comparator-dr0001-layout",
+  "provenance": "extracted",
+  "netlist": "/tmp/feas219b/extract/comparator.dut-layout-mm.spice",
+  "netlist_sha256": "ab00c5ff7b53bd7141715fc1e1dd3171982dca45e0b245eb4d073f010e6f5997",
+  "params": {
+   "dut_ib": 1e-05,
+   "dut_vcm": 1.65
+  },
+  "binding_config": "/tmp/feas219b/dut-binding.json",
+  "binding_entry_sha256": "af196941192900ecc66266d387d50e8d5c8f805a35ec61900c0fe9d3aaaf0271",
+  "staged_netlist": "sources/dut/comparator.dut-layout-mm.spice",
+  "staged_binding": "sources/dut-binding.json"
+ },
+ "testbench": {
+  "experiment": "comparator-offset-tran-extracted-feasibility",
+  "dir": "sim/comparator-offset-tran-extracted-feasibility/testbench",
+  "netlist": "tb_offset_tran_extracted.spice",
+  "netlist_sha256": "c7063c072b4f505c6b7f46ece8fe713b8cd0d1210b6ffc2be7f00ed49501780a",
+  "manifest_sha256": "7b577021e3100f078b6cf01d2248a1a10b73fa727568116cef12f37abdaf559c",
+  "staged_dir": "sources/testbench"
+ },
+ "parameters": {
+  "point": "ff_125c_3.63v",
+  "mc_n": 20,
+  "feasibility_only": true,
+  "centre_mv": -21.54
+ },
+ "requests": {
+  "probe-tt_27c_3.30v": {
+   "leg": "probe",
+   "vdd": 3.3,
+   "request": "request-probe-tt_27c_3.30v.json",
+   "request_sha256": "dac786517abf419046e25173cdf53b690f7fed94072a22cebcd07d16892b83f9",
+   "netlist": "body-probe-tt_27c_3.30v.spice",
+   "netlist_sha256": "7b4c84b900d91798cf7ecc2261d8295fc66d76202b68bd5ff36e0faaa2aff1be"
+  },
+  "probe-ff_125c_3.63v": {
+   "leg": "probe",
+   "vdd": 3.63,
+   "request": "request-probe-ff_125c_3.63v.json",
+   "request_sha256": "462fdb26fe0a0029675c4d5a0f4c7efab253437596ec4487aefad688f382f158",
+   "netlist": "body-probe-ff_125c_3.63v.spice",
+   "netlist_sha256": "ba33ad0d3192688ff1b7e0d83e9e3f670071c2b517d37a1a0abab45a32f1ad93"
+  },
+  "mc-tt_27c_3.30v": {
+   "leg": "mc",
+   "vdd": 3.3,
+   "request": "request-mc-tt_27c_3.30v.json",
+   "request_sha256": "bd344fa20dda8d5882acd564e69ba167c164d3dcd96355be8d0a5736eda3699d",
+   "netlist": "body-mc-tt_27c_3.30v.spice",
+   "netlist_sha256": "61ffa31b05577bbc2dadb518823ad64531926c659c73e8e5e4ec382fa2fe8582"
+  },
+  "mc-ff_125c_3.63v": {
+   "leg": "mc",
+   "vdd": 3.63,
+   "request": "request-mc-ff_125c_3.63v.json",
+   "request_sha256": "55b61d2d2f7ce1e9d2aa1459684c3ba3d9a7a6edcc82756a3aff3e65a702663b",
+   "netlist": "body-mc-ff_125c_3.63v.spice",
+   "netlist_sha256": "50985f2b6ce8ddd4c5a107f463f53842ad50781750f7e66c05c85036aaab310b"
+  }
+ },
+ "staged": {
+  "body-mc-ff_125c_3.63v.spice": "50985f2b6ce8ddd4c5a107f463f53842ad50781750f7e66c05c85036aaab310b",
+  "body-mc-tt_27c_3.30v.spice": "61ffa31b05577bbc2dadb518823ad64531926c659c73e8e5e4ec382fa2fe8582",
+  "body-probe-ff_125c_3.63v.spice": "ba33ad0d3192688ff1b7e0d83e9e3f670071c2b517d37a1a0abab45a32f1ad93",
+  "body-probe-tt_27c_3.30v.spice": "7b4c84b900d91798cf7ecc2261d8295fc66d76202b68bd5ff36e0faaa2aff1be",
+  "design.ngspice": "091cb530bf85160a1f07878fb81f789ca367d018991c8ab41a584cd1a85c6692",
+  "request-mc-ff_125c_3.63v.json": "55b61d2d2f7ce1e9d2aa1459684c3ba3d9a7a6edcc82756a3aff3e65a702663b",
+  "request-mc-tt_27c_3.30v.json": "bd344fa20dda8d5882acd564e69ba167c164d3dcd96355be8d0a5736eda3699d",
+  "request-probe-ff_125c_3.63v.json": "462fdb26fe0a0029675c4d5a0f4c7efab253437596ec4487aefad688f382f158",
+  "request-probe-tt_27c_3.30v.json": "dac786517abf419046e25173cdf53b690f7fed94072a22cebcd07d16892b83f9",
+  "sources/dut/comparator.dut-layout-mm.spice": "ab00c5ff7b53bd7141715fc1e1dd3171982dca45e0b245eb4d073f010e6f5997",
+  "sources/dut-binding.json": "f545adedb6921e1eac2ec4690b1cd6234c355deb59f387e7f71fd8ea9c609ffe",
+  "sources/testbench/tb.json": "7b577021e3100f078b6cf01d2248a1a10b73fa727568116cef12f37abdaf559c",
+  "sources/testbench/tb_offset_tran_extracted.spice": "c7063c072b4f505c6b7f46ece8fe713b8cd0d1210b6ffc2be7f00ed49501780a",
+  "sources/testbench/tb_trip_probe.spice": "6ae89e60cdc0904d2ae938e2810d3be61e2c5385170a246d31df82a4365ee245"
+ }
+}

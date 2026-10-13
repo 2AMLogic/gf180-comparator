@@ -2,8 +2,172 @@
 
 Chronological record of merged pull requests and closed issues. Newest entries appear first.
 
+### 2026-10-12
+
+- **PR #313**: docs(extracted-campaign): record #292 identity-gate completion assessment
+- **Issue #231** (closed): Run an additive full-PVT extracted offset mismatch campaign after feasibility
+- **Issue #273** (closed): Publish structured latch decision correctness in fleet records
+
+### 2026-10-11
+
+- **PR #310**: feat(sim): mismatch-on guard floors for transient offset benches (#309)
+- **PR #308**: feat(sim): re-qualify kickback and cm-index records on the pinned open_pdks via the fleet (#288)
+- **Issue #309** (closed): Add a collapsed-population (mismatch-on) guard to the whole-comparator transient offset bench
+- **Issue #288** (closed): Two citable reference records were simulated with a non-pinned open_pdks revision
+- **PR #306**: docs(sim): mark two records non-qualified under exact open_pdks pin; fleet probe evidence (#288)
+- **PR #304**: fix(signoff): mark positive-node-only kickback fallback as incomplete item-5 coverage
+- **PR #302**: fix: qualify schematic baselines against PDK revision and toolchain drift
+- **PR #300**: signoff: require qualified DUT-bound sources for item-8 characterization claims
+- **PR #299**: Fix wrapper fixture missing corners.py and claim-check deps (#295)
+- **PR #298**: Validate characterization narrative numbers before issuing item-8 evidence
+- **PR #297**: Bind extracted-offset campaign summaries to point and run identity
+- **PR #294**: Validate distinct PVT corner coverage in item-8 source records
+- **PR #291**: Clean-source 20261011 rerun of the 45-corner N=200 campaign (#247)
+- **PR #290**: Quantify solver-tolerance sensitivity of the common-mode offset window (#240)
+- **PR #287**: Qualify fleet reference evidence against the exact open_pdks revision
+- **PR #286**: Mark September kickback record historical, drop #252 waiver
+- **PR #284**: Enforce ngspice version floor on fleet record ingestion
+- **PR #282**: ci: scheduled non-gating selftest + netlist --check workflow
+- **PR #281**: feat(signoff): protect parasitic-study run archives as append-only (#266)
+- **PR #279**: Reject ambiguous fleet units and duplicate ingredients (#278)
+- **PR #277**: Validate characterization evidence chain before issuing item-8 pass (#275)
+- **PR #271**: fix: match complete numeric tokens in claim drift guard (#268)
+- **Issue #303** (closed): Mark positive-node-only kickback fallback as incomplete item-5 coverage
+- **Issue #301** (closed): Qualify local schematic baselines against recorded PDK and toolchain provenance
+- **Issue #296** (closed): Require qualified DUT-bound sources for current item-8 characterization claims
+- **Issue #295** (closed): Build/runtime failure on main: wrapper fixtures omit corners.py after item-8 grid validation
+- **Issue #293** (closed): Validate characterization narrative numbers before issuing item-8 evidence
+- **Issue #292** (closed): Bind extracted-offset campaign summaries to point and run identity
+- **Issue #289** (closed): Validate distinct PVT corner coverage in characterization source records
+- **Issue #283** (closed): Qualify fleet reference evidence against the exact open_pdks revision
+- **Issue #280** (closed): Run the harness selftest and netlist regeneration check in a non-gating scheduled CI workflow
+- **Issue #278** (closed): Reject ambiguous normalized fleet units and duplicate measurement ingredients
+- **Issue #275** (closed): Validate the characterization evidence chain before issuing item-8 pass
+- **Issue #269** (closed): Enforce the ngspice version floor when ingesting fleet reference records
+- **Issue #268** (closed): Match complete numeric values in the headline claim drift guard
+- **Issue #266** (closed): Protect committed parasitic study run archives from evidence rewrites
+- **Issue #252** (closed): Ledger kickback section cites schematic record 20260910-125341 as current although newer same-DUT records exist
+- **Issue #247** (closed): Regenerate the extracted-offset 45x200 campaign from a clean committed source (follow-up to PR #244)
+- **Issue #240** (closed): Quantify solver-tolerance sensitivity of the common-mode offset window
+- **PR #274**: Preserve bundled campaign parameters in fleet record reproduction guidance
+- **Issue #272** (closed): Preserve bundled campaign parameters in fleet record reproduction guidance
+
+### 2026-10-10
+
+- **PR #270**: Measure combined finite ground-C x series-R budgets (negative result, #264)
+- **PR #267**: Require comparable committed schematic baseline for post-layout deltas
+- **PR #265**: fix: fail closed when git cleanliness cannot be inspected
+- **PR #263**: Reserve harness-owned PVT and dut_vos parameter names (#261)
+- **PR #258**: Render actual per-corner bound verdicts in harness evidence tables
+- **PR #259**: refactor(klt_record): share evidence archiving and provenance assembly
+- **PR #257**: Reject invalid numeric check bounds when loading testbench manifests
+- **PR #244**: feat(sim): extracted offset 45-point N=200 campaign results (experimental) (#231)
+- **PR #253**: Guard published headline claims against drift from committed records (#245)
+- **Issue #264** (closed): Measure combined finite parasitic budgets after the four-net ground-C study failed
+- **Issue #262** (closed): Require a comparable committed schematic baseline for post-layout deltas
+- **Issue #260** (closed): Fail closed when simulation source cleanliness cannot be verified
+- **Issue #261** (closed): Prevent testbench redefinition of harness-owned PVT and offset parameters
+- **Issue #255** (closed): Render actual per-corner bound verdicts in harness evidence tables
+- **Issue #254** (closed): Simplify klt_record: share evidence archiving and provenance assembly
+- **Issue #256** (closed): Reject invalid numeric check bounds when loading testbench manifests
+- **Issue #245** (closed): Guard published headline claims against drift from committed evidence records
+- **PR #250**: feat(signoff): size budget guard for protected sim/ evidence
+- **PR #249**: Finite ground-C budget sweep for the post-layout delay gap (#243)
+- **PR #248**: fix(pex): narrow pex_measure tb.json pin to deck fields + graded bounds (#241)
+- **PR #242**: feat(pex): attribute the post-layout td_od50 misses to extracted parasitics (#229)
+- **PR #237**: Protect committed probe artifacts with the append-only evidence guard
+- **PR #236**: feat(sim): extracted offset 45-point campaign tool (experimental, not yet run) (#231)
+- **PR #235**: docs(signoff): refresh item-10 CI disclosure and grader rulebook comments
+- **PR #234**: feat: full 45-point common-mode window record for monotonic-index bench (#218)
+- **PR #230**: docs: refresh whole-comparator offset headline to 45-point campaign
+- **PR #228**: feat(signoff): score item-5 kickback on the both-node record (r4)
+- **Issue #246** (closed): Set an evidence size budget for new protected sim/ artifacts
+- **Issue #243** (closed): Establish finite routing-capacitance budgets for the post-layout delay gap
+- **Issue #241** (closed): pex_measure.py's whole-file tb.json pin is stale since #181, so run_pex.py cannot regenerate item 7
+- **Issue #239** (closed): Checkpoint orchestration blocked by worktree-write-confinement: investigate target routing
+- **Issue #238** (closed): Auditor guard decision: keep unresolved-variable removal flagged
+- **Issue #233** (closed): Refresh signoff item-10 CI disclosure after harness and source-pin checks landed
+- **Issue #232** (closed): Protect committed feasibility probe artifacts with the append-only evidence guard
+- **Issue #229** (closed): Attribute the 7 post-layout decision-time misses (T1 item 7) to extracted parasitics
+- **Issue #223** (closed): Refresh headline whole-comparator offset claims after the 45-point campaign
+- **Issue #218** (closed): Measure the consumer common-mode window with a monotonic index stimulus
+- **Issue #204** (closed): Repin item-5 kickback row to the both-node schematic record (new scoring revision)
+
+- **Issue #225** (closed): Guard README bench inventory: fix stale 'seven bench directories' and check it in bench-inventory
+- **Issue #219** (closed): Establish extracted-layout transient offset Monte Carlo feasibility
+- **Issue #177** (closed): Test run_lvs interface-pin and device-geometry contract checks
+- **Issue #216** (closed): Reconcile bench inventory docs and guard characterize.sh coverage
+- **Issue #212** (closed): Close unclosed file handles in layout scripts and make ResourceWarning fail the PDK-free suite
+- **Issue #197** (closed): Auditor guard telemetry: stash-scope:create-redirect — keep flagged
+- **Issue #210** (closed): Correct current characterization report ratification and average-power verdicts
+- **PR #226**: Fix README bench count; add README-DRIFT checks (#225)
+- **PR #224**: Establish extracted-layout transient offset Monte Carlo feasibility (#219)
+- **PR #222**: feat: monotonic-index common-mode stimulus, semantics fixture, nominal fleet probe (#218)
+- **PR #221**: test: cover run_lvs interface-pin and device-geometry contract checks
+- **PR #220**: Reconcile bench inventory docs and guard characterize.sh coverage
+- **PR #215**: Close unclosed file handles; fail PDK-free suite on ResourceWarning
+- **PR #217**: feat(pex): paired preamp-noise 45-point PVT path; stopped at fleet executor-capability gate (#209)
+- **PR #214**: docs: correct characterization report ratification and average-power verdicts
+- **Issue #188** (closed): Test run_extract_sim.py: netlist adaptation, positional pin wiring and fail-closed branches
+- **Issue #189** (closed): Test verify-report.py grade_drift and pin checks, the signoff anti-rot gate
+- **Issue #190** (closed): Test pex_measure.py pure helpers: template edits, derivation and grading
+- **Issue #157** (closed): Measure total comparator offset: transient Monte Carlo covering the latch, plus a hand budget for load-resistor mismatch
+- **Issue #194** (closed): Remove duplicated INTERFACE_PINS in layout/pex/run_pex.py and pin the contract in a test
+- **Issue #193** (closed): Test gen_comparator connectivity tables against the netlist and committed placement evidence
+- **Issue #200** (closed): Expand whole-comparator transient offset evidence to the full 45-point PVT grid
+- **Issue #160** (closed): Measure kickback peaks on both comparator input nodes
+- **Issue #184** (closed): Test layout route_nets channel-assignment helpers and the run_drc exit-code contract
+- **Issue #202** (closed): Establish extracted preamp observation nodes for a paired post-layout noise feasibility probe
+- **Issue #182** (closed): Prove paired preamp common-mode measurement feasibility for the consumer window
+- **Issue #208** (closed): Test preamp_noise_probe fail-closed helpers and deck builder PDK-free
+- **PR #191**: test(layout): cover run_extract_sim.py adaptation and fail-closed branches
+- **PR #192**: test(signoff): cover verify-report.py drift and pin checks
+- **PR #195**: test(pex): cover pex_measure pure helpers (#190)
+- **PR #196**: Measure total comparator offset: thread-pinned transient MC record + load-R budget (#157)
+- **PR #198**: Dedupe INTERFACE_PINS in run_pex and pin contract in a test (#194)
+- **PR #199**: test(layout): cross-check gen_comparator tables vs netlist and evidence (#193)
+- **PR #201**: Expand whole-comparator transient offset evidence to the full 45-point PVT grid
+- **PR #203**: evidence(sim): both-node kickback schematic 45-corner record (#160)
+- **PR #205**: test(layout): route_nets helpers and run_drc exit-code contract
+- **PR #206**: Extracted preamp observation nodes and paired nominal noise feasibility probe
+- **PR #207**: feat(sim): consumer-window CM paired-measurement feasibility; refuse unsupported fleet path (#182)
+- **PR #211**: test(pex): PDK-free tests for preamp_noise_probe (#208)
+
 ### 2026-10-09
 
+- **Issue #183** (closed): Test harness CLI main() refusal paths and the sabotage no-write guarantee
+- **Issue #181** (closed): Refresh live simulation claims and reproduction guidance after spec ratification
+- **PR #186**: test(harness): cover cli main() refusal paths and sabotage no-write (#183)
+- **PR #187**: docs(sim): refresh live bench claims and reproduction guidance (#181)
+
+- **PR #180**: test(harness): cover summarize() bound and per-axis branches (#176)
+- **PR #179**: test(harness): cover testbench load/validation and PDK discovery (#172)
+- **PR #178**: test(harness): cover toolchain drift gate (#171)
+- **PR #173**: Reject invalid numeric inputs in offset yield sample adaptation
+- **PR #175**: feat(sim): whole-comparator transient MC offset bench + load-R hand budget (fleet run pending) (#157)
+- **PR #174**: Enforce byte identity of the pinned signoff rulebook (#168)
+- **PR #170**: Measure kickback peaks on both comparator input nodes (#160)
+- **PR #167**: Validate integrator paths, ordered ports, top subckt and area against committed artifacts
+- **Issue #176** (closed): Test summarize() bound and per-axis sensitivity branches in sim/harness/report.py
+- **Issue #172** (closed): Test testbench manifest validation and PDK discovery precedence in the sim harness
+- **Issue #171** (closed): Test the toolchain drift gate (sim/harness/toolchain.py check and CLI enforcement)
+- **Issue #169** (closed): Reject invalid numeric inputs in offset yield sample adaptation
+- **Issue #168** (closed): Enforce byte identity of the pinned signoff rulebook
+- **Issue #161** (closed): Validate integrator paths, ordered ports and area against committed artifacts
+- **PR #162**: Assert reference False on not-citable records; check all staged testbench files vs clean commit (#156)
+- **PR #159**: fix(sim): reject non-finite local measurements and fleet-derived results
+- **PR #155**: fix(sim): bind replayed fleet evidence to its originating source bundle
+- **PR #153**: Validate exact fleet PVT and MC coverage before reference scoring (#152)
+- **PR #150**: ci: enforce append-only sim/ evidence with a base-comparison guard
+- **PR #149**: Preserve partial simulator logs and probe warnings on timeout
+- **PR #147**: ci: preserve started main Signoff runs (#145)
+- **Issue #156** (closed): Test the complete-but-not-citable reference gate; widen clean-commit cross-check to all staged testbench files
+- **Issue #154** (closed): Reject non-finite local measurements and fleet-derived results
+- **Issue #151** (closed): Bind replayed fleet evidence to the originating DUT and testbench sources
+- **Issue #152** (closed): Validate exact fleet PVT and Monte Carlo coverage before reference scoring
+- **Issue #135** (closed): CI: enforce the append-only rule for sim/ evidence records
+- **Issue #148** (closed): Preserve partial simulator logs and probe warnings on timeout
+- **Issue #145** (closed): CI: preserve started main Signoff verification during merge bursts
 - **PR #144**: test: PDK-free coverage for klt_record.py and mk_klt_request.py (#142)
 - **PR #143**: sim: add td_od1_over_tau, deprecate mislabelled resolve_decades (#141)
 - **PR #140**: spec: propose DR-0006 average-power operating condition (proposed, not ratified)

@@ -1,0 +1,68 @@
+{
+  "feasibility_only": false,
+  "point": "fs_27c_3.30v",
+  "mints_record": false,
+  "experimental": true,
+  "issue": 231,
+  "probe": {
+    "probe_unit": "fs/novdd/27C",
+    "trip_mv": -8.488192,
+    "t_flip_s": 3.15118e-05,
+    "centre_mv": -8.49,
+    "centre_resolution_mv": 0.01
+  },
+  "population": {
+    "n_valid_draws": 200,
+    "trip_abs_mean_mv": -8.470000000000002,
+    "sig_trip_mv": 0.9547327723853763,
+    "sig_trip_raw_mv": 0.9558493605166037,
+    "trip_abs_min_mv": -11.690000000000001,
+    "trip_abs_max_mv": -5.9300000000000015,
+    "trip_levels": [
+      12,
+      48
+    ],
+    "probe_trip_mv": -8.488192,
+    "centre_mv": -8.49,
+    "convention": "trip = differential input at which the decision flips (absolute, centre NOT subtracted); input-referred offset = -trip; sigma is quantisation-corrected population (ddof=0) sigma",
+    "se_mean_mv": 0.06750980175747322,
+    "se_sigma_mv": 0.04785642961971149,
+    "sigma_rel_se": 0.05012547071170855,
+    "sigma_ci95_mv": [
+      0.8609341703307418,
+      1.0485313744400109
+    ]
+  },
+  "executor": {
+    "remote": {
+      "provider": "aws-batch-fleet",
+      "job_id": "klt-sim-19255bebb727",
+      "bucket": "2am-batch-jobs-221082181346",
+      "region": "us-east-1",
+      "instance_id": "i-0294c4ce2f97b93f4",
+      "instance_type": "c7i.4xlarge",
+      "availability_zone": "us-east-1b",
+      "ami_id": "ami-0e40e3245f1923ac8",
+      "lifecycle": "spot",
+      "spot": true,
+      "state": "done",
+      "exit_code": "0",
+      "concurrency": "1",
+      "physical_cores": "8",
+      "elapsed_seconds": 32,
+      "runner_klt_version": "0.5.0",
+      "client_klt_version": "0.7.0+gf03eb675fa81",
+      "runner_compatibility": "mismatch",
+      "runner_compatibility_warning": "the fleet runner ran klt 0.5.0 but the submitting client is 0.7.0+gf03eb675fa81; request options the runner does not know may have been ignored -- update the runner image or use a compatible client"
+    },
+    "monte_carlo": {
+      "n": 200,
+      "seed": 20260909,
+      "vary": "mismatch",
+      "family_mismatch": []
+    },
+    "engine_version": "46"
+  },
+  "seed": 20260909,
+  "n": 200
+}

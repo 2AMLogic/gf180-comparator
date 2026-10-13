@@ -43,6 +43,11 @@ diagnostic on failure:
     SOURCE_COMMIT_MISMATCH     the bundle claims a clean commit whose files
                                differ from the staged bytes
 
+`comparator-offset-cm-window` (issue #182) is refused outright with
+UNSUPPORTED_EXECUTOR_CAPABILITY: the fleet runner cannot address its nested
+sweep's six points. `collect_cm_window` / `derive_cm_window` validate the
+specified same-draw contract against synthetic reports only.
+
 Differences between the bundle and today's checkout (fragment, manifest,
 binding entry, selected DUT, DUT netlist) are reported as source drift; the
 record still cites the bundle's (originating) sources, never today's.
@@ -50,6 +55,43 @@ record still cites the bundle's (originating) sources, never today's.
 A record is citable REFERENCE evidence (`"reference": true`) only when BOTH
 gates pass: exact PVT/MC coverage of the bundled requests (#152, `complete`;
 otherwise exit 1) and verified, clean source identity (#151, `citable`).
+
+ngspice floor (issue #269): every ingested report's `environment.engine` /
+`engine_version` is checked against the floor snapshotted into the source
+bundle (`toolchain.ngspice_min_major`, bound to the generation commit). Below
+floor, missing, malformed, wrong-engine or mixed-version reports are refused
+before anything is written; `--allow-engine-drift` retains them as NON-CITABLE
+diagnostics with the override recorded in `ingest.engine_floor`. Legacy
+bundles (no `toolchain` key) are checked against the ingest checkout's floor,
+stamped `ingest-checkout (legacy bundle)`.
+
+Functional correctness (issue #273) is a SEPARATE axis. For
+comparator-regeneration and comparator-kickback the record carries
+`decision_correctness` (schema `decision-correctness/1`): every latch-decision
+polarity check (`dout_*_first` / `dout_*_end`) of every expected corner,
+evaluated against the generation-time manifest's `min`/`max`, with a rollup
+`status` of `pass`, `fail` (a wrong decision; `failures` names the corner and
+measurement) or `incomplete` (a missing corner / measurement / bound; never
+`pass`). A faithfully executed design with a wrong decision is still recorded
+and may still be `reference` evidence -- `reference` keeps its coverage +
+provenance meaning -- but it is not functionally verified, whatever its
+`within_target` count. See sim/README.md "Fleet record correctness fields".
+
+PDK qualification (issue #283): the exact open_pdks revision (sim/toolchain.json
+`open_pdks`) IS the device models, so every ingested leg's executor-reported
+`provenance.pdk.{name,version}` must equal the revision and variant snapshotted
+into the source bundle (`toolchain.open_pdks` / `pdk_variant`). Missing,
+malformed, wrong, contradictory (deck hash vs environment model hash) or mixed
+identities are refused before anything is written; `--allow-pdk-drift` retains
+them as NON-CITABLE diagnostics with the override in `ingest.pdk_qualification`.
+The submitting host's PDK is never taken as proof. Bundles without
+`toolchain.open_pdks` (legacy) are qualified against the ingest checkout's pin
+and the request-selected variant, stamped `ingest-checkout (legacy bundle)`.
+The snapshot itself is source identity: for a clean origin, the pin file at
+the origin commit must hash to the snapshot's sha256 and carry the same
+`open_pdks` / `ngspice_min_major` (else SOURCE_COMMIT_MISMATCH; unreadable ->
+non-citable), and the snapshot variant must equal every bundled request's
+`models.pdk` (else SOURCE_BUNDLE_INCONSISTENT).
 """
 
 from __future__ import annotations
@@ -59,6 +101,7 @@ import hashlib
 import json
 import math
 import os
+import re
 import shutil
 import statistics
 import subprocess
@@ -73,7 +116,9 @@ sys.path.insert(0, str(SIM))
 
 from harness import corners as hc  # noqa: E402
 from harness import dut as hdut  # noqa: E402
+from harness.report import scalar_bound_failures  # noqa: E402
 from harness import testbench as htb  # noqa: E402
+from harness import toolchain as htc  # noqa: E402
 
 sys.path.insert(0, str(HERE))
 import mk_klt_request as mk  # noqa: E402
@@ -83,6 +128,7 @@ LEGS = {
     "comparator-regeneration": ["main"],
     "comparator-preamp-noise": ["noise", "ac"],
     "comparator-offset-mc": ["main"],
+    "comparator-offset-tran": ["main"],
 }
 
 #: Ratified TARGET / STRETCH bounds (README.md table, DR-0002). Read-only.
@@ -92,6 +138,12 @@ SPEC = {
     "comparator-regeneration": ("Decision time @ 50 mV", "td_od50_ns", 1.5, 0.8, "ns"),
     "comparator-preamp-noise": ("Input-referred noise", "vn_in_uv", 1000.0, 600.0, "uV rms"),
     "comparator-offset-mc": ("Offset 3-sigma", "vos_3sig_mv", 15.0, 8.0, "mV"),
+    # Scored on the CONSERVATIVE derived total (simulated whole-comparator
+    # sigma + hand-budgeted load-R term at the conservative coefficient), so
+    # the verdict is the pessimistic one; the cited-coefficient total and the
+    # purely simulated value are reported alongside it (issue #157).
+    "comparator-offset-tran": ("Offset 3-sigma (whole-comparator, incl. derived load-R budget)",
+                               "vos_3sig_total_cons_mv", 15.0, 8.0, "mV"),
 }
 POWER_TARGET_UW = 1000.0  # <= 1 mW static, README.md supply/power row
 
@@ -103,9 +155,18 @@ def corner_id(raw: str, vdd: float) -> tuple[str, str]:
 
     The supply is not in klt's corner id: it is baked into each request's
     body netlist (one request per supply point, see mk_klt_request.py)."""
+    if not isinstance(raw, str):
+        raise ValueError(f"corner id {raw!r} is not a string")
     parts = raw.split("/")
     proc = parts[0]
-    temp = next(float(x.rstrip("C")) for x in parts[1:] if x.endswith("C"))
+    try:
+        temp = next(float(x[:-1]) for x in parts[1:] if x.endswith("C"))
+    except StopIteration:
+        raise ValueError(f"corner id {raw!r} has no temperature part") from None
+    except ValueError:
+        raise ValueError(f"corner id {raw!r} has an unparsable temperature") from None
+    if not proc or not math.isfinite(temp):
+        raise ValueError(f"corner id {raw!r} has no process or a non-finite temperature")
     sample = next((x for x in parts[1:] if x.startswith("mc")), "")
     return f"{proc}_{temp:g}c_{vdd:.2f}v", sample
 
@@ -150,7 +211,10 @@ def collect_checked(report: dict, request: dict, vdd: float, tag: str = "") -> t
 
     Unlike `collect`, nothing is overwritten or silently dropped. Every issue is
     a string led by a named diagnostic code: DUPLICATE_UNIT, MISSING_UNIT,
-    UNEXPECTED_UNIT, FAILED_UNIT, MC_DECLARATION_MISMATCH, NONFINITE_INGREDIENT."""
+    UNEXPECTED_UNIT, FAILED_UNIT, MC_DECLARATION_MISMATCH, NONFINITE_INGREDIENT,
+    DUPLICATE_INGREDIENT, MALFORMED_CORNER_ID. Duplicates are judged on the
+    normalized (corner_id, sample) key, so aliases such as tt/27C and tt/27.0C
+    collide; neither copy of a repeated unit is trusted, whatever the order."""
     pre = f"{tag}: " if tag else ""
     issues: list[str] = []
     want = expected_units(request, vdd)
@@ -165,15 +229,25 @@ def collect_checked(report: dict, request: dict, vdd: float, tag: str = "") -> t
     ingredients = [m["name"] for m in request.get("measurements", []) if "name" in m]
     out: dict = {}
     bad: list = []
-    seen: set = set()
+    seen: dict = {}
     failed: set = set()
     for c in report["corners"]:
-        raw = c["corner_id"]
-        cid, sample = corner_id(raw, vdd)
-        if raw in seen:
-            issues.append(f"{pre}DUPLICATE_UNIT: {raw} appears more than once")
+        raw = c.get("corner_id")
+        try:
+            cid, sample = corner_id(raw, vdd)
+        except ValueError as e:
+            issues.append(f"{pre}MALFORMED_CORNER_ID: {e}")
             continue
-        seen.add(raw)
+        key = (cid, sample)
+        if key in seen:
+            issues.append(f"{pre}DUPLICATE_UNIT: {raw} appears more than once"
+                          f" (same unit as {seen[key]}, normalized {cid}{'/' + sample if sample else ''})")
+            out.get(cid, {}).pop(sample, None)  # neither copy is trusted
+            if cid in out and not out[cid]:
+                del out[cid]
+            failed.add(key)
+            continue
+        seen[key] = raw
         if cid not in want or sample not in want[cid]:
             issues.append(f"{pre}UNEXPECTED_UNIT: {raw} is not in the requested grid")
             continue
@@ -181,6 +255,13 @@ def collect_checked(report: dict, request: dict, vdd: float, tag: str = "") -> t
             bad.append((raw, c["status"]))
             failed.add((cid, sample))
             issues.append(f"{pre}FAILED_UNIT: {raw} -> {c['status']}")
+            continue
+        names = [m.get("name") for m in c["measurements"]]
+        repeated = [n for n in ingredients if names.count(n) > 1]
+        for name in repeated:
+            issues.append(f"{pre}DUPLICATE_INGREDIENT: {raw} {name} appears {names.count(name)} times")
+        if repeated:
+            failed.add(key)
             continue
         vals = {m["name"]: m["value"] for m in c["measurements"] if m.get("value") is not None}
         invalid = [name for name in ingredients if not _finite(vals.get(name))]
@@ -224,6 +305,326 @@ def _eval_outputs(cid: str, thunks: dict, problems: list) -> dict | None:
         out[name] = v
     return out if ok else None
 
+#: Raw per-draw `.meas` ingredients of comparator-offset-tran (tb.json `analyses`).
+TRAN_INGREDIENTS = ("t_trip", "dn_start", "dn_end", "dd_start", "dd_end", "ap_start")
+
+
+def derive_offset_tran(tb, raw: dict, ids: list[str], problems: list[str]) -> dict:
+    """Whole-comparator transient-MC statistics per PVT point (issue #157).
+
+    Per draw (all quantities from ONE Monte-Carlo draw):
+      cycle c   = floor((t_trip - t0)/T)           the clock period whose decision flipped
+      level k   = c - lead                          index into the staircase
+      V_trip    = v0 + k*step - step/2              midpoint of the one-step bracket
+      A_v       = (dd_end - dd_start)/(v_end - v0)  preamp gain, end-of-reset samples
+      V_os_pre  = v_end - dd_end/A_v                DC-equivalent preamp offset (same draw)
+      V_lat     = V_trip - V_os_pre                 decision-stage contribution
+    Population statistics over the draws are then fed to tb.json's `measure`
+    expressions. The staircase quantises V_trip by a uniform +-step/2, so
+    its variance step^2/12 is subtracted in quadrature (`q2`); the raw sigma
+    is reported too. Any out-of-range or malformed draw is a named problem
+    and its whole PVT point is dropped (never silently clipped)."""
+    P = tb.params
+    t0, period, high = P["stair_t0_ns"] * 1e-9, P["stair_period_ns"] * 1e-9, P["stair_clk_high_ns"] * 1e-9
+    v0, step = P["stair_v0_mv"] * 1e-3, P["stair_step_mv"] * 1e-3
+    levels, lead = int(P["stair_levels"]), int(P["stair_lead_cycles"])
+    v_end = v0 + (levels - 1) * step
+    pstd = statistics.pstdev
+    res: dict = {}
+    for cid in ids:
+        vdd = float(cid.rsplit("_", 1)[1].rstrip("v"))
+        trips, pres, lats, avs, vdrops = [], [], [], [], []
+        bad = []
+        for key, s in raw[cid].items():
+            # collect_checked already drops non-finite ingredients; re-checked
+            # here so a hand-built `raw` can never reach math.floor(nan).
+            if not all(_finite(s.get(n)) for n in TRAN_INGREDIENTS):
+                bad.append(f"NONFINITE_INGREDIENT: {cid}/{key} "
+                           + ", ".join(f"{n}={s.get(n)!r}" for n in TRAN_INGREDIENTS))
+                continue
+            c = math.floor((s["t_trip"] - t0) / period)
+            phase = (s["t_trip"] - t0) - c * period
+            k = c - lead
+            gain = (s["dd_end"] - s["dd_start"]) / (v_end - v0)
+            err = None
+            if s["dn_start"] > 0.1 or s["dn_end"] < 0.9:
+                err = f"BAD_ENDPOINT_DECISION: {cid}/{key} dn_start={s['dn_start']:.3g} dn_end={s['dn_end']:.3g}"
+            elif not 1 <= k <= levels - 1:
+                err = f"TRIP_OUT_OF_RANGE: {cid}/{key} flipped in cycle {c} (level {k}) outside 1..{levels - 1}"
+            elif phase > high + 1e-9:
+                err = f"LATE_FLIP: {cid}/{key} output crossed {phase * 1e9:.2f} ns after the clock rise"
+            elif gain <= 0:
+                err = f"ZERO_GAIN: {cid}/{key} preamp gain = {gain!r}"
+            if err:
+                bad.append(err)
+                continue
+            trip = v0 + k * step - step / 2
+            pre = v_end - s["dd_end"] / gain
+            trips.append(trip)
+            pres.append(pre)
+            lats.append(trip - pre)
+            avs.append(gain)
+            vdrops.append((vdd - s["ap_start"]) / gain)
+        if bad:
+            problems += bad
+            continue
+        env = dict(MATH, **P)
+        env.update({
+            "n": len(trips), "q2": step * step / 12,
+            "s_trip": pstd(trips), "m_trip": statistics.fmean(trips),
+            "s_pre": pstd(pres), "m_pre": statistics.fmean(pres),
+            "s_lat": pstd(lats), "m_lat": statistics.fmean(lats),
+            "m_av": statistics.fmean(avs),
+            "vdrop_over_av": statistics.fmean(vdrops),
+        })
+        d = _eval_outputs(cid, {
+            name: (lambda expr=expr: eval(expr.replace("^", "**"), {"__builtins__": {}}, env))
+            for name, expr in tb.measure.items()
+        }, problems)
+        if d is not None:
+            # Manifest `checks` floors (mismatch-on guards): a collapsed
+            # population is a named problem and the point is dropped, so it
+            # cannot count towards complete reference evidence (issue #309).
+            guard = scalar_bound_failures(getattr(tb, "checks", None) or {}, d)
+            if guard:
+                problems += [f"GUARD_FAILED: {cid} {g}" for g in guard]
+                continue
+            res[cid] = d
+    return res
+
+
+# ---------------------------------------------------------------------------
+# Consumer-window common-mode feasibility adapter (issue #182). PDK-free
+# validation of the six-point same-draw contract specified by
+# mk_klt_request.cm_window_leg. It mints nothing: `main` refuses the bench
+# (UNSUPPORTED_EXECUTOR_CAPABILITY) until a fleet runner with
+# `measurements[].expr` is established, and full 45-point coverage is pending.
+# ---------------------------------------------------------------------------
+
+CM_WINDOW_COMMON_MODES = ("dn", "mid", "up")
+#: Coordinate read-back tolerance (V): the stimulus sources are ideal, so a
+#: read-back off by more than this names a different sweep point.
+CM_COORD_TOL_V = 1e-6
+
+
+def check_cm_window_request(req: dict) -> list[str]:
+    """REQUEST_SHAPE_INVALID issues; [] only for ONE dc analysis per draw whose
+    18 values all index that one solve with the fixed label -> point mapping."""
+    issues = []
+    if req.get("analysis") != {"kind": "dc", "args": mk.CM_WINDOW_DC_ARGS}:
+        issues.append(f"REQUEST_SHAPE_INVALID: analysis {req.get('analysis')!r} is not the one nested "
+                      f"sweep `dc {mk.CM_WINDOW_DC_ARGS}`")
+    mc = req.get("monte_carlo") or {}
+    if mc.get("vary") != "mismatch" or not isinstance(mc.get("n"), int) or mc["n"] < 1:
+        issues.append(f"REQUEST_SHAPE_INVALID: monte_carlo {req.get('monte_carlo')!r} is not a mismatch draw set")
+    want = {m["name"]: m["expr"] for m in mk.cm_window_measurements()}
+    got = req.get("measurements") or []
+    names = [m.get("name") for m in got]
+    if sorted(map(str, names)) != sorted(want):
+        issues.append(f"REQUEST_SHAPE_INVALID: measurements {sorted(map(str, names))} != the six-point set")
+    for m in got:
+        if "spice" in m:
+            issues.append(f"REQUEST_SHAPE_INVALID: {m.get('name')!r} is a `.meas` card; `at=` on the nested "
+                          "sweep cannot select the outer common-mode coordinate")
+        elif m.get("name") in want and m.get("expr") != want[m["name"]]:
+            issues.append(f"REQUEST_SHAPE_INVALID: {m['name']!r} reads {m.get('expr')!r}, its point is "
+                          f"{want[m['name']]!r}")
+    if (req.get("batch") or {}).get("runner_version_check") != "enforce":
+        issues.append("REQUEST_SHAPE_INVALID: batch.runner_version_check must be 'enforce' (an older runner "
+                      "must refuse before simulating, not be detected afterwards)")
+    return issues
+
+
+def check_cm_index_request(req: dict) -> list[str]:
+    """REQUEST_SHAPE_INVALID issues; [] only for ONE monotonic-index dc analysis
+    per draw whose 18 raw `.meas dc ... at=<k>` cards are exactly the fixed
+    label -> index mapping (issue #218). No `expr` entry is accepted."""
+    issues = []
+    if req.get("analysis") != {"kind": "dc", "args": mk.CM_INDEX_DC_ARGS}:
+        issues.append(f"REQUEST_SHAPE_INVALID: analysis {req.get('analysis')!r} is not the one monotonic "
+                      f"index sweep `dc {mk.CM_INDEX_DC_ARGS}`")
+    mc = req.get("monte_carlo") or {}
+    if mc.get("vary") != "mismatch" or not isinstance(mc.get("n"), int) or mc["n"] < 1:
+        issues.append(f"REQUEST_SHAPE_INVALID: monte_carlo {req.get('monte_carlo')!r} is not a mismatch draw set")
+    want = {m["name"]: m["spice"] for m in mk.cm_index_measurements()}
+    got = req.get("measurements") or []
+    names = [m.get("name") for m in got]
+    if sorted(map(str, names)) != sorted(want):
+        issues.append(f"REQUEST_SHAPE_INVALID: measurements {sorted(map(str, names))} != the six-point set")
+    for m in got:
+        if "expr" in m:
+            issues.append(f"REQUEST_SHAPE_INVALID: {m.get('name')!r} is an `expr` entry; the index bench "
+                          "uses raw `.meas` cards")
+        elif m.get("name") in want and m.get("spice") != want[m["name"]]:
+            issues.append(f"REQUEST_SHAPE_INVALID: {m['name']!r} reads {m.get('spice')!r}, its point is "
+                          f"{want[m['name']]!r}")
+    return issues
+
+
+def check_cm_index_executor(report: dict) -> list[str]:
+    """The report must name the fleet runner that produced it (executor
+    identity). No `expr` capability is needed, so no version gate."""
+    remote = (report.get("environment") or {}).get("remote")
+    runners = (remote.get("fleet") or [remote]) if isinstance(remote, dict) else remote
+    if not isinstance(runners, list) or not runners or not all(
+            isinstance(r, dict) and r.get("runner_klt_version") for r in runners):
+        return ["UNSUPPORTED_EXECUTOR_CAPABILITY: report names no fleet runner (environment.remote)"]
+    return []
+
+
+def collect_cm_index(report: dict, request: dict, vdd: float) -> tuple[dict, list[str]]:
+    """Index-stimulus counterpart of `collect_cm_window`: same identity,
+    coordinate read-back and finiteness checks over the 18 `.meas` values."""
+    return collect_cm_window(report, request, vdd, index=True)
+
+
+def check_cm_window_executor(report: dict) -> list[str]:
+    """UNSUPPORTED_EXECUTOR_CAPABILITY unless every runner that produced the
+    report is a version-matched klt with `expr` (environment.remote)."""
+    remote = (report.get("environment") or {}).get("remote")
+    runners = (remote.get("fleet") or [remote]) if isinstance(remote, dict) else remote
+    if not isinstance(runners, list) or not runners:
+        return ["UNSUPPORTED_EXECUTOR_CAPABILITY: report names no fleet runner (environment.remote)"]
+    issues = []
+    for r in runners:
+        r = r if isinstance(r, dict) else {}
+        gap = mk.cm_window_capability_gap(r.get("runner_klt_version"))
+        if gap:
+            issues.append(f"UNSUPPORTED_EXECUTOR_CAPABILITY: {gap}")
+        elif r.get("runner_compatibility") != "match":
+            issues.append(f"UNSUPPORTED_EXECUTOR_CAPABILITY: runner_compatibility "
+                          f"{r.get('runner_compatibility')!r}, not 'match'")
+    return issues
+
+
+def pair_cm_window_reports(reports: list[dict]) -> dict:
+    """The ONE report that may carry a supply point's draws.
+
+    A draw's six points must come from one analysis of one instance. Values
+    pooled from separate requests are refused even when their monte_carlo
+    seeds are equal: a shared seed reproduces a sequence of separately
+    randomized decks; it does not make two decks the same draw."""
+    if len(reports) != 1:
+        seeds = {json.dumps(((r.get("environment") or {}).get("monte_carlo") or {}).get("seed")) for r in reports}
+        refuse("SEPARATE_REQUEST_PAIRING",
+               f"{len(reports)} reports offered for one supply point"
+               + (" (all with the same monte_carlo seed)" if len(seeds) == 1 and reports else "")
+               + "; seed equality across requests is not draw identity")
+    return reports[0]
+
+
+def collect_cm_window(report: dict, request: dict, vdd: float, index: bool = False) -> tuple[dict, list[str]]:
+    """-> ({corner_id: {mcN: {label: dv}}}, issues), keyed by identity, never
+    by position. A sample contributes only when it carries every one of the
+    18 named values, finite, with both coordinate read-backs matching its
+    labels; anything else is a named issue and the sample is excluded."""
+    issues = (check_cm_index_request(request) + check_cm_index_executor(report) if index
+              else check_cm_window_request(request) + check_cm_window_executor(report))
+    declared, got_mc = request.get("monte_carlo") or {}, (report.get("environment") or {}).get("monte_carlo") or {}
+    for k in ("n", "seed", "vary"):
+        if got_mc.get(k) != declared.get(k):
+            issues.append(f"MC_DECLARATION_MISMATCH: {k} requested {declared.get(k)!r}, report says {got_mc.get(k)!r}")
+    want = expected_units(request, vdd)
+    names = {m["name"] for m in (mk.cm_index_measurements() if index else mk.cm_window_measurements())}
+    out: dict = {}
+    seen: set = set()
+    for c in report.get("corners", []):
+        raw = c.get("corner_id")
+        cid, sample = corner_id(raw, vdd)
+        if (cid, sample) in seen:
+            issues.append(f"DUPLICATE_SAMPLE: {raw} appears more than once")
+            out.get(cid, {}).pop(sample, None)  # neither copy is trusted
+            continue
+        seen.add((cid, sample))
+        if not sample.startswith("mc") or cid not in want or sample not in want[cid]:
+            issues.append(f"UNEXPECTED_SAMPLE: {raw} is not a requested draw")
+            continue
+        if (c.get("monte_carlo") or {}).get("sample_index") != int(sample[2:]):
+            issues.append(f"SAMPLE_IDENTITY_MISMATCH: {raw} carries monte_carlo {c.get('monte_carlo')!r}")
+            continue
+        if c.get("status") != "pass":
+            issues.append(f"FAILED_SAMPLE: {raw} -> {c.get('status')}")
+            continue
+        vals: dict = {}
+        bad = []
+        for m in c.get("measurements", []):
+            if m.get("name") in vals:
+                bad.append(f"DUPLICATE_VALUE: {raw} {m.get('name')}")
+            vals[m.get("name")] = m.get("value")
+        bad += [f"UNEXPECTED_VALUE: {raw} {n!r} is not a six-point label" for n in sorted(set(vals) - names, key=str)]
+        bad += [f"INCOMPLETE_SAMPLE: {raw} has no {n}" for n in sorted(names - set(vals))]
+        bad += [f"NONFINITE_VALUE: {raw} {n} = {vals[n]!r}" for n in sorted(names & set(vals)) if not _finite(vals[n])]
+        if not bad:
+            for label, (vcmd, vd, _) in mk.CM_WINDOW_POINTS.items():
+                if abs(vals[f"xcm_{label}"] - vcmd) > CM_COORD_TOL_V or abs(vals[f"xvd_{label}"] - vd) > CM_COORD_TOL_V:
+                    bad.append(f"COORDINATE_MISMATCH: {raw} {label} read back vcmd={vals[f'xcm_{label}']!r} "
+                               f"vd={vals[f'xvd_{label}']!r}, labelled vcmd={vcmd!r} vd={vd!r}")
+        if bad:
+            issues += bad
+            continue
+        out.setdefault(cid, {})[sample] = {label: vals[f"dv_{label}"] for label in mk.CM_WINDOW_POINTS}
+    for cid, smp in want.items():
+        for s in sorted(smp):
+            if (cid, s) not in seen:
+                issues.append(f"MISSING_SAMPLE: {cid}/{s} has no result")
+    return out, issues
+
+
+def derive_cm_window_draw(dv: dict) -> dict:
+    """ONE draw's six differential outputs -> per common mode p the gain
+    A_p = (dv_p(2m) - dv_p(0))/0.002 and offset V_os,p = -dv_p(0)/A_p, plus
+    the paired deltas V_os,dn - V_os,mid and V_os,up - V_os,mid of that same
+    draw. Raises ValueError(code, detail) on a non-positive/non-finite gain."""
+    d: dict = {}
+    for p in CM_WINDOW_COMMON_MODES:
+        v0, v1 = dv[f"{p}_0"], dv[f"{p}_2m"]
+        gain = (v1 - v0) / mk.CM_WINDOW_VD_STEP_V
+        if not _finite(gain) or gain <= 0:
+            raise ValueError("INVALID_GAIN", f"{p} gain = {gain!r}")
+        vos = -v0 / gain
+        if not _finite(vos):
+            raise ValueError("NONFINITE_DERIVED", f"{p} offset = {vos!r}")
+        d[f"av_{p}"], d[f"vos_{p}"] = gain, vos
+    d["dvos_dn"] = d["vos_dn"] - d["vos_mid"]
+    d["dvos_up"] = d["vos_up"] - d["vos_mid"]
+    return d
+
+
+def derive_cm_window(samples: dict) -> tuple[dict, list[str]]:
+    """Population statistics per PVT point, named as the bench's tb.json
+    `measure` (population sigma, as everywhere in this tool). Any invalid
+    draw drops its whole PVT point with a named problem."""
+    pstd, mean = statistics.pstdev, statistics.fmean
+    res: dict = {}
+    problems: list[str] = []
+    for cid in sorted(samples):
+        draws, bad = [], []
+        for key in sorted(samples[cid], key=lambda s: int(s[2:])):
+            try:
+                draws.append(derive_cm_window_draw(samples[cid][key]))
+            except ValueError as e:
+                bad.append(f"{e.args[0]}: {cid}/{key} {e.args[1]}")
+        if bad or not draws:
+            problems += bad or [f"EMPTY_POINT: {cid} has no draws"]
+            continue
+        col = {k: [d[k] for d in draws] for k in draws[0]}
+        out = _eval_outputs(cid, {
+            "n_samples": lambda: len(draws),
+            "sig_vos_mid_mv": lambda: pstd(col["vos_mid"]) * 1e3,
+            "mean_vos_mid_uv": lambda: mean(col["vos_mid"]) * 1e6,
+            "mean_dvos_dn_uv": lambda: mean(col["dvos_dn"]) * 1e6,
+            "sig_dvos_dn_uv": lambda: pstd(col["dvos_dn"]) * 1e6,
+            "mean_dvos_up_uv": lambda: mean(col["dvos_up"]) * 1e6,
+            "sig_dvos_up_uv": lambda: pstd(col["dvos_up"]) * 1e6,
+            "av_dn_mean": lambda: mean(col["av_dn"]),
+            "av_mid_mean": lambda: mean(col["av_mid"]),
+            "av_up_mean": lambda: mean(col["av_up"]),
+            "av_sigma_pct": lambda: pstd(col["av_mid"]) / mean(col["av_mid"]) * 100,
+        }, problems)
+        if out is not None:
+            res[cid] = out
+    return res, problems
+
 
 def derive(bench: str, tb, legs: dict[str, dict]) -> tuple[dict, list]:
     """-> ({corner_id: {derived name: value}}, problems).
@@ -266,6 +667,8 @@ def derive(bench: str, tb, legs: dict[str, dict]) -> tuple[dict, list]:
             if d is not None:
                 res[cid] = d
         return res, problems
+    if bench == "comparator-offset-tran":
+        return derive_offset_tran(tb, legs["main"][0], ids, problems), problems
     # offset-mc: population statistics over the draws. Per draw, gain from the
     # 0 mV and +2 mV points of one dc sweep (same draw), voa = -dv0/gain --
     # the bench's `voa` at vcmd = 0.
@@ -300,6 +703,28 @@ def derive(bench: str, tb, legs: dict[str, dict]) -> tuple[dict, list]:
         if d is not None:
             res[cid] = d
     return res, problems
+
+
+def node_coverage(derived: dict) -> str:
+    """Kickback records: 'both' when every corner carries both input nodes' peaks.
+
+    Records minted before issue #160 derived `kick_1k_peak_mv` from the
+    positive node only; they have no `kick_1k_nnode_peak_mv` and are partial
+    node coverage ('positive-only'). Anything in between is 'partial'."""
+    has = [("kick_1k_nnode_peak_mv" in d and "kick_1k_pnode_peak_mv" in d) for d in derived.values()]
+    if has and all(has):
+        return "both"
+    return "partial" if any(has) else "positive-only"
+
+
+def node_coverage_line(derived: dict) -> str:
+    cov = node_coverage(derived)
+    if cov != "both":
+        return ("`positive-only` -- PARTIAL node coverage: `kick_1k_peak_mv` here covers the positive "
+                "input node alone; the negative node was not measured.")
+    n_neg = sum(d["kick_1k_nnode_peak_mv"] > d["kick_1k_pnode_peak_mv"] for d in derived.values())
+    return (f"`both` -- `kick_1k_peak_mv` is the maximum of the positive-node (`kick_1k_pnode_peak_mv`) and "
+            f"negative-node (`kick_1k_nnode_peak_mv`) peaks; the negative node sets it at {n_neg}/{len(derived)} corners.")
 
 
 def power_uw(bench: str, cid: str, d: dict) -> float | None:
@@ -393,13 +818,133 @@ def reverse_polarity_lines(summary: dict | None) -> list[str]:
     return lines
 
 
+#: Issue #273: the latch-decision polarity measurements each bench REQUIRES
+#: to be evaluated before a record may claim functional correctness. Only the
+#: NAMES live here; the thresholds always come from the generation-time
+#: (bundled, staged) manifest's `checks`, so they are the ratified manifest
+#: bounds the record was minted against, never a copy hard-coded in this tool.
+#: A required name with no `min`/`max` bound in that manifest cannot pass.
+#: Any further `dout_*` bound in the manifest is evaluated as well.
+DECISION_CHECKS = {
+    # tb.json: the second-strobe (end) answer must be positive AND the
+    # first-strobe answer negative -- together they prove the latch flipped.
+    "comparator-regeneration": ("dout_od50_first", "dout_od1_first", "dout_od01_first",
+                                "dout_od50_end", "dout_od1_end", "dout_od01_end"),
+    # tb.json: every instance must still decide correctly while kicked.
+    "comparator-kickback": ("dout_1k_end", "dout_float_small_end", "dout_float_big_end"),
+}
+DECISION_SCHEMA = "decision-correctness/1"
+
+
+def _decision_phase(name: str) -> str:
+    return "first" if name.endswith("_first") else "end" if name.endswith("_end") else "other"
+
+
+def decision_correctness(bench: str, tb, derived: dict, expected_ids) -> dict | None:
+    """Structured latch-decision correctness (issue #273), or None for a bench
+    with no decision checks.
+
+    Evaluates every `DECISION_CHECKS[bench]` measurement (plus any other
+    `dout_*` bound) of every EXPECTED corner against the generation-time
+    manifest's `min`/`max`, with `report.point_check_outcome`'s semantics
+    (value < min or value > max is wrong). Per check the status is `pass`,
+    `fail` (a finite value on the wrong side of its bound: a wrong decision)
+    or `missing` (absent / non-finite value, a corner that derived no result,
+    or a required check with no bound). A corner is `fail` if any check fails,
+    else `missing` if any is missing, else `pass`. The rollup is `fail` if any
+    corner has a wrong decision, else `incomplete` if anything is missing,
+    else `pass` -- so absent evidence can never roll up to `pass`.
+
+    This is FUNCTIONAL correctness only; it is independent of coverage /
+    provenance (`complete`, `citable`, `reference`) and of target compliance
+    (`within_target`), and it does not change any of them."""
+    required = DECISION_CHECKS.get(bench)
+    if required is None:
+        return None
+    extra = sorted(n for n in tb.checks if n.startswith("dout_") and n not in required)
+    names = list(required) + extra
+    bounds = {n: {k: (tb.checks.get(n) or {})[k] for k in ("min", "max") if k in (tb.checks.get(n) or {})}
+              for n in names}
+    per_corner: dict = {}
+    failures: list = []
+    missing: list = []
+    for cid in sorted(set(expected_ids) | set(derived)):
+        d = derived.get(cid)
+        if d is None:
+            per_corner[cid] = {"status": "missing", "checks": {}}
+            missing.append({"corner": cid, "measurement": None,
+                            "reason": "no derived result for this corner (see problems)"})
+            continue
+        checks: dict = {}
+        for n in names:
+            b, v = bounds[n], d.get(n)
+            entry = {"phase": _decision_phase(n), "value": v if _finite(v) else None, **b}
+            if not b:
+                entry["status"], reason = "missing", "no min/max bound in the generation-time manifest"
+            elif not _finite(v):
+                entry["status"], reason = "missing", "measurement absent or non-finite"
+            else:
+                wrong = ("min" in b and v < b["min"]) or ("max" in b and v > b["max"])
+                entry["status"], reason = ("fail", "wrong decision") if wrong else ("pass", "")
+            checks[n] = entry
+            if entry["status"] == "fail":
+                failures.append({"corner": cid, "measurement": n, "phase": entry["phase"], "value": v, **b})
+            elif entry["status"] == "missing":
+                missing.append({"corner": cid, "measurement": n, "reason": reason})
+        sts = {c["status"] for c in checks.values()}
+        per_corner[cid] = {"status": "fail" if "fail" in sts else "missing" if "missing" in sts or not checks else "pass",
+                           "checks": checks}
+    n_pass = sum(c["status"] == "pass" for c in per_corner.values())
+    status = "fail" if failures else "incomplete" if (missing or not per_corner) else "pass"
+    return {
+        "schema": DECISION_SCHEMA,
+        "status": status,
+        "bounds_source": "generation-time testbench manifest `checks` (record `testbench.manifest_sha256`)",
+        "checks": {n: dict(bounds[n], phase=_decision_phase(n), required=n in required) for n in names},
+        "corners_expected": len(set(expected_ids)),
+        "corners_evaluated": sum(bool(c["checks"]) for c in per_corner.values()),
+        "corners_pass": n_pass,
+        "corners_fail": sum(c["status"] == "fail" for c in per_corner.values()),
+        "failures": failures,
+        "missing": missing,
+        "per_corner": per_corner,
+    }
+
+
+def _bound_text(e: dict) -> str:
+    return " and ".join(f"{op} {e[k]:g}" for k, op in (("min", ">="), ("max", "<=")) if k in e) or "no bound"
+
+
+def decision_lines(dc: dict, bench: str) -> list[str]:
+    """Markdown for `decision_correctness`, rendered ONLY from that structure
+    (so the record's JSON and Markdown cannot disagree)."""
+    title = {"comparator-regeneration": "Decision correctness (first strobe negative, second strobe positive)",
+             "comparator-kickback": "Decision correctness while kicked"}.get(bench, "Decision correctness")
+    rule = "; ".join(f"`{n}` {_bound_text(c)}" for n, c in dc["checks"].items())
+    out = [f"- **{title}** (`decision_correctness.status` = `{dc['status']}`; bounds from the generation-time manifest: "
+           f"{rule}): {dc['corners_pass']}/{dc['corners_expected']} expected corners pass, "
+           f"{dc['corners_fail']} with a wrong decision, {len(dc['missing'])} missing check(s)."]
+    if dc["status"] == "fail":
+        out.append("  - FUNCTIONAL FAILURE: the delay/kickback numbers at the corners below were taken on a "
+                   "wrong decision and do not establish functional verification, whatever their target score.")
+    out += [f"  - wrong decision: `{f['corner']}` `{f['measurement']}` = {fmt(f['value'])} (required {_bound_text(f)})"
+            for f in dc["failures"][:60]]
+    out += [f"  - missing: `{m['corner']}`" + (f" `{m['measurement']}`" if m["measurement"] else "") + f" -- {m['reason']}"
+            for m in dc["missing"][:60]]
+    return out
+
+
 def git_state() -> tuple[str, bool]:
-    """INGEST-time checkout: (short commit, derivation tooling dirty?).
+    """INGEST-time checkout: (full 40-char commit, derivation tooling dirty?).
+
+    Full SHA so it compares like-for-like with the bundle's origin commit
+    (mk_klt_request.git_state, `rev-parse HEAD`); callers abbreviate it for
+    the record's existing short-SHA fields (issue #272).
 
     Only the code that turns raw values into the record (sim/tools,
     sim/harness) matters here; the simulated sources' identity and dirty
     state come from the source bundle (see mk_klt_request.git_state)."""
-    sha = subprocess.check_output(["git", "-C", str(REPO), "rev-parse", "--short=7", "HEAD"], text=True).strip()
+    sha = subprocess.check_output(["git", "-C", str(REPO), "rev-parse", "HEAD"], text=True).strip()
     dirty = bool(subprocess.check_output(["git", "-C", str(REPO), "status", "--porcelain", "--untracked-files=all", "--", "sim/tools", "sim/harness"], text=True).strip())
     return sha, dirty
 
@@ -521,6 +1066,173 @@ def _report_netlist_sha(report: dict) -> str | None:
     return h.split(":", 1)[1] if h.startswith("sha256:") else None
 
 
+def check_engine_floor(b: dict, reports: dict, allow_drift: bool = False) -> dict:
+    """Enforce the ngspice minimum major on every ingested report (issue #269).
+
+    The floor is the one SNAPSHOTTED into the source bundle at generation
+    (`b["toolchain"]`), so a later sim/toolchain.json change does not alter
+    what an originating bundle means. A LEGACY bundle (written before this
+    gate, no `toolchain` key) has no recorded floor; the conservative policy
+    is to apply today's checkout floor and stamp the record
+    `floor_source = "ingest-checkout (legacy bundle)"`. Existing committed
+    records are never re-derived.
+
+    Missing / malformed / wrong-engine / below-floor / mixed-version reports
+    are violations. Without `allow_drift` they refuse BEFORE anything is
+    written. With it (`--allow-engine-drift`, never inferred) ingestion
+    proceeds as an explicitly NON-CITABLE diagnostic and the override and
+    violations are stamped into the record.
+    -> {"ngspice_min_major", "floor_source", "observed", "violations",
+    "override", "noncite"}"""
+    snap = b.get("toolchain")
+    if isinstance(snap, dict) and snap.get("ngspice_min_major") is not None:
+        floor, source = int(snap["ngspice_min_major"]), "source-bundle"
+    elif isinstance(snap, dict):
+        floor, source = None, "source-bundle (no ngspice floor pinned)"
+    else:
+        floor = htc.load_pins().get("ngspice_min_major")
+        floor = None if floor is None else int(floor)
+        source = "ingest-checkout (legacy bundle)"
+    violations: list[str] = []
+    observed: dict[str, str | None] = {}
+    majors = set()
+    for n, rep in sorted(reports.items()):
+        env = rep.get("environment") or {}
+        eng, ver = env.get("engine"), env.get("engine_version")
+        observed[n] = None if ver is None else str(ver)
+        if eng is not None and str(eng).lower() != "ngspice":
+            violations.append(f"report-{n}.json: engine {eng!r}, not ngspice")
+            continue
+        if ver is None or ver == "":
+            violations.append(f"report-{n}.json: no environment.engine_version")
+            continue
+        major = htc.engine_major(ver)
+        if major is None:
+            violations.append(f"report-{n}.json: unparseable engine_version {ver!r}")
+            continue
+        majors.add(major)
+        if floor is not None and major < floor:
+            violations.append(f"report-{n}.json: ngspice major {major} is below the floor {floor}")
+    if len(set(v for v in observed.values())) > 1:
+        violations.append(f"mixed engine versions across reports: {sorted({str(v) for v in observed.values()})}")
+    if violations and not allow_drift:
+        refuse("ENGINE_FLOOR_VIOLATION",
+               f"ngspice floor {floor} ({source}): " + "; ".join(violations[:6])
+               + " -- no record written. Pass --allow-engine-drift to retain a NON-CITABLE diagnostic.")
+    noncite = [f"engine floor override: {v}" for v in violations]
+    return {"ngspice_min_major": floor, "floor_source": source,
+            "observed": sorted({v for v in observed.values() if v is not None}),
+            "violations": violations, "override": bool(violations and allow_drift), "noncite": noncite}
+
+
+_OPEN_PDKS_VERSION = re.compile(r"open_pdks\s+([0-9a-fA-F]{40})")
+_SHA256 = re.compile(r"(?:sha256:)?([0-9a-fA-F]{64})")
+
+
+def report_pdk_identity(rep: dict) -> tuple[str | None, str | None, list[str]]:
+    """-> (variant, open_pdks revision, problems) from one report's EXECUTOR
+    metadata (`provenance.pdk`). Anything not exactly the observed shape
+    (`{"name": "gf180mcuD", "version": "open_pdks <40-hex>"}`) is a problem,
+    never a guess."""
+    pdk = (rep.get("provenance") or {}).get("pdk")
+    if not isinstance(pdk, dict):
+        return None, None, ["no provenance.pdk identity"]
+    problems = []
+    name, ver = pdk.get("name"), pdk.get("version")
+    if not isinstance(name, str) or not name:
+        name = None
+        problems.append("no provenance.pdk.name")
+    rev = None
+    if not isinstance(ver, str) or not ver:
+        problems.append("no provenance.pdk.version")
+    else:
+        m = _OPEN_PDKS_VERSION.fullmatch(ver.strip())
+        if m:
+            rev = m.group(1).lower()
+        else:
+            problems.append(f"unparseable provenance.pdk.version {ver!r}")
+    return name, rev, problems
+
+
+def check_pdk_identity(work: Path, b: dict, reports: dict, allow_drift: bool = False) -> dict:
+    """Qualify every ingested leg against the exact open_pdks revision and PDK
+    variant (issue #283). Required identity is the bundle's snapshot; a legacy
+    bundle falls back to the ingest checkout's pin and the variant its own
+    requests select, stamped as such. Observed identity is only what the
+    EXECUTOR reported. Violations refuse before any write unless
+    `allow_drift` (explicit `--allow-pdk-drift`), which keeps a NON-CITABLE
+    diagnostic. Model-library hashes are recorded for traceability only.
+    -> {"required", "required_source", "observed", "model_lib_sha256",
+    "violations", "override", "noncite"}"""
+    snap = b.get("toolchain")
+    if isinstance(snap, dict) and snap.get("open_pdks"):
+        req_rev, req_var, source = str(snap["open_pdks"]).lower(), snap.get("pdk_variant"), "source-bundle"
+    elif isinstance(snap, dict) and "open_pdks" in snap:
+        req_rev, req_var, source = None, snap.get("pdk_variant"), "source-bundle (no open_pdks pinned)"
+    else:
+        pin = htc.load_pins().get("open_pdks")
+        req_rev, req_var, source = (str(pin).lower() if pin else None), None, "ingest-checkout (legacy bundle)"
+    if req_var is not None:
+        # The snapshot variant and the variant each bundled (hash-verified)
+        # request selects are both the bundle's own claims: a disagreement is
+        # a contradiction, not executor drift, so no override applies.
+        for n, r in sorted((b.get("requests") or {}).items()):
+            try:
+                got = (json.loads((work / r["request"]).read_text()).get("models") or {}).get("pdk")
+            except (OSError, ValueError, KeyError, TypeError, AttributeError):
+                got = None
+            if got != req_var:
+                refuse("SOURCE_BUNDLE_INCONSISTENT",
+                       f"toolchain snapshot pdk_variant {req_var!r}, but request {n} selects models.pdk {got!r}")
+    if req_var is None:
+        variants = set()
+        for r in (b.get("requests") or {}).values():
+            try:
+                variants.add((json.loads((work / r["request"]).read_text()).get("models") or {}).get("pdk"))
+            except (OSError, ValueError, KeyError, TypeError):
+                variants.add(None)
+        req_var = variants.pop() if len(variants) == 1 else None
+    violations: list[str] = []
+    if not req_rev:
+        violations.append("no required open_pdks revision is pinned for this bundle")
+    if not req_var:
+        violations.append("required PDK variant cannot be established from the bundle")
+    seen: dict[str, tuple] = {}
+    hashes: dict[str, str | None] = {}
+    for n, rep in sorted(reports.items()):
+        name, rev, problems = report_pdk_identity(rep)
+        v = [f"report-{n}.json: {p}" for p in problems]
+        if name is not None and req_var and name != req_var:
+            v.append(f"report-{n}.json: PDK variant {name!r}, required {req_var!r}")
+        if rev is not None and req_rev and rev != req_rev:
+            v.append(f"report-{n}.json: open_pdks {rev}, required {req_rev}")
+        deck = ((rep.get("provenance") or {}).get("deck") or {}).get("content_hash")
+        envh = (rep.get("environment") or {}).get("models_lib_sha256")
+        dm, em = (_SHA256.fullmatch(x) if isinstance(x, str) else None for x in (deck, envh))
+        if dm and em and dm.group(1).lower() != em.group(1).lower():
+            v.append(f"report-{n}.json: contradictory model hashes (provenance.deck {dm.group(1)[:12]} vs "
+                     f"environment.models_lib_sha256 {em.group(1)[:12]})")
+        # provenance.deck.content_hash is the MODEL-LIBRARY hash (sm141064.ngspice),
+        # not the netlist hash: verified equal to environment.models_lib_sha256
+        # in committed fleet reports (e.g. report-main-v3.30.json).
+        hashes[n] = (em or dm).group(1).lower() if (em or dm) else None
+        seen[n] = (name, rev)
+        violations += v
+    if len({s for s in seen.values()}) > 1:
+        violations.append(f"mixed PDK identities across legs: {sorted({str(s) for s in seen.values()})}")
+    if len({h for h in hashes.values() if h}) > 1:
+        violations.append("mixed model-library hashes across legs")
+    if violations and not allow_drift:
+        refuse("PDK_QUALIFICATION_FAILED",
+               f"required {req_var} / open_pdks {req_rev} ({source}): " + "; ".join(violations[:6])
+               + " -- no record written. Pass --allow-pdk-drift to retain a NON-CITABLE diagnostic.")
+    return {"required": {"open_pdks": req_rev, "pdk_variant": req_var}, "required_source": source,
+            "observed": [{"pdk_variant": s[0], "open_pdks": s[1]} for s in sorted({s for s in seen.values()}, key=str)],
+            "model_lib_sha256": sorted({h for h in hashes.values() if h}),
+            "violations": violations, "override": bool(violations and allow_drift),
+            "noncite": [f"PDK qualification override: {x}" for x in violations]}
+
+
 def verify_reports(work: Path, b: dict, names: dict, reports: dict) -> list[str]:
     """Link each report to its submitted request/body -> informational notes."""
     notes = []
@@ -575,9 +1287,18 @@ def verify_origin_commit(b: dict) -> list[str]:
         return []
     d, t = b["dut"], b["testbench"]
     unverified = []
-    for path, want in ((d["netlist"], d["netlist_sha256"]),
-                       (f"{t['dir']}/{t['netlist']}", t["netlist_sha256"]),
-                       (f"{t['dir']}/{htb.MANIFEST_NAME}", t["manifest_sha256"])):
+    checks = {d["netlist"]: d["netlist_sha256"],
+              f"{t['dir']}/{t['netlist']}": t["netlist_sha256"],
+              f"{t['dir']}/{htb.MANIFEST_NAME}": t["manifest_sha256"]}
+    # stage_sources copies EVERY file in the testbench dir (e.g. the
+    # tb_vosprobe.spice offset-probe fragments), and the bundle hashes each.
+    # They are not .included by the body netlist, but a clean-commit claim
+    # covers the whole staged testbench, so check them against the commit too.
+    stdir = t["staged_dir"].rstrip("/") + "/"
+    for rel, h in sorted((b.get("staged") or {}).items()):
+        if rel.startswith(stdir):
+            checks.setdefault(f"{t['dir']}/{rel[len(stdir):]}", h)
+    for path, want in checks.items():
         data = git_blob(o["commit"], path)
         got = None if data is None else mk.sha256_bytes(data)
         if got is None:
@@ -596,7 +1317,50 @@ def verify_origin_commit(b: dict) -> list[str]:
             refuse("SOURCE_COMMIT_MISMATCH",
                    f"bundle claims clean commit {o['commit'][:7]}, but its {d['binding_config']} "
                    f"entry {d['key']!r} differs from the staged binding")
+    unverified += _verify_toolchain_snapshot(o["commit"], b.get("toolchain"))
     return unverified
+
+
+# Snapshot fields that must equal the pin file at the origin commit. Each is
+# only compared when the snapshot carries it (pre-#283 bundles lack open_pdks).
+_SNAPSHOT_PINS = ("open_pdks", "ngspice_min_major")
+
+
+def _verify_toolchain_snapshot(commit: str, snap) -> list[str]:
+    """The toolchain snapshot (ngspice floor #269, open_pdks pin #283) is
+    bound to the CLEAN origin commit: its pin file there must hash to the
+    recorded sha256 and parse to the recorded pins. Unreadable -> a reason the
+    record is non-citable; a contradiction refuses SOURCE_COMMIT_MISMATCH.
+    Legacy bundles without a snapshot are qualified against the ingest
+    checkout instead (stamped so), so there is nothing to bind here."""
+    if not isinstance(snap, dict):
+        return []
+    path, want = snap.get("file"), snap.get("sha256")
+    if not path or not want:
+        return [f"toolchain snapshot names no pin file/sha256 to verify at {commit[:7]}"]
+    if snap.get("commit") and not _same_commit(str(snap["commit"]), commit):
+        refuse("SOURCE_COMMIT_MISMATCH",
+               f"toolchain snapshot was taken at {str(snap['commit'])[:7]}, but the bundle claims "
+               f"clean commit {commit[:7]}")
+    blob = git_blob(commit, path)
+    if blob is None:
+        return [f"{path} @ {commit[:7]} not readable from this clone"]
+    got = mk.sha256_bytes(blob)
+    if got != want:
+        refuse("SOURCE_COMMIT_MISMATCH",
+               f"bundle claims clean commit {commit[:7]}, but {path} there is {got[:16]}, "
+               f"toolchain snapshot {str(want)[:16]}")
+    try:
+        pins = json.loads(blob)
+    except ValueError:
+        pins = None
+    if not isinstance(pins, dict):
+        refuse("SOURCE_COMMIT_MISMATCH", f"{path} @ {commit[:7]} is not a pin object")
+    for k in _SNAPSHOT_PINS:
+        if k in snap and snap[k] != pins.get(k):
+            refuse("SOURCE_COMMIT_MISMATCH",
+                   f"toolchain snapshot {k} = {snap[k]!r}, but {path} @ {commit[:7]} pins {pins.get(k)!r}")
+    return []
 
 
 def checkout_drift(b: dict, repo: Path | None = None) -> list[str]:
@@ -643,14 +1407,15 @@ def dispatch(work: Path, names: list[str]) -> None:
             f"KLT_SIM_BACKEND={backend!r}: refusing to run a multi-unit grid on a "
             "local backend (shared dispatch worker). Export KLT_SIM_BACKEND=batch."
         )
-    procs = {
-        n: subprocess.Popen(
-            ["klt", "sim", "-o", str(work / f"out-{n}"), str(work / f"request-{n}.json"), "--format", "json"],
-            stdout=(work / f"report-{n}.json").open("w"),
-            stderr=(work / f"stderr-{n}.txt").open("w"),
-        )
-        for n in names
-    }
+    procs = {}
+    for n in names:
+        # The child inherits its own copy of each fd, so the parent closes its handles at once.
+        with (work / f"report-{n}.json").open("w") as out, (work / f"stderr-{n}.txt").open("w") as err:
+            procs[n] = subprocess.Popen(
+                ["klt", "sim", "-o", str(work / f"out-{n}"), str(work / f"request-{n}.json"), "--format", "json"],
+                stdout=out,
+                stderr=err,
+            )
     for n, pr in procs.items():
         rc = pr.wait()
         if not (work / f"report-{n}.json").read_text().strip():
@@ -684,6 +1449,15 @@ def _collect_checked_legs(bench: str, names: dict, reports: dict, requests: dict
     return legs_c, coverage, expected
 
 
+def expected_corner_ids(bench: str, names: dict, requests: dict) -> set[str]:
+    """The requested PVT corner ids (first leg, as `_collect_checked_legs` counts them)."""
+    ids: set[str] = set()
+    for n, (leg, v) in names.items():
+        if leg == LEGS[bench][0]:
+            ids |= set(expected_units(requests[n], v))
+    return ids
+
+
 def legacy_diagnostic(bench: str, work: Path) -> int:
     """A pre-#151 work dir: print, never publish. Exit 3 (not a record)."""
     tb = htb.load(HERE.parent / bench)  # today's manifest: interpretation aid only
@@ -706,18 +1480,272 @@ def legacy_diagnostic(bench: str, work: Path) -> int:
     return 3
 
 
+def _archive_record(bench: str, work: Path, b: dict, tb, vdds, names: dict, unverified: list[str],
+                    engine: dict, pdk: dict) -> dict:
+    """Record identity, citability and the append-only archive, shared by both
+    record writers (issue #254). Call only once a nonempty result is derived and
+    every verification has passed. The corner dir is created exclusively (an
+    existing record id raises); it receives the bundle, design include, bodies,
+    requests, reports and staged-source tree, plus the netlist snapshot."""
+    origin = b["origin"]
+    ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S%f")
+    ingest_full, tools_dirty = git_state()
+    ingest_sha = ingest_full[:7]  # existing fields stay short, matching historical records
+    noncite = []
+    if origin["dirty"]:
+        noncite.append(f"sources uncommitted at request generation: {', '.join(origin['dirty_paths'])}")
+    noncite += [f"origin unverifiable: {u}" for u in unverified]
+    noncite += engine["noncite"] + pdk["noncite"]
+    if tools_dirty:
+        noncite.append(f"derivation tooling (sim/tools, sim/harness) dirty at ingest commit {ingest_sha}")
+    sha = origin["commit"][:7]
+    r = {"rid": f"{ts}-{sha}", "sha": sha, "exp": SIM / bench, "bundle_sha": mk.sha256_file(work / mk.BUNDLE_NAME),
+         "ingest_sha": ingest_sha, "ingest_commit_full": ingest_full, "tools_dirty": tools_dirty, "noncite": noncite,
+         "citable": not noncite,
+         "engine_floor": {k: v for k, v in engine.items() if k != "noncite"},
+         "pdk_qualification": {k: v for k, v in pdk.items() if k != "noncite"}}  # == not (origin dirty or origin unverified or tooling dirty)
+    for sub in ("records", "corners", "netlist-snapshots"):
+        (r["exp"] / sub).mkdir(exist_ok=True)
+    cdir = r["exp"] / "corners" / r["rid"]
+    cdir.mkdir()  # exclusive: raises if the id exists
+    for f in [mk.BUNDLE_NAME, "design.ngspice"] + [f"body-v{v:.2f}.spice" for v in vdds] \
+            + [f"request-{n}.json" for n in names] + [f"report-{n}.json" for n in names]:
+        shutil.copy2(work / f, cdir / f)
+    shutil.copytree(work / mk.SOURCES_DIR, cdir / mk.SOURCES_DIR)
+    snap = r["exp"] / "netlist-snapshots" / f"{r['rid']}.spice"
+    snap.write_text(_staged_path(work, b["dut"]["staged_netlist"]).read_text()
+                    + "\n* ---- testbench fragment ----\n" + tb.netlist.read_text())
+    return r
+
+
+def _provenance(r: dict, bench: str, b: dict, drift: list[str], link_notes: list[str]) -> dict:
+    """The record JSON fields common to both writers (identity, DUT, testbench,
+    source bundle, ingest); each caller composes its own fields around them."""
+    d, t, origin = b["dut"], b["testbench"], b["origin"]
+    return {
+        "record_id": r["rid"], "bench": bench, "commit": r["sha"], "dirty": bool(origin["dirty"]),
+        "citable": r["citable"], "not_citable_reasons": r["noncite"],
+        "dut": {
+            "dut_id": d["dut_id"], "dut_provenance": d["provenance"], "dut_netlist": d["netlist"],
+            "dut_netlist_sha256": d["netlist_sha256"], "dut_params": d["params"],
+            "dut_selector": d.get("selector"), "dut_binding_config": d["binding_config"],
+            "dut_binding_entry_sha256": d["binding_entry_sha256"],
+        },
+        "testbench": {"dir": t["dir"], "netlist": t["netlist"], "netlist_sha256": t["netlist_sha256"],
+                      "manifest_sha256": t["manifest_sha256"]},
+        "source_bundle": {"file": f"corners/{r['rid']}/{mk.BUNDLE_NAME}", "sha256": r["bundle_sha"],
+                          "schema": b["schema"], "version": b["version"],
+                          "origin_commit": origin["commit"], "origin_dirty_paths": origin["dirty_paths"]},
+        "ingest": {"commit": r["ingest_sha"], "commit_full": r.get("ingest_commit_full"), "tools_dirty": r["tools_dirty"], "source_drift": drift,
+                   "linkage_notes": link_notes, "engine_floor": r["engine_floor"],
+                   "pdk_qualification": r["pdk_qualification"]},
+    }
+
+
+def _same_commit(a: str, b: str) -> bool:
+    """Full SHAs compare exactly; if one side is abbreviated (a record without
+    a full ingest SHA), it matches when it is a prefix of the other."""
+    if not a or not b:
+        return False
+    if len(a) == len(b):
+        return a == b
+    short, full = sorted((a, b), key=len)
+    return len(short) >= 7 and full.startswith(short)
+
+
+def reproduce_line(bench: str, b: dict, r: dict, tb) -> str:
+    """Shared `Reproduce` bullet for both record writers (issue #272).
+
+    Built from the verified source bundle (MC count, DUT selector, grid) and
+    the ingestion identity -- never from today's CLI defaults, so a non-default
+    N or DUT cannot silently regenerate as N=200 / the default DUT. Names the
+    full origin and ingest commits; when they differ, explains that the request
+    set is regenerated from the origin sources while the derivation runs on
+    the ingest tooling. A bundled grid that differs from the CLI defaults is
+    replayed from the archived requests rather than by a default command."""
+    origin_commit = b["origin"]["commit"]
+    ingest_commit = r.get("ingest_commit_full") or r["ingest_sha"]  # full SHA; short only if unavailable
+    params, sel = b.get("parameters") or {}, b["dut"].get("selector")
+    args = bench
+    if params.get("mc_n") is not None:
+        args += f" --mc-n {params['mc_n']}"
+    if sel:
+        args += f" --dut {sel}"
+    cmd = f"KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py {args}"
+    try:
+        default_grid = {"corners": [c.name for c in hc.resolve_corners(list(tb.corners))],
+                        "temperatures_c": [float(t) for t in tb.temperatures_c],
+                        "supply_tolerance": tb.supply_tolerance}
+    except Exception:  # unresolvable defaults: do not claim a default command reproduces it
+        default_grid = None
+    bundled = {k: params.get(k) for k in ("corners", "temperatures_c", "supply_tolerance")}
+    bundled["temperatures_c"] = [float(t) for t in bundled["temperatures_c"] or []]
+    rid = r["rid"]
+    out = f"- **Reproduce**: origin commit `{origin_commit}`; ingested at commit `{ingest_commit}`. "
+    if default_grid is not None and bundled == default_grid:
+        out += f"At the origin commit: `{cmd}`."
+    else:
+        out += (f"The bundled grid ({json.dumps(bundled, sort_keys=True)}) differs from the CLI defaults, so no default "
+                f"command reproduces it: replay the archived requests `corners/{rid}/request-*.json` (with their "
+                f"`body-*.spice` and `{mk.SOURCES_DIR}/`) through `klt sim`, then ingest with "
+                f"`python3 sim/tools/klt_record.py {args} --from-report <workdir>`; copy the whole "
+                f"`corners/{rid}/` directory as `<workdir>`, since `--from-report` also needs its "
+                f"`{mk.BUNDLE_NAME}` and `design.ngspice`.")
+    q = r.get("pdk_qualification")
+    if q:
+        req = q["required"]
+        out += (f" PDK qualification: required `{req['pdk_variant']}` / open_pdks `{req['open_pdks']}` "
+                f"({q['required_source']}); executor-reported {json.dumps(q['observed'])}"
+                + ("; DIAGNOSTIC OVERRIDE (`--allow-pdk-drift`), not citable." if q["override"]
+                   else "; every leg matched. Replaying needs an executor reporting this exact revision."))
+    if not _same_commit(origin_commit, ingest_commit):
+        out += (f" The origin commit (`{origin_commit}`) produced the requests and sources; the derivation tooling ran at "
+                f"the ingest commit (`{ingest_commit}`). To replay, check out the origin commit for the simulation sources "
+                f"(or use the archived requests above), then derive with the ingest-commit `sim/tools` and `sim/harness`.")
+    return out
+
+
+def mint_cm_index(a) -> int:
+    """Issue #218: append-only record for the monotonic-index common-mode
+    bench. UNSCORED: no ratified bound exists, so there is no target/stretch
+    verdict and the consumer's rejection verdict stays Unknown. Full coverage
+    is claimed only when every requested PVT point is complete (`complete`)
+    AND the source identity is citable; draws are joined by identity inside
+    one report (`collect_cm_index`), never pooled across requests."""
+    bench = a.bench
+    work = Path(a.from_report or a.work or f"/tmp/klt-{bench}").resolve()
+    if not a.from_report:
+        work.mkdir(parents=True, exist_ok=True)
+        subprocess.check_call([sys.executable, str(HERE / "mk_klt_request.py"), bench, str(work),
+                               "--mc-n", str(a.mc_n)] + (["--dut", a.dut] if a.dut else []))
+    b = load_bundle(work, bench)
+    check_dut_selection(b, a.dut)
+    d, t = b["dut"], b["testbench"]
+    tb = htb.load(_staged_path(work, t["staged_dir"]))
+    vdds = hc.supply_points(tb.nominal_supply_v, tb.supply_tolerance)
+    names = {f"main-v{v:.2f}": ("main", v) for v in vdds}
+    verify_staged(work, b, names)
+    if not a.from_report:
+        dispatch(work, list(names))
+    reports = {n: json.loads((work / f"report-{n}.json").read_text()) for n in names}
+    link_notes = verify_reports(work, b, names, reports)
+    engine = check_engine_floor(b, reports, a.allow_engine_drift)
+    pdk = check_pdk_identity(work, b, reports, a.allow_pdk_drift)
+    unverified = verify_origin_commit(b)
+    drift = checkout_drift(b)
+    requests = {n: json.loads((work / b["requests"][n]["request"]).read_text()) for n in names}
+    samples: dict = {}
+    issues: list[str] = []
+    expected = 0
+    for n, (_, v) in names.items():
+        pair_cm_window_reports([reports[n]])  # one report per supply point, by construction
+        got, iss = collect_cm_index(reports[n], requests[n], v)
+        issues += [f"{n}: {i}" for i in iss]
+        expected += len(expected_units(requests[n], v))
+        for cid, smp in got.items():
+            samples.setdefault(cid, {}).update(smp)
+    mcs = {json.dumps(r.get("monte_carlo"), sort_keys=True) for r in requests.values()}
+    if len(mcs) > 1:
+        issues.append(f"MC_DECLARATION_MISMATCH: requests disagree on monte_carlo: {sorted(mcs)}")
+    derived, dprob = derive_cm_window(samples)
+    problems = issues + dprob
+    complete = not problems and len(derived) == expected
+    if not derived:
+        print("\n".join(["no complete PVT point: nothing derived, no record written"] + problems[:60]), file=sys.stderr)
+        raise SystemExit(f"EMPTY_RESULT: {bench} produced no complete PVT point; refusing to publish a record")
+    r = _archive_record(bench, work, b, tb, vdds, names, unverified, engine, pdk)
+    rid, sha, exp, bundle_sha, ingest_sha, citable, noncite = (
+        r[k] for k in ("rid", "sha", "exp", "bundle_sha", "ingest_sha", "citable", "noncite"))
+    reference = complete and citable
+    full = reference
+    rem = [rep["environment"].get("remote") for rep in reports.values()]
+    ng = sorted({str(rep["environment"].get("engine_version")) for rep in reports.values()})
+    mc = next(iter(reports.values()))["environment"].get("monte_carlo", {})
+    draws = {cid: d_["n_samples"] for cid, d_ in derived.items()}
+    cols = list(next(iter(derived.values())).keys())
+    if reference:
+        claim = ("COMPLETE: every requested PVT point returned every draw with verified coordinates; "
+                 "FULL COVERAGE of the documented 1.55/1.65/1.75 V window, as schematic preamp DC characterization")
+    elif not complete:
+        claim = "NON-COMPLETE DIAGNOSTIC (full coverage NOT claimed; see INCOMPLETE / FAILED UNITS)" + ("; also NOT CITABLE, see Commit" if not citable else "")
+    else:
+        claim = "NOT-CITABLE DIAGNOSTIC (full coverage NOT claimed; source identity not citable, see Commit)"
+    lines = [
+        f"# Record {rid}", "",
+        f"- **Record ID**: {rid}",
+        f"- **Experiment**: `sim/{bench}/` (klt sim requests, one per supply point: {', '.join(names)})",
+        f"- **Topology label**: {a.label or d['dut_id']}",
+        f"- **Claim**: {claim}. UNSCORED: no ratified common-mode rejection bound exists; the consumer's rejection verdict stays **Unknown**. Schematic preamp DC only -- not whole-comparator transient, not extracted-layout.",
+        f"- **DUT**: `{d['dut_id']}` -- **{d['provenance']}** -- `{d['netlist']}` (sha256 `{d['netlist_sha256']}`), binding `{d['binding_config']}` entry `{d['key']}` (sha256 `{d['binding_entry_sha256'][:16]}`), params {json.dumps(d['params'], sort_keys=True)}",
+        f"- **Testbench**: `{t['dir']}/{t['netlist']}` (sha256 `{t['netlist_sha256']}`), manifest sha256 `{t['manifest_sha256'][:16]}`",
+        f"- **Commit**: `{sha}` (originating commit, from the source bundle `corners/{rid}/{mk.BUNDLE_NAME}` sha256 `{bundle_sha[:16]}`)"
+        + (f" -- **NOT CITABLE until re-minted from a clean commit**: {'; '.join(noncite)}" if noncite else ""),
+        f"- **Ingested**: at commit `{ingest_sha}` by `sim/tools/klt_record.py`; report-to-request linkage verified",
+        f"- **Source drift since generation**: {', '.join(drift) if drift else 'none'}",
+        f"- **Executor**: `klt sim` ({klt_version()}), backend `{os.environ.get('KLT_SIM_BACKEND', '?')}`; remote/batch descriptor(s): `{json.dumps(rem)}`; ngspice engine_version(s) reported: {ng}",
+        f"- **Coverage**: {len(derived)} of {expected} PVT points complete; draws per point min {min(draws.values())} / max {max(draws.values())} (requested {mc.get('n')}).",
+        f"- **Monte Carlo**: seed {mc.get('seed')}, n = {mc.get('n')} draws requested per PVT point, vary = {mc.get('vary')}. One draw is one `corners[]` entry of one report (one analysis `dc {mk.CM_INDEX_DC_ARGS}` of one instance), joined by `monte_carlo.sample_index`; both coordinate read-backs checked within {CM_COORD_TOL_V:g} V. Seed equality across requests is not used as pairing.",
+        "- **Definitions**: per draw, `A_p = (dv_p(2 mV) - dv_p(0))/2 mV`, `Vos_p = -dv_p(0)/A_p`; `dvos_dn/up` = endpoint minus midpoint offset change within the same draw (reported in uV). No rejection ratio is defined. Sigmas are population.",
+    ]
+    lines += [f"  - linkage note: {n}" for n in link_notes]
+    if problems:
+        lines += ["- **INCOMPLETE / FAILED UNITS**:"] + [f"  - {p}" for p in problems[:60]]
+    lines += ["- **Result**:", "", "  | corner-id | " + " | ".join(f"`{n}`" for n in cols) + " |", "  |---|" + "---|" * len(cols)]
+    for cid, dd in derived.items():
+        lines.append(f"  | `{cid}` | " + " | ".join(fmt(dd[n]) for n in cols) + " |")
+    lines += [
+        "",
+        reproduce_line(bench, b, r, tb),
+        "",
+    ]
+    (exp / "records" / f"{rid}.md").write_text("\n".join(lines))
+    meta = _provenance(r, bench, b, drift, link_notes)
+    ingest = meta.pop("ingest")  # this schema places executor/monte_carlo before ingest
+    (exp / "records" / f"{rid}.json").write_text(json.dumps({
+        **meta,
+        "executor": {"remote": rem, "engine_versions": ng, "backend": os.environ.get("KLT_SIM_BACKEND", "?")},
+        "monte_carlo": {"n": mc.get("n"), "seed": mc.get("seed"), "vary": mc.get("vary"), "draws_per_point": draws},
+        "ingest": ingest,
+        "scored": False, "verdict": "Unknown",
+        "complete": complete, "outcome": "complete" if complete else "incomplete", "expected_points": expected,
+        "full_coverage": full, "reference": reference, "points": len(derived), "problems": problems,
+        "derived": derived,
+    }, indent=1, allow_nan=False) + "\n")
+    print(f"record {rid}: {len(derived)} of {expected} points, complete={complete}, citable={citable}"
+          + ("" if citable else " -- NOT CITABLE: " + "; ".join(noncite)))
+    if not complete:
+        print(f"INCOMPLETE: {len(problems)} problem(s); non-complete diagnostic, full coverage not claimed", file=sys.stderr)
+        return 1
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("bench", choices=sorted(LEGS))
+    ap.add_argument("bench", choices=sorted(LEGS) + [mk.CM_WINDOW_BENCH, mk.CM_INDEX_BENCH])
     ap.add_argument("--work", default=None, help="scratch dir for requests/reports")
     ap.add_argument("--from-report", default=None, help="ingest a finished work dir, skip dispatch")
     ap.add_argument("--mc-n", type=int, default=200)
     ap.add_argument("--dut", default=None, help="DUT binding id/path (e.g. a control netlist), as run_corners.py --dut")
     ap.add_argument("--label", default="", help="free-text topology label stamped in the record")
+    ap.add_argument("--allow-engine-drift", action="store_true",
+                    help="retain a report set whose ngspice engine/version fails the bundled floor as an "
+                         "explicitly NON-CITABLE diagnostic (override recorded); default is to refuse")
+    ap.add_argument("--allow-pdk-drift", action="store_true",
+                    help="retain a report set whose executor-reported PDK variant / open_pdks revision fails "
+                         "qualification as an explicitly NON-CITABLE diagnostic (override recorded); default is to refuse")
     ap.add_argument("--legacy-diagnostic", action="store_true",
                     help="for a --from-report dir with no source bundle: print a NON-CITABLE table, write nothing")
     a = ap.parse_args()
 
+    if a.bench == mk.CM_INDEX_BENCH:
+        return mint_cm_index(a)
+    if a.bench == mk.CM_WINDOW_BENCH:
+        # Issue #182: refused before any dispatch or ingest, so no evidence
+        # record can be minted for it. Even with a capable runner there is no
+        # record path yet: full 45-point consumer-window coverage is pending.
+        refuse("UNSUPPORTED_EXECUTOR_CAPABILITY",
+               mk.cm_window_capability_gap(mk.FLEET_RUNNER_KLT_OBSERVED)
+               or f"{a.bench} has no record-minting path yet (full 45-point coverage pending, issue #182)")
     work = Path(a.from_report or a.work or f"/tmp/klt-{a.bench}").resolve()
     if not a.from_report:
         work.mkdir(parents=True, exist_ok=True)
@@ -729,7 +1757,7 @@ def main() -> int:
     # time -- not from today's checkout (issue #151).
     b = load_bundle(work, a.bench)
     check_dut_selection(b, a.dut)
-    d, t, origin = b["dut"], b["testbench"], b["origin"]
+    d, t = b["dut"], b["testbench"]
     tb = htb.load(_staged_path(work, t["staged_dir"]))  # originating manifest + `measure`
     vdds = hc.supply_points(tb.nominal_supply_v, tb.supply_tolerance)
     names = {f"{leg}-v{v:.2f}": (leg, v) for leg in LEGS[a.bench] for v in vdds}
@@ -739,6 +1767,8 @@ def main() -> int:
 
     reports = {n: json.loads((work / f"report-{n}.json").read_text()) for n in names}
     link_notes = verify_reports(work, b, names, reports)
+    engine = check_engine_floor(b, reports, a.allow_engine_drift)
+    pdk = check_pdk_identity(work, b, reports, a.allow_pdk_drift)
     unverified = verify_origin_commit(b)
     drift = checkout_drift(b)
     # The requests are the bundled (hash-verified) ones; the expected grid
@@ -752,37 +1782,23 @@ def main() -> int:
         print("\n".join(["no scorable corner: nothing derived, no record written"] + problems[:60]), file=sys.stderr)
         raise SystemExit(f"EMPTY_RESULT: {a.bench} produced no complete PVT point; refusing to publish a record")
 
+    # Issue #273: functional (latch-decision) correctness, evaluated against
+    # the generation-time manifest; separate from coverage, provenance and
+    # target compliance, and never folded into `complete` / `reference`.
+    decisions = decision_correctness(a.bench, tb, derived, expected_corner_ids(a.bench, names, requests))
+
     label, key, tgt, stretch, unit = SPEC[a.bench]
     vals = {cid: dd[key] for cid, dd in derived.items()}
     worst_cid = max(vals, key=vals.get)
     best_cid = min(vals, key=vals.get)
     n_t = sum(v <= tgt for v in vals.values())
     n_s = sum(v <= stretch for v in vals.values())
-    ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S%f")
-    sha = origin["commit"][:7]
-    ingest_sha, tools_dirty = git_state()
-    citable = not origin["dirty"] and not unverified and not tools_dirty
-    bundle_sha = mk.sha256_file(work / mk.BUNDLE_NAME)
-    rid = f"{ts}-{sha}"
-    exp = SIM / a.bench
-    for sub in ("records", "corners", "netlist-snapshots"):
-        (exp / sub).mkdir(exist_ok=True)
-    cdir = exp / "corners" / rid
-    cdir.mkdir()  # exclusive: raises if the id exists
-    for f in [mk.BUNDLE_NAME, "design.ngspice"] + [f"body-v{v:.2f}.spice" for v in vdds] + [f"request-{n}.json" for n in names] + [f"report-{n}.json" for n in names]:
-        shutil.copy2(work / f, cdir / f)
-    shutil.copytree(work / mk.SOURCES_DIR, cdir / mk.SOURCES_DIR)
-    snap = exp / "netlist-snapshots" / f"{rid}.spice"
-    snap.write_text(_staged_path(work, d["staged_netlist"]).read_text() + "\n* ---- testbench fragment ----\n" + tb.netlist.read_text())
+    r = _archive_record(a.bench, work, b, tb, vdds, names, unverified, engine, pdk)
+    rid, sha, exp, bundle_sha, ingest_sha, citable, noncite = (
+        r[k] for k in ("rid", "sha", "exp", "bundle_sha", "ingest_sha", "citable", "noncite"))
 
-    rem = [r["environment"].get("remote") for r in reports.values()]
-    ng = [r["environment"].get("engine_version") for r in reports.values()]
-    noncite = []
-    if origin["dirty"]:
-        noncite.append(f"sources uncommitted at request generation: {', '.join(origin['dirty_paths'])}")
-    noncite += [f"origin unverifiable: {u}" for u in unverified]
-    if tools_dirty:
-        noncite.append(f"derivation tooling (sim/tools, sim/harness) dirty at ingest commit {ingest_sha}")
+    rem = [rep["environment"].get("remote") for rep in reports.values()]
+    ng = [rep["environment"].get("engine_version") for rep in reports.values()]
     # Citable REFERENCE evidence needs BOTH gates: exact PVT/MC coverage
     # (#152, `complete`) and verified source identity (#151, `citable`).
     reference = complete and citable
@@ -792,6 +1808,9 @@ def main() -> int:
         claim = "NON-COMPLETE DIAGNOSTIC (NOT reference evidence; coverage incomplete, see INCOMPLETE / FAILED UNITS" + ("; also NOT CITABLE, see Commit" if not citable else "") + ")"
     else:
         claim = "NOT-CITABLE DIAGNOSTIC (NOT reference evidence; source identity not citable, see Commit)"
+    if decisions is not None and decisions["status"] != "pass":
+        claim += (" -- FUNCTIONAL DECISION CHECKS " + {"fail": "FAILED", "incomplete": "INCOMPLETE"}[decisions["status"]]
+                  + " (`decision_correctness`, see Decision correctness): NOT functionally verified")
     lines = [
         f"# Record {rid}",
         "",
@@ -806,9 +1825,15 @@ def main() -> int:
         f"- **Ingested**: at commit `{ingest_sha}` by `sim/tools/klt_record.py`; report-to-request linkage verified (netlist sha256" + (", include closure" if not link_notes else "") + ", measurements)",
         f"- **Source drift since generation** (today's checkout vs this record's sources; the record cites the generation-time sources): {', '.join(drift) if drift else 'none'}",
         f"- **Executor**: `klt sim` ({klt_version()}), backend `{os.environ.get('KLT_SIM_BACKEND', '?')}`; remote/batch descriptor(s): `{json.dumps(rem)}`; ngspice engine_version(s) reported: {ng}",
-        f"- **Corner matrix**: {len(derived)} of {expected} PVT points with every leg passing (process tt/ff/ss/fs/sf x -40/27/125 C x 2.97/3.30/3.63 V)",
+        f"- **Corner matrix**: {len(derived)} of {expected} PVT points with every leg passing (process {'/'.join(dict.fromkeys(p['name'] for r in requests.values() for p in r['corners']['process']))} x {'/'.join(f'{t:g}' for t in dict.fromkeys(t for r in requests.values() for t in r['corners']['temperature_c']))} C x {'/'.join(f'{v:.2f}' for v in vdds)} V)",
     ]
     lines += [f"  - linkage note: {n}" for n in link_notes]
+    if a.bench == "comparator-offset-tran":
+        mc = next(iter(reports.values()))["environment"].get("monte_carlo", {})
+        lines += [
+            f"- **Monte Carlo**: seed {mc.get('seed')}, n = {mc.get('n')} draws requested per PVT point{'' if complete else ' (NOT achieved: see INCOMPLETE / FAILED UNITS; achieved draws per point in the n_samples column)'}, vary = {mc.get('vary')} (`.param sw_stat_mismatch=1` set by the fragment); the seed is the one `sim/comparator-offset-mc/` uses, common to every PVT point. One clocked staircase transient per draw; `sigma` = population standard deviation over the draws of the per-draw trip point, with the staircase's uniform quantisation variance (step^2/12) subtracted in quadrature (`sig_vos_tran_raw_mv` is the uncorrected value); stats are computed by `sim/tools/klt_record.py` from the raw `.meas` values in `corners/{rid}/report-main-v*.json`.",
+            "- **Derived, NOT simulated**: `sig_rload_mv`, `sig_rload_cons_mv`, `sig_vos_total_mv`, `vos_3sig_total_mv`, `vos_3sig_total_cons_mv`. The PDK models no `ppolyf_u_1k` mismatch (`mis_r` absent/zero), so the load-pair term is a hand budget: sigma(dR/R) = A_R/sqrt(W*L) (pair difference; A_R from the foundry's commented-out `ppolyf_u` mismatch coefficient in the PDK model file, see the bench README), input-referred as (I_D*R / A_v) * sigma(dR/R), where I_D*R / A_v is the measured per-corner load drop over the measured same-draw gain (`vdrop_over_av_mv`), added in quadrature to the simulated sigma. The `_cons` quantities use a 3x larger A_R. The scored column is the conservative total.",
+        ]
     if a.bench == "comparator-offset-mc":
         mc = next(iter(reports.values()))["environment"].get("monte_carlo", {})
         lines += [
@@ -817,9 +1842,12 @@ def main() -> int:
     if problems:
         lines += ["- **INCOMPLETE / FAILED UNITS**:"] + [f"  - {p}" for p in problems[:60]]
     cols = list(next(iter(derived.values())).keys())
-    lines += ["- **Result**:", "", "  | corner-id | " + " | ".join(f"`{n}`" for n in cols) + " | vs target |", "  |---|" + "---|" * (len(cols) + 1)]
+    dcol = decisions is not None
+    lines += ["- **Result**:", "", "  | corner-id | " + " | ".join(f"`{n}`" for n in cols) + " | vs target |"
+              + (" decisions |" if dcol else ""), "  |---|" + "---|" * (len(cols) + 1 + dcol)]
     for cid, dd in derived.items():
-        lines.append(f"  | `{cid}` | " + " | ".join(fmt(dd[n]) for n in cols) + f" | {'PASS' if dd[key] <= tgt else 'FAIL'} |")
+        lines.append(f"  | `{cid}` | " + " | ".join(fmt(dd[n]) for n in cols) + f" | {'PASS' if dd[key] <= tgt else 'FAIL'} |"
+                     + (f" {decisions['per_corner'][cid]['status'].upper()} |" if dcol else ""))
     lines += [
         "",
         f"- **Score vs ratified bounds** (`{key}`): within target {n_t}/{len(vals)}, within stretch {n_s}/{len(vals)}; min {vals[best_cid]:.6g} @ `{best_cid}`, max {vals[worst_cid]:.6g} @ `{worst_cid}` ({unit}).",
@@ -827,50 +1855,41 @@ def main() -> int:
     if a.bench == "comparator-regeneration":
         pw = {cid: power_uw(a.bench, cid, dd) for cid, dd in derived.items()}
         lines.append(f"- **Static power** (`i_static_ua` x vdd): min {min(pw.values()):.4g} uW, max {max(pw.values()):.4g} uW; within the {POWER_TARGET_UW:g} uW target at {sum(p <= POWER_TARGET_UW for p in pw.values())}/{len(pw)} corners.")
-        bad_end = [cid for cid, dd in derived.items() if min(dd["dout_od50_end"], dd["dout_od1_end"], dd["dout_od01_end"]) < 0.9]
-        lines.append(f"- **Decision correctness** (`dout_*_end` >= 0.9 at all three overdrives): failing corners: {bad_end or 'none'}.")
+    if decisions is not None:
+        lines += decision_lines(decisions, a.bench)
+    if a.bench == "comparator-regeneration":
         lines += reverse_polarity_lines(reverse_polarity_summary(derived))
     if a.bench == "comparator-kickback":
-        bad_end = [cid for cid, dd in derived.items() if min(dd["dout_1k_end"], dd["dout_float_small_end"], dd["dout_float_big_end"]) < 0.9]
-        lines.append(f"- **Decision correctness while kicked** (`dout_*_end` >= 0.9): failing corners: {bad_end or 'none'}.")
-    sel = d.get("selector")
+        lines.append(f"- **Input-node coverage** (issue #160): {node_coverage_line(derived)}")
     lines += [
         "- **Not computed by this executor** (single-analysis `klt sim` requests): "
         + {
             "comparator-preamp-noise": "`vn_in_hf_uv`, `onoise_hf_uv`, `flicker_frac_pct`, `white_nv_rthz`, `enbw_mhz`, `vbias_anchor_mv` (they need a second `.noise` plot / the `.op` in the same run). `vn_in_uv` is the row-facing quantity.",
             "comparator-offset-mc": "`sig_dvos_dn_uv`/`sig_dvos_up_uv` (the +-50 mV CM-step points), `mean_dvos_*`, `mean_vos_sem`, `vbias_anchor_mv` and the in-run `sig_rpair_uv` null control: the 0.5.0 fleet runner cannot express the nested `vcmd` sweep as `.meas` cards, so only the vcmd = 0 offset point (`voa`) is measured.",
+            "comparator-offset-tran": "the +-50 mV common-mode dependence (`sig_dvos_*`), the in-run `sig_rpair_uv` null control (it stays in the DC bench's record) and per-draw `vbias_anchor_mv`; the fleet runner's `.meas` cards give the trip time and the end-of-reset preamp samples, and everything else is derived from them.",
             "comparator-kickback": "nothing (all `.meas` ingredients are requested; `.meas` precision is the executor's `measureprec=12`).",
             "comparator-regeneration": "nothing.",
         }[a.bench],
-        f"- **Reproduce**: at commit `{sha}`: `KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py {a.bench}" + (f" --dut {sel}" if sel else "") + "`",
+        reproduce_line(a.bench, b, r, tb),
         "",
     ]
     (exp / "records" / f"{rid}.md").write_text("\n".join(lines))
     (exp / "records" / f"{rid}.json").write_text(json.dumps({
-        "record_id": rid, "bench": a.bench, "commit": sha, "dirty": bool(origin["dirty"]),
-        "citable": citable, "not_citable_reasons": noncite,
-        "dut": {
-            "dut_id": d["dut_id"], "dut_provenance": d["provenance"], "dut_netlist": d["netlist"],
-            "dut_netlist_sha256": d["netlist_sha256"], "dut_params": d["params"],
-            "dut_selector": d.get("selector"), "dut_binding_config": d["binding_config"],
-            "dut_binding_entry_sha256": d["binding_entry_sha256"],
-        },
-        "testbench": {"dir": t["dir"], "netlist": t["netlist"], "netlist_sha256": t["netlist_sha256"],
-                      "manifest_sha256": t["manifest_sha256"]},
-        "source_bundle": {"file": f"corners/{rid}/{mk.BUNDLE_NAME}", "sha256": bundle_sha,
-                          "schema": b["schema"], "version": b["version"],
-                          "origin_commit": origin["commit"], "origin_dirty_paths": origin["dirty_paths"]},
-        "ingest": {"commit": ingest_sha, "tools_dirty": tools_dirty, "source_drift": drift,
-                   "linkage_notes": link_notes},
+        **_provenance(r, a.bench, b, drift, link_notes),
         "spec_row": {"label": label, "measure": key, "target_max": tgt, "stretch_max": stretch, "unit": unit},
         "complete": complete, "outcome": "complete" if complete else "incomplete", "expected_points": expected,
         "reference": reference,
         "within_target": n_t, "within_stretch": n_s, "points": len(vals), "problems": problems,
         **({"supplemental_reverse_polarity": rev} if (rev := reverse_polarity_summary(derived)) else {}),
         "derived": derived,
+        **({"input_node_coverage": node_coverage(derived)} if a.bench == "comparator-kickback" else {}),
+        **({"decision_correctness": decisions} if decisions is not None else {}),
     }, indent=1, allow_nan=False) + "\n")  # strict JSON: no NaN/Infinity tokens
     print(f"record {rid}: {len(derived)} points, {key} within target {n_t}/{len(vals)}, stretch {n_s}/{len(vals)}, worst {vals[worst_cid]:.6g} @ {worst_cid}"
           + ("" if citable else " -- NOT CITABLE: " + "; ".join(noncite)))
+    if decisions is not None:
+        print(f"decision correctness: {decisions['status']} ({decisions['corners_pass']}/{decisions['corners_expected']} corners pass, "
+              f"{len(decisions['failures'])} wrong decision(s), {len(decisions['missing'])} missing)")
     if drift:
         print(f"source drift since generation (record cites the generation-time sources): {', '.join(drift)}")
     if not complete:

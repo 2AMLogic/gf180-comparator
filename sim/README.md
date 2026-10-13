@@ -3,7 +3,7 @@
 xschem + ngspice testbenches and **append-only** results for
 `gf180-comparator`, on the gf180mcu 3.3 V rail.
 
-Four experiments, one per first-class row of
+Four corner-grid experiments (run by `characterize.sh`), one per first-class row of
 [`README.md`'s target specification](../README.md#target-specification-ratified-via-dr-0002):
 
 | experiment | row it backs | method |
@@ -12,6 +12,35 @@ Four experiments, one per first-class row of
 | [`comparator-preamp-noise/`](comparator-preamp-noise/) | Input-referred noise | `.noise`, total integrated output noise ÷ measured DC gain |
 | [`comparator-regeneration/`](comparator-regeneration/) | Decision time vs. overdrive, **metastability** | transient overdrive ladder, τ extracted from it |
 | [`comparator-kickback/`](comparator-kickback/) | **Kickback** | 1 kΩ source impedance *and* a floating high-Z input |
+
+A fifth, additive bench backs the same Offset σ row from the other side:
+[`comparator-offset-tran/`](comparator-offset-tran/) is a whole-comparator
+transient Monte Carlo (preamp + StrongARM latch + SR latch) with a derived hand
+budget for the unmodelled `ppolyf_u_1k` load-pair mismatch. It covers the two
+terms `comparator-offset-mc/` cannot see (issue #157). It is fleet-only (`sim/tools/klt_record.py`); first record
+`comparator-offset-tran/records/20261010-013540611508-4a4df37` (total 3σ
+3.146–3.725 mV over its reduced 9-point grid, kept as history) and the full
+45-point record `comparator-offset-tran/records/20261010-021500046481-d84e59d` (total 3σ
+2.994–3.795 mV, 45/45 within target and stretch, issue #200).
+
+A supplemental, unscored bench, [`comparator-offset-cm-window/`](comparator-offset-cm-window/)
+(issue #182), specifies paired same-draw preamp offset/gain at the consumer's
+±100 mV common-mode window. It is a **feasibility stage with no record**. Its
+fleet path is refused with `UNSUPPORTED_EXECUTOR_CAPABILITY`, because the fleet
+runner (klt 0.5.0) cannot address a nested sweep's points. Full 45-point
+coverage is not available from this bench. Its monotonic-index variant,
+[`comparator-offset-cm-index/`](comparator-offset-cm-index/) (issue #218), is
+executable on the 0.5.0 runner and has a complete unscored 45-point x N=200
+record ([`20261011-210628443577-7e20c78`](comparator-offset-cm-index/records/20261011-210628443577-7e20c78.md)); the
+consumer's rejection verdict stays Unknown. **Re-qualified (#288):** the earlier record `20261010-130605300890-d8e9253` showed `open_pdks f6eeac7`, not the `sim/toolchain.json` pin, so it is superseded by this one (pin `c6d73a35...`, identical results); see [`qualification-notes/20261011-288-open-pdks-requalification.md`](qualification-notes/20261011-288-open-pdks-requalification.md).
+
+A further supplemental feasibility stage,
+[`comparator-offset-tran-extracted-feasibility/`](comparator-offset-tran-extracted-feasibility/)
+(issue #219), establishes the measurement contract for the whole-comparator
+transient offset against the **extracted** binding (two PVT points, N = 20, no
+record). It finds that the committed extraction adapter's bare `M` MOS cards
+bypass the PDK mismatch subckt, and runs only with a feasibility-only
+mismatch-capable variant. It claims no signoff item and no full-grid statistics.
 
 Metastability and kickback are first-class rows here, not appendices, per
 [`CLAUDE.md`](../CLAUDE.md).
@@ -27,11 +56,17 @@ Metastability and kickback are first-class rows here, not appendices, per
 > Two limits on what they mean. **The target-specification table in
 > [`README.md`](../README.md#target-specification-ratified-via-dr-0002)
 > is ratified** (DR-0002, via the two-key ceremony on PR #74 per the
-> operator ruling of 2026-10-02 on #3) — so a record that meets (or
-> misses) a row is *reference, not verdict* until that row's scoring pass
-> lands: the offset-σ row's has ([#24](https://github.com/2AMLogic/gf180-comparator/issues/24));
-> the other four rows' are tracked in [#75](https://github.com/2AMLogic/gf180-comparator/issues/75). And every
-> record is **schematic-level, with no parasitics**: post-layout extraction
+> operator ruling of 2026-10-02 on #3) — so a measurement is a
+> *verdict* only where a scoring pass has scored it against the ratified bound,
+> and the per-bench `checks` in each `tb.json` are measurement-sanity checks and
+> corner-sensitivity anchors, not those bounds. Scoring has landed for the
+> offset-σ row ([#24](https://github.com/2AMLogic/gf180-comparator/issues/24))
+> and for the other rows ([#75](https://github.com/2AMLogic/gf180-comparator/issues/75));
+> per-row verdicts are in the README Basis column and
+> [`spec/evidence-ledger.md`](../spec/evidence-ledger.md). Records older than
+> that scoring (and every `placeholder-v1` record) predate it and keep the
+> "reference, not verdict" wording they were written with. Every
+> *schematic* record is **without parasitics**: post-layout extraction
 > can only add capacitance at the preamplifier output (which lowers the
 > measured noise) and at the input (which raises the measured kickback), so
 > the noise numbers are conservative and the kickback numbers are *not*.
@@ -48,8 +83,12 @@ Metastability and kickback are first-class rows here, not appendices, per
 > the overdrive ladder was referred to; see the benches' `tb_vosprobe.spice`).
 > The two analog-partition benches (offset-MC, preamp-noise) are refused
 > against the flat extraction: a flat netlist has no analog/latch
-> partition. `./sim/characterize.sh postlayout` runs the whole campaign in
-> one command.
+> partition, so those two support the schematic binding only (and
+> `mk_klt_request.py` likewise supports only schematic DUTs for fleet
+> requests -- an extracted DUT needs the vosprobe leg, which the fleet path
+> does not have; see #164).
+> `./sim/characterize.sh postlayout` runs the whole campaign in one command
+> (local ngspice, so on a workstation, not a shared dispatch worker).
 >
 > The earlier `placeholder-v1` records are still in `records/` and still carry
 > their banner — `sim/` is append-only evidence, so nothing was rewritten. See
@@ -99,6 +138,30 @@ Every record ends with the exact command that regenerates it. It is always:
 ```bash
 python3 sim/run_corners.py <experiment-slug> -j 8
 ```
+
+That local command covers the four original benches (`comparator-offset-mc`,
+`comparator-preamp-noise`, `comparator-regeneration`, `comparator-kickback`) on
+a workstation that has the pinned PDK and ngspice. It does **not** apply to
+`comparator-offset-tran`, which is not wired into `run_corners.py` and is
+fleet-only (see below). Shared dispatch workers must not run multi-corner or
+Monte Carlo grids by hand: use the fleet path.
+
+**Fleet path** (needs `klt` on `PATH` and `KLT_SIM_BACKEND=batch`;
+`klt_record.py` refuses a local backend for a multi-unit grid):
+
+```bash
+KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py <bench> --label "<text>"
+```
+
+`mk_klt_request.py` (called by `klt_record.py`) builds the requests. Current
+limits, stated as they are in the tools: `comparator-preamp-noise` cannot be
+expressed for the fleet runner (its `klt` 0.5.0 has no `noise` analysis), so a
+noise is run locally via `run_corners.py` (a single nominal point on a shared dispatch worker; the full PVT grid only on a workstation with the pinned PDK); fleet requests support the
+schematic DUT binding only, so extracted (`comparator-dr0001-layout`) records
+use the local `postlayout` path, and fleet records omit some secondary
+quantities (each record lists which). `comparator-offset-tran` pins ngspice to one
+thread per unit (a `.control` block in its generated body) because the
+runner's per-process threads oversubscribed the job instance (see its README).
 
 A re-run mints a **new** record; it never overwrites one already committed.
 `sim/` is an evidence trail, not a status page.
@@ -172,9 +235,9 @@ aborted run, not a record.
 Every record states, in its header, everything needed to judge or reproduce
 it:
 
-- the **claim** it substantiates — and, for any row whose scoring pass has
-  not yet landed (see [#75](https://github.com/2AMLogic/gf180-comparator/issues/75)), that a
-  row met or missed there is reference rather than verdict;
+- the **claim** it substantiates — and whether the row was scored against the
+  ratified bound (see [#75](https://github.com/2AMLogic/gf180-comparator/issues/75)) or is reference only
+  (older records keep the wording they were minted with);
 - the **DUT** — id, provenance (`placeholder` / `schematic` / `extracted`),
   path and sha256;
 - the **testbench** fragment and manifest sha256s;
@@ -187,6 +250,48 @@ it:
   (`CLAUDE.md` requires all three);
 - the full per-corner result table, the grid spread, the per-axis corner
   sensitivity, the verdict, and the reproduction command.
+
+### Fleet record correctness fields
+
+A fleet record (`sim/tools/klt_record.py`) answers separate questions; a
+consumer must read each from its own field and never infer one from another:
+
+| question | field | meaning |
+|---|---|---|
+| did the whole requested grid execute? | `complete` | exact PVT/MC coverage of the bundled requests (#152) |
+| is the provenance valid? | `citable` | clean, verified source identity (#151) |
+| is it citable reference evidence? | `reference` | `complete` and `citable` -- nothing more |
+| did the latch decide correctly? | `decision_correctness.status` | functional decision checks (#273), regeneration and kickback only |
+| does it meet the ratified row? | `within_target` / `within_stretch` | target compliance of the headline quantity |
+
+`decision_correctness` (schema `decision-correctness/1`) evaluates every
+latch-decision polarity check -- regeneration's `dout_*_first` (`max`, the
+first strobe must decide low) and `dout_*_end` (`min`, the second strobe must
+decide high, so the latch is proven to have flipped), kickback's `dout_*_end`
+(the instance still decides correctly while kicked) -- at every expected
+corner, against the `min`/`max` of the **generation-time** manifest the
+record was minted from (`testbench.manifest_sha256`), not today's. It
+carries the bounds used (`checks`), a `per_corner` breakdown (`pass` / `fail`
+/ `missing` per check and per corner), `failures` (`corner`, `measurement`,
+`phase`, `value`, bound) and `missing` (`corner`, `measurement`, `reason`).
+The rollup `status` is:
+
+- `pass` -- every expected corner was evaluated and every decision is correct;
+- `fail` -- at least one finite decision is on the wrong side of its bound;
+- `incomplete` -- no wrong decision observed, but a corner, measurement or
+  manifest bound is missing, so correctness is **not** established.
+
+**Downstream scoring consumers** (signoff envelopes, ledgers) must treat a
+regeneration or kickback record as functionally verified **only** when
+`decision_correctness.status == "pass"`; a `fail` or `incomplete` record may
+still be cited as `reference` evidence of what the design did, but its delay
+or kickback score must not be presented as a verified result. A record minted
+before #273 has **no** `decision_correctness` field: treat that as *not
+evaluated* (never as `pass`). Its archived reports and `derived` table can be
+re-evaluated against its archived manifest by a consumer, but the historical
+record itself is append-only evidence and is not rewritten. The Markdown
+record's "Decision correctness" bullet and `decisions` table column are
+rendered from the same structure.
 
 Raw per-corner ngspice logs are committed alongside (`.gitignore` explicitly
 un-ignores `sim/*/corners/**/*.log` for this reason), so a reader can check a
@@ -227,12 +332,32 @@ covered automatically:
 | `sim/<experiment>/corners/**` | raw per-corner ngspice logs (incl. orphaned aborted-run logs) |
 | `sim/<experiment>/netlist-snapshots/**` | netlists exactly as simulated |
 | `sim/<experiment>/yield/**` | Monte-Carlo yield evidence |
+| `sim/<experiment>/probes/**` | committed feasibility probe artifacts (reports, logs, refusals, and the `sources/` / `extract/` copies bundled into each probe) |
 | `sim/corner-matrix/**/*.json` | item-5 corner-matrix revision envelopes |
+| `layout/pex/artifacts/parasitic-attribution/<run-id>/**` | committed parasitic-attribution run archives (whole subtree, issue [#266](https://github.com/2AMLogic/gf180-comparator/issues/266)) |
+| `layout/pex/artifacts/ground-c-budget/<run-id>/**` | committed ground-C budget run archives (whole subtree) |
 
 Not protected: testbenches, `sim/harness/` and other tooling, experiment
 `README.md` files, DUT and configuration sources, mutable `layout/` reports,
 and the signoff manifest/report — those keep their existing re-pin/re-grade
 contract in `signoff/README.md`.
+
+**Probes are immutable but experimental.** Everything under an experiment's
+`probes/` directory is an empirical result exactly as run, including the
+`sources/` and `extract/` copies bundled into a probe (they are snapshots of the
+inputs, not working files). Protection applies once a file is committed;
+adding a new probe is always allowed. Protection does not promote a probe to
+signoff evidence: probes mint no reference record, are not in the signoff
+manifest, and signoff eligibility is unchanged. Editable testbench and DUT
+sources stay outside `probes/`; correct a probe by adding a new probe
+identifier and updating citations.
+
+**Parasitic-study archives.** `<run-id>` is `YYYYMMDD-HHMMSS-<hex sha>`; only
+those run directories under the two roots above are immutable, so the family
+`README.md`, the study code, current `layout/` reports and other artifact
+families stay editable. The size budget (`signoff/check_sim_size_budget.py`)
+enumerates these roots too, with the same thresholds and allowlist. Correct an
+archived run by adding a new run identifier, never by overwriting.
 
 **Correcting evidence.** There is no allowlist or exception file. A wrong or
 superseded result is corrected by adding a NEW run (a fresh `<record-id>`) or a
@@ -263,3 +388,40 @@ With no `--base`, if `origin/main` is missing, equals `HEAD`, or shares no
 history with it, the check prints `SKIP (local-only)` and exits 0. A `--base`
 or `--head` that does not resolve fails (exit 2). The check compares committed
 trees, so commit your changes before running it.
+
+## Evidence size budget
+
+Protected evidence is append-only, so every committed byte is permanent and is
+paid for by every clone. `signoff/check_sim_size_budget.py` (issue
+[#246](https://github.com/2AMLogic/gf180-comparator/issues/246)) is the
+`sim-size` step of `scripts/run-pdk-free-tests.sh`. It lists the ten largest
+tracked `sim/**` files and applies a per-file budget to protected paths (the
+table above):
+
+| Size of one protected file | Result |
+|----------------------------|--------|
+| up to 5 MiB | fine |
+| over 5 MiB, up to 25 MiB | `WARN` (listed, exit 0) |
+| over 25 MiB | `FAIL` unless allowlisted |
+
+**Allowlist.** `signoff/sim_size_allowlist.json` maps a repo path to a
+non-empty reason. An allowlisted file is exempt from the warning and the
+failure and is printed as `GRANDFATHERED`. An entry with an empty reason, or
+naming a path that is not a tracked protected file, fails the check. The six
+reports above 5 MiB that predate the budget are listed there; none was
+modified, moved or deleted. Add an entry only when the full file is the
+evidence and no slimmer form exists, and say why in the reason.
+
+**What is worth committing in full:** the evidence record and its JSON twin,
+the netlist snapshots, the per-corner logs, and measurement values (the
+per-corner results and Monte-Carlo samples the record cites). **Regenerable
+bulk:** the tool-emitted `coverage` block (limit-key bookkeeping, not
+measurement) and other dumps that a re-run of the committed request
+reproduces. Prefer not to commit the latter in full.
+
+**Proposing a slimmer report form.** Do not change the harness ad hoc. Open a
+decision record from `spec/decision-records/TEMPLATE.md` stating the fields
+kept and dropped, why the record's citations and the JSON-twin readers still
+work, and how the dropped data is regenerated. A tool-side option (for example
+omitting `coverage`) is a generic gap for the `2AMLogic/klayout-tools` tracker
+under the friction protocol.

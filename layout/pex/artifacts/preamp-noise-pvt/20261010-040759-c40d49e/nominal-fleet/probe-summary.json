@@ -1,0 +1,40 @@
+{
+ "backend": "batch",
+ "client_klt": "klt 0.7.0+g8eec069c7576",
+ "executor": {
+  "extracted-v3.30": {
+   "issues": [
+    "UNSUPPORTED_EXECUTOR_CAPABILITY: fleet refused the request: batch_runner_version_mismatch: batch job klt-sim-077efa68c737 finished 'failed' (job command exited 87): the job's klt reported: the fleet runner runs klt 0.5.0 but the submitting client is 0.7.0+g8eec069c7576 -- the request was not run (update the runner image or use a compatible client)",
+    "UNSUPPORTED_EXECUTOR_CAPABILITY: fleet runner klt '0.5.0' cannot execute the paired preamp-noise request: it needs `analysis_steps` (klt #2482; ordered op/noise/noise/noise/ac solves in one deck) and `measurements[].expr` (klt #2533; onoise_total, inoise_total and the measured-gain referral nfull.onoise/ac.av_dc), because ngspice has no `.meas noise` and a `.meas`-only runner cannot read a noise integral (klt #2938). Needs a runner with klt >= 0.7.0."
+   ],
+   "runner": [
+    {
+     "ami_id": "ami-0e40e3245f1923ac8",
+     "availability_zone": "us-east-1f",
+     "bucket": "2am-batch-jobs-221082181346",
+     "client_klt_version": "0.7.0+g8eec069c7576",
+     "concurrency": "1",
+     "elapsed_seconds": 5,
+     "exit_code": "87",
+     "instance_id": "i-066493124bd8adf63",
+     "instance_type": "c7i.4xlarge",
+     "job_id": "klt-sim-077efa68c737",
+     "lifecycle": "spot",
+     "physical_cores": "8",
+     "provider": "aws-batch-fleet",
+     "region": "us-east-1",
+     "runner_compatibility": "mismatch",
+     "runner_compatibility_warning": "the fleet runner ran klt 0.5.0 but the submitting client is 0.7.0+g8eec069c7576; request options the runner does not know may have been ignored -- update the runner image or use a compatible client",
+     "runner_klt_version": "0.5.0",
+     "spot": true,
+     "state": "failed"
+    }
+   ]
+  }
+ },
+ "issue": 209,
+ "klt_rc": {
+  "extracted-v3.30": 4
+ },
+ "supported": false
+}

@@ -34,6 +34,49 @@ Every instance's decision is checked (`dout_*_end`), because a comparator
 whose own kickback pushed its input past the decision point would fail in a
 way the displacement numbers alone cannot show.
 
+### Both input nodes (issue #160)
+
+README's kickback row is stated at "the input nodes", but until #160 the
+row-facing `kick_1k_peak_mv` came from the **positive** 1 kΩ node alone
+(probe `ad` = `v(apa)-v(asp)`). The bench now also probes the **negative**
+node against its own source (`adn` = `v(ana)-v(asn)`, same 1 kΩ / 100 fF
+loading, same 30 ns-45 ns decision window, same operating point) and reports:
+
+| measurement | meaning |
+|---|---|
+| `kick_1k_pnode_peak_mv` | positive-node peak (the pre-#160 definition of `kick_1k_peak_mv`) |
+| `kick_1k_nnode_peak_mv` | negative-node peak |
+| `kick_1k_peak_mv` | **row-facing: the maximum of the two** |
+| `kick_1k_nnode_pos_mv` / `kick_1k_nnode_neg_mv` | negative-node extrema |
+
+Layout asymmetry means equal peaks on both nodes cannot be assumed. The 5 mV
+target and 2 mV stretch are unchanged; a worse aggregate is a recorded miss,
+not a relaxed bound. Records minted before #160 (every record listed below)
+carry the positive node only: they are **partial node coverage**, are left
+byte-for-byte as committed, and new records state their coverage in the
+`Input-node coverage` line and the `input_node_coverage` JSON field.
+
+**Evidence status (honest ledger).** Bench, scoring and regression tests
+(`sim/harness/tests/test_klt_record.py`, `KickbackBothNodes`) landed in #160.
+The schematic both-node 45-corner record is
+[`records/20261011-195826615490-7e20c78.md`](records/20261011-195826615490-7e20c78.md)
+(all three supply legs minted through `klt sim` on the batch fleet; coverage
+`both`). Result: the aggregate is the maximum of the two node peaks at every
+corner; the positive node sets it at 45/45 corners (positive 4.528-10.010 mV,
+negative 4.244-9.905 mV; nominal 7.598 mV), so the aggregate equals the earlier
+positive-only schematic values to the displayed precision. Verdict unchanged
+and not relaxed: within the 5 mV target at 1/45 corners, 0/45 within the 2 mV
+stretch. Extracted-DUT both-node evidence is **PENDING** (follow-up, coordinate
+with #112); the older records above remain partial node coverage. Reproduce
+with `KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py comparator-kickback`.
+
+> **Re-qualified (#288).** The earlier `bf851ec` record (`20261010-022609774981-bf851ec`) ran on
+> `open_pdks f6eeac7`, not the `sim/toolchain.json` pin `c6d73a35`, so it is NOT
+> qualified and is superseded by `20261011-195826615490-7e20c78` (fleet-reported pin
+> `c6d73a35...`; every per-corner value identical). The superseded record is
+> kept byte-for-byte as history. See
+> [`../qualification-notes/20261011-288-open-pdks-requalification.md`](../qualification-notes/20261011-288-open-pdks-requalification.md).
+
 ### Beating the `meas` resolution floor
 
 ngspice's `meas` returns roughly six significant digits, so differencing two

@@ -1,0 +1,7 @@
+* PDK-free DUT stand-in for the semantics fixture (issue #218). NOT a model of
+* the comparator: a deliberately ASYMMETRIC differential output so that a
+* swapped or shifted index->coordinate mapping changes every reported value.
+*   dd = aop - aon = 100*vd + 3*x + 40*x^2 - 3*x*vd,  x = v(cm) - v(cmb)
+* Distinct per point (k = 0..5): see sim/harness/tests/test_cm_index_semantics.py.
+Bop aop 0 v = 50*(v(ap)-v(an)) + 1.5*(v(cm)-v(cmb)) + 20*(v(cm)-v(cmb))*(v(cm)-v(cmb))
+Bon aon 0 v = -50*(v(ap)-v(an)) - 1.5*(v(cm)-v(cmb)) - 20*(v(cm)-v(cmb))*(v(cm)-v(cmb)) + 3*(v(ap)-v(an))*(v(cm)-v(cmb))

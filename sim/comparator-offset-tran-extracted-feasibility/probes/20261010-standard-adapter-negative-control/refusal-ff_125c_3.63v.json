@@ -1,0 +1,7 @@
+{
+  "feasibility_only": true,
+  "point": "ff_125c_3.63v",
+  "published": false,
+  "code": "MISMATCH_NOT_EXERCISED",
+  "reason": "ff_125c_3.63v: zero trip-point spread over 20 draws (mismatch is not reaching the adapted devices, or the staircase is too coarse)"
+}

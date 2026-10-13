@@ -1,0 +1,98 @@
+{
+ "schema": "gf180-comparator/preamp-noise-pvt-bundle",
+ "version": 1,
+ "generator": "layout/pex/preamp_noise_pvt.py",
+ "issue": 209,
+ "generated_utc": "2026-10-10T04:08:05Z",
+ "origin": {
+  "commit": "c40d49e65f778c102e329d39430acdb0c53151f4",
+  "dirty": false,
+  "dirty_paths": []
+ },
+ "nominal_only": true,
+ "params": {
+  "dut_ib": 1e-05,
+  "dut_vcm": 1.65
+ },
+ "grid": {
+  "process": [
+   "tt"
+  ],
+  "process_sections": {
+   "tt": [
+    "typical",
+    "res_typical",
+    "bjt_typical",
+    "diode_typical",
+    "moscap_typical",
+    "mimcap_typical"
+   ]
+  },
+  "temperatures_c": [
+   27.0
+  ],
+  "supply_v": [
+   3.3
+  ]
+ },
+ "stimulus_sha256": "9fc67e0bfb2675ef3b1dc09a0784adbd9c25cb6e0c60f122e9002f1e2dbfb006",
+ "pinned_identity": {
+  "record": "layout/pex/artifacts/preamp-noise/record.json",
+  "record_sha256": "e5b64f03f928b65df086b003b2e1635ed473b32bba11c80058c779e15a5429bf",
+  "schematic": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a",
+  "extracted": "a7ca3c00ea4db8a2b00cad69f2edc2d9320738499049cfa9c7faec517b7b5f45",
+  "params": {
+   "dut_ib": 1e-05,
+   "dut_vcm": 1.65
+  }
+ },
+ "legs": {
+  "schematic": {
+   "dut_source": "design/comparator.spice",
+   "dut_sha256": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a",
+   "staged_dut": "sources/schematic/comparator.spice",
+   "observation": [
+    "xdut.aop",
+    "xdut.aon"
+   ],
+   "c_route": "0"
+  },
+  "extracted": {
+   "dut_source": "layout/pex/artifacts/preamp-noise/comparator.dut-layout.cir",
+   "dut_sha256": "a7ca3c00ea4db8a2b00cad69f2edc2d9320738499049cfa9c7faec517b7b5f45",
+   "staged_dut": "sources/extracted/comparator.dut-layout.cir",
+   "observation": [
+    "xdut.xlayout_dut.aop",
+    "xdut.xlayout_dut.aon"
+   ],
+   "c_route": "0"
+  }
+ },
+ "requests": {
+  "schematic-v3.30": {
+   "leg": "schematic",
+   "vdd": 3.3,
+   "request": "request-schematic-v3.30.json",
+   "request_sha256": "3f26dd2e908e5c80d916699f3c03ac2b72a501a5edc9790ef85f3c64f16e4f56",
+   "netlist": "body-schematic-v3.30.spice",
+   "netlist_sha256": "90d978214d8779da5d910335f6e541146fc8db03f32b1e3e802f85857933034b"
+  },
+  "extracted-v3.30": {
+   "leg": "extracted",
+   "vdd": 3.3,
+   "request": "request-extracted-v3.30.json",
+   "request_sha256": "1f1e83b5fe7b8b1e6739e7ad1f7487744eca3bdf2b359cbab361e5997e98020a",
+   "netlist": "body-extracted-v3.30.spice",
+   "netlist_sha256": "f60b60e540c0a91ed3eff5e4327ad4442c91e07eb6a116f680fc9648baee0e3d"
+  }
+ },
+ "staged": {
+  "body-extracted-v3.30.spice": "f60b60e540c0a91ed3eff5e4327ad4442c91e07eb6a116f680fc9648baee0e3d",
+  "body-schematic-v3.30.spice": "90d978214d8779da5d910335f6e541146fc8db03f32b1e3e802f85857933034b",
+  "design.ngspice": "091cb530bf85160a1f07878fb81f789ca367d018991c8ab41a584cd1a85c6692",
+  "request-extracted-v3.30.json": "1f1e83b5fe7b8b1e6739e7ad1f7487744eca3bdf2b359cbab361e5997e98020a",
+  "request-schematic-v3.30.json": "3f26dd2e908e5c80d916699f3c03ac2b72a501a5edc9790ef85f3c64f16e4f56",
+  "sources/extracted/comparator.dut-layout.cir": "a7ca3c00ea4db8a2b00cad69f2edc2d9320738499049cfa9c7faec517b7b5f45",
+  "sources/schematic/comparator.spice": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a"
+ }
+}

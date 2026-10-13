@@ -11,6 +11,7 @@ ngspice, no PDK, no network, and ``subprocess.Popen`` is mocked.
 
 from __future__ import annotations
 
+import dataclasses
 import io
 import json
 import math
@@ -21,6 +22,7 @@ import tempfile
 import types
 import unittest
 from contextlib import redirect_stdout
+from datetime import datetime
 from pathlib import Path
 from unittest import mock
 
@@ -29,7 +31,9 @@ sys.path.insert(0, str(SIM / "tools"))
 
 import klt_record as kr  # noqa: E402
 import mk_klt_request as mk  # noqa: E402
+from harness import report as hr  # noqa: E402
 from harness import testbench as htb  # noqa: E402
+from harness import toolchain as htc  # noqa: E402
 
 
 def _report(*corners: tuple[str, str, dict]) -> dict:
@@ -115,6 +119,154 @@ class DeriveOffsetMc(unittest.TestCase):
         res, _ = kr.derive("comparator-offset-mc", None,
                            {"main": ({"a": smp, "b": smp}, [])})
         self.assertEqual(sorted(res), ["a", "b"])
+
+
+class DeriveOffsetTran(unittest.TestCase):
+    """Whole-comparator transient-MC derivation (issue #157)."""
+
+    CID = "tt_27c_3.30v"
+    A = 20.0       # synthetic preamp gain
+    VDROP = 1.2    # synthetic load drop, V
+
+    def setUp(self):
+        self.tb = htb.load(SIM / "comparator-offset-tran")
+        P = self.tb.params
+        self.t0, self.T = P["stair_t0_ns"] * 1e-9, P["stair_period_ns"] * 1e-9
+        self.step = P["stair_step_mv"] * 1e-3
+        self.v0 = P["stair_v0_mv"] * 1e-3
+
+    def _draw(self, k, pre, phase_ns=1.0, cycle=None, dn_end=1.0):
+        """One draw whose first 1-decision is staircase level k, preamp offset `pre`."""
+        c = (k + int(self.tb.params["stair_lead_cycles"])) if cycle is None else cycle
+        ve = -self.v0
+        return {
+            "t_trip": self.t0 + c * self.T + phase_ns * 1e-9,
+            "dn_start": 0.0, "dn_end": dn_end,
+            "dd_start": self.A * (self.v0 - pre), "dd_end": self.A * (ve - pre),
+            "ap_start": 3.3 - self.VDROP,
+        }
+
+    guarded = False  # arithmetic tests use tiny synthetic populations: manifest floors off
+
+    def _derive(self, draws):
+        smp = {f"mc{i}": d for i, d in enumerate(draws)}
+        tb = self.tb if self.guarded else dataclasses.replace(self.tb, checks={})
+        return kr.derive("comparator-offset-tran", tb, {"main": ({self.CID: smp}, [])})
+
+    def test_trip_midpoint_preamp_offset_and_latch_difference(self):
+        # level k=32 -> V = -5.04 + 0.16*32 = 0.08 mV; trip estimate = V - step/2 = 0.00 mV.
+        # preamp offset 0.3 mV -> latch contribution = 0.0 - 0.3 = -0.3 mV.
+        res, problems = self._derive([self._draw(32, 0.3e-3), self._draw(32, 0.3e-3)])
+        self.assertEqual(problems, [])
+        d = res[self.CID]
+        self.assertAlmostEqual(d["mean_vos_tran_uv"], 0.0, places=6)
+        self.assertAlmostEqual(d["mean_vos_pre_uv"], 300.0, places=6)
+        self.assertAlmostEqual(d["mean_latch_uv"], -300.0, places=6)
+        self.assertAlmostEqual(d["av_mean"], self.A, places=9)
+        self.assertEqual(d["n_samples"], 2)
+
+    def test_quantisation_variance_removed_in_quadrature(self):
+        # Two adjacent levels: raw population sigma = step/2; the correction
+        # subtracts step^2/12 from sigma^2.
+        res, _ = self._derive([self._draw(30, 0.0), self._draw(31, 0.0)])
+        d = res[self.CID]
+        raw = self.step / 2
+        self.assertAlmostEqual(d["sig_vos_tran_raw_mv"], raw * 1e3, places=9)
+        want = math.sqrt(raw ** 2 - self.step ** 2 / 12) * 1e3
+        self.assertAlmostEqual(d["sig_vos_tran_mv"], want, places=9)
+        self.assertAlmostEqual(d["vos_3sig_tran_mv"], 3 * want, places=9)
+
+    def test_rload_budget_scales_with_measured_drop_over_gain_and_adds_in_quadrature(self):
+        res, _ = self._derive([self._draw(30, 0.0), self._draw(31, 0.0)])
+        d = res[self.CID]
+        P = self.tb.params
+        rel = P["rmis_a_r_um"] / math.sqrt(P["rmis_w_um"] * P["rmis_l_um"])  # pair sigma(dR/R)
+        self.assertAlmostEqual(d["vdrop_over_av_mv"], self.VDROP / self.A * 1e3, places=9)
+        self.assertAlmostEqual(d["sig_rload_mv"], self.VDROP / self.A * rel * 1e3, places=9)
+        self.assertAlmostEqual(d["sig_rload_cons_mv"], d["sig_rload_mv"] * P["rmis_conservative_factor"], places=9)
+        self.assertAlmostEqual(d["sig_vos_total_mv"], math.hypot(d["sig_vos_tran_mv"], d["sig_rload_mv"]), places=9)
+        self.assertAlmostEqual(
+            d["vos_3sig_total_cons_mv"], 3 * math.hypot(d["sig_vos_tran_mv"], d["sig_rload_cons_mv"]), places=9)
+        self.assertGreater(d["vos_3sig_total_cons_mv"], d["vos_3sig_total_mv"])
+
+    def test_malformed_draws_are_named_problems_not_data(self):
+        for draw, code in (
+            (self._draw(0, 0.0), "TRIP_OUT_OF_RANGE"),                  # flipped at the lowest level
+            (self._draw(10, 0.0, phase_ns=20.0), "LATE_FLIP"),          # crossed after the high phase
+            (self._draw(10, 0.0, dn_end=0.2), "BAD_ENDPOINT_DECISION"),  # never settled high
+        ):
+            res, problems = self._derive([self._draw(10, 0.0), draw])
+            self.assertEqual(res, {}, code)  # the whole PVT point is dropped
+            self.assertTrue(any(p.startswith(code) for p in problems), (code, problems))
+
+    def test_nonfinite_ingredient_is_named_problem_not_a_crash(self):
+        nan = self._draw(10, 0.0)
+        nan["t_trip"] = float("nan")
+        res, problems = self._derive([self._draw(10, 0.0), nan])
+        self.assertEqual(res, {})
+        self.assertTrue(any(p.startswith("NONFINITE_INGREDIENT") for p in problems), problems)
+
+    def test_committed_measure_names_and_scored_key(self):
+        res, _ = self._derive([self._draw(30, 0.0), self._draw(31, 0.0)])
+        self.assertEqual(set(res[self.CID]), set(self.tb.measure))
+        self.assertIn(kr.SPEC["comparator-offset-tran"][1], self.tb.measure)
+        self.assertEqual(kr.SPEC["comparator-offset-tran"][2:4], (15.0, 8.0))  # ratified bounds untouched
+
+
+class OffsetTranMismatchGuard(unittest.TestCase):
+    """Manifest `checks` floors are enforced on the klt ingest path (issue #309)."""
+
+    RECORD = SIM / "comparator-offset-tran/records/20261010-021500046481-d84e59d.json"
+
+    def setUp(self):
+        self.helper = DeriveOffsetTran("test_trip_midpoint_preamp_offset_and_latch_difference")
+        self.helper.setUp()
+        self.helper.guarded = True
+
+    def test_manifests_carry_the_floors(self):
+        tb = htb.load(SIM / "comparator-offset-tran")
+        self.assertEqual({k: v["min"] for k, v in tb.checks.items()},
+                         {"sig_vos_tran_raw_mv": 0.1, "sig_vos_tran_mv": 0.1, "sig_vos_pre_mv": 0.05})
+        fb = htb.load(SIM / "comparator-offset-tran-extracted-feasibility")
+        self.assertEqual({k: v["min"] for k, v in fb.checks.items()},
+                         {"sig_trip_raw_mv": 0.1, "sig_trip_mv": 0.1})
+        for t in (tb, fb):
+            for spec in t.checks.values():
+                self.assertIn("not a spec bound", spec["description"])
+                self.assertNotIn("max", spec)
+
+    def test_single_bin_collapse_fails_guard(self):
+        h = self.helper
+        res, problems = h._derive([h._draw(32, 0.0) for _ in range(20)])
+        self.assertEqual(res, {})
+        self.assertTrue(any(p.startswith("GUARD_FAILED") and "sig_vos_tran_raw_mv" in p for p in problems), problems)
+        self.assertTrue(any("sig_vos_pre_mv" in p for p in problems), problems)
+
+    def test_two_bin_collapse_fails_guard(self):
+        h = self.helper
+        res, problems = h._derive([h._draw(k, 0.0) for k in (31, 32) * 10])
+        self.assertEqual(res, {})
+        self.assertTrue(any(p.startswith("GUARD_FAILED") and "sig_vos_tran_mv" in p for p in problems), problems)
+
+    def test_real_spread_passes_guard(self):
+        h = self.helper
+        draws = [h._draw(32 + d, d * 0.2e-3) for d in range(-6, 7) for _ in range(3)]
+        res, problems = h._derive(draws)
+        self.assertEqual(problems, [])
+        self.assertIn(h.CID, res)
+
+    def test_committed_45_point_record_passes_guard_unmodified(self):
+        doc = json.loads(self.RECORD.read_text())
+        tb = htb.load(SIM / "comparator-offset-tran")
+        self.assertEqual(len(doc["derived"]), 45)
+        for cid, d in doc["derived"].items():
+            self.assertEqual(hr.scalar_bound_failures(tb.checks, d), [], cid)
+
+    def test_helper_semantics(self):
+        checks = {"a": {"min": 1.0}, "b": {"max": 2.0}, "c": {"max_spread_pct": 1}}
+        self.assertEqual(hr.scalar_bound_failures(checks, {"a": 1.0, "b": 2.0}), [])
+        self.assertEqual(len(hr.scalar_bound_failures(checks, {"a": 0.5, "b": 3.0})), 2)
+        self.assertEqual(len(hr.scalar_bound_failures(checks, {"a": float("nan")})), 2)
 
 
 class DeriveOtherBenches(unittest.TestCase):
@@ -257,6 +409,37 @@ class MkKltRequest(unittest.TestCase):
             self.assertEqual(len(req["measurements"]), len(tb.analyses) - 1)
             self.assertTrue(all(m["spice"].startswith(".meas tran ") for m in req["measurements"]))
 
+    def test_offset_tran_is_tran_monte_carlo_on_the_full_grid(self):
+        tb = htb.load(SIM / "comparator-offset-tran")
+        rc, reqs, bodies = self._mk("comparator-offset-tran", "--mc-n", "5")
+        self.assertEqual(rc, 0)
+        # Full 45-point grid (issue #200): 3 supply requests x 5 corners x 3 temps.
+        self.assertEqual(sorted(reqs), [f"request-main-v{v}.json" for v in ("2.97", "3.30", "3.63")])
+        req = reqs["request-main-v3.30.json"]
+        for r in reqs.values():
+            self.assertEqual(r["corners"], req["corners"])
+        self.assertEqual(req["monte_carlo"], {"n": 5, "seed": mk.OFFSET_MC_SEED, "vary": "mismatch"})
+        self.assertEqual(req["analysis"]["kind"], "tran")
+        self.assertEqual([c["name"] for c in req["corners"]["process"]], ["tt", "ss", "ff", "fs", "sf"])
+        self.assertEqual(req["corners"]["temperature_c"], [-40.0, 27.0, 125.0])
+        self.assertEqual(len(req["measurements"]), len(tb.analyses) - 1)
+        self.assertTrue(all(m["spice"].startswith(".meas tran ") for m in req["measurements"]))
+        self.assertEqual(req["batch"]["capacity_wait_s"], mk.BATCH_CAPACITY_WAIT_S)
+        # One OpenMP thread per unit (issue #157): the `.control` block sits
+        # AFTER both includes so it precedes klt's own `.control ... tran`.
+        lines = bodies["body-v3.30.spice"].splitlines()
+        i = lines.index(".control")
+        self.assertEqual(lines[i:i + 3], mk.SINGLE_THREAD_CONTROL)
+        self.assertTrue(lines[i - 1].startswith(".include") and "tb_offset_tran" in lines[i - 1])
+
+    def test_single_thread_pin_scoped_to_offset_tran(self):
+        # Other benches' bodies (and so their existing records' bundles) are unchanged.
+        for bench in ("comparator-offset-mc", "comparator-regeneration"):
+            _, _, bodies = self._mk(bench, "--mc-n", "2")
+            for body in bodies.values():
+                self.assertNotIn(".control", body)
+                self.assertNotIn("num_threads", body)
+
     def test_noise_bench_refused(self):
         with self.assertRaises(SystemExit):
             self._mk("comparator-preamp-noise")
@@ -274,6 +457,7 @@ class MkKltRequest(unittest.TestCase):
 BENCH = "comparator-kickback"
 REPO = SIM.parent
 ORIGIN = "a1b2c3d" + "0" * 33
+INGEST = "1ngest0" + "f" * 33  # full SHA, the form klt_record.git_state returns
 
 
 def _sha(path: Path) -> str:
@@ -308,9 +492,18 @@ def _bundle(work: Path) -> dict:
     return json.loads((work / mk.BUNDLE_NAME).read_text())
 
 
+PDK_REV = json.loads((SIM / "toolchain.json").read_text())["open_pdks"]
+
+
+def _prov(rev=PDK_REV, name="gf180mcuD") -> dict:
+    """The executor's provenance.pdk/deck shape, as in committed fleet reports."""
+    return {"pdk": {"name": name, "source": "search root: ~/.volare", "version": f"open_pdks {rev}"},
+            "deck": {"name": "sm141064.ngspice", "content_hash": "sha256:" + "6" * 64}}
+
+
 def _link_env(work: Path, b: dict, r: dict, closure=True, netlist_sha=True) -> dict:
     """The executor's report-to-input linkage for bundled request `r`."""
-    env = {"engine_version": "46", "remote": {"job_id": f"job-{r['request']}"}}
+    env = {"engine_version": "46", "models_lib_sha256": "6" * 64, "remote": {"job_id": f"job-{r['request']}"}}
     if netlist_sha:
         env["netlist_sha256"] = r["netlist_sha256"]
     if closure:
@@ -336,7 +529,8 @@ def _write_reports(work: Path, closure=True, netlist_sha=True) -> None:
                    for p in req["corners"]["process"] for t in req["corners"]["temperature_c"]]
         env = _link_env(work, b, r, closure, netlist_sha)
         (work / f"report-{n}.json").write_text(json.dumps(
-            {"corners": corners, "measurements": [{"name": m} for m in meas], "environment": env}))
+            {"corners": corners, "measurements": [{"name": m} for m in meas], "environment": env,
+             "provenance": _prov()}))
 
 
 def _committed_blob(commit, path):
@@ -345,7 +539,8 @@ def _committed_blob(commit, path):
     return p.read_bytes() if p.is_file() else None
 
 
-def _ingest(td: Path, work: Path, *extra, blob=_committed_blob, ingest_dirty=False, repo=None, bench=BENCH):
+def _ingest(td: Path, work: Path, *extra, blob=_committed_blob, ingest_dirty=False, repo=None, bench=BENCH,
+            ingest_sha=INGEST):
     """-> (exit code or SystemExit message, record json or None, stdout)."""
     root = td / "evidence"
     (root / bench).mkdir(parents=True, exist_ok=True)
@@ -354,7 +549,7 @@ def _ingest(td: Path, work: Path, *extra, blob=_committed_blob, ingest_dirty=Fal
     with mock.patch.object(sys, "argv", argv), \
             mock.patch.object(kr, "SIM", root), \
             mock.patch.object(kr, "REPO", repo or REPO), \
-            mock.patch.object(kr, "git_state", return_value=("1ngest0", ingest_dirty)), \
+            mock.patch.object(kr, "git_state", return_value=(ingest_sha, ingest_dirty)), \
             mock.patch.object(kr, "git_blob", side_effect=blob), \
             mock.patch.object(kr, "klt_version", return_value="klt 0.0"), \
             redirect_stdout(out):
@@ -472,7 +667,8 @@ class ReplayIngest(unittest.TestCase):
             self.assertTrue(rec["citable"], rec["not_citable_reasons"])
             self.assertEqual(rec["source_bundle"]["origin_commit"], ORIGIN)
             self.assertEqual(rec["source_bundle"]["sha256"], _sha(work / mk.BUNDLE_NAME))
-            self.assertEqual(rec["ingest"]["commit"], "1ngest0")
+            self.assertEqual(rec["ingest"]["commit"], "1ngest0")  # existing short field unchanged
+            self.assertEqual(rec["ingest"]["commit_full"], INGEST)
             self.assertEqual(rec["ingest"]["source_drift"], [])
             self.assertEqual(rec["dut"]["dut_netlist_sha256"], b["dut"]["netlist_sha256"])
             self.assertEqual(rec["testbench"]["netlist_sha256"], b["testbench"]["netlist_sha256"])
@@ -636,6 +832,35 @@ class ReplayIngest(unittest.TestCase):
             self.assertTrue(str(rc).startswith("STAGED_SOURCE_MISSING"), rc)
             self.assertIsNone(rec)
 
+    def test_clean_claim_contradicted_for_staged_probe_fragment_refused(self):
+        """Every staged testbench file (not just the .included fragment and
+        tb.json) is checked against the claimed clean commit."""
+        probe = "tb_vosprobe.spice"
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work = _generate(td)
+            _write_reports(work)
+            b = _bundle(work)
+            self.assertIn(f"{b['testbench']['staged_dir']}/{probe}", b["staged"])
+
+            def other(commit, path):
+                data = _committed_blob(commit, path)
+                return data + b"* differs at origin\n" if path.endswith(probe) else data
+            rc, rec, _ = _ingest(td, work, blob=other)
+            self.assertTrue(str(rc).startswith("SOURCE_COMMIT_MISMATCH"), rc)
+            self.assertIsNone(rec)
+
+    def test_probe_fragment_unreadable_at_commit_noncitable_not_refused(self):
+        probe = "tb_vosprobe.spice"
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work = _generate(td)
+            _write_reports(work)
+            rc, rec, _ = _ingest(td, work, blob=lambda c, p: None if p.endswith(probe) else _committed_blob(c, p))
+            self.assertEqual(rc, 0)
+            self.assertFalse(rec["citable"])
+            self.assertFalse(rec["reference"])
+
     def test_bundle_identity_edit_refused(self):
         with tempfile.TemporaryDirectory() as td:
             td = Path(td)
@@ -671,7 +896,9 @@ class ReplayIngest(unittest.TestCase):
                 _write_reports(work)
                 rc, rec, out = _ingest(td, work, **kw)
                 self.assertEqual(rc, 0)
+                self.assertTrue(rec["complete"])  # complete grid: only citability fails
                 self.assertFalse(rec["citable"])
+                self.assertFalse(rec["reference"])
                 self.assertIn("NOT CITABLE", out)
         with tempfile.TemporaryDirectory() as td:
             td = Path(td)
@@ -680,7 +907,9 @@ class ReplayIngest(unittest.TestCase):
             rc, rec, _ = _ingest(td, work)
             self.assertEqual(rc, 0)
             self.assertTrue(rec["dirty"])
+            self.assertTrue(rec["complete"])
             self.assertFalse(rec["citable"])
+            self.assertFalse(rec["reference"])
             md = (td / "evidence" / BENCH / "records" / f"{rec['record_id']}.md").read_text()
             self.assertIn("NOT CITABLE", md)
             self.assertIn(f"sim/{BENCH}/testbench/tb.json", md)
@@ -827,7 +1056,54 @@ class CoverageValidation(unittest.TestCase):
         rep["environment"] = {"monte_carlo": MC2}
         out, _, issues = self._check(rep, req)
         self.assertTrue(any(i.startswith("DUPLICATE_UNIT") and "tt/27C/mc0" in i for i in issues))
-        self.assertEqual(out["tt_27c_3.30v"]["mc0"]["dv0"], 1.0)  # first kept
+        self.assertNotIn("mc0", out.get("tt_27c_3.30v", {}))  # neither copy trusted
+        self.assertFalse(any(i.startswith("MISSING_UNIT") for i in issues))
+
+    def _one(self, *units):
+        req = _req(procs=("tt",), temps=(27.0,), mc=None, meas=("x",))
+        return kr.collect_checked(_report(*units), req, 3.3)
+
+    def test_alias_duplicate_rejected_either_order(self):
+        a, b = ("tt/27C", "pass", {"x": 1}), ("tt/27.0C", "pass", {"x": 99})
+        for units in ((a, b), (b, a)):
+            out, _, issues = self._one(*units)
+            self.assertEqual(self._codes(issues), ["DUPLICATE_UNIT"], issues)
+            self.assertEqual(out, {})
+
+    def test_exact_duplicate_rejected(self):
+        a = ("tt/27C", "pass", {"x": 1})
+        out, _, issues = self._one(a, a)
+        self.assertEqual(self._codes(issues), ["DUPLICATE_UNIT"], issues)
+        self.assertEqual(out, {})
+        out, _, issues = self._one(a, a, a)
+        self.assertEqual(out, {})
+
+    def test_repeated_ingredient_rejected(self):
+        for ms in ([("x", 1), ("x", 99)], [("x", None), ("x", 5)], [("x", 5), ("x", None)]):
+            rep = {"corners": [{"corner_id": "tt/27C", "status": "pass",
+                                "measurements": [{"name": n, "value": v} for n, v in ms]}]}
+            req = _req(procs=("tt",), temps=(27.0,), meas=("x",))
+            out, _, issues = kr.collect_checked(rep, req, 3.3)
+            self.assertEqual(self._codes(issues), ["DUPLICATE_INGREDIENT"], issues)
+            self.assertEqual(out, {})
+
+    def test_repeated_unrequired_name_tolerated(self):
+        rep = {"corners": [{"corner_id": "tt/27C", "status": "pass", "measurements": [
+            {"name": "x", "value": 1}, {"name": "y", "value": 1}, {"name": "y", "value": 2}]}]}
+        out, _, issues = kr.collect_checked(rep, _req(procs=("tt",), temps=(27.0,), meas=("x",)), 3.3)
+        self.assertEqual(issues, [])
+
+    def test_distinct_mc_samples_not_duplicates(self):
+        req = _req(procs=("tt",), temps=(27.0,), mc=MC2)
+        out, _, issues = self._check(_full_mc_report(req), req)
+        self.assertEqual(issues, [])
+        self.assertEqual(sorted(out["tt_27c_3.30v"]), ["mc0", "mc1"])
+
+    def test_malformed_corner_ids_named(self):
+        for raw in ("tt", "tt/xC", "tt/nanC", "/27C", "", None, 5):
+            out, _, issues = self._one((raw, "pass", {"x": 1}))
+            self.assertIn("MALFORMED_CORNER_ID", self._codes(issues), (raw, issues))
+            self.assertEqual(out, {})
 
     def test_missing_mc_draw_named(self):
         req = _req(procs=("tt",), temps=(27.0,), mc=MC2)
@@ -932,6 +1208,7 @@ class MainCoverageGate(unittest.TestCase):
                     rep["corners"].append(dict(rep["corners"][0]))
                 rep["measurements"] = [{"name": x["name"]} for x in req["measurements"]]
                 rep["environment"].update(_link_env(work, b, r))
+                rep["provenance"] = _prov()
                 (work / f"report-{n}.json").write_text(json.dumps(rep))
             err = io.StringIO()
             with mock.patch.object(sys, "stderr", err):
@@ -979,6 +1256,605 @@ class MainCoverageGate(unittest.TestCase):
         self.assertIsInstance(rc, str)
         self.assertIn("EMPTY_RESULT", rc)
         self.assertIsNone(rec)
+
+
+class _FrozenClock:
+    """`datetime` stand-in for klt_record: every record id gets the same stamp."""
+
+    @staticmethod
+    def now(tz=None):
+        return datetime(2026, 1, 2, 3, 4, 5, 6, tzinfo=tz)
+
+
+def _cm_index_work(td: Path, n: int = 2) -> Path:
+    """A generated common-mode index request set with clean synthetic reports:
+    every requested draw carries all 18 values, coordinates read back exactly."""
+    work = _generate(td, "--mc-n", str(n), bench=mk.CM_INDEX_BENCH)
+    b = _bundle(work)
+    vals = []
+    for i, (label, (vcmd, vd, _)) in enumerate(mk.CM_WINDOW_POINTS.items()):
+        dv = 1e-4 * (i // 2 + 1) + (50e-3 if vd else 0.0)
+        vals += [{"name": f"dv_{label}", "value": dv}, {"name": f"xcm_{label}", "value": vcmd},
+                 {"name": f"xvd_{label}", "value": vd}]
+    for name, r in b["requests"].items():
+        req = json.loads((work / r["request"]).read_text())
+        corners = [{"corner_id": f"{p['name']}/{t:g}C/mc{i}", "status": "pass",
+                    "monte_carlo": {"sample_index": i},
+                    "measurements": [dict(v, value=v["value"] * (1 + 0.1 * i)) if v["name"].startswith("dv_")
+                                     else dict(v) for v in vals]}
+                   for p in req["corners"]["process"] for t in req["corners"]["temperature_c"] for i in range(n)]
+        env = _link_env(work, b, r)
+        env["monte_carlo"] = dict(req["monte_carlo"])
+        env["remote"] = {"runner_klt_version": "0.5.0", "runner_compatibility": "match"}
+        (work / f"report-{name}.json").write_text(json.dumps(
+            {"corners": corners, "measurements": [{"name": m["name"]} for m in req["measurements"]],
+             "environment": env, "provenance": _prov()}))
+    return work
+
+
+class CmIndexReplay(unittest.TestCase):
+    """Issue #254: a successful common-mode replay through `mint_cm_index`,
+    sharing the archive/provenance helpers with the scored path."""
+
+    def test_clean_replay_is_complete_unscored_reference(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work = _cm_index_work(td)
+            rc, rec, _ = _ingest(td, work, bench=mk.CM_INDEX_BENCH)
+            self.assertEqual(rc, 0)
+            self.assertTrue(rec["complete"] and rec["citable"] and rec["reference"] and rec["full_coverage"])
+            self.assertEqual((rec["scored"], rec["verdict"]), (False, "Unknown"))
+            self.assertNotIn("spec_row", rec)
+            self.assertEqual(rec["not_citable_reasons"], [])
+            self.assertEqual(rec["points"], rec["expected_points"])
+            exp = td / "evidence" / mk.CM_INDEX_BENCH
+            cdir = exp / "corners" / rec["record_id"]
+            b = _bundle(work)
+            want = {mk.BUNDLE_NAME, "design.ngspice", mk.SOURCES_DIR} | \
+                {f"body-v{r['vdd']:.2f}.spice" for r in b["requests"].values()} | \
+                {f"{k}-{n}.json" for n in b["requests"] for k in ("request", "report")}
+            self.assertEqual({p.name for p in cdir.iterdir()}, want)
+            self.assertEqual(rec["source_bundle"]["sha256"], _sha(cdir / mk.BUNDLE_NAME))
+            snap = (exp / "netlist-snapshots" / f"{rec['record_id']}.spice").read_text()
+            self.assertIn("\n* ---- testbench fragment ----\n", snap)
+            self.assertEqual(list(rec)[:9], ["record_id", "bench", "commit", "dirty", "citable",
+                                             "not_citable_reasons", "dut", "testbench", "source_bundle"])
+            self.assertEqual(list(rec)[9:12], ["executor", "monte_carlo", "ingest"])
+
+    def test_dirty_tools_replay_is_not_citable(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            rc, rec, _ = _ingest(td, _cm_index_work(td), bench=mk.CM_INDEX_BENCH, ingest_dirty=True)
+            self.assertEqual(rc, 0)
+            self.assertFalse(rec["citable"] or rec["reference"])
+            self.assertEqual(rec["not_citable_reasons"],
+                             ["derivation tooling (sim/tools, sim/harness) dirty at ingest commit 1ngest0"])
+
+
+def _set_engine(work: Path, version, engine="ngspice", only=None, drop=False) -> None:
+    for f in sorted(work.glob("report-*.json")):
+        if only and only not in f.name:
+            continue
+        rep = json.loads(f.read_text())
+        env = rep["environment"]
+        env["engine"] = engine
+        if drop:
+            env.pop("engine_version", None)
+        else:
+            env["engine_version"] = version
+        f.write_text(json.dumps(rep))
+
+
+class _IngestMatrix(unittest.TestCase):
+    """Runs a case over both record writers (ordinary and common-mode index)."""
+
+
+    def _cases(self):
+        yield "ordinary", BENCH, _generate, lambda td, w: _write_reports(w)
+        yield "cm-index", mk.CM_INDEX_BENCH, lambda td, **k: _cm_index_work(td), None
+
+    def _each(self):
+        for label, bench, gen, wr in self._cases():
+            with tempfile.TemporaryDirectory() as td:
+                td = Path(td)
+                work = gen(td, bench=bench) if label == "ordinary" else gen(td)
+                if wr:
+                    wr(td, work)
+                yield label, td, work, bench
+
+    def _no_evidence(self, td, bench):
+        ev = td / "evidence" / bench
+        return not any((ev / s).exists() and any((ev / s).iterdir()) for s in ("records", "corners", "netlist-snapshots"))
+
+
+class EngineFloorIngest(_IngestMatrix):
+    """Issue #269: the ngspice floor is enforced on ingested fleet reports."""
+
+    def test_bundle_snapshots_floor_bound_to_commit(self):
+        with tempfile.TemporaryDirectory() as td:
+            b = _bundle(_generate(Path(td)))
+            self.assertEqual(b["toolchain"]["ngspice_min_major"], 46)
+            self.assertEqual(b["toolchain"]["commit"], ORIGIN)
+            self.assertEqual(b["toolchain"]["file"], "sim/toolchain.json")
+
+    def test_at_or_above_floor_passes_and_is_recorded(self):
+        for ver in ("46", "47", "46.1"):
+            for label, td, work, bench in self._each():
+                with self.subTest(ver=ver, writer=label):
+                    _set_engine(work, ver)
+                    rc, rec, _ = _ingest(td, work, bench=bench)
+                    self.assertEqual(rc, 0)
+                    self.assertTrue(rec["citable"], rec["not_citable_reasons"])
+                    ef = rec["ingest"]["engine_floor"]
+                    self.assertEqual((ef["ngspice_min_major"], ef["floor_source"], ef["observed"], ef["override"]),
+                                     (46, "source-bundle", [ver], False))
+
+    def test_violations_refused_before_any_write(self):
+        cases = {"below": dict(version="42"), "below-prefixed": dict(version="ngspice-45"),
+                 "malformed": dict(version="forty-six"), "empty": dict(version=""),
+                 "missing": dict(version=None, drop=True), "wrong-engine": dict(version="46", engine="xyce")}
+        for name, kw in cases.items():
+            for label, td, work, bench in self._each():
+                with self.subTest(case=name, writer=label):
+                    _set_engine(work, **kw)
+                    rc, rec, _ = _ingest(td, work, bench=bench)
+                    self.assertIn("ENGINE_FLOOR_VIOLATION", str(rc))
+                    self.assertIsNone(rec)
+                    self.assertTrue(self._no_evidence(td, bench))
+
+    def test_mixed_versions_refused(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                _set_engine(work, "46")
+                _set_engine(work, "47", only="v3.30")
+                rc, rec, _ = _ingest(td, work, bench=bench)
+                self.assertIn("mixed engine versions", str(rc))
+                self.assertIsNone(rec)
+                self.assertTrue(self._no_evidence(td, bench))
+
+    def test_explicit_override_retains_non_citable_diagnostic(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                _set_engine(work, "42")
+                rc, rec, _ = _ingest(td, work, "--allow-engine-drift", bench=bench)
+                self.assertEqual(rc, 0)
+                self.assertFalse(rec["citable"] or rec["reference"])
+                ef = rec["ingest"]["engine_floor"]
+                self.assertTrue(ef["override"])
+                self.assertEqual(ef["observed"], ["42"])
+                self.assertTrue(ef["violations"])
+                self.assertTrue(any("engine floor override" in r for r in rec["not_citable_reasons"]))
+
+    def test_override_flag_does_not_degrade_a_passing_set(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                rc, rec, _ = _ingest(td, work, "--allow-engine-drift", bench=bench)
+                self.assertEqual(rc, 0)
+                self.assertTrue(rec["citable"])
+                self.assertFalse(rec["ingest"]["engine_floor"]["override"])
+
+    def test_later_pin_change_does_not_alter_bundle_floor(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                _set_engine(work, "46")
+                with mock.patch.object(htc, "load_pins", return_value={"ngspice_min_major": 99}):
+                    rc, rec, _ = _ingest(td, work, bench=bench)
+                self.assertEqual(rc, 0)
+                self.assertEqual(rec["ingest"]["engine_floor"]["ngspice_min_major"], 46)
+
+    def test_legacy_bundle_uses_checkout_floor_and_says_so(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                b = _bundle(work)
+                b.pop("toolchain")
+                (work / mk.BUNDLE_NAME).write_text(json.dumps(b, indent=1) + "\n")
+                rc, rec, _ = _ingest(td, work, bench=bench)
+                self.assertEqual(rc, 0)
+                ef = rec["ingest"]["engine_floor"]
+                self.assertEqual((ef["ngspice_min_major"], ef["floor_source"]),
+                                 (46, "ingest-checkout (legacy bundle)"))
+                _set_engine(work, "42")
+                rc, rec, _ = _ingest(td, work, bench=bench)
+                self.assertIn("ENGINE_FLOOR_VIOLATION", str(rc))
+
+    def test_engine_major_parsing(self):
+        self.assertEqual([htc.engine_major(v) for v in ("46", "ngspice-46", "46.1", "ngspice 45")], [46, 46, 46, 45])
+        self.assertEqual([htc.engine_major(v) for v in (None, "", "x46", "46x", 46)], [None] * 5)
+
+
+def _set_pdk(work: Path, only=None, drop=False, **kw) -> None:
+    for f in sorted(work.glob("report-*.json")):
+        if only and only not in f.name:
+            continue
+        rep = json.loads(f.read_text())
+        if drop:
+            rep.pop("provenance", None)
+        else:
+            rep["provenance"] = _prov(**kw)
+        f.write_text(json.dumps(rep))
+
+
+class PdkQualificationIngest(_IngestMatrix):
+    """Issue #283: executor-reported open_pdks revision / variant is enforced."""
+
+    def test_bundle_snapshots_pdk_requirement(self):
+        with tempfile.TemporaryDirectory() as td:
+            t = _bundle(_generate(Path(td)))["toolchain"]
+            self.assertEqual((t["open_pdks"], t["pdk_variant"]), (PDK_REV, "gf180mcuD"))
+
+    def test_matching_report_is_citable_and_recorded(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                rc, rec, _ = _ingest(td, work, bench=bench)
+                self.assertEqual(rc, 0)
+                self.assertTrue(rec["citable"], rec["not_citable_reasons"])
+                q = rec["ingest"]["pdk_qualification"]
+                self.assertEqual(q["required"], {"open_pdks": PDK_REV, "pdk_variant": "gf180mcuD"})
+                self.assertEqual(q["observed"], [{"pdk_variant": "gf180mcuD", "open_pdks": PDK_REV}])
+                self.assertEqual((q["required_source"], q["override"], q["model_lib_sha256"]),
+                                 ("source-bundle", False, ["6" * 64]))
+
+    def test_violations_refused_before_any_write(self):
+        cases = {"wrong-revision": dict(rev="f" * 40), "wrong-variant": dict(name="gf180mcuC"),
+                 "malformed": dict(rev="c6d73a"), "absent": dict(drop=True)}
+        for name, kw in cases.items():
+            for label, td, work, bench in self._each():
+                with self.subTest(case=name, writer=label):
+                    _set_pdk(work, **kw)
+                    rc, rec, _ = _ingest(td, work, bench=bench)
+                    self.assertIn("PDK_QUALIFICATION_FAILED", str(rc))
+                    self.assertIsNone(rec)
+                    self.assertTrue(self._no_evidence(td, bench))
+
+    def test_mixed_identities_refused(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                _set_pdk(work, only="v3.30", rev="f" * 40)
+                rc, rec, _ = _ingest(td, work, bench=bench)
+                self.assertIn("PDK_QUALIFICATION_FAILED", str(rc))
+                self.assertIn("mixed PDK identities", str(rc))
+                self.assertIsNone(rec)
+
+    def test_contradictory_model_hashes_refused(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                for f in work.glob("report-*.json"):
+                    rep = json.loads(f.read_text())
+                    rep["environment"]["models_lib_sha256"] = "7" * 64
+                    f.write_text(json.dumps(rep))
+                rc, rec, _ = _ingest(td, work, bench=bench)
+                self.assertIn("contradictory model hashes", str(rc))
+
+    def test_override_retains_non_citable_and_documents_it(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                _set_pdk(work, rev="f" * 40)
+                rc, rec, out = _ingest(td, work, "--allow-pdk-drift", bench=bench)
+                self.assertEqual(rc, 0)
+                self.assertFalse(rec["citable"] or rec["reference"])
+                q = rec["ingest"]["pdk_qualification"]
+                self.assertTrue(q["override"] and q["violations"])
+                self.assertTrue(any("PDK qualification override" in r for r in rec["not_citable_reasons"]))
+
+    def test_override_does_not_degrade_matching_set(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                rc, rec, _ = _ingest(td, work, "--allow-pdk-drift", bench=bench)
+                self.assertTrue(rec["citable"])
+
+    def test_later_pin_change_does_not_alter_bundle_requirement(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                with mock.patch.object(htc, "load_pins", return_value={"open_pdks": "e" * 40, "ngspice_min_major": 46}):
+                    rc, rec, _ = _ingest(td, work, bench=bench)
+                self.assertEqual(rc, 0)
+                self.assertEqual(rec["ingest"]["pdk_qualification"]["required"]["open_pdks"], PDK_REV)
+
+    def test_legacy_bundle_uses_checkout_pin_and_says_so(self):
+        for legacy in ("no-toolchain", "pre-283-toolchain"):
+            for label, td, work, bench in self._each():
+                with self.subTest(legacy=legacy, writer=label):
+                    b = _bundle(work)
+                    if legacy == "no-toolchain":
+                        b.pop("toolchain")
+                    else:
+                        b["toolchain"].pop("open_pdks")
+                        b["toolchain"].pop("pdk_variant")
+                    (work / mk.BUNDLE_NAME).write_text(json.dumps(b, indent=1) + "\n")
+                    rc, rec, _ = _ingest(td, work, bench=bench)
+                    self.assertEqual(rc, 0)
+                    q = rec["ingest"]["pdk_qualification"]
+                    self.assertEqual((q["required_source"], q["required"]["open_pdks"], q["required"]["pdk_variant"]),
+                                     ("ingest-checkout (legacy bundle)", PDK_REV, "gf180mcuD"))
+                    _set_pdk(work, rev="f" * 40)
+                    rc, rec, _ = _ingest(td, work, bench=bench)
+                    self.assertIn("PDK_QUALIFICATION_FAILED", str(rc))
+
+    def test_reproduce_guidance_names_qualification(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                _, rec, _ = _ingest(td, work, bench=bench)
+                md = (td / "evidence" / bench / "records" / f"{rec['record_id']}.md").read_text()
+                line = next(l for l in md.splitlines() if l.startswith("- **Reproduce**"))
+                self.assertIn(f"PDK qualification: required `gf180mcuD` / open_pdks `{PDK_REV}`", line)
+                self.assertIn("every leg matched", line)
+
+    def test_committed_fleet_report_shape_parses(self):
+        rep = json.loads(next((SIM / "comparator-offset-tran/corners").glob("*/report-main-v3.30.json")).read_text())
+        self.assertEqual(kr.report_pdk_identity(rep), ("gf180mcuD", PDK_REV, []))
+
+
+def _edit_snapshot(work: Path, **kw) -> None:
+    b = _bundle(work)
+    b["toolchain"].update(kw)
+    (work / mk.BUNDLE_NAME).write_text(json.dumps(b, indent=1) + "\n")
+
+
+class ToolchainSnapshotIdentity(_IngestMatrix):
+    """Issue #283 review: the bundle's toolchain snapshot is verified against
+    sim/toolchain.json at the clean origin commit, never merely trusted."""
+
+    def _refused(self, td, bench, rc, rec, code, needle=""):
+        self.assertIn(code, str(rc))
+        self.assertIn(needle, str(rc))
+        self.assertIsNone(rec)
+        self.assertTrue(self._no_evidence(td, bench))
+
+    def test_untampered_snapshot_is_verified_and_citable(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                rc, rec, _ = _ingest(td, work, bench=bench)
+                self.assertEqual(rc, 0)
+                self.assertTrue(rec["citable"], rec["not_citable_reasons"])
+
+    def test_tampered_open_pdks_refused(self):
+        # Executor reports agree with the tampered pin, so only the origin
+        # binding can catch it.
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                _edit_snapshot(work, open_pdks="f" * 40)
+                _set_pdk(work, rev="f" * 40)
+                rc, rec, _ = _ingest(td, work, bench=bench)
+                self._refused(td, bench, rc, rec, "SOURCE_COMMIT_MISMATCH", "open_pdks")
+
+    def test_tampered_ngspice_floor_refused(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                _edit_snapshot(work, ngspice_min_major=40)
+                rc, rec, _ = _ingest(td, work, bench=bench)
+                self._refused(td, bench, rc, rec, "SOURCE_COMMIT_MISMATCH", "ngspice_min_major")
+
+    def test_tampered_snapshot_commit_refused(self):
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                _edit_snapshot(work, commit="0" * 40)
+                rc, rec, _ = _ingest(td, work, bench=bench)
+                self._refused(td, bench, rc, rec, "SOURCE_COMMIT_MISMATCH", "snapshot was taken")
+
+    def test_pin_file_hash_mismatch_at_origin_refused(self):
+        def blob(commit, path):
+            data = _committed_blob(commit, path)
+            return data + b"\n" if path == "sim/toolchain.json" else data
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                rc, rec, _ = _ingest(td, work, blob=blob, bench=bench)
+                self._refused(td, bench, rc, rec, "SOURCE_COMMIT_MISMATCH", "sim/toolchain.json")
+
+    def test_pin_file_unreadable_at_origin_is_non_citable(self):
+        def blob(commit, path):
+            return None if path == "sim/toolchain.json" else _committed_blob(commit, path)
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                rc, rec, _ = _ingest(td, work, blob=blob, bench=bench)
+                self.assertFalse(rec["citable"] or rec["reference"])
+                self.assertTrue(any("sim/toolchain.json" in r and "not readable" in r
+                                    for r in rec["not_citable_reasons"]), rec["not_citable_reasons"])
+
+    def test_snapshot_variant_contradicting_requests_refused(self):
+        # Reports agree with the tampered snapshot; the requests (hash-verified)
+        # still select gf180mcuD, so the bundle contradicts itself.
+        for label, td, work, bench in self._each():
+            with self.subTest(writer=label):
+                _edit_snapshot(work, pdk_variant="gf180mcuC")
+                _set_pdk(work, name="gf180mcuC")
+                rc, rec, _ = _ingest(td, work, "--allow-pdk-drift", bench=bench)
+                self._refused(td, bench, rc, rec, "SOURCE_BUNDLE_INCONSISTENT", "models.pdk")
+
+
+class ReproduceGuidance(unittest.TestCase):
+    """Issue #272: both record writers share one bundle-derived formatter, so a
+    non-default MC count / DUT selector survives into the Reproduce bullet."""
+
+    DUT = "comparator-dr0004-cascode-exp"
+
+    def _md(self, td, rec, bench):
+        return (td / "evidence" / bench / "records" / f"{rec['record_id']}.md").read_text()
+
+    def _line(self, md):
+        return next(l for l in md.splitlines() if l.startswith("- **Reproduce**"))
+
+    def test_common_mode_writer_preserves_n_and_custom_dut(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work = _generate(td, "--mc-n", "3", "--dut", self.DUT, bench=mk.CM_INDEX_BENCH)
+            self.assertEqual(_bundle(work)["parameters"]["mc_n"], 3)
+            # reuse the synthetic reports of the default-DUT helper for N=3
+            tmp = td / "other"
+            tmp.mkdir()
+            ref = _cm_index_work(tmp, n=3)
+            for f in ref.glob("report-*.json"):
+                req = json.loads((work / f.name.replace("report-", "request-")).read_text())
+                rep = json.loads(f.read_text())
+                rep["environment"] = _link_env(work, _bundle(work), _bundle(work)["requests"][f.stem[7:]])
+                rep["environment"]["monte_carlo"] = dict(req["monte_carlo"])
+                rep["environment"]["remote"] = {"runner_klt_version": "0.5.0", "runner_compatibility": "match"}
+                (work / f.name).write_text(json.dumps(rep))
+            rc, rec, _ = _ingest(td, work, bench=mk.CM_INDEX_BENCH)
+            self.assertEqual(rc, 0)
+            line = self._line(self._md(td, rec, mk.CM_INDEX_BENCH))
+            self.assertIn("--mc-n 3", line)
+            self.assertNotIn("200", line)
+            self.assertIn(f"--dut {self.DUT}", line)
+            self.assertIn(ORIGIN, line)
+            self.assertIn(INGEST, line)
+            self.assertIn("derivation tooling ran at the ingest commit", line)
+
+    def test_scored_writer_preserves_custom_dut_and_both_commits(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work = _generate(td, "--dut", self.DUT)
+            _write_reports(work)
+            rc, rec, _ = _ingest(td, work)
+            self.assertEqual(rc, 0)
+            line = self._line(self._md(td, rec, BENCH))
+            self.assertIn(f"--dut {self.DUT}", line)
+            self.assertIn(ORIGIN, line)
+            self.assertIn(INGEST, line)
+            self.assertIn("derivation tooling ran at the ingest commit", line)
+
+    def test_same_commit_has_no_replay_split(self):
+        """Origin and ingest at one commit (git_state mocked in production form,
+        full SHA): both writers print it in full and omit the split note."""
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work = _generate(td, "--dut", self.DUT)
+            _write_reports(work)
+            rc, rec, _ = _ingest(td, work, ingest_sha=ORIGIN)
+            self.assertEqual(rc, 0)
+            self.assertEqual(rec["ingest"]["commit"], ORIGIN[:7])
+            self.assertEqual(rec["ingest"]["commit_full"], ORIGIN)
+            line = self._line(self._md(td, rec, BENCH))
+            self.assertIn(f"origin commit `{ORIGIN}`; ingested at commit `{ORIGIN}`", line)
+            self.assertNotIn("derivation tooling ran", line)
+            self.assertNotIn("check out the origin commit", line)
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            rc, rec, _ = _ingest(td, _cm_index_work(td), bench=mk.CM_INDEX_BENCH, ingest_sha=ORIGIN)
+            self.assertEqual(rc, 0)
+            line = self._line(self._md(td, rec, mk.CM_INDEX_BENCH))
+            self.assertIn(f"ingested at commit `{ORIGIN}`", line)
+            self.assertNotIn("derivation tooling ran", line)
+
+    def test_formatter_legacy_short_ingest_sha(self):
+        """A record dict without the full ingest SHA falls back to the short one,
+        matched by prefix rather than always reported as a split."""
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work = _generate(td, "--mc-n", "3", bench="comparator-offset-mc")
+            b = _bundle(work)
+            tb = htb.load(work / b["testbench"]["staged_dir"])
+            line = kr.reproduce_line("comparator-offset-mc", b, {"rid": "RID", "ingest_sha": ORIGIN[:7]}, tb)
+            self.assertNotIn("derivation tooling ran", line)
+            line = kr.reproduce_line("comparator-offset-mc", b, {"rid": "RID", "ingest_sha": "1ngest0"}, tb)
+            self.assertIn("derivation tooling ran", line)
+
+    def test_formatter_preserves_n3_and_flags_nondefault_grid(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work = _generate(td, "--mc-n", "3", bench="comparator-offset-mc")
+            b = _bundle(work)
+            tb = htb.load(work / b["testbench"]["staged_dir"])
+            r = {"rid": "RID", "ingest_sha": ORIGIN[:7], "ingest_commit_full": ORIGIN}
+            line = kr.reproduce_line("comparator-offset-mc", b, r, tb)
+            self.assertIn("--mc-n 3", line)
+            self.assertNotIn("--mc-n 200", line)
+            self.assertNotIn("differs", line)
+            self.assertNotIn("derivation tooling ran", line)  # same commit: no replay split
+            b["parameters"]["temperatures_c"] = [27.0]
+            line = kr.reproduce_line("comparator-offset-mc", b, r, tb)
+            self.assertIn("differs from the CLI defaults", line)
+            self.assertIn("corners/RID/request-*.json", line)
+            self.assertIn(mk.BUNDLE_NAME, line)
+            self.assertIn("design.ngspice", line)
+            self.assertIn("--mc-n 3", line)
+
+
+class ExistingRecordRefused(unittest.TestCase):
+    """Both writers create the corner dir exclusively: an existing record id
+    is refused, never overwritten (issue #254 keeps this for both paths)."""
+
+    def _twice(self, bench, work_fn):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work = work_fn(td)
+            with mock.patch.object(kr, "datetime", _FrozenClock):
+                rc, _rec, _ = _ingest(td, work, bench=bench)
+                self.assertIn(rc, (0, 1))
+                before = sorted(p.relative_to(td) for p in (td / "evidence").rglob("*"))
+                with self.assertRaises(FileExistsError):
+                    _ingest(td, work, bench=bench)
+            self.assertEqual(sorted(p.relative_to(td) for p in (td / "evidence").rglob("*")), before)
+
+    def test_scored_path(self):
+        def work_fn(td):
+            work = _generate(td)
+            _write_reports(work)
+            return work
+        self._twice(BENCH, work_fn)
+
+    def test_common_mode_path(self):
+        self._twice(mk.CM_INDEX_BENCH, _cm_index_work)
+
+
+class KickbackBothNodes(unittest.TestCase):
+    """#160: the row-facing kickback peak covers BOTH 1 kohm input nodes."""
+
+    RAW = {"ad_pos": 4e-3, "ad_neg": -3e-3, "adn_pos": 2e-3, "adn_neg": -2e-3}
+
+    def _derive(self, raw):
+        tb = htb.load(SIM / "comparator-kickback")
+        names = set()
+        for expr in tb.measure.values():
+            names |= {t for t in __import__("re").findall(r"[A-Za-z_]\w*", expr) if t not in kr.MATH}
+        full = {n: 2.0 + i for i, n in enumerate(sorted(names))}
+        full.update(raw)
+        return kr.derive("comparator-kickback", tb, {"main": ({"c": {"": full}}, [])})
+
+    def test_aggregate_is_max_of_both_nodes(self):
+        res, problems = self._derive(self.RAW)
+        self.assertEqual(problems, [])
+        d = res["c"]
+        self.assertAlmostEqual(d["kick_1k_pnode_peak_mv"], 4.0)
+        self.assertAlmostEqual(d["kick_1k_nnode_peak_mv"], 2.0)
+        self.assertAlmostEqual(d["kick_1k_peak_mv"], 4.0)
+
+    def test_negative_node_larger_sets_the_aggregate(self):
+        raw = dict(self.RAW, adn_pos=1e-3, adn_neg=-7e-3)  # negative node worse than positive
+        res, problems = self._derive(raw)
+        self.assertEqual(problems, [])
+        d = res["c"]
+        self.assertAlmostEqual(d["kick_1k_nnode_peak_mv"], 7.0)
+        self.assertGreater(d["kick_1k_nnode_peak_mv"], d["kick_1k_pnode_peak_mv"])
+        self.assertAlmostEqual(d["kick_1k_peak_mv"], 7.0)  # cannot ignore the negative node
+        self.assertEqual(kr.node_coverage(res), "both")
+        self.assertIn("1/1 corners", kr.node_coverage_line(res))
+
+    def test_positive_node_value_unchanged_vs_historical_definition(self):
+        res, _ = self._derive(self.RAW)
+        d = res["c"]
+        self.assertAlmostEqual(d["kick_1k_pnode_peak_mv"], max(abs(self.RAW["ad_pos"]), abs(self.RAW["ad_neg"])) * 1e3)
+
+    def test_negative_node_ingredients_are_requested_and_validated(self):
+        tb = htb.load(SIM / "comparator-kickback")
+        cards = "\n".join(tb.analyses)
+        self.assertIn("meas tran adn_pos max v(adn)", cards)
+        self.assertIn("meas tran adn_neg min v(adn)", cards)
+        self.assertIn("v(ana)-v(asn)", tb.netlist.read_text())
+        # missing / non-finite node measurement fails validation (no record cell)
+        req = _req(meas=("ad_pos", "ad_neg", "adn_pos", "adn_neg"))
+        for bad in (None, float("nan"), float("inf")):
+            vals = {"ad_pos": 1e-3, "ad_neg": -1e-3, "adn_pos": 1e-3, "adn_neg": bad}
+            rep = {"corners": [{"corner_id": "tt/27C", "status": "pass",
+                                "measurements": [{"name": k, "value": v} for k, v in vals.items()]}]}
+            req1 = dict(req, corners={"process": [{"name": "tt"}], "temperature_c": [27.0]})
+            out, _bad, issues = kr.collect_checked(rep, req1, 3.3)
+            self.assertEqual(out, {}, bad)
+            self.assertTrue(any("adn_neg" in i for i in issues), (bad, issues))
+
+    def test_legacy_positive_only_record_is_partial(self):
+        legacy = {"c": {"kick_1k_peak_mv": 7.6, "kick_1k_pos_mv": 7.6}}
+        self.assertEqual(kr.node_coverage(legacy), "positive-only")
+        self.assertIn("PARTIAL", kr.node_coverage_line(legacy))
 
 
 if __name__ == "__main__":
@@ -1042,3 +1918,523 @@ class DerivedValidation(unittest.TestCase):
         self.assertTrue(problems or len(res) < 1)
         self.assertEqual(len(res), 0)
 
+
+# ---------------------------------------------------------------------------
+# Consumer-window common-mode feasibility contract (issue #182). Synthetic
+# CONTRACT VALIDATION only: every value below is a hand-chosen fixture, not
+# simulation evidence, and nothing here can mint a record -- the bench is
+# refused with UNSUPPORTED_EXECUTOR_CAPABILITY on the real paths.
+# ---------------------------------------------------------------------------
+
+CMW = mk.CM_WINDOW_BENCH
+
+#: Two deliberately asymmetric draws, given as (gain, offset) per common mode
+#: so every expected number below is hand-derivable:
+#:   draw 0: dn (20, -50 uV)  mid (25, +40 uV)   up (16, +125 uV)
+#:           -> dvos_dn = -90 uV, dvos_up = +85 uV
+#:   draw 1: dn (10, +200 uV) mid (20, -100 uV)  up (40, -25 uV)
+#:           -> dvos_dn = +300 uV, dvos_up = +75 uV
+CMW_DRAWS = [
+    {"dn": (20.0, -50e-6), "mid": (25.0, 40e-6), "up": (16.0, 125e-6)},
+    {"dn": (10.0, 200e-6), "mid": (20.0, -100e-6), "up": (40.0, -25e-6)},
+]
+
+
+def _cmw_dv(draw: dict) -> dict:
+    """(gain, offset) per common mode -> the six dv values (dv0 = -vos*gain)."""
+    out = {}
+    for p, (g, vos) in draw.items():
+        out[f"{p}_0"] = -vos * g
+        out[f"{p}_2m"] = -vos * g + g * mk.CM_WINDOW_VD_STEP_V
+    return out
+
+
+def _cmw_request(n: int = 2) -> dict:
+    req = dict(mk.cm_window_leg(n))
+    req["corners"] = {"process": [{"name": "tt", "sections": ["typical"]}], "temperature_c": [27.0]}
+    req["batch"] = {"runner_version_check": "enforce"}
+    return req
+
+
+def _cmw_report(draws=CMW_DRAWS, runner="0.7.0", compat="match", seed=mk.OFFSET_MC_SEED) -> dict:
+    """A synthetic report of the six-point request: one corners[] entry per
+    draw, carrying all 18 named values and the draw's monte_carlo identity."""
+    corners = []
+    for i, draw in enumerate(draws):
+        dv = _cmw_dv(draw)
+        meas = []
+        for label, (vcmd, vd, _) in mk.CM_WINDOW_POINTS.items():
+            meas += [{"name": f"dv_{label}", "value": dv[label]},
+                     {"name": f"xcm_{label}", "value": vcmd},
+                     {"name": f"xvd_{label}", "value": vd}]
+        corners.append({"corner_id": f"tt/27C/mc{i}", "status": "pass", "measurements": meas,
+                        "monte_carlo": {"sample_index": i, "seed": 1000 + i}})
+    return {"corners": corners, "environment": {
+        "monte_carlo": {"n": len(draws), "seed": seed, "vary": "mismatch"},
+        "remote": {"provider": "aws-batch-fleet", "runner_klt_version": runner,
+                   "client_klt_version": runner, "runner_compatibility": compat}}}
+
+
+def _cmw_codes(issues):
+    return {i.split(":", 1)[0] for i in issues}
+
+
+class CmWindowRequestContract(unittest.TestCase):
+    def test_one_analysis_one_draw_set_all_points_index_the_same_solve(self):
+        leg = mk.cm_window_leg(7)
+        self.assertEqual(leg["analysis"], {"kind": "dc", "args": "vd 0 2m 2m vcmd -100m 100m 100m"})
+        self.assertEqual(leg["monte_carlo"], {"n": 7, "seed": mk.OFFSET_MC_SEED, "vary": "mismatch"})
+        ms = leg["measurements"]
+        self.assertEqual(len(ms), 18)
+        self.assertTrue(all(set(m) == {"name", "expr"} for m in ms))  # no `.meas` card at all
+        # Each label reads dv and both coordinates at ONE index of the one solve.
+        for label, (_, _, k) in mk.CM_WINDOW_POINTS.items():
+            got = {m["name"]: m["expr"] for m in ms if m["name"].endswith("_" + label)}
+            self.assertEqual(got, {f"dv_{label}": f"v(dd)[{k}]", f"xcm_{label}": f"v(cm)[{k}]-v(cmb)[{k}]",
+                                   f"xvd_{label}": f"v(vd)[{k}]"})
+        self.assertEqual(kr.check_cm_window_request(_cmw_request()), [])
+
+    def test_point_map_matches_ngspice_nested_order(self):
+        # `dc A a0 a1 da B b0 b1 db`: A is the inner (fast) source, so the
+        # flattened index of (vcmd_j, vd_i) is 2*j + i.
+        vds, vcmds = (0.0, 2e-3), (-0.1, 0.0, 0.1)
+        flat = [(c, d) for c in vcmds for d in vds]
+        for label, (vcmd, vd, k) in mk.CM_WINDOW_POINTS.items():
+            self.assertEqual(flat[k], (vcmd, vd), label)
+        self.assertEqual(sorted(k for _, _, k in mk.CM_WINDOW_POINTS.values()), list(range(6)))
+
+    def test_bad_request_shapes_refused(self):
+        def issues(edit):
+            req = json.loads(json.dumps(_cmw_request()))
+            edit(req)
+            return kr.check_cm_window_request(req)
+        self.assertTrue(issues(lambda r: r["analysis"].update(args="vd 0 2m 2m")))
+        self.assertTrue(issues(lambda r: r.pop("monte_carlo")))
+        self.assertTrue(issues(lambda r: r["batch"].update(runner_version_check="warn")))
+        # A `.meas` card cannot name the outer coordinate.
+        self.assertTrue(any("`.meas` card" in i for i in issues(lambda r: r["measurements"][0].update(
+            spice=".meas dc dv_dn_0 find v(dd) at=0"))))
+        # Swapped point mapping: dn's dv reads up's index.
+        def swap(r):
+            for m in r["measurements"]:
+                if m["name"] == "dv_dn_0":
+                    m["expr"] = "v(dd)[4]"
+        self.assertTrue(any("dv_dn_0" in i for i in issues(swap)))
+        self.assertTrue(issues(lambda r: r["measurements"].pop()))
+
+    def test_capability_gap_by_runner_version(self):
+        gap = mk.cm_window_capability_gap("0.5.0")
+        self.assertIn("'spice'", gap)
+        self.assertIn("expr", gap)
+        self.assertIn("klt >= 0.7.0", gap)
+        for ok in ("0.7.0", "0.7.0+g5e5b55992a7f", "klt 0.8.1"):
+            self.assertIsNone(mk.cm_window_capability_gap(ok), ok)
+        for bad in (None, "", "unknown", "0.6.9"):
+            self.assertIsNotNone(mk.cm_window_capability_gap(bad), bad)
+        # The observed fleet runner is the unsupported one: the real paths refuse.
+        self.assertIsNotNone(mk.cm_window_capability_gap(mk.FLEET_RUNNER_KLT_OBSERVED))
+
+    def test_mk_request_refused_before_anything_is_staged(self):
+        with tempfile.TemporaryDirectory() as td:
+            out = Path(td) / "out"
+            with mock.patch.object(sys, "argv", ["mk_klt_request.py", CMW, str(out)]), \
+                    mock.patch.object(mk.hpdk, "find_pdk") as pdk, \
+                    self.assertRaises(SystemExit) as cm:
+                mk.main()
+            self.assertTrue(str(cm.exception.code).startswith("UNSUPPORTED_EXECUTOR_CAPABILITY: "))
+            self.assertFalse(out.exists())
+            pdk.assert_not_called()
+        with self.assertRaises(SystemExit) as cm:
+            mk.legs_for(CMW, None, 3)
+        self.assertIn("UNSUPPORTED_EXECUTOR_CAPABILITY", str(cm.exception.code))
+
+    def test_record_path_refused_and_nothing_minted(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            rc, rec, _ = _ingest(td, td / "work", bench=CMW)
+            self.assertIn("UNSUPPORTED_EXECUTOR_CAPABILITY", str(rc))
+            self.assertIsNone(rec)
+            self.assertFalse(any((td / "evidence" / CMW).iterdir()))
+            # Even with a capable runner there is no minting path yet.
+            with mock.patch.object(mk, "FLEET_RUNNER_KLT_OBSERVED", "0.7.0"):
+                rc, rec, _ = _ingest(td, td / "work", bench=CMW)
+            self.assertIn("full 45-point coverage pending", str(rc))
+            self.assertIsNone(rec)
+
+    def test_bench_is_separate_and_historical_bench_untouched(self):
+        tb = htb.load(SIM / CMW)
+        self.assertIn("  dc vd 0 2m 2m vcmd -100m 100m 100m", tb.analyses)
+        old = htb.load(SIM / "comparator-offset-mc")
+        self.assertIn("  dc vd 0 2m 2m vcmd -50m 50m 50m", old.analyses)
+        self.assertNotEqual(tb.netlist, old.netlist)
+        # The adapter's outputs are the manifest's measure names.
+        res, _ = kr.derive_cm_window({"c": {f"mc{i}": _cmw_dv(d) for i, d in enumerate(CMW_DRAWS)}})
+        self.assertEqual(set(res["c"]), set(tb.measure))
+        self.assertNotIn(CMW, kr.SPEC)  # no ratified row, no score
+
+
+class CmWindowDerivation(unittest.TestCase):
+    CID = "tt_27c_3.30v"
+
+    def _collect(self, rep, req=None):
+        return kr.collect_cm_window(rep, req or _cmw_request(), 3.3)
+
+    def test_hand_calculated_two_draw_fixture(self):
+        samples, issues = self._collect(_cmw_report())
+        self.assertEqual(issues, [])
+        d0 = kr.derive_cm_window_draw(samples[self.CID]["mc0"])
+        self.assertAlmostEqual(d0["av_dn"], 20.0, places=9)
+        self.assertAlmostEqual(d0["av_mid"], 25.0, places=9)
+        self.assertAlmostEqual(d0["av_up"], 16.0, places=9)
+        self.assertAlmostEqual(d0["vos_mid"] * 1e6, 40.0, places=6)
+        self.assertAlmostEqual(d0["dvos_dn"] * 1e6, -90.0, places=6)
+        self.assertAlmostEqual(d0["dvos_up"] * 1e6, 85.0, places=6)
+        d1 = kr.derive_cm_window_draw(samples[self.CID]["mc1"])
+        self.assertAlmostEqual(d1["av_mid"], 20.0, places=9)
+        self.assertAlmostEqual(d1["dvos_dn"] * 1e6, 300.0, places=6)
+        self.assertAlmostEqual(d1["dvos_up"] * 1e6, 75.0, places=6)
+        res, problems = kr.derive_cm_window(samples)
+        self.assertEqual(problems, [])
+        r = res[self.CID]
+        self.assertEqual(r["n_samples"], 2)
+        self.assertAlmostEqual(r["mean_vos_mid_uv"], -30.0, places=6)
+        self.assertAlmostEqual(r["sig_vos_mid_mv"], 0.070, places=9)   # population: |40-(-100)|/2 uV
+        self.assertAlmostEqual(r["mean_dvos_dn_uv"], 105.0, places=6)
+        self.assertAlmostEqual(r["sig_dvos_dn_uv"], 195.0, places=6)
+        self.assertAlmostEqual(r["mean_dvos_up_uv"], 80.0, places=6)
+        self.assertAlmostEqual(r["sig_dvos_up_uv"], 5.0, places=6)
+        self.assertAlmostEqual(r["av_dn_mean"], 15.0, places=9)
+        self.assertAlmostEqual(r["av_mid_mean"], 22.5, places=9)
+        self.assertAlmostEqual(r["av_up_mean"], 28.0, places=9)
+        self.assertAlmostEqual(r["av_sigma_pct"], 2.5 / 22.5 * 100, places=9)
+        # Population, not sample, sigma (n = 2: they differ by sqrt(2)).
+        self.assertNotAlmostEqual(r["sig_dvos_dn_uv"], 195.0 * math.sqrt(2), places=3)
+
+    def test_paired_delta_is_within_draw_not_across_populations(self):
+        # The same marginal populations, re-paired across draws, give a
+        # different delta sigma: the pairing is what is being measured.
+        samples, _ = self._collect(_cmw_report())
+        res, _ = kr.derive_cm_window(samples)
+        crossed = [dict(CMW_DRAWS[0], mid=CMW_DRAWS[1]["mid"]), dict(CMW_DRAWS[1], mid=CMW_DRAWS[0]["mid"])]
+        res_x, _ = kr.derive_cm_window(self._collect(_cmw_report(crossed))[0])
+        self.assertAlmostEqual(res_x[self.CID]["sig_vos_mid_mv"], res[self.CID]["sig_vos_mid_mv"], places=12)
+        self.assertNotAlmostEqual(res_x[self.CID]["sig_dvos_dn_uv"], res[self.CID]["sig_dvos_dn_uv"], places=3)
+
+    def test_shuffled_order_is_correct_by_identity(self):
+        import random
+        rep = _cmw_report()
+        rng = random.Random(182)
+        rng.shuffle(rep["corners"])
+        for c in rep["corners"]:
+            rng.shuffle(c["measurements"])
+        a, ia = self._collect(_cmw_report())
+        b, ib = self._collect(rep)
+        self.assertEqual((ia, ib), ([], []))
+        self.assertEqual(a, b)
+        self.assertEqual(kr.derive_cm_window(a), kr.derive_cm_window(b))
+
+    def test_duplicate_missing_and_misidentified_samples(self):
+        rep = _cmw_report()
+        rep["corners"].append(json.loads(json.dumps(rep["corners"][0])))
+        out, issues = self._collect(rep)
+        self.assertIn("DUPLICATE_SAMPLE", _cmw_codes(issues))
+        self.assertNotIn("mc0", out[self.CID])  # neither copy is trusted
+        rep = _cmw_report()
+        rep["corners"].pop()
+        _, issues = self._collect(rep)
+        self.assertIn("MISSING_SAMPLE: tt_27c_3.30v/mc1 has no result", issues)
+        rep = _cmw_report()
+        rep["corners"][1]["monte_carlo"]["sample_index"] = 0
+        _, issues = self._collect(rep)
+        self.assertIn("SAMPLE_IDENTITY_MISMATCH", _cmw_codes(issues))
+        rep = _cmw_report()
+        rep["corners"][1]["corner_id"] = "tt/27C/mc9"
+        _, issues = self._collect(rep)
+        self.assertTrue({"UNEXPECTED_SAMPLE", "MISSING_SAMPLE"} <= _cmw_codes(issues))
+        rep = _cmw_report()
+        rep["corners"][0]["status"] = "error"
+        _, issues = self._collect(rep)
+        self.assertIn("FAILED_SAMPLE", _cmw_codes(issues))
+
+    def test_wrong_endpoint_labels_fail_on_coordinate_readback(self):
+        # A writer that swaps the dn/up labels (values intact, labels wrong):
+        # the read-back coordinates name the other endpoint.
+        rep = _cmw_report()
+        for m in rep["corners"][0]["measurements"]:
+            n = m["name"]
+            m["name"] = n.replace("_dn_", "_UP_").replace("_up_", "_dn_").replace("_UP_", "_up_")
+        out, issues = self._collect(rep)
+        self.assertIn("COORDINATE_MISMATCH", _cmw_codes(issues))
+        self.assertNotIn("mc0", out.get(self.CID, {}))
+        # vd swapped within one common mode is caught the same way.
+        rep = _cmw_report()
+        for m in rep["corners"][1]["measurements"]:
+            if m["name"] in ("xvd_mid_0", "xvd_mid_2m"):
+                m["value"] = 2e-3 if m["name"].endswith("_0") else 0.0
+        _, issues = self._collect(rep)
+        self.assertTrue(any(i.startswith("COORDINATE_MISMATCH: tt/27C/mc1 mid_0") for i in issues))
+
+    def test_unknown_label_and_incomplete_sample(self):
+        rep = _cmw_report()
+        for m in rep["corners"][0]["measurements"]:
+            if m["name"] == "dv_up_2m":
+                m["name"] = "dv_hi_2m"
+        _, issues = self._collect(rep)
+        self.assertTrue({"UNEXPECTED_VALUE", "INCOMPLETE_SAMPLE"} <= _cmw_codes(issues))
+        rep = _cmw_report()
+        rep["corners"][1]["measurements"] = rep["corners"][1]["measurements"][:-1]
+        out, issues = self._collect(rep)
+        self.assertEqual(_cmw_codes(issues), {"INCOMPLETE_SAMPLE"})
+        self.assertEqual(sorted(out[self.CID]), ["mc0"])
+        rep = _cmw_report()
+        rep["corners"][0]["measurements"].append({"name": "dv_mid_0", "value": 0.0})
+        _, issues = self._collect(rep)
+        self.assertIn("DUPLICATE_VALUE", _cmw_codes(issues))
+
+    def test_six_values_split_across_two_samples_are_not_a_draw(self):
+        # Half the points under mc0, half under mc1: neither is a complete
+        # draw of one analysis, so neither contributes.
+        rep = _cmw_report()
+        a, b = rep["corners"]
+        a["measurements"] = [m for m in a["measurements"] if "_up_" not in m["name"]]
+        b["measurements"] = [m for m in b["measurements"] if "_up_" in m["name"]]
+        out, issues = self._collect(rep)
+        self.assertEqual(out, {})
+        self.assertEqual(_cmw_codes(issues), {"INCOMPLETE_SAMPLE"})
+
+    def test_nonfinite_values_refused(self):
+        for bad in (float("nan"), float("inf"), None, "1e-3", True):
+            rep = _cmw_report()
+            rep["corners"][0]["measurements"][0]["value"] = bad
+            out, issues = self._collect(rep)
+            self.assertIn("NONFINITE_VALUE", _cmw_codes(issues), bad)
+            self.assertNotIn("mc0", out[self.CID])
+
+    def test_zero_negative_and_overflowing_gain_drop_the_point(self):
+        for edit in ({"mid_2m": None}, {"up_2m": "neg"}):
+            dv = [_cmw_dv(d) for d in CMW_DRAWS]
+            if "mid_2m" in edit:
+                dv[1]["mid_2m"] = dv[1]["mid_0"]                 # zero gain
+            else:
+                dv[0]["up_2m"] = dv[0]["up_0"] - 1e-3            # negative gain
+            res, problems = kr.derive_cm_window({self.CID: {f"mc{i}": v for i, v in enumerate(dv)}})
+            self.assertEqual(res, {})
+            self.assertTrue(problems and all(p.startswith("INVALID_GAIN: tt_27c_3.30v/mc") for p in problems))
+        dv = _cmw_dv(CMW_DRAWS[0])
+        dv["dn_0"], dv["dn_2m"] = -1e308, 1e308                  # (dv1 - dv0) overflows
+        with self.assertRaises(ValueError) as cm:
+            kr.derive_cm_window_draw(dv)
+        self.assertEqual(cm.exception.args[0], "INVALID_GAIN")
+
+    def test_executor_without_expr_or_version_match_is_unsupported(self):
+        for runner, compat in (("0.5.0", "mismatch"), ("0.7.0", "mismatch"), (None, "unknown")):
+            _, issues = self._collect(_cmw_report(runner=runner, compat=compat))
+            self.assertIn("UNSUPPORTED_EXECUTOR_CAPABILITY", _cmw_codes(issues), runner)
+        rep = _cmw_report()
+        del rep["environment"]["remote"]
+        _, issues = self._collect(rep)
+        self.assertIn("UNSUPPORTED_EXECUTOR_CAPABILITY", _cmw_codes(issues))
+        rep = _cmw_report()
+        rep["environment"]["remote"]["fleet"] = [{"runner_klt_version": "0.7.0", "runner_compatibility": "match"},
+                                                 {"runner_klt_version": "0.5.0", "runner_compatibility": "mismatch"}]
+        _, issues = self._collect(rep)
+        self.assertIn("UNSUPPORTED_EXECUTOR_CAPABILITY", _cmw_codes(issues))  # every shard must qualify
+
+    def test_mc_declaration_and_request_shape_checked_at_collection(self):
+        _, issues = self._collect(_cmw_report(seed=1))
+        self.assertIn("MC_DECLARATION_MISMATCH", _cmw_codes(issues))
+        req = _cmw_request()
+        req["batch"]["runner_version_check"] = "warn"
+        _, issues = self._collect(_cmw_report(), req)
+        self.assertIn("REQUEST_SHAPE_INVALID", _cmw_codes(issues))
+
+    def test_separate_request_seed_equality_is_not_pairing(self):
+        # Three requests, one per common mode, all seeded identically: the
+        # seed reproduces a sequence of separately randomized decks, not one
+        # instance. Refused regardless of how well the seeds line up.
+        reps = [_cmw_report(), _cmw_report(), _cmw_report()]
+        for r in reps:
+            self.assertEqual(r["environment"]["monte_carlo"]["seed"], mk.OFFSET_MC_SEED)
+        with self.assertRaises(SystemExit) as cm:
+            kr.pair_cm_window_reports(reps)
+        self.assertTrue(str(cm.exception.code).startswith("SEPARATE_REQUEST_PAIRING: 3 reports"))
+        self.assertIn("same monte_carlo seed", str(cm.exception.code))
+        with self.assertRaises(SystemExit):
+            kr.pair_cm_window_reports([])
+        self.assertIs(kr.pair_cm_window_reports(reps[:1]), reps[0])
+
+
+#: Raw `.meas` ingredients of each bench's decision measurements (tb.json `measure`).
+_DECISION_RAW = {
+    "comparator-regeneration": {"da_first": 0.0, "db_first": 0.0, "dc_first": 0.0,
+                                "da_end": 1.0, "db_end": 1.0, "dc_end": 1.0},
+    "comparator-kickback": {"da_end": 1.0, "db_end": 1.0, "dc_end": 1.0},
+}
+
+
+class DecisionCorrectness(unittest.TestCase):
+    """#273: latch-decision polarity checks are a structured, per-corner result."""
+
+    def _derived(self, bench, **raw):
+        tb = htb.load(SIM / bench)
+        names = set()
+        for expr in tb.measure.values():
+            names |= {t for t in __import__("re").findall(r"[A-Za-z_]\w*", expr) if t not in kr.MATH}
+        full = {n: 2.0 + i for i, n in enumerate(sorted(names))}
+        full.update(_DECISION_RAW[bench], **raw)
+        res, problems = kr.derive(bench, tb, {"main": ({"tt_27c_3.30v": {"": full}}, [])})
+        self.assertEqual(problems, [])
+        return tb, res
+
+    def test_thresholds_come_from_the_manifest(self):
+        tb = htb.load(SIM / "comparator-regeneration")
+        dc = kr.decision_correctness("comparator-regeneration", tb, {}, set())
+        for n in kr.DECISION_CHECKS["comparator-regeneration"]:
+            self.assertEqual({k: v for k, v in dc["checks"][n].items() if k in ("min", "max")},
+                             {k: tb.checks[n][k] for k in ("min", "max") if k in tb.checks[n]})
+            self.assertTrue(dc["checks"][n]["required"])
+        self.assertEqual(dc["checks"]["dout_od1_first"]["phase"], "first")
+        self.assertEqual(dc["checks"]["dout_od1_end"]["phase"], "end")
+        # a different (generation-time) manifest bound is the one applied
+        tb2 = types.SimpleNamespace(checks=dict(tb.checks, dout_od50_end={"min": 1.5}))
+        _, res = self._derived("comparator-regeneration")
+        self.assertEqual(kr.decision_correctness("comparator-regeneration", tb, res, set(res))["status"], "pass")
+        dc2 = kr.decision_correctness("comparator-regeneration", tb2, res, set(res))
+        self.assertEqual(dc2["status"], "fail")
+        self.assertEqual([(f["corner"], f["measurement"]) for f in dc2["failures"]], [("tt_27c_3.30v", "dout_od50_end")])
+
+    def test_other_benches_have_none(self):
+        self.assertIsNone(kr.decision_correctness("comparator-offset-mc", htb.load(SIM / "comparator-offset-mc"), {}, set()))
+
+    def test_correct_decisions_pass(self):
+        for bench in _DECISION_RAW:
+            tb, res = self._derived(bench)
+            dc = kr.decision_correctness(bench, tb, res, set(res))
+            self.assertEqual(dc["status"], "pass", (bench, dc))
+            self.assertEqual((dc["corners_pass"], dc["corners_expected"], dc["failures"], dc["missing"]), (1, 1, [], []))
+
+    def test_wrong_first_decision_fails_with_corner_and_measurement(self):
+        tb, res = self._derived("comparator-regeneration", db_first=1.0)  # first strobe decided high
+        dc = kr.decision_correctness("comparator-regeneration", tb, res, set(res))
+        self.assertEqual(dc["status"], "fail")
+        self.assertEqual(dc["failures"], [{"corner": "tt_27c_3.30v", "measurement": "dout_od1_first",
+                                           "phase": "first", "value": 1.0, "max": 0.1}])
+        self.assertEqual(dc["per_corner"]["tt_27c_3.30v"]["status"], "fail")
+        self.assertEqual(dc["per_corner"]["tt_27c_3.30v"]["checks"]["dout_od1_end"]["status"], "pass")
+
+    def test_wrong_final_decision_fails_even_with_in_bound_headline(self):
+        for bench, raw, name in (("comparator-regeneration", {"dc_end": 0.0}, "dout_od01_end"),
+                                 ("comparator-kickback", {"db_end": 0.2}, "dout_float_small_end")):
+            tb, res = self._derived(bench, **raw)
+            key, tgt = kr.SPEC[bench][1], kr.SPEC[bench][2]
+            res["tt_27c_3.30v"][key] = tgt / 2  # finite and within the ratified target
+            dc = kr.decision_correctness(bench, tb, res, set(res))
+            self.assertEqual(dc["status"], "fail", bench)
+            self.assertEqual([(f["corner"], f["measurement"], f["phase"]) for f in dc["failures"]],
+                             [("tt_27c_3.30v", name, "end")])
+
+    def test_absent_measurement_or_corner_cannot_pass(self):
+        tb, res = self._derived("comparator-kickback")
+        del res["tt_27c_3.30v"]["dout_1k_end"]
+        dc = kr.decision_correctness("comparator-kickback", tb, res, set(res))
+        self.assertEqual(dc["status"], "incomplete")
+        self.assertEqual(dc["missing"][0]["measurement"], "dout_1k_end")
+        self.assertEqual(dc["corners_pass"], 0)
+        _, res = self._derived("comparator-kickback")
+        dc = kr.decision_correctness("comparator-kickback", tb, res, set(res) | {"ss_125c_2.97v"})
+        self.assertEqual(dc["status"], "incomplete")
+        self.assertEqual(dc["per_corner"]["ss_125c_2.97v"]["status"], "missing")
+        self.assertEqual((dc["corners_pass"], dc["corners_expected"], dc["corners_evaluated"]), (1, 2, 1))
+        dc = kr.decision_correctness("comparator-kickback", tb, {}, set())
+        self.assertEqual(dc["status"], "incomplete")  # nothing evaluated is not a pass
+
+    def test_required_check_without_manifest_bound_cannot_pass(self):
+        tb, res = self._derived("comparator-regeneration")
+        checks = {k: v for k, v in tb.checks.items() if k != "dout_od50_first"}
+        dc = kr.decision_correctness("comparator-regeneration", types.SimpleNamespace(checks=checks), res, set(res))
+        self.assertEqual(dc["status"], "incomplete")
+        self.assertEqual([m["measurement"] for m in dc["missing"]], ["dout_od50_first"])
+
+    def test_nonfinite_value_is_missing_not_pass(self):
+        tb, res = self._derived("comparator-kickback")
+        res["tt_27c_3.30v"]["dout_1k_end"] = float("nan")
+        dc = kr.decision_correctness("comparator-kickback", tb, res, set(res))
+        self.assertEqual(dc["status"], "incomplete")
+        self.assertIsNone(dc["per_corner"]["tt_27c_3.30v"]["checks"]["dout_1k_end"]["value"])
+        json.dumps(dc, allow_nan=False)  # strict JSON
+
+
+class DecisionCorrectnessIngest(unittest.TestCase):
+    """#273 end to end: synthetic fleet reports -> record JSON and Markdown agree."""
+
+    def _run(self, bench, bad=None):
+        """bad = (corner_id, {raw: value}) applied to one unit of every supply's report."""
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work = _generate(td, bench=bench)
+            _write_reports(work)
+            for p in work.glob("report-*.json"):
+                rep = json.loads(p.read_text())
+                for c in rep["corners"]:
+                    over = dict(_DECISION_RAW[bench])
+                    if bad and c["corner_id"] == bad[0] and p.name == "report-main-v3.30.json":
+                        over.update(bad[1])
+                    for m in c["measurements"]:
+                        if m["name"] in over:
+                            m["value"] = over[m["name"]]
+                p.write_text(json.dumps(rep))
+            with mock.patch.object(sys, "stderr", io.StringIO()):
+                rc, rec, out = _ingest(td, work, bench=bench)
+            md = (td / "evidence" / bench / "records" / f"{rec['record_id']}.md").read_text()
+        return rc, rec, md, out
+
+    def test_correct_decisions_pass_and_gates_unchanged(self):
+        for bench in _DECISION_RAW:
+            rc, rec, md, out = self._run(bench)
+            self.assertEqual(rc, 0, bench)
+            self.assertTrue(rec["complete"] and rec["citable"] and rec["reference"])
+            dc = rec["decision_correctness"]
+            self.assertEqual(dc["schema"], "decision-correctness/1")
+            self.assertEqual(dc["status"], "pass")
+            self.assertEqual(dc["corners_pass"], rec["expected_points"])
+            self.assertIn("`decision_correctness.status` = `pass`", md)
+            self.assertNotIn("FUNCTIONAL", md)
+            self.assertIn("decision correctness: pass", out)
+
+    def test_wrong_decision_is_machine_readable_and_rendered(self):
+        rc, rec, md, _ = self._run("comparator-regeneration", ("ss/125C", {"da_first": 1.0}))
+        # coverage / provenance gates are untouched: still complete reference evidence
+        self.assertEqual(rc, 0)
+        self.assertTrue(rec["complete"] and rec["reference"])
+        dc = rec["decision_correctness"]
+        self.assertEqual(dc["status"], "fail")
+        self.assertEqual([(f["corner"], f["measurement"]) for f in dc["failures"]],
+                         [("ss_125c_3.30v", "dout_od50_first")])
+        self.assertEqual(dc["corners_fail"], 1)
+        self.assertEqual(dc["corners_pass"], rec["expected_points"] - 1)
+        # Markdown is rendered from the same structure
+        self.assertIn("`decision_correctness.status` = `fail`", md)
+        self.assertIn("wrong decision: `ss_125c_3.30v` `dout_od50_first` = 1 (required <= 0.1)", md)
+        self.assertIn("FUNCTIONAL DECISION CHECKS FAILED", md)
+        rows = {l.split("|")[1].strip(" `"): l.rstrip().rsplit("|", 2)[-2].strip()
+                for l in md.splitlines() if l.startswith("  | `")}
+        self.assertEqual({c for c, s in rows.items() if s == "FAIL"}, {"ss_125c_3.30v"})
+        self.assertEqual({c: s.lower() for c, s in rows.items()},
+                         {c: v["status"] for c, v in dc["per_corner"].items()})
+
+    def test_kickback_wrong_decision_while_kicked(self):
+        rc, rec, md, _ = self._run("comparator-kickback", ("tt/27C", {"dc_end": 0.5}))
+        dc = rec["decision_correctness"]
+        self.assertEqual(dc["status"], "fail")
+        self.assertEqual(dc["failures"], [{"corner": "tt_27c_3.30v", "measurement": "dout_float_big_end",
+                                           "phase": "end", "value": 0.5, "min": 0.9}])
+        self.assertIn("wrong decision: `tt_27c_3.30v` `dout_float_big_end` = 0.5 (required >= 0.9)", md)
+
+    def test_dropped_corner_is_incomplete_not_pass(self):
+        rc, rec, md, _ = self._run("comparator-kickback", ("tt/27C", {"dc_end": float("nan")}))
+        self.assertEqual(rc, 1)  # #152 coverage gate still fires
+        self.assertFalse(rec["complete"])
+        dc = rec["decision_correctness"]
+        self.assertEqual(dc["status"], "incomplete")
+        self.assertEqual(dc["per_corner"]["tt_27c_3.30v"]["status"], "missing")
+        self.assertIn("FUNCTIONAL DECISION CHECKS INCOMPLETE", md)

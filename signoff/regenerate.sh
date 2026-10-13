@@ -34,6 +34,14 @@ KLT_VERSION="0.6.0"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
+# Rulebook byte identity (issue #168): the vendored tiers doc must match its
+# committed sha256 pin (signoff/design-evidence-tiers.md.sha256) before
+# anything is installed or graded. This is the same shared check
+# signoff/verify-report.py runs; a missing rulebook or pin fails here rather
+# than falling back to the wheel's bundled copy. To re-vendor deliberately,
+# refresh the pin first (see signoff/check_rulebook_pin.py).
+python3 signoff/check_rulebook_pin.py
+
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 

@@ -35,8 +35,11 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(os.path.dirname(HERE))
 
+# The interface pin contract is defined once, in layout/layout_common.py.
+sys.path.insert(0, os.path.join(REPO_ROOT, "layout"))
+from layout_common import INTERFACE_PINS  # noqa: E402
+
 KLT_PEX_VERSION = "0.7.0"
-INTERFACE_PINS = ("vinp", "vinn", "clk", "ibias", "dout", "doutb", "vdd", "vss")
 REPORT = os.path.join(HERE, "comparator.pex.json")
 
 

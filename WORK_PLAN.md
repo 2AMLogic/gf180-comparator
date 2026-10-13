@@ -7,7 +7,7 @@ This roadmap is generated from the repository's current GitHub label state.
 
 Judge-approved PRs stuck under a `loom:operator` merge-risk hold — implementation work is done, only a human merge decision is missing.
 
-_None._
+- **#166**: sim(regeneration): reverse-polarity (HIGH->LOW) decision-time ladder across PVT (#158)
 
 ## Operator Priority
 
@@ -19,13 +19,13 @@ Issues the operator starred (`loom:operator-priority`); land these first.
 
 Human-approved issues ready for implementation (`loom:issue`).
 
-- **#145**: CI: preserve started main Signoff verification during merge bursts
+_None._
 
 ## In Progress
 
 Issues currently being built (`loom:building`).
 
-- **#125**: Define and measure the missing average-power operating condition for T1
+_None._
 
 ## PRs Awaiting Review
 
@@ -37,7 +37,7 @@ _None._
 
 PRs that passed review and are queued for Champion auto-merge (`loom:pr`).
 
-_None._
+- **#166**: sim(regeneration): reverse-polarity (HIGH->LOW) decision-time ladder across PVT (#158)
 
 ## Proposed
 
@@ -45,10 +45,12 @@ Issues carrying `loom:curated`.
 
 - **#3**: Gap-to-T1 tracker: gf180-comparator artifact-presence survey *(curated)*
 - **#125**: Define and measure the missing average-power operating condition for T1 *(curated)*
+- **#158**: Characterize reverse-polarity comparator delay across PVT *(curated)*
+- **#209**: Extend paired extracted preamp noise measurement to full PVT coverage *(curated)*
 
 ## Proposed (Architect / Hermit)
 
-- **#135**: CI: enforce the append-only rule for sim/ evidence records *(architect)*
+_None._
 
 ## Epics
 
@@ -58,13 +60,13 @@ _None._
 
 | Tier | Count |
 |------|-------|
-| Operator merge-risk holds | 0 |
+| Operator merge-risk holds | 1 |
 | Operator priority | 1 |
-| Ready (`loom:issue`) | 1 |
-| In Progress (`loom:building`) | 1 |
+| Ready (`loom:issue`) | 0 |
+| In Progress (`loom:building`) | 0 |
 | PRs awaiting review | 0 |
-| Approved PRs awaiting merge | 0 |
-| Curated | 2 |
-| Architect / Hermit proposals | 1 |
+| Approved PRs awaiting merge | 1 |
+| Curated | 4 |
+| Architect / Hermit proposals | 0 |
 | Active epics | 0 |
 <!-- guide:plan-body:end -->

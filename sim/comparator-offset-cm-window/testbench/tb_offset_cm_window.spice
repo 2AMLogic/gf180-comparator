@@ -1,0 +1,56 @@
+* tb_offset_cm_window -- SUPPLEMENTAL consumer-window common-mode bench
+* (issue #182): same-draw preamp offset and gain at three input common modes,
+* dut_vcm - 100 mV, dut_vcm and dut_vcm + 100 mV.
+*
+* Netlist FRAGMENT. The harness (or mk_klt_request.py's body netlist) supplies
+* the models, the corner .lib sections, .temp, the DUT netlist, the .control
+* block and .end (sim/harness/README.md). Parameters from the harness:
+* vdd_val, vdd_nom, temp_c, dut_ib, dut_vcm.
+*
+* NOT A REPLACEMENT FOR sim/comparator-offset-mc/. That bench's +/-50 mV band
+* is a standalone property of this comparator and its records stay as they
+* are. This one is separately named because the window here is the one the
+* consumer (gf180-sar-adc) documents, +/-100 mV about 1.65 V
+* (spec/consumers.md), and widening the original band in place would blur
+* the comparability of its historical records.
+*
+* SAME STIMULUS TOPOLOGY as tb_offset_mc.spice: an ideal differential DC
+* source riding on an ideal common-mode source, so one `dc` sweep of
+* `vd` (inner) x `vcmd` (outer) gives six operating points of ONE instance:
+*
+*     dc vd 0 2m 2m vcmd -100m 100m 100m
+*
+* The resistor null control is deliberately not repeated here; it stays live
+* in sim/comparator-offset-mc/.
+*
+* MISMATCH IS TURNED ON HERE, IN THE FRAGMENT, for the same reason as in
+* tb_offset_mc.spice: a manifest param is emitted ahead of design.ngspice,
+* which sets sw_stat_mismatch = 0 and would silently override it.
+
+.param sw_stat_mismatch=1
+
+.param c_route=10f
+
+* ---- supply ----------------------------------------------------------
+vsup vdd 0 dc {vdd_val}
+
+* ---- ideal standalone stimulus ---------------------------------------
+* cm = dut_vcm + vcmd. `cmb` is kept as its own node so a measurement can
+* read the common-mode delta back as v(cm) - v(cmb) without knowing dut_vcm.
+vcmb cmb 0 dc {dut_vcm}
+vcmd cm  cmb dc 0
+vd   vd 0 dc 0
+Eap  ap cm vd 0 0.5
+Ean  an cm vd 0 -0.5
+
+* ---- device under test (front end; see sim/dut/README.md) -------------
+ib   vdd ibn dc {dut_ib}
+Xa   ap an ibn aop aon vdd 0 comparator_dut_analog
+
+* Same routing allowance as the offset-mc and noise benches.
+Cwp aop 0 {c_route}
+Cwn aon 0 {c_route}
+
+* Differential output probe, a high-Z VCVS (no loading): one node to index,
+* v(dd)[k], in both the local control loop and the fleet request.
+Eddprobe dd 0 aop aon 1

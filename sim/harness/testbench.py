@@ -33,6 +33,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -50,6 +52,49 @@ MANIFEST_NAME = "tb.json"
 TESTBENCH_DIRNAME = "testbench"
 
 FORBIDDEN_DIRECTIVES = (".control", ".endc", ".end", ".lib", ".temp", ".include")
+
+# Parameters the harness owns: the PVT point and the measured offset referral.
+# A bench may reference them but never define them (ngspice is case-insensitive
+# and the last ``.param`` wins, so a bench redefinition would silently
+# supersede the labelled corner / probed offset).
+RESERVED_PARAMS = frozenset({"vdd_nom", "vdd_val", "temp_c", "dut_vos"})
+
+_PARAM_NAME_RE = re.compile(r"(?:^|[\s,])([A-Za-z_][\w.$]*)\s*=")
+
+
+def check_reserved_params(names, where: str) -> None:
+    """Raise ``ValueError`` if any of ``names`` is a harness-owned parameter."""
+    bad = sorted({str(n) for n in names if str(n).strip().lower() in RESERVED_PARAMS})
+    if bad:
+        raise ValueError(
+            f"{where}: parameter(s) {', '.join(bad)} are owned by the harness "
+            f"(reserved: {', '.join(sorted(RESERVED_PARAMS))}); a testbench may "
+            "reference them but must not define them"
+        )
+
+
+def _param_assignments(text: str):
+    """Yield ``(physical_lineno, name)`` for every ``.param`` assignment.
+
+    Handles ``+`` continuation lines, several assignments per line and any
+    case; quoted/braced expression bodies and trailing comments are ignored.
+    """
+    in_param = False
+    for lineno, raw in enumerate(text.splitlines(), start=1):
+        line = raw.strip()
+        if line.startswith("+"):
+            body = line[1:]
+        else:
+            body = line[len(".param"):]
+            in_param = line.lower().startswith(".param") and (
+                not body or body[0].isspace()
+            )
+        if not in_param:
+            continue
+        body = re.split(r"[;$]", body, maxsplit=1)[0]
+        body = re.sub(r"'[^']*'|\{[^}]*\}", "0", body)
+        for match in _PARAM_NAME_RE.finditer(body):
+            yield lineno, match.group(1)
 
 #: Keys a ``checks`` entry may carry. Anything else is a typo that would
 #: otherwise be silently ignored -- and a silently-ignored ``min_spread_pct``
@@ -175,6 +220,58 @@ def _require(manifest: dict, key: str, path: Path):
     return manifest[key]
 
 
+class _NonstandardConstant:
+    """Placeholder for a NaN / Infinity / -Infinity token found while parsing.
+
+    ``json`` accepts those tokens by default; ``parse_constant`` swaps them for
+    this marker so validation can report WHERE (measurement / key / axis) the
+    nonstandard constant sat, instead of a context-free parse error.
+    """
+
+    def __init__(self, token: str):
+        self.token = token
+
+    def __repr__(self) -> str:
+        return f"nonstandard JSON constant {self.token}"
+
+
+def _reject_nonstandard(node, where: str, path: Path) -> None:
+    """Raise if a parsed manifest subtree still holds a nonstandard constant."""
+    if isinstance(node, _NonstandardConstant):
+        raise ValueError(f"{path}: {where} is {node!r}; manifest numbers must be finite")
+    if isinstance(node, dict):
+        for k, v in node.items():
+            _reject_nonstandard(v, f"{where}.{k}" if where else str(k), path)
+    elif isinstance(node, list):
+        for i, v in enumerate(node):
+            _reject_nonstandard(v, f"{where}[{i}]", path)
+
+
+def _check_bound(value, where: str, path: Path, *, nonneg: bool = False) -> float:
+    """Return ``value`` if it is a finite real number, else raise ``ValueError``."""
+    if isinstance(value, _NonstandardConstant):
+        raise ValueError(
+            f"{path}: {where} is {value!r}; it must be a finite number"
+        )
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError(
+            f"{path}: {where} must be a finite number, got {type(value).__name__} {value!r}"
+        )
+    if not math.isfinite(value):
+        raise ValueError(f"{path}: {where} must be finite, got {value!r}")
+    if nonneg and value < 0:
+        raise ValueError(f"{path}: {where} must be >= 0, got {value!r}")
+    return value
+
+
+def _check_pair(lo, hi, lo_where: str, hi_where: str, path: Path) -> None:
+    if lo is not None and hi is not None and lo > hi:
+        raise ValueError(
+            f"{path}: {lo_where} ({lo!r}) is greater than {hi_where} ({hi!r}); "
+            "the bounds are reversed"
+        )
+
+
 def _validate_checks(checks: dict[str, dict], measure: dict[str, str], path: Path) -> None:
     for name, spec in checks.items():
         if name not in measure:
@@ -202,6 +299,30 @@ def _validate_checks(checks: dict[str, dict], measure: dict[str, str], path: Pat
                     f"{path}: check {name!r}: unknown axis/axes {', '.join(unknown_axes)} in "
                     f"{axis_key}; known: {', '.join(AXES)}"
                 )
+        # Numeric validity of every bound (scalar and per-axis alike).
+        vals: dict[str, float] = {}
+        for key in ("min", "max", "max_spread_pct", "min_spread_pct"):
+            if key in spec:
+                vals[key] = _check_bound(
+                    spec[key], f"check {name!r}: {key}", path,
+                    nonneg=key.endswith("_spread_pct"),
+                )
+        _check_pair(vals.get("min"), vals.get("max"),
+                    f"check {name!r}: min", "max", path)
+        _check_pair(vals.get("min_spread_pct"), vals.get("max_spread_pct"),
+                    f"check {name!r}: min_spread_pct", "max_spread_pct", path)
+        by_axis: dict[str, dict[str, float]] = {}
+        for axis_key in ("min_spread_pct_by_axis", "max_spread_pct_by_axis"):
+            for axis, bound in (spec.get(axis_key) or {}).items():
+                by_axis.setdefault(axis, {})[axis_key] = _check_bound(
+                    bound, f"check {name!r}: {axis_key}[{axis}]", path, nonneg=True
+                )
+        for axis, b in by_axis.items():
+            _check_pair(
+                b.get("min_spread_pct_by_axis"), b.get("max_spread_pct_by_axis"),
+                f"check {name!r}: min_spread_pct_by_axis[{axis}]",
+                f"max_spread_pct_by_axis[{axis}]", path,
+            )
 
 
 def load(directory: str | Path) -> Testbench:
@@ -219,7 +340,13 @@ def load(directory: str | Path) -> Testbench:
     if not manifest_path.is_file():
         raise FileNotFoundError(f"no {MANIFEST_NAME} in {directory}")
 
-    manifest = json.loads(manifest_path.read_text())
+    manifest = json.loads(
+        manifest_path.read_text(), parse_constant=_NonstandardConstant
+    )
+
+    _reject_nonstandard(
+        {k: v for k, v in manifest.items() if k != "checks"}, "", manifest_path
+    )
 
     netlist = directory / _require(manifest, "netlist", manifest_path)
     if not netlist.is_file():
@@ -246,8 +373,19 @@ def load(directory: str | Path) -> Testbench:
                 f"back as {key.lower()!r} and never matches)"
             )
 
-    checks = dict(manifest.get("checks", {}))
+    raw_checks = manifest.get("checks", {})
+    if not isinstance(raw_checks, dict):
+        raise ValueError(
+            f"{manifest_path}: 'checks' must be an object, got {raw_checks!r}"
+            if isinstance(raw_checks, _NonstandardConstant)
+            else f"{manifest_path}: 'checks' must be an object, got {type(raw_checks).__name__}"
+        )
+    checks = dict(raw_checks)
     _validate_checks(checks, measure, manifest_path)
+    # _validate_checks only inspects the bound keys; sweep the rest of the
+    # subtree (e.g. ``description``) so no _NonstandardConstant marker can
+    # escape load() and break json.dumps of tb.checks in the report later.
+    _reject_nonstandard(checks, "checks", manifest_path)
 
     evidence = dict(manifest.get("evidence", {}))
     unknown_evidence = sorted(set(evidence) - set(EVIDENCE_KEYS))
@@ -277,6 +415,7 @@ def load(directory: str | Path) -> Testbench:
         evidence=evidence,
         offset_probe=dict(manifest.get("offset_probe", {})),
     )
+    check_reserved_params(tb.params, f"{manifest_path}: params")
     validate_netlist(tb)
     probe = tb.offset_probe_testbench()
     if probe is not None:
@@ -292,7 +431,18 @@ def validate_netlist(tb: Testbench) -> None:
     room temperature.
     """
     problems: list[str] = []
-    for lineno, raw in enumerate(tb.netlist.read_text().splitlines(), start=1):
+    text = tb.netlist.read_text()
+    owned = [
+        f"  line {lineno}: .param {name} (harness-owned)"
+        for lineno, name in _param_assignments(text)
+        if name.lower() in RESERVED_PARAMS
+    ]
+    if owned:
+        raise ValueError(
+            f"{tb.netlist}: netlist fragments must not define harness-owned "
+            f"parameters ({', '.join(sorted(RESERVED_PARAMS))}):\n" + "\n".join(owned)
+        )
+    for lineno, raw in enumerate(text.splitlines(), start=1):
         line = raw.strip().lower()
         if not line.startswith("."):
             continue
