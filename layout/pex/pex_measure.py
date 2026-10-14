@@ -90,7 +90,7 @@ workdir, never into the `klt pex` document: supplemental, UNSCORED. Each rung
 is "established" only with a HIGH first state, a LOW end state and a timed
 crossing; otherwise it is named unavailable with its reason, never filled from
 schematic data or inferred symmetry. Its inputs carry their own pins
-(REVERSE_PINNED_SHA256, TB_JSON_REVERSE_SHA256, TB_JSON_e6f77566ff167a2b7c071b68d7ff5393d547a5e3e9d93f1203d390328c94283b256);
+(REVERSE_PINNED_SHA256, TB_JSON_REVERSE_SHA256, TB_JSON_REVERSE_GRADING_SHA256);
 the forward contracts and the forward-only deck are unchanged.
 
 Usage (normally via `layout/pex/run_pex.py`, never by hand):
@@ -166,7 +166,7 @@ REVERSE_CHECK_ROWS = (
     "dout_od50_rev_first", "dout_od1_rev_first", "dout_od01_rev_first",
     "dout_od50_rev_end", "dout_od1_rev_end", "dout_od01_rev_end",
 )
-TB_JSON_e6f77566ff167a2b7c071b68d7ff5393d547a5e3e9d93f1203d390328c94283b256 = "e6f77566ff167a2b7c071b68d7ff5393d547a5e3e9d93f1203d390328c94283b"
+TB_JSON_REVERSE_GRADING_SHA256 = "e6f77566ff167a2b7c071b68d7ff5393d547a5e3e9d93f1203d390328c94283b"
 
 #: Rows this adapter emits that are graded by a tb.json check.
 GRADED_CHECK_ROWS = (
@@ -324,10 +324,10 @@ def _check_reverse_pins() -> None:
             "REVERSE_MEAS and the rewrite rules, do not just re-pin"
         )
     got = _tb_reverse_grading_sha256(tb)
-    if got != TB_JSON_e6f77566ff167a2b7c071b68d7ff5393d547a5e3e9d93f1203d390328c94283b256:
+    if got != TB_JSON_REVERSE_GRADING_SHA256:
         sys.exit(
             f"{os.path.relpath(TB_JSON, REPO_ROOT)}: reverse grading-subset contract "
-            f"broken: hash {got}, not the pinned {TB_JSON_e6f77566ff167a2b7c071b68d7ff5393d547a5e3e9d93f1203d390328c94283b256}"
+            f"broken: hash {got}, not the pinned {TB_JSON_REVERSE_GRADING_SHA256}"
         )
 
 
