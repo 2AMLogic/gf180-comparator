@@ -7,11 +7,17 @@ This roadmap is generated from the repository's current GitHub label state.
 
 Judge-approved PRs stuck under a `loom:operator` merge-risk hold — implementation work is done, only a human merge decision is missing.
 
-- **#166**: sim(regeneration): reverse-polarity (HIGH->LOW) decision-time ladder across PVT (#158)
+_None._
 
-## Operator Priority
+## Very Important
 
-Issues the operator starred (`loom:operator-priority`); land these first.
+`loom:very-important` (one counts per workspace); every stage takes these first.
+
+_None._
+
+## Important
+
+`loom:important`; taken before unlabelled work.
 
 - **#3**: Gap-to-T1 tracker: gf180-comparator artifact-presence survey
 
@@ -25,19 +31,19 @@ _None._
 
 Issues currently being built (`loom:building`).
 
-_None._
+- **#164**: Extracted reverse-polarity regeneration coverage: fleet probe-leg path, and the 0.1 mV first-strobe referral gap
 
 ## PRs Awaiting Review
 
 PRs waiting on Judge (`loom:review-requested`).
 
-_None._
+- **#317**: pex_measure: opt-in supplemental reverse-polarity campaign + 0.1 mV investigation (#164)
 
 ## Approved (Awaiting Merge)
 
 PRs that passed review and are queued for Champion auto-merge (`loom:pr`).
 
-- **#166**: sim(regeneration): reverse-polarity (HIGH->LOW) decision-time ladder across PVT (#158)
+_None._
 
 ## Proposed
 
@@ -45,7 +51,7 @@ Issues carrying `loom:curated`.
 
 - **#3**: Gap-to-T1 tracker: gf180-comparator artifact-presence survey *(curated)*
 - **#125**: Define and measure the missing average-power operating condition for T1 *(curated)*
-- **#158**: Characterize reverse-polarity comparator delay across PVT *(curated)*
+- **#164**: Extracted reverse-polarity regeneration coverage: fleet probe-leg path, and the 0.1 mV first-strobe referral gap *(curated)*
 - **#209**: Extend paired extracted preamp noise measurement to full PVT coverage *(curated)*
 
 ## Proposed (Architect / Hermit)
@@ -58,14 +64,15 @@ _None._
 
 ## Backlog Balance
 
-| Tier | Count |
+| Bucket | Count |
 |------|-------|
-| Operator merge-risk holds | 1 |
-| Operator priority | 1 |
+| Operator merge-risk holds | 0 |
+| Very important | 0 |
+| Important | 1 |
 | Ready (`loom:issue`) | 0 |
-| In Progress (`loom:building`) | 0 |
-| PRs awaiting review | 0 |
-| Approved PRs awaiting merge | 1 |
+| In Progress (`loom:building`) | 1 |
+| PRs awaiting review | 1 |
+| Approved PRs awaiting merge | 0 |
 | Curated | 4 |
 | Architect / Hermit proposals | 0 |
 | Active epics | 0 |
