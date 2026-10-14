@@ -1,0 +1,4128 @@
+{
+ "corners": [
+  {
+   "corner_id": "tt_-40c_2.97v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.775577
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00002
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -1.82233e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 1.1232199999999999
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00002
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -1.82233e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 6.52973e-06
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -1.82233e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -322.25299999999993
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -337.11000000000007
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (6.53e-06)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "tt_-40c_3.30v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.684684
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00002
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -2.08792e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 0.948249
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00002
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -2.08792e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 7.14032e-06
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -2.08792e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -288.526
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -297.3009999999999
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (7.14e-06)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "tt_-40c_3.63v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.6248830000000001
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00002
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -2.30887e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 0.857405
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00002
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -2.30887e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 7.48733e-06
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -2.30887e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -262.823
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -264.4050000000001
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (7.487e-06)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "tt_27c_2.97v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.911909
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00003
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -2.75312e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 1.29512
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00003
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -2.75312e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 9.785e-06
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -2.75312e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -388.5309999999999
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -396.97000000000014
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (9.785e-06)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "tt_27c_3.30v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.807819
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00003
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -3.06927e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 1.1277199999999998
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00003
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -3.06927e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 1.06599e-05
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -3.06927e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -345.391
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -349.1600000000001
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (1.066e-05)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "tt_27c_3.63v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.7411719999999999
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00003
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -3.32272e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 1.02393
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00003
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -3.32272e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 1.16421e-05
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -3.32272e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -312.4080000000001
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -322.44
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (1.164e-05)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "tt_125c_2.97v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 1.11457
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -4.18935e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 1.58401
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -4.18935e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 2.04362e-05
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -4.18934e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -472.66999999999996
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -475.33000000000004
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (2.044e-05)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "tt_125c_3.30v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.998143
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -4.56795e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 1.40497
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -4.56795e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 2.25907e-05
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -4.56795e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -418.81700000000006
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -422.66999999999996
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (2.259e-05)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "tt_125c_3.63v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.91776
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -4.84612e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 1.28372
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -4.84612e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 2.48675e-05
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -4.84612e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -379.93000000000006
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -389.49000000000007
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (2.487e-05)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "ff_-40c_2.97v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.623855
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00002
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -2.58472e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 0.853921
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00002
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -2.58472e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 7.73793e-06
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -2.58472e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -271.941
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -280.989
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (7.738e-06)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "ff_-40c_3.30v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.570792
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00002
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -2.81553e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 0.7785000000000001
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00002
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -2.81553e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 8.06519e-06
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -2.81553e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -245.95700000000002
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -249.58999999999986
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (8.065e-06)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "ff_-40c_3.63v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.535312
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00002
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -3.0104e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 0.7283350000000001
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00002
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -3.0104e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 8.57517e-06
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -3.0104e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -226.487
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -230.69199999999998
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (8.575e-06)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "ff_27c_2.97v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.741889
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00003
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -3.76357e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 1.0307199999999999
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00003
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -3.76357e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 1.19012e-05
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -3.76357e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -325.0810000000001
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -326.86000000000007
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (1.19e-05)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "ff_27c_3.30v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.6815019999999999
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00003
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -4.0133e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 0.9419430000000001
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00003
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -4.0133e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 1.34738e-05
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -4.0133e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -293.21999999999997
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -295.55699999999985
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (1.347e-05)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "ff_27c_3.63v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.638708
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00003
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -4.21502e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 0.880168
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00003
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -4.21502e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 1.51967e-05
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -4.21502e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -270.056
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -275.232
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (1.52e-05)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "ff_125c_2.97v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.923927
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -5.66804e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 1.29538
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -5.66804e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "info",
+     "value": 1.54612
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -5.66804e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "pass",
+     "value": 108.8949983924214
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -395.403
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -399.3300000000001
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "info",
+     "value": -415.16
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "info",
+     "value": -6.874881648528447
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": true,
+     "reasons": []
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "ff_125c_3.30v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.8492759999999999
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -5.91225e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 1.1899899999999999
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -5.91225e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "info",
+     "value": 1.4334099999999999
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -5.91225e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "pass",
+     "value": 105.71596278488954
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -357.36400000000015
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -357.01
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "info",
+     "value": -331.13000000000005
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "info",
+     "value": 11.23954119165612
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": true,
+     "reasons": []
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "ff_125c_3.63v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.794943
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -6.05191e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 1.11204
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -6.05191e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 3.38809e-05
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -6.05191e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -328.427
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -328.86999999999995
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (3.388e-05)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "ss_-40c_2.97v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 1.0999700000000001
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00001
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -1.12145e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 2.02378
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00001
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -1.12145e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "info",
+     "value": 2.37286
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "pass",
+     "value": 1.00001
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -1.12145e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "pass",
+     "value": 151.60351774278723
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -386.15
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -469.4900000000002
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "info",
+     "value": -561.1300000000001
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "info",
+     "value": -39.79874632161395
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": true,
+     "reasons": []
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "ss_-40c_3.30v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.8865770000000001
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00001
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -1.48481e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 1.30718
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00001
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -1.48481e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 3.13928e-06
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -1.48481e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -345.2329999999999
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -375.4199999999999
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (3.139e-06)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "ss_-40c_3.63v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.772191
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00002
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -1.72875e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 1.0772199999999998
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00002
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -1.72875e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 6.42758e-06
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -1.72875e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -312.0390000000001
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -325.16000000000014
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (6.428e-06)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "ss_27c_2.97v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 1.23285
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00001
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -1.89869e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 1.9065500000000002
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00001
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -1.89869e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 4.46151e-06
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -1.89869e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -471.2400000000001
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -527.4599999999997
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (4.462e-06)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "ss_27c_3.30v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 1.02217
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00003
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -2.26096e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 1.45797
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00003
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -2.26096e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 8.79033e-06
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -2.26096e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -416.0599999999999
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -439.8299999999997
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (8.79e-06)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "ss_27c_3.63v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.899656
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00003
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -2.55406e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 1.25552
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00003
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -2.55406e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 9.47848e-06
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -2.55406e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -372.27399999999994
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -388.6499999999999
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (9.478e-06)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "ss_125c_2.97v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 1.4506199999999998
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -2.93252e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 2.11091
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -2.93251e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 1.49515e-05
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -2.93248e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -579.5400000000001
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -613.3399999999999
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (1.495e-05)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "ss_125c_3.30v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 1.23111
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -3.40549e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 1.74996
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -3.40549e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 1.61028e-05
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -3.40549e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -504.9500000000002
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -522.3000000000002
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (1.61e-05)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "ss_125c_3.63v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 1.1000999999999999
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -3.76456e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 1.5443200000000001
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -3.76456e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 1.74466e-05
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -3.76456e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -448.13
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -469.97999999999985
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (1.745e-05)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "fs_-40c_2.97v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.7263310000000001
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00002
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -1.84546e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 1.02987
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00002
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -1.84546e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 6.30034e-06
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -1.84546e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -342.65900000000005
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -360.3399999999998
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (6.3e-06)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "fs_-40c_3.30v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.6461450000000001
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00002
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -2.09666e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 0.889521
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00002
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -2.09666e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 6.93766e-06
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -2.09666e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -303.89899999999994
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -309.86899999999997
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (6.938e-06)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "fs_-40c_3.63v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.592384
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00002
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -2.30625e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 0.808181
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00002
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -2.30625e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 7.5163e-06
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -2.30625e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -275.33399999999995
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -280.70899999999995
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (7.516e-06)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "fs_27c_2.97v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.8558819999999999
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00003
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -2.77247e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 1.2046400000000002
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00003
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -2.77247e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 9.40174e-06
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -2.77247e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -411.09799999999996
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -419.48999999999995
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (9.402e-06)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "fs_27c_3.30v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.7636759999999999
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00003
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -3.06951e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 1.0600500000000002
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00003
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -3.06951e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 9.93602e-06
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -3.06951e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -362.984
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -370.51
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (9.936e-06)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "fs_27c_3.63v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.703576
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00003
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -3.30857e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 0.9707800000000001
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00003
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -3.30857e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 1.06041e-05
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -3.30857e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -327.56399999999996
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -334.96000000000004
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (1.06e-05)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "fs_125c_2.97v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 1.04955
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -4.2495e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 1.48243
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -4.2495e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "info",
+     "value": 1.75479
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -4.2495e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "pass",
+     "value": 118.28444509116969
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -498.96999999999997
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -508.2400000000001
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "info",
+     "value": -597.8199999999997
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "info",
+     "value": -38.904099688893126
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": true,
+     "reasons": []
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "fs_125c_3.30v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.9452029999999999
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -4.59597e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 1.3278999999999999
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -4.59597e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "info",
+     "value": 1.58574
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -4.59597e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "pass",
+     "value": 111.97848921393444
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -441.007
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -444.40000000000003
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "info",
+     "value": -465.42000000000024
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "info",
+     "value": -9.12887000960644
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": true,
+     "reasons": []
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "fs_125c_3.63v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.871783
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -4.85133e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 1.21916
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -4.85133e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "info",
+     "value": 1.43756
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -4.85133e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "pass",
+     "value": 94.84991484767019
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -399.0970000000001
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -405.93999999999994
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "info",
+     "value": -451.73000000000025
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "info",
+     "value": -19.886344326350038
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": true,
+     "reasons": []
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "sf_-40c_2.97v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.841773
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00002
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -1.79935e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 1.23958
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00002
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -1.79935e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 6.93512e-06
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -1.79935e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -305.41700000000003
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -329.9300000000001
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (6.935e-06)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "sf_-40c_3.30v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.7351829999999999
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00002
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -2.08077e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 1.0204900000000001
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00002
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -2.08077e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 7.34013e-06
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -2.08077e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -275.2770000000001
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -290.73999999999995
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (7.34e-06)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "sf_-40c_3.63v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.667264
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00002
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -2.31194e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 0.911786
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00002
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -2.31194e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 8.01997e-06
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -2.31194e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -251.83700000000002
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -262.40400000000005
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (8.02e-06)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "sf_27c_2.97v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.9852059999999999
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00003
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -2.73468e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 1.4022899999999998
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00003
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -2.73468e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 1.08821e-05
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -2.73468e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -369.21400000000006
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -392.40000000000003
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (1.088e-05)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "sf_27c_3.30v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.8653679999999999
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00003
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -3.07223e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 1.20594
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00003
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -3.07223e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 1.25063e-05
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -3.07223e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -329.8420000000001
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -339.77
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (1.251e-05)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "sf_27c_3.63v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.789831
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00003
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -3.34044e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 1.09244
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00003
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -3.34044e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 1.3737e-05
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -3.34044e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -298.479
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -304.89
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (1.374e-05)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "sf_125c_2.97v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 1.19914
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -4.17051e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 1.7002300000000001
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -4.17051e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 3.09469e-05
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -4.17051e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -449.63000000000005
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -461.5700000000001
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (3.095e-05)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "sf_125c_3.30v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 1.06619
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -4.58052e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 1.49692
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -4.58052e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 3.31654e-05
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -4.58052e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -398.45999999999987
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -406.3200000000001
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (3.317e-05)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  },
+  {
+   "corner_id": "sf_125c_3.63v",
+   "measurements": [
+    {
+     "name": "td_od50_rev_ns",
+     "status": "pass",
+     "value": 0.976575
+    },
+    {
+     "name": "dout_od50_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od50_rev_end",
+     "status": "pass",
+     "value": -4.88016e-05
+    },
+    {
+     "name": "td_od1_rev_ns",
+     "status": "info",
+     "value": 1.36605
+    },
+    {
+     "name": "dout_od1_rev_first",
+     "status": "pass",
+     "value": 1.00004
+    },
+    {
+     "name": "dout_od1_rev_end",
+     "status": "pass",
+     "value": -4.88016e-05
+    },
+    {
+     "name": "td_od01_rev_ns",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dout_od01_rev_first",
+     "status": "fail",
+     "value": 3.44912e-05
+    },
+    {
+     "name": "dout_od01_rev_end",
+     "status": "pass",
+     "value": -4.88016e-05
+    },
+    {
+     "name": "tau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtd_od50_rev_ps",
+     "status": "info",
+     "value": -361.80500000000006
+    },
+    {
+     "name": "dtd_od1_rev_ps",
+     "status": "info",
+     "value": -366.1799999999999
+    },
+    {
+     "name": "dtd_od01_rev_ps",
+     "status": "unavailable",
+     "value": null
+    },
+    {
+     "name": "dtau_rev_ps",
+     "status": "unavailable",
+     "value": null
+    }
+   ],
+   "rungs": {
+    "od01": {
+     "established": false,
+     "reasons": [
+      "first strobe did not decide HIGH (3.449e-05)",
+      "no timed HIGH->LOW crossing (tdr_* missing)"
+     ]
+    },
+    "od1": {
+     "established": true,
+     "reasons": []
+    },
+    "od50": {
+     "established": true,
+     "reasons": []
+    }
+   }
+  }
+ ],
+ "note": "SUPPLEMENTAL, UNSCORED (issue #158/#164): reverse-polarity (HIGH->LOW) rows are never read by T1 item 7 or any scored row; status here is the bench's own check on the row, informational only.",
+ "side": "extracted"
+}

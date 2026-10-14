@@ -1,0 +1,30 @@
+{
+  "dut_netlist_sha256": "a7ca3c00ea4db8a2b00cad69f2edc2d9320738499049cfa9c7faec517b7b5f45",
+  "klt_sim_client": {
+    "git_commit": "c622e8addb362491664d44ba4d717f354ca88bbd",
+    "git_tag": "v0.6.0",
+    "is_release": true,
+    "version": "0.6.0"
+  },
+  "klt_sim_reports": [
+    "ladder-ff.report.json",
+    "ladder-fs.report.json",
+    "ladder-sf.report.json",
+    "ladder-ss.report.json",
+    "ladder-tt.report.json",
+    "probe.report.json"
+  ],
+  "ladder_centre": "probed dut_vos",
+  "reverse": {
+    "analyses_sha256": "62ba20a2b5d3f7e617d05651231b4b026f28402ef867639f48dcac6f3c62c298",
+    "artifact": "reverse-supplemental.json",
+    "fragment_sha256": "93df669541d0407e10b8c7c712ee4b5f75de1ffe5062cbd1ea03efaa121c8476",
+    "note": "SUPPLEMENTAL, UNSCORED (issue #158/#164): reverse-polarity (HIGH->LOW) rows are never read by T1 item 7 or any scored row; status here is the bench's own check on the row, informational only."
+  },
+  "runners": [
+    "{\"client_klt_version\": null, \"instance_type\": \"c7i.8xlarge\", \"lifecycle\": \"spot\", \"provider\": \"aws-batch-fleet\", \"runner_klt_version\": null, \"state\": \"done\"}",
+    "{\"client_klt_version\": null, \"instance_type\": \"c7i.8xlarge\", \"lifecycle\": \"spot\", \"provider\": \"aws-batch-fleet\", \"runner_klt_version\": null, \"state\": \"failed\"}",
+    "{\"client_klt_version\": null, \"instance_type\": \"m6i.4xlarge\", \"lifecycle\": \"spot\", \"provider\": \"aws-batch-fleet\", \"runner_klt_version\": null, \"state\": \"failed\"}"
+  ],
+  "side": "extracted"
+}

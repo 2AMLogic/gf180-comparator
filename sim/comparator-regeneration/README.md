@@ -245,10 +245,10 @@ What the schematic record shows:
   with `--from-report`. Its source-bundle and linkage checks verify that the
   three reports belong to the bundled requests.
 
-**Extracted (post-layout) coverage is a blocker, not a substitution**
-([#164](https://github.com/2AMLogic/gf180-comparator/issues/164); stale
-`pex_measure.py` pins: [#165](https://github.com/2AMLogic/gf180-comparator/issues/165)). No
-extracted reverse record exists. The schematic record above does **not**
+**Extracted (post-layout) coverage is not a substitution**
+([#164](https://github.com/2AMLogic/gf180-comparator/issues/164)). The extracted
+45-point supplemental campaign is described below; the paragraph that follows is
+the original blocker statement, kept for history. The schematic record above does **not**
 stand in for it, for two reasons:
 
 1. **No fleet path exists for an offset-referred extracted ladder.**
@@ -288,9 +288,11 @@ schematic-only:
 # one PVT point, local single-corner probe (scratch)
 python3 layout/pex/pex_measure.py --reverse --debug-corner tt_27c_3.30v \
     --side extracted --workdir <dir> <extracted-netlist>
-# full 45 points: `klt pex --measure-command` -> run_pex.py -> batch fleet
-# (pex_measure.py never launches ngspice itself); run_pex.py is not rewired:
-# set PEX_MEASURE_REVERSE=1 in the environment to opt in. NOT YET RUN.
+# full 45 points on the batch fleet (pex_measure.py never launches ngspice itself):
+python3 layout/pex/pex_measure.py --reverse --side extracted --backend batch \
+    --workdir <dir> <klt-extract --parasitics netlist>
+# run_pex.py (klt pex -> comparator.pex.json) is NOT rewired and was not re-run:
+# set PEX_MEASURE_REVERSE=1 in the environment to opt in.
 ```
 
 `--reverse` appends `tb_regeneration_reverse.spice` to each per-process ladder
@@ -307,6 +309,40 @@ reverse rows are supplemental and unscored. Per corner and rung, a rung is
 `established` only with first state HIGH, end state LOW and a timed `tdr_*`
 crossing; otherwise it carries its reasons (for example "end state not LOW" and
 "no timed HIGH->LOW crossing"). Nothing is filled from schematic data.
+
+*Extracted 45-point campaign (supplemental, unscored).* Run through
+`pex_measure.py --reverse --side extracted --backend batch` (probe request, then
+five per-process ladder requests; AWS Batch Spot fleet, runner ngspice 46,
+`klt` client v0.6.0). Extraction: `klt extract --parasitics` (klayout-tools
+0.7.0) of `layout/comparator.gds`; adapted DUT netlist sha256 `a7ca3c00…`, the
+same one `layout/pex/artifacts/measure/extracted/` cites. Committed, append-only,
+under `layout/pex/artifacts/measure-reverse/extracted/`: the probe and ladder
+requests and reports (job ids, netlist and models sha256, runner), `summary.json`
+(reverse fragment and `reverse_ladder.analyses` pins), `reverse-supplemental.json`
+(per-corner rows and per-rung `established`/`reasons`) and the `klt pex`-shaped
+forward document. Generated decks are gitignored by the existing
+`layout/pex/artifacts/**/*.spice` rule; the reports carry their sha256.
+
+| rung | established | reverse decision time range | unavailable |
+|---|---|---|---|
+| 50 mV (`od50`) | 45/45 | 0.535 ns (`ff_-40c_3.63v`) – 1.451 ns (`ss_125c_2.97v`) | none |
+| 1 mV (`od1`) | 45/45 | 0.728 ns (`ff_-40c_3.63v`) – 2.111 ns (`ss_125c_2.97v`) | none |
+| 0.1 mV (`od01`) | **6/45** | 1.433 ns (`ff_125c_3.30v`) – 2.373 ns (`ss_-40c_2.97v`) | **39/45** |
+
+The 0.1 mV reverse rung is established only at `ff_125c_2.97v`, `ff_125c_3.30v`,
+`ss_-40c_2.97v`, `fs_125c_2.97v`, `fs_125c_3.30v` and `fs_125c_3.63v`. At the other
+39 points the mirrored 0.1 mV instance decided LOW on the first strobe (first
+state at most 3.4e-5 of the supply, i.e. LOW), so there is no HIGH->LOW
+transition to time and `tdr_c` has no value. Each such point is named with its
+reason in `reverse-supplemental.json`; nothing is filled from schematic data or
+inferred from symmetry. This is the same failure the single-corner
+investigation below attributes to the probe-versus-strobed trip-point
+convention, now seen across the grid. Forward (scored) rows are not scored from
+this run: they come from the committed `klt pex` evidence, which is unchanged.
+The forward measurements in this run differ slightly from the forward-only
+artifacts (for example `td_c` 1.70 ns vs 1.65 ns at `tt_-40c_2.97v`) because the
+mirrored instances load the shared rail and change the adaptive timestep; they
+are not a re-grade.
 
 *0.1 mV investigation (single corner, scratch).* `tt_27c_3.30v`,
 `comparator-dr0001-layout` (netlist sha256 `8ffe4ec2…`, klt 0.6.0 via `uvx`),
