@@ -2,9 +2,20 @@
 
 Chronological record of merged pull requests and closed issues. Newest entries appear first.
 
+### 2026-10-14
+
+- **Issue #165** (closed): layout/pex/pex_measure.py: regeneration bench sha256 pins stale since #141 (and moved again by #158)
+- **Issue #316** (closed): Re-run PEX attribution/budget/combo campaigns against the #158 reverse-polarity bench
+
+### 2026-10-13
+
+- **PR #166**: sim(regeneration): reverse-polarity (HIGH->LOW) decision-time ladder across PVT (#158)
+- **Issue #158** (closed): Characterize reverse-polarity comparator delay across PVT
+
 ### 2026-10-12
 
 - **PR #313**: docs(extracted-campaign): record #292 identity-gate completion assessment
+- **PR #285**: Publish structured latch decision correctness in fleet records (#273)
 - **Issue #231** (closed): Run an additive full-PVT extracted offset mismatch campaign after feasibility
 - **Issue #273** (closed): Publish structured latch decision correctness in fleet records
 
