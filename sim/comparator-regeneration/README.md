@@ -277,6 +277,63 @@ stand in for it, for two reasons:
    check cannot detect this, because a LOW first decision is what that check
    expects. Per the issue, this is disclosed rather than read as symmetry.
 
+**Extracted reverse campaign path and the 0.1 mV investigation
+([#164](https://github.com/2AMLogic/gf180-comparator/issues/164)).**
+
+*Fleet path.* The existing probe -> ladder flow in `layout/pex/pex_measure.py`
+carries the reverse ladder behind an opt-in flag, so `mk_klt_request.py` stays
+schematic-only:
+
+```bash
+# one PVT point, local single-corner probe (scratch)
+python3 layout/pex/pex_measure.py --reverse --debug-corner tt_27c_3.30v \
+    --side extracted --workdir <dir> <extracted-netlist>
+# full 45 points: `klt pex --measure-command` -> run_pex.py -> batch fleet
+# (pex_measure.py never launches ngspice itself); run_pex.py is not rewired:
+# set PEX_MEASURE_REVERSE=1 in the environment to opt in. NOT YET RUN.
+```
+
+`--reverse` appends `tb_regeneration_reverse.spice` to each per-process ladder
+deck, rewrites the three `vsr*` sources onto the same probed `Bvos` as the
+forward ladder (mirrored order kept: POSITIVE first, NEGATIVE second), and adds
+`reverse_ladder.analyses` to the measured cards. Without the flag the generated
+decks are byte-identical to the forward-only decks committed PEX/attribution
+evidence cites (`test_pex_measure.py` asserts it). The reverse inputs have
+their own pins (`REVERSE_PINNED_SHA256`, `TB_JSON_REVERSE_SHA256`,
+`TB_JSON_REVERSE_GRADING_SHA256`); `PINNED_SHA256`, `TB_JSON_DECK_SHA256` and
+`TB_JSON_GRADING_SHA256` are unchanged. Output goes to
+`reverse-supplemental.json` in the workdir, never into the `klt pex` document:
+reverse rows are supplemental and unscored. Per corner and rung, a rung is
+`established` only with first state HIGH, end state LOW and a timed `tdr_*`
+crossing; otherwise it carries its reasons (for example "end state not LOW" and
+"no timed HIGH->LOW crossing"). Nothing is filled from schematic data.
+
+*0.1 mV investigation (single corner, scratch).* `tt_27c_3.30v`,
+`comparator-dr0001-layout` (netlist sha256 `8ffe4ec2…`, klt 0.6.0 via `uvx`),
+host ngspice-46 (the pinned floor), harness `run_point` with the committed
+`regen_reverse_control.stage` fixture and a mutated *copy* of the reverse
+fragment; the committed bench is untouched. Probed trip point −8.21806 mV.
+
+| variant | 0.1 mV instance (`dv_tiny`) | `tdr_c` | `dout_od01_rev_first` |
+|---|---|---|---|
+| current sequence | decided LOW on first strobe | out of interval | 1.1e-5 (fail) |
+| settling strobe at 1-4 ns added before the 10 ns strobe (private reverse clock) | still LOW | out of interval | 9.3e-6 (fail) |
+| first-strobe referral: overdrive 0.1 mV + 0.2 mV | HIGH then LOW | 1.354 ns | 1.0 |
+| first-strobe referral: overdrive 0.1 mV + 0.5 mV | HIGH then LOW | 1.429 ns | 1.0 |
+
+Result: the *first-strobe / history* hypothesis is **refuted**. A prior settling
+strobe, which removes any DC-operating-point memory, leaves the same failure.
+The effective strobed trip point of the extracted DUT sits between 0.1 and
+0.3 mV above the slow-ramp probed trip point, in the steady strobed state too.
+So the discrepancy is the probe-versus-strobed trip-point convention, not an
+initialisation effect. The 0.2/0.5 mV rows are diagnostics only (they change
+the rung, so they are not 0.1 mV overdrive results). No sequence change was
+adopted and the committed bench is unchanged; the extracted 0.1 mV reverse rung
+stays **unavailable at this corner** under the current referral convention. A
+first-strobe-specific or strobed-referral probe (a change to the probe leg)
+would need its own justification and was not made. This was one corner; other
+corners are expected only from the fleet campaign.
+
 Reproduce:
 
 ```bash

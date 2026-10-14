@@ -81,6 +81,18 @@ GRADING (the per-measurement `status` `klt pex` turns into delta-row status)
 No bound is relaxed: the spec numbers are DR-0002's, the checks are the
 committed bench's.
 
+OPT-IN REVERSE CAMPAIGN (issue #164, `--reverse`)
+-------------------------------------------------
+Appends tb_regeneration_reverse.spice (mirrored HIGH->LOW ladder) to each
+ladder deck with the same probed-`vos` rewrite, and its `reverse_ladder.analyses`
+to the measured cards. Results go to `reverse-supplemental.json` in the
+workdir, never into the `klt pex` document: supplemental, UNSCORED. Each rung
+is "established" only with a HIGH first state, a LOW end state and a timed
+crossing; otherwise it is named unavailable with its reason, never filled from
+schematic data or inferred symmetry. Its inputs carry their own pins
+(REVERSE_PINNED_SHA256, TB_JSON_REVERSE_SHA256, TB_JSON_e6f77566ff167a2b7c071b68d7ff5393d547a5e3e9d93f1203d390328c94283b256);
+the forward contracts and the forward-only deck are unchanged.
+
 Usage (normally via `layout/pex/run_pex.py`, never by hand):
     KLT_PEX_SIDE=schematic python3 layout/pex/pex_measure.py design/comparator.spice
 Debug one PVT point locally (a single-corner probe, allowed on any host):
@@ -110,6 +122,7 @@ BENCH_DIR = os.path.join(REPO_ROOT, "sim", "comparator-regeneration", "testbench
 TB_JSON = os.path.join(BENCH_DIR, "tb.json")
 TB_MAIN = os.path.join(BENCH_DIR, "tb_regeneration.spice")
 TB_PROBE = os.path.join(BENCH_DIR, "tb_vosprobe.spice")
+TB_REVERSE = os.path.join(BENCH_DIR, "tb_regeneration_reverse.spice")
 DUT_JSON = os.path.join(REPO_ROOT, "sim", "dut.json")
 SCHEMATIC_NETLIST = os.path.join(REPO_ROOT, "design", "comparator.spice")
 
@@ -133,6 +146,27 @@ PINNED_SHA256 = {
 #: Canonical sha256 of tb.json's deck fields (see _tb_deck_sha256); same
 #: encoding as parasitic_attribution.tb_consumed_sha256.
 TB_JSON_DECK_SHA256 = "462b79b389613fbc06de8037311ed54b0820a60f48778e1a1322c48c94a13f74"
+
+#: OPT-IN reverse-polarity campaign (issue #164, `--reverse`). Its inputs are
+#: pinned SEPARATELY from, and never folded into, the forward contracts above:
+#: committed PEX/attribution evidence was produced from the forward-only deck
+#: (tb.json evidence note "WHY THE LADDER IS A SEPARATE FRAGMENT", issue #158),
+#: so PINNED_SHA256 / TB_JSON_DECK_SHA256 / TB_JSON_GRADING_SHA256 keep their
+#: values and are checked on every run, reverse or not.
+REVERSE_PINNED_SHA256 = {
+    TB_REVERSE: "93df669541d0407e10b8c7c712ee4b5f75de1ffe5062cbd1ea03efaa121c8476",
+}
+#: Canonical sha256 of tb.json `reverse_ladder` {netlist, analyses}
+#: (see _tb_reverse_sha256).
+TB_JSON_REVERSE_SHA256 = "62ba20a2b5d3f7e617d05651231b4b026f28402ef867639f48dcac6f3c62c298"
+#: Supplemental reverse rows that have a tb.json check (min/max bounds hashed
+#: by _tb_reverse_grading_sha256). Never scored: see REVERSE_NOTE.
+REVERSE_CHECK_ROWS = (
+    "td_od50_rev_ns", "tau_rev_ps",
+    "dout_od50_rev_first", "dout_od1_rev_first", "dout_od01_rev_first",
+    "dout_od50_rev_end", "dout_od1_rev_end", "dout_od01_rev_end",
+)
+TB_JSON_e6f77566ff167a2b7c071b68d7ff5393d547a5e3e9d93f1203d390328c94283b256 = "e6f77566ff167a2b7c071b68d7ff5393d547a5e3e9d93f1203d390328c94283b"
 
 #: Rows this adapter emits that are graded by a tb.json check.
 GRADED_CHECK_ROWS = (
@@ -243,6 +277,60 @@ def _tb_grading_sha256(tb: dict) -> str:
     return hashlib.sha256(json.dumps(subset, sort_keys=True).encode()).hexdigest()
 
 
+def _tb_reverse_sha256(tb: dict) -> str:
+    """Canonical hash of tb.json's `reverse_ladder` netlist name and analyses."""
+    rev = tb.get("reverse_ladder")
+    if (not isinstance(rev, dict) or not isinstance(rev.get("analyses"), list)
+            or not isinstance(rev.get("netlist"), str)):
+        sys.exit(f"{os.path.relpath(TB_JSON, REPO_ROOT)}: `reverse_ladder` "
+                 "(netlist, analyses) missing or malformed")
+    fields = {"netlist": rev["netlist"], "analyses": rev["analyses"]}
+    return hashlib.sha256(json.dumps(fields, sort_keys=True).encode()).hexdigest()
+
+
+def _tb_reverse_grading_sha256(tb: dict) -> str:
+    """Canonical hash of the min/max bounds of the reverse rows' checks."""
+    checks = tb.get("checks")
+    if not isinstance(checks, dict):
+        sys.exit(f"{os.path.relpath(TB_JSON, REPO_ROOT)}: required `checks` "
+                 "missing or not an object")
+    subset = {}
+    for name in REVERSE_CHECK_ROWS:
+        check = checks.get(name)
+        if not isinstance(check, dict):
+            sys.exit(f"{os.path.relpath(TB_JSON, REPO_ROOT)}: reverse check "
+                     f"{name!r} missing or malformed")
+        subset[name] = {k: check[k] for k in ("min", "max") if k in check}
+    return hashlib.sha256(json.dumps(subset, sort_keys=True).encode()).hexdigest()
+
+
+def _check_reverse_pins() -> None:
+    """Reverse-campaign contracts; only called with --reverse."""
+    for path, want in REVERSE_PINNED_SHA256.items():
+        got = _sha256(path)
+        if got != want:
+            sys.exit(
+                f"{os.path.relpath(path, REPO_ROOT)}: reverse SPICE fragment sha256 "
+                f"{got} is not the pinned {want} this re-expression was written "
+                "against -- update the reverse rewrite rules and re-pin, do not "
+                "just re-pin"
+            )
+    tb = _load_tb()
+    got = _tb_reverse_sha256(tb)
+    if got != TB_JSON_REVERSE_SHA256:
+        sys.exit(
+            f"{os.path.relpath(TB_JSON, REPO_ROOT)}: reverse_ladder contract broken: "
+            f"hash {got}, not the pinned {TB_JSON_REVERSE_SHA256} -- update "
+            "REVERSE_MEAS and the rewrite rules, do not just re-pin"
+        )
+    got = _tb_reverse_grading_sha256(tb)
+    if got != TB_JSON_e6f77566ff167a2b7c071b68d7ff5393d547a5e3e9d93f1203d390328c94283b256:
+        sys.exit(
+            f"{os.path.relpath(TB_JSON, REPO_ROOT)}: reverse grading-subset contract "
+            f"broken: hash {got}, not the pinned {TB_JSON_e6f77566ff167a2b7c071b68d7ff5393d547a5e3e9d93f1203d390328c94283b256}"
+        )
+
+
 def _check_pins() -> None:
     for path, want in PINNED_SHA256.items():
         got = _sha256(path)
@@ -312,6 +400,41 @@ def _main_body() -> str:
         sys.exit("tb_regeneration.spice: a dut_vos reference survived the rewrite")
     _assert_vdd_val_only_on_supplies(text, ("vsup", "vsupa"), "tb_regeneration.spice")
     return text
+
+
+def _reverse_body() -> str:
+    """The reverse fragment, re-expressed the same way as the forward ladder.
+
+    Each mirrored source `pwl(0 {dut_vos+dv} ... {dut_vos-dv})` becomes a
+    `+dv -> -dv` PWL plus `v(vos)` (the SAME Bvos source as the forward
+    ladder), keeping the mirrored sign order: POSITIVE first, NEGATIVE second.
+    """
+    text = _strip_comments(Path(TB_REVERSE).read_text())
+    for inst, rung in (("a", "dv_big"), ("b", "dv_mid"), ("c", "dv_tiny")):
+        old = (
+            f"vsr{inst} sr{inst} 0 pwl(0 {{dut_vos+{rung}}} {{t_flip}} "
+            f"{{dut_vos+{rung}}} {{t_flip+1n}} {{dut_vos-{rung}}})"
+        )
+        new = (
+            f"vsr{inst}u sr{inst}u 0 pwl(0 {{{rung}}} {{t_flip}} {{{rung}}} "
+            f"{{t_flip+1n}} {{-{rung}}})\n"
+            f"Bsr{inst} sr{inst} 0 v = 'v(sr{inst}u)+v(vos)'"
+        )
+        text = _replace_once(text, old, new, "tb_regeneration_reverse.spice")
+    if "dut_vos" in text:
+        sys.exit("tb_regeneration_reverse.spice: a dut_vos reference survived the rewrite")
+    if "vdd_val" in text:
+        sys.exit("tb_regeneration_reverse.spice: unexpected {vdd_val} reference")
+    return text
+
+
+def _ladder_deck(dut_text: str, centre: dict, reverse: bool = False) -> str:
+    """The ladder deck for one process bundle. With reverse=False this is
+    byte-identical to the forward-only deck committed evidence cites."""
+    body = _main_body()
+    if reverse:
+        body = body.rstrip() + "\n" + _reverse_body()
+    return _flatten(dut_text, body, [_vos_source(centre)])
 
 
 def _probe_body() -> str:
@@ -395,6 +518,18 @@ MAIN_MEAS = [
     ("i_stat", "meas tran i_stat avg i(vsupa) from=25n to=29n"),
     ("q_dec", "meas tran q_dec integ i(vsupa) from=39.9n to=48n"),
 ]
+#: Mirrors tb.json reverse_ladder.analyses (supplemental, issue #158/#164).
+REVERSE_MEAS = [
+    ("tdr_a", "meas tran tdr_a trig v(clkn) val=0.5 rise=2 targ v(dran) val=0.5 fall=1 td=35n"),
+    ("tdr_b", "meas tran tdr_b trig v(clkn) val=0.5 rise=2 targ v(drbn) val=0.5 fall=1 td=35n"),
+    ("tdr_c", "meas tran tdr_c trig v(clkn) val=0.5 rise=2 targ v(drcn) val=0.5 fall=1 td=35n"),
+    ("dra_first", "meas tran dra_first find v(dran) at=18n"),
+    ("drb_first", "meas tran drb_first find v(drbn) at=18n"),
+    ("drc_first", "meas tran drc_first find v(drcn) at=18n"),
+    ("dra_end", "meas tran dra_end find v(dran) at=55n"),
+    ("drb_end", "meas tran drb_end find v(drbn) at=55n"),
+    ("drc_end", "meas tran drc_end find v(drcn) at=55n"),
+]
 PROBE_MEAS = [("t_flip", "meas tran t_flip when v(dn)=0.5 rise=1 td=8u")]
 
 
@@ -409,6 +544,13 @@ def _check_meas_against_manifest() -> None:
     probe = tb["offset_probe"]["analyses"]
     if probe[0] != "tran 100n 80u 0 100n" or probe[1] != PROBE_MEAS[0][1]:
         sys.exit("tb.json offset_probe analyses changed -- PROBE_MEAS no longer mirrors them")
+
+
+def _check_reverse_meas_against_manifest() -> None:
+    tb = _load_tb()
+    rev = tb.get("reverse_ladder")
+    if not isinstance(rev, dict) or [c for _, c in REVERSE_MEAS] != rev.get("analyses"):
+        sys.exit("tb.json reverse_ladder.analyses changed -- REVERSE_MEAS no longer mirrors them")
 
 
 def _request(netlist: str, processes: list[str], meas, tran: str, timeout_s: int,
@@ -500,6 +642,58 @@ def _derive(raw: dict[str, float | None]) -> dict[str, float | None]:
     return out
 
 
+REVERSE_NOTE = (
+    "SUPPLEMENTAL, UNSCORED (issue #158/#164): reverse-polarity (HIGH->LOW) "
+    "rows are never read by T1 item 7 or any scored row; status here is the "
+    "bench's own check on the row, informational only."
+)
+_RUNGS = (("od50", "a"), ("od1", "b"), ("od01", "c"))
+
+
+def _derive_reverse(raw: dict[str, float | None]) -> tuple[dict, dict]:
+    """Supplemental reverse rows and, per rung, whether it was ESTABLISHED.
+
+    A rung is established only when the first-strobe state is HIGH, the
+    end state is LOW, and the timed second-decision crossing exists. Anything
+    else is named with its reason; nothing is filled from the forward or the
+    schematic data.
+    """
+    out: dict[str, float | None] = {}
+    rungs: dict[str, dict] = {}
+    for rung, inst in _RUNGS:
+        td = raw.get(f"tdr_{inst}")
+        first = raw.get(f"dr{inst}_first")
+        end = raw.get(f"dr{inst}_end")
+        out[f"td_{rung}_rev_ns"] = None if td is None else td * 1e9
+        out[f"dout_{rung}_rev_first"] = first
+        out[f"dout_{rung}_rev_end"] = end
+        reasons = []
+        if first is None or end is None:
+            reasons.append("state measurement missing")
+        else:
+            if first < 0.9:
+                reasons.append(f"first strobe did not decide HIGH ({first:.4g})")
+            if end > 0.1:
+                reasons.append(f"end state not LOW ({end:.4g}): no HIGH->LOW decision")
+        if td is None:
+            reasons.append("no timed HIGH->LOW crossing (tdr_* missing)")
+        rungs[rung] = {"established": not reasons, "reasons": reasons}
+    tb_, tc_ = raw.get("tdr_b"), raw.get("tdr_c")
+    if tb_ is not None and tc_ is not None and tb_ != tc_:
+        out["tau_rev_ps"] = (tc_ - tb_) / math.log(10) * 1e12
+    else:
+        out["tau_rev_ps"] = None
+    for rung, inst in _RUNGS:
+        r, f = raw.get(f"tdr_{inst}"), raw.get(f"td_{inst}")
+        out[f"dtd_{rung}_rev_ps"] = None if r is None or f is None else (r - f) * 1e12
+    f_b, f_c = raw.get("td_b"), raw.get("td_c")
+    if out["tau_rev_ps"] is not None and f_b is not None and f_c is not None:
+        out["dtau_rev_ps"] = ((tc_ - tb_) - (f_c - f_b)) / math.log(10) * 1e12
+    else:
+        out["dtau_rev_ps"] = None
+    return out, rungs
+
+
 def _grade(name: str, value: float | None, checks: dict) -> str:
     if value is None:
         return "error"
@@ -548,9 +742,13 @@ def _dut_text(side: str, netlist: str, workdir: str) -> tuple[str, str]:
 
 
 def measure(side: str, netlist: str, workdir: str, backend: str,
-            only: tuple[str, float, float] | None = None) -> dict:
+            only: tuple[str, float, float] | None = None,
+            reverse: bool = False) -> dict:
     _check_pins()
     _check_meas_against_manifest()
+    if reverse:
+        _check_reverse_pins()
+        _check_reverse_meas_against_manifest()
     os.makedirs(workdir, exist_ok=True)
     checks = _load_tb()["checks"]
     client = _klt_identity()
@@ -597,8 +795,8 @@ def measure(side: str, netlist: str, workdir: str, backend: str,
                 sys.exit(f"offset probe produced no trip point at {process} {missing}")
         net = f"ladder-{process}.spice"
         with open(os.path.join(workdir, net), "w") as f:
-            f.write(_flatten(dut_text, _main_body(), [_vos_source(centre)]))
-        req = narrowed(_request(net, [process], MAIN_MEAS, "5p 60n", TIMEOUT_MAIN_S,
+            f.write(_ladder_deck(dut_text, centre, reverse))
+        req = narrowed(_request(net, [process], MAIN_MEAS + (REVERSE_MEAS if reverse else []), "5p 60n", TIMEOUT_MAIN_S,
                                 ["vsup", "vsupa"]))
         return _run_klt_sim(req, workdir, f"ladder-{process}", backend)
 
@@ -606,6 +804,7 @@ def measure(side: str, netlist: str, workdir: str, backend: str,
         reports = list(pool.map(ladder, processes))
 
     corners = []
+    rev_corners = []
     for report in reports:
         for corner in report["corners"]:
             key = _point_key(corner)
@@ -618,9 +817,20 @@ def measure(side: str, netlist: str, workdir: str, backend: str,
                     row["unit"] = UNITS[name]
                 rows.append(row)
             corners.append({"corner_id": corner_id(*key), "measurements": rows})
+            if reverse:
+                rev, rungs = _derive_reverse(_values(corner))
+                rrows = []
+                for name, value in rev.items():
+                    st = "unavailable" if value is None else (
+                        _grade(name, value, checks) if name in REVERSE_CHECK_ROWS
+                        else "info")
+                    rrows.append({"name": name, "value": value, "status": st})
+                rev_corners.append({"corner_id": corner_id(*key),
+                                    "measurements": rrows, "rungs": rungs})
     order = {corner_id(p, t, v): i for i, (p, t, v) in enumerate(
         (p, t, v) for p in PROCESS_BUNDLES for t in TEMPERATURES_C for v in SUPPLIES_V)}
     corners.sort(key=lambda c: order[c["corner_id"]])
+    rev_corners.sort(key=lambda c: order[c["corner_id"]])
 
     summary = {
         "side": side,
@@ -635,6 +845,19 @@ def measure(side: str, netlist: str, workdir: str, backend: str,
             for r in [probe, *reports]
         }),
     }
+    if reverse:
+        # Supplemental artifact only: NOT part of the returned `klt pex`
+        # document, so scored rows and delta rows are unchanged.
+        summary["reverse"] = {
+            "note": REVERSE_NOTE,
+            "fragment_sha256": _sha256(TB_REVERSE),
+            "analyses_sha256": TB_JSON_REVERSE_SHA256,
+            "artifact": "reverse-supplemental.json",
+        }
+        with open(os.path.join(workdir, "reverse-supplemental.json"), "w") as f:
+            json.dump({"note": REVERSE_NOTE, "side": side, "corners": rev_corners},
+                      f, indent=1, sort_keys=True)
+            f.write("\n")
     with open(os.path.join(workdir, "summary.json"), "w") as f:
         json.dump(summary, f, indent=2, sort_keys=True)
         f.write("\n")
@@ -649,6 +872,11 @@ def main() -> int:
     ap.add_argument("--backend", default="batch")
     ap.add_argument("--debug-corner", help="run ONE PVT point (e.g. tt_27c_3.30v) "
                     "with --backend local: a single-corner debug probe")
+    ap.add_argument("--reverse", action="store_true",
+                    default=os.environ.get("PEX_MEASURE_REVERSE") == "1",
+                    help="opt in to the supplemental, unscored reverse-polarity "
+                    "campaign (issue #164); writes reverse-supplemental.json and "
+                    "leaves the klt pex document and the forward deck unchanged")
     args = ap.parse_args()
     if args.side not in ("schematic", "extracted"):
         sys.exit("side must be schematic or extracted ($KLT_PEX_SIDE or --side)")
@@ -662,7 +890,7 @@ def main() -> int:
     workdir = args.workdir or tempfile.mkdtemp(prefix=f"pex-{args.side}-")
     os.makedirs(workdir, exist_ok=True)
     doc = measure(args.side, os.path.abspath(args.netlist), os.path.abspath(workdir),
-                  args.backend, only)
+                  args.backend, only, args.reverse)
     json.dump(doc, sys.stdout, indent=1)
     sys.stdout.write("\n")
     return 0

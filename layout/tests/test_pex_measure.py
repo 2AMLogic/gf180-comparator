@@ -305,5 +305,164 @@ class PinPreflight(unittest.TestCase):
         self.assertIn("malformed", self._refusal(pm._check_meas_against_manifest))
 
 
+class ReverseCampaign(unittest.TestCase):
+    """Opt-in reverse path (#164): rewrite, pins, derivation, forward isolation."""
+
+    DUT = ".subckt comparator_dut a b c d e f g h\n.ends\n"
+
+    def centre(self):
+        return {(t, v): 0.001 for t in pm.TEMPERATURES_C for v in pm.SUPPLIES_V}
+
+    def setUp(self):
+        self.saved = (pm.TB_JSON, pm.TB_REVERSE, dict(pm.REVERSE_PINNED_SHA256))
+        self.tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+        self.addCleanup(self._restore)
+
+    def _restore(self):
+        pm.TB_JSON, pm.TB_REVERSE = self.saved[:2]
+        pm.REVERSE_PINNED_SHA256.clear()
+        pm.REVERSE_PINNED_SHA256.update(self.saved[2])
+
+    def test_forward_contracts_unchanged(self):
+        self.assertEqual(pm.PINNED_SHA256[pm.TB_MAIN][:8], "ef3dc3be")
+        self.assertEqual(pm.PINNED_SHA256[pm.TB_PROBE][:8], "56475d33")
+        self.assertEqual(pm.TB_JSON_DECK_SHA256[:8], "462b79b3")
+        self.assertEqual(pm.TB_JSON_GRADING_SHA256[:8], "aabcb437")
+        self.assertEqual(len(pm.PINNED_SHA256), 2)
+        self.assertNotIn(pm.TB_REVERSE, pm.PINNED_SHA256)
+
+    def test_committed_reverse_inputs_pass(self):
+        pm._check_reverse_pins()
+        pm._check_reverse_meas_against_manifest()
+
+    def test_forward_deck_byte_identical_with_and_without_reverse_path(self):
+        c = self.centre()
+        legacy = pm._flatten(self.DUT, pm._main_body(), [pm._vos_source(c)])
+        self.assertEqual(pm._ladder_deck(self.DUT, c), legacy)
+        self.assertEqual(pm._ladder_deck(self.DUT, c, reverse=False), legacy)
+        self.assertNotIn("vsr", legacy)
+        rev = pm._ladder_deck(self.DUT, c, reverse=True)
+        self.assertIn(pm._main_body().rstrip(), rev)
+        self.assertNotEqual(rev, legacy)
+        # Loading the reverse path must not perturb a later forward build.
+        self.assertEqual(pm._ladder_deck(self.DUT, c), legacy)
+
+    def test_reverse_rewrite_keeps_mirrored_sign_order_and_vos(self):
+        body = pm._reverse_body()
+        self.assertNotIn("dut_vos", body)
+        for inst, rung in (("a", "dv_big"), ("b", "dv_mid"), ("c", "dv_tiny")):
+            self.assertIn(
+                f"vsr{inst}u sr{inst}u 0 pwl(0 {{{rung}}} {{t_flip}} {{{rung}}} "
+                f"{{t_flip+1n}} {{-{rung}}})", body)
+            self.assertIn(f"Bsr{inst} sr{inst} 0 v = 'v(sr{inst}u)+v(vos)'", body)
+        # Same single Bvos in the whole reverse deck.
+        deck = pm._ladder_deck(self.DUT, self.centre(), reverse=True)
+        self.assertEqual(deck.count("Bvos vos 0"), 1)
+
+    def test_reverse_body_anchor_drift_refuses(self):
+        src = Path(self.saved[1]).read_text().replace("vsrb srb 0", "vsrb srb 0 ", 1)
+        copy = self.tmp / "rev.spice"
+        copy.write_text(src)
+        pm.TB_REVERSE = str(copy)
+        with self.assertRaises(SystemExit) as cm:
+            pm._reverse_body()
+        self.assertIn("expected exactly one", str(cm.exception))
+
+    def test_reverse_fragment_one_byte_change_refuses(self):
+        copy = self.tmp / "rev.spice"
+        copy.write_bytes(Path(self.saved[1]).read_bytes() + b" ")
+        pm.REVERSE_PINNED_SHA256[str(copy)] = pm.REVERSE_PINNED_SHA256[self.saved[1]]
+        pm.TB_REVERSE = str(copy)
+        with self.assertRaises(SystemExit) as cm:
+            pm._check_reverse_pins()
+        self.assertIn("reverse SPICE fragment sha256", str(cm.exception))
+
+    def _mutated_tb(self, fn):
+        tb = json.loads(Path(self.saved[0]).read_text())
+        fn(tb)
+        p = self.tmp / "tb.json"
+        p.write_text(json.dumps(tb))
+        pm.TB_JSON = str(p)
+
+    def test_reverse_card_drift_refuses_without_touching_forward_contract(self):
+        self._mutated_tb(lambda tb: tb["reverse_ladder"]["analyses"].append("meas x"))
+        with self.assertRaises(SystemExit) as cm:
+            pm._check_reverse_pins()
+        self.assertIn("reverse_ladder contract", str(cm.exception))
+        pm._check_pins()  # forward contracts still hold
+
+    def test_reverse_bound_drift_refuses(self):
+        self._mutated_tb(lambda tb: tb["checks"]["dout_od01_rev_end"].update(max=0.5))
+        with self.assertRaises(SystemExit) as cm:
+            pm._check_reverse_pins()
+        self.assertIn("reverse grading-subset", str(cm.exception))
+
+    def test_reverse_meas_manifest_mismatch_refuses(self):
+        self._mutated_tb(lambda tb: tb["reverse_ladder"]["analyses"].reverse())
+        with self.assertRaises(SystemExit):
+            pm._check_reverse_meas_against_manifest()
+
+    def test_forward_edit_does_not_need_reverse_pin(self):
+        # Forward-only checks never read the reverse fragment.
+        pm.TB_REVERSE = str(self.tmp / "absent.spice")
+        pm._check_pins()
+
+    RAW = {"td_a": 1.0e-9, "td_b": 2.0e-9, "td_c": 2.0e-9 + 2.302585093e-10,
+           "tdr_a": 0.8e-9, "tdr_b": 1.8e-9, "tdr_c": 1.8e-9 + 2.302585093e-10,
+           "dra_first": 1.0, "drb_first": 1.0, "drc_first": 1.0,
+           "dra_end": 0.0, "drb_end": 0.0, "drc_end": 0.0}
+
+    def test_complete_rows(self):
+        rows, rungs = pm._derive_reverse(self.RAW)
+        self.assertTrue(all(r["established"] for r in rungs.values()))
+        self.assertAlmostEqual(rows["td_od50_rev_ns"], 0.8)
+        self.assertAlmostEqual(rows["tau_rev_ps"], 100.0, places=3)
+        self.assertAlmostEqual(rows["dtd_od50_rev_ps"], -200.0)
+        self.assertAlmostEqual(rows["dtau_rev_ps"], 0.0, places=3)
+        for k in ("od50", "od1", "od01"):
+            self.assertEqual(rows[f"dout_{k}_rev_first"], 1.0)
+            self.assertEqual(rows[f"dout_{k}_rev_end"], 0.0)
+
+    def test_missing_crossing_names_the_rung_and_is_not_filled(self):
+        raw = dict(self.RAW, tdr_c=None, dra_end=0.0)
+        rows, rungs = pm._derive_reverse(raw)
+        self.assertFalse(rungs["od01"]["established"])
+        self.assertIn("tdr_* missing", " ".join(rungs["od01"]["reasons"]))
+        self.assertTrue(rungs["od50"]["established"])
+        self.assertIsNone(rows["td_od01_rev_ns"])
+        self.assertIsNone(rows["tau_rev_ps"])
+        self.assertIsNone(rows["dtau_rev_ps"])
+        self.assertIsNone(rows["dtd_od01_rev_ps"])
+
+    def test_second_decision_suppressed_fails_polarity_and_timing(self):
+        # Negative control: output never falls -> no crossing, end still HIGH.
+        raw = dict(self.RAW, tdr_c=None, drc_end=1.0)
+        _, rungs = pm._derive_reverse(raw)
+        reasons = " ".join(rungs["od01"]["reasons"])
+        self.assertFalse(rungs["od01"]["established"])
+        self.assertIn("end state not LOW", reasons)
+        self.assertIn("no timed HIGH->LOW crossing", reasons)
+
+    def test_first_strobe_low_fails_polarity(self):
+        # The 0.1 mV extracted failure mode: first strobe decided LOW.
+        raw = dict(self.RAW, tdr_c=None, drc_first=0.0)
+        _, rungs = pm._derive_reverse(raw)
+        self.assertIn("first strobe did not decide HIGH", " ".join(rungs["od01"]["reasons"]))
+
+    def test_missing_state_measure_is_unestablished(self):
+        raw = dict(self.RAW, drb_end=None)
+        _, rungs = pm._derive_reverse(raw)
+        self.assertFalse(rungs["od1"]["established"])
+
+    def test_forward_derivation_and_grading_unchanged_by_reverse_raw(self):
+        fwd = {k: v for k, v in Derive.RAW.items()}
+        base = pm._derive(fwd)
+        mixed = pm._derive(dict(fwd, **{k: v for k, v in self.RAW.items()
+                                        if k.startswith("tdr") or k.startswith("dr")}))
+        self.assertEqual(base, mixed)
+        self.assertFalse(any("rev" in k for k in base))
+
+
 if __name__ == "__main__":
     unittest.main()
