@@ -18,6 +18,7 @@ import shutil
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 PEX = Path(__file__).resolve().parents[1] / "pex" / "pex_measure.py"
 _spec = importlib.util.spec_from_file_location("pex_measure", PEX)
@@ -397,6 +398,25 @@ class ReverseCampaign(unittest.TestCase):
         with self.assertRaises(SystemExit) as cm:
             pm._check_reverse_pins()
         self.assertIn("reverse grading-subset", str(cm.exception))
+        # The refusal is driven by the pin under its proper name.
+        self.assertIn(f"not the pinned {pm.TB_JSON_REVERSE_GRADING_SHA256}",
+                      str(cm.exception))
+
+    def test_reverse_grading_pin_by_name(self):
+        # The pin is the committed tb.json reverse grading-subset hash.
+        tb = json.loads(Path(self.saved[0]).read_text())
+        self.assertEqual(pm._tb_reverse_grading_sha256(tb),
+                         pm.TB_JSON_REVERSE_GRADING_SHA256)
+        self.assertEqual(pm.TB_JSON_REVERSE_GRADING_SHA256[:8], "e6f77566")
+        # _check_reverse_pins compares against TB_JSON_REVERSE_GRADING_SHA256
+        # itself: patching that name (and only that name) makes the committed
+        # tb.json refuse. A renamed/mangled constant fails this test.
+        with mock.patch.object(pm, "TB_JSON_REVERSE_GRADING_SHA256", "0" * 64):
+            with self.assertRaises(SystemExit) as cm:
+                pm._check_reverse_pins()
+        self.assertIn("reverse grading-subset", str(cm.exception))
+        self.assertIn(f"not the pinned {'0' * 64}", str(cm.exception))
+        pm._check_reverse_pins()  # restored pin passes again
 
     def test_reverse_meas_manifest_mismatch_refuses(self):
         self._mutated_tb(lambda tb: tb["reverse_ladder"]["analyses"].reverse())
