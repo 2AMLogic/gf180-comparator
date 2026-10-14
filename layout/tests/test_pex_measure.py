@@ -483,6 +483,43 @@ class ReverseCampaign(unittest.TestCase):
         self.assertEqual(base, mixed)
         self.assertFalse(any("rev" in k for k in base))
 
+class CommittedReverseCampaign(unittest.TestCase):
+    """The committed extracted reverse campaign artifact (#164) stays coherent."""
+
+    D = Path(pm.REPO_ROOT) / "layout/pex/artifacts/measure-reverse/extracted"
+
+    def setUp(self):
+        self.rev = json.loads((self.D / "reverse-supplemental.json").read_text())
+        self.summary = json.loads((self.D / "summary.json").read_text())
+
+    def test_pins_in_summary_match_current_reverse_contracts(self):
+        r = self.summary["reverse"]
+        self.assertEqual(r["fragment_sha256"], pm.REVERSE_PINNED_SHA256[pm.TB_REVERSE])
+        self.assertEqual(r["analyses_sha256"], pm.TB_JSON_REVERSE_SHA256)
+
+    def test_all_45_points_named_and_unavailable_rungs_carry_reasons(self):
+        self.assertEqual(len(self.rev["corners"]), 45)
+        ids = {c["corner_id"] for c in self.rev["corners"]}
+        self.assertEqual(len(ids), 45)
+        for c in self.rev["corners"]:
+            for rung, v in c["rungs"].items():
+                self.assertEqual(v["established"], not v["reasons"], (c["corner_id"], rung))
+
+    def test_only_the_tiny_rung_is_unavailable_and_nothing_is_filled(self):
+        for c in self.rev["corners"]:
+            self.assertTrue(c["rungs"]["od50"]["established"], c["corner_id"])
+            self.assertTrue(c["rungs"]["od1"]["established"], c["corner_id"])
+            if not c["rungs"]["od01"]["established"]:
+                row = {m["name"]: m for m in c["measurements"]}["td_od01_rev_ns"]
+                self.assertIsNone(row["value"])
+                self.assertEqual(row["status"], "unavailable")
+
+    def test_forward_document_has_no_reverse_rows(self):
+        doc = json.loads((self.D / "klt-pex-document.json").read_text())
+        self.assertEqual(len(doc["corners"]), 45)
+        for c in doc["corners"]:
+            self.assertFalse(any("rev" in m["name"] for m in c["measurements"]))
+
 
 if __name__ == "__main__":
     unittest.main()

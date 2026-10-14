@@ -1,0 +1,3964 @@
+{
+ "corners": [
+  {
+   "corner_id": "tt_-40c_2.97v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.0978299999999999,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.4603300000000001,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 1.70273,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 105.27298241334819,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 13.87184030054454,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999973,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 6.52896e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999973,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 6.52538e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999973,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 6.52652e-06,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 29.7694,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 1431.5781942,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 88.415118,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.0038981999999999975,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "tt_-40c_3.30v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 0.97321,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.24555,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 1.4663899999999999,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 95.90959338351414,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 12.986709212908591,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.99997,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 7.18394e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.99997,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 7.14876e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.99997,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 7.142e-06,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 29.501,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 1811.2409700000003,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 97.35329999999999,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.005758400000000004,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "tt_-40c_3.63v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 0.887706,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.12181,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 1.29049,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 73.25679320744047,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 15.313392122193815,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999968,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 7.48733e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999968,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 7.48733e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999968,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 7.48733e-06,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 29.2009,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 2243.0449173,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 105.999267,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.007708600000000003,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "tt_27c_2.97v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.3004399999999998,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.69209,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 1.9856800000000001,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 127.5045169419757,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 13.270823972220768,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999961,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 1.04041e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999961,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 1.00121e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999961,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 9.8786e-06,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 29.4025,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 1485.6793875000003,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 87.32542500000001,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.005877899999999998,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "tt_27c_3.30v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.15321,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.47688,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 1.71978,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 105.49012965429988,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 14.000172384277668,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999958,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 1.19449e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999958,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 1.11166e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999958,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 1.08504e-05,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 29.113300000000002,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 1882.3505909999997,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 96.07388999999999,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.008188200000000007,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "tt_27c_3.63v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.05358,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.34637,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 1.5954599999999999,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 108.178412497281,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 12.445828783389109,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999955,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 1.37387e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999955,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 1.23561e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999955,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 1.19207e-05,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 28.8174,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 2381.1422778,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 104.607162,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.010618000000000002,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "tt_125c_2.97v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.58724,
+     "status": "fail",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 2.05934,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 2.39765,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 146.92616617268905,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 14.016155553800836,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999944,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 2.68764e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999944,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 2.32701e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999944,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 2.17527e-05,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 28.974400000000003,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 1574.0743392000002,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 86.05396800000001,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.0089074,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "tt_125c_3.30v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.41696,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.82764,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 2.11968,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 126.83136049502565,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 14.410000751128743,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.99994,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 2.99e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.99994,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 2.59273e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.99994,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 2.41865e-05,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 28.659299999999998,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 2041.580211,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 94.57569,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.011787700000000002,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "tt_125c_3.63v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.29769,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.67321,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 1.95986,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 124.49051323756706,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 13.440461899349625,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999938,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 3.2008e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999938,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 2.80907e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999938,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 2.63318e-05,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 28.3432,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 2577.7177404,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 102.88581599999999,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.014757800000000005,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "ff_-40c_2.97v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 0.895796,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.1349099999999999,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 1.34078,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 89.40820498942246,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 12.693577732986215,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999963,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 8.0813e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999963,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 7.83326e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999963,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 7.76821e-06,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 29.3459,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 1500.6525236999998,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 87.157323,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.007468200000000001,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "ff_-40c_3.30v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 0.816749,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.02809,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 1.18709,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 69.05282262261711,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 14.888457284630476,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999961,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 8.06519e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999961,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 8.06519e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999961,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 8.06519e-06,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 28.9895,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 1914.7525649999998,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 95.66535,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.009838600000000003,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "ff_-40c_3.63v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 0.761799,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 0.9590270000000001,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 1.10505,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 63.416983130958535,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 15.122557911964561,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999959,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 8.57517e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999959,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 8.57517e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999959,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 8.57517e-06,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 28.671300000000002,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 2425.8544760999994,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 104.076819,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.0122687,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "ff_27c_2.97v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.0669700000000002,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.35758,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 1.5657,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 90.38536757370481,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 15.019909045487484,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999948,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 1.59515e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999948,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 1.39578e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999948,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 1.31651e-05,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 28.9479,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 1577.7501597,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 85.97526300000001,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.0103182,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "ff_27c_3.30v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 0.974722,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.2374999999999998,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 1.42258,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 80.3792227106539,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 15.395769681111569,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999946,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 1.13817e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999946,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 1.61592e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999946,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 1.50496e-05,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 28.5996,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 2046.1096919999998,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 94.37867999999999,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.013198399999999999,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "ff_27c_3.63v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 0.908764,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.1554,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 1.33513,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 78.05574723247143,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 14.802241230987153,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999944,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 2.03937e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999944,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 1.76893e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999944,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 1.64944e-05,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 28.2771,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 2583.501818699999,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 102.645873,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.016138400000000004,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "ff_125c_2.97v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.3193300000000001,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.69471,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 1.9612800000000001,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 115.76988004094984,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 14.638608931792547,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999925,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 4.11892e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999925,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 3.68834e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999925,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 3.44476e-05,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 28.508399999999998,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 1722.4870212,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 84.669948,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.014487700000000003,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "ff_125c_3.30v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.2066400000000002,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.547,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 1.76454,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 94.47642159323341,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 16.374455910921156,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999923,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 4.1386e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999923,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 3.77192e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999923,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 3.55445e-05,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 28.1521,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 2222.1275669999995,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 92.90193,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.0179681,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "ff_125c_3.63v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.12337,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.44091,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 1.6389399999999998,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 86.00333625130095,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 16.754117488996872,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999923,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 4.09699e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999923,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 3.79655e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999923,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 3.63187e-05,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 27.7892,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 2801.3054124,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 100.874796,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.021538200000000004,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "ss_-40c_2.97v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.48612,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 2.49327,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 2.93399,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 191.40226406440118,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 13.02633494011904,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999983,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 4.79503e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999983,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 4.79853e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999983,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 4.79855e-06,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 30.1418,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 1354.6449774000002,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 89.52114600000002,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.001797000000000007,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "ss_-40c_3.30v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.2318099999999998,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.6825999999999999,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 2.04612,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 157.87473006147007,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 10.657817114524047,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999978,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 3.13713e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999978,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 3.1432e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999978,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 3.1432e-06,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 29.887999999999998,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 1744.34766,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 98.6304,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.0031476000000000004,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "ss_-40c_3.63v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.08423,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.4023800000000002,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 1.70069,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 129.55438689655904,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 10.824643098498175,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999976,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 6.42758e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999976,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 6.42758e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999976,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 6.42758e-06,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 29.6216,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 2159.5161852,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 107.52640799999999,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.0046781000000000045,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "ss_27c_2.97v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.70409,
+     "status": "fail",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 2.43401,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 3.0237700000000003,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 256.1295136472619,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 9.503043852072766,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999973,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 4.50768e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999973,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 4.46896e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999973,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 4.46384e-06,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 29.7848,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 1427.1120864,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 88.460856,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.0030867000000000047,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "ss_27c_3.30v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.43823,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.8977999999999997,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 2.43587,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 233.68083187768286,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 8.12133363592859,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999968,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 8.95195e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999968,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 8.82806e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999968,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 8.80173e-06,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 29.5296,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 1805.5297919999998,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 97.44767999999999,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.004857500000000008,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "ss_27c_3.63v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.27193,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.64417,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 2.07348,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 186.44696402588514,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 8.81843267649954,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999965,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 9.91608e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999965,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 9.5872e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999965,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 9.51035e-06,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 29.2816,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 2234.2869251999996,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 106.292208,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.006807900000000006,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "ss_125c_2.97v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 2.03016,
+     "status": "fail",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 2.72425,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 3.46692,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 322.53748287508796,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 8.446305141703624,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999961,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 1.66949e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999961,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 1.55738e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999961,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 1.51704e-05,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 29.374699999999997,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 1494.4681521000002,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 87.242859,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.005186500000000004,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "ss_125c_3.30v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.7360600000000002,
+     "status": "fail",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 2.27226,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 2.77339,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 217.63799371617654,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 10.440548367502748,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999955,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 1.38945e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999955,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 1.72852e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999955,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 1.65732e-05,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 29.101100000000002,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 1901.8067969999997,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 96.03363,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.007527200000000005,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "ss_125c_3.63v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.54823,
+     "status": "fail",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 2.0143,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 2.49411,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 208.37883536199936,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 9.666528735995298,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999951,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 2.12797e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999951,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 1.87166e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999951,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 1.78615e-05,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 28.8406,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 2410.5491982,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 104.691378,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.010017400000000003,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "fs_-40c_2.97v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.06899,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.39021,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 1.68331,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 127.29171264584318,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 10.921449410205563,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999969,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 6.29298e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999969,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 6.29706e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999969,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 6.29902e-06,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 29.7715,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 1422.4335345000004,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 88.421355,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.004198,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "fs_-40c_3.30v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 0.950044,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.19939,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 1.40164,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 87.83605896493268,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 13.654870381637224,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999966,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 6.93153e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999966,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 6.93269e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999966,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 6.93542e-06,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 29.5011,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 1799.295597,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 97.35363000000001,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.005998500000000004,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "fs_-40c_3.63v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 0.867718,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.08889,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 1.27154,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 79.32388711962894,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 13.727138690995274,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999964,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 7.53265e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999964,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 7.51458e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999964,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 7.51467e-06,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 29.2206,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 2233.8008682,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 106.070778,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.007918599999999998,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "fs_27c_2.97v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.26698,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.62413,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 1.9169100000000001,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 127.15273841163412,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 12.773063484815966,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999955,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 9.53622e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999955,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 9.44254e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999955,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 9.41587e-06,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 29.388599999999997,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 1475.4732498,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 87.284142,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.006208000000000005,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "fs_27c_3.30v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.12666,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.43056,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 1.68759,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 111.62671068359275,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 12.815570675149065,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999952,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 1.03451e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999952,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 1.00807e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999952,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 1.00021e-05,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 29.0868,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 1878.584136,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 95.98644,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.008488100000000005,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "fs_27c_3.63v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.03114,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.3057400000000001,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 1.53063,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 97.66848603522222,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 13.369102491556085,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.99995,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 1.1459e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.99995,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 1.09055e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.99995,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 1.07403e-05,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 28.7895,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 2379.9007815,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 104.50588499999999,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.010828300000000003,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "fs_125c_2.97v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.54852,
+     "status": "fail",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.9906700000000002,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 2.35261,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 157.1885447800628,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 12.664218011467264,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999935,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 1.90234e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999935,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 1.70519e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999935,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 1.61814e-05,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 28.9486,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 1573.1149698,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 85.97734200000001,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.009297300000000005,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "fs_125c_3.30v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.38621,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.7723,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 2.0511600000000003,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 121.1073592235409,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 14.634123073633164,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999932,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 2.16121e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999932,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 1.90841e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999932,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 1.78858e-05,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 28.636000000000003,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 2040.3550200000002,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 94.4988,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.0120878,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "fs_125c_3.63v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.27088,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.6251,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 1.8892900000000001,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 114.73625917402022,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 14.16378755677588,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.99993,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 2.37656e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.99993,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 2.09508e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.99993,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 1.95946e-05,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 28.3203,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 2573.8354190999994,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 102.802689,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.014968000000000006,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "sf_-40c_2.97v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.1471900000000002,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.5695100000000002,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 1.84177,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 118.24101564297928,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 13.273820352990109,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999977,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 7.01359e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999977,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 6.95207e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999977,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 6.93998e-06,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 29.7915,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 1441.4979645,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 88.48075500000002,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.0036280000000000062,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "sf_-40c_3.30v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.0104600000000001,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.3112300000000001,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 1.58547,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 119.1009187171477,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 11.009402900694955,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999974,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 7.649e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999974,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 7.41467e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999974,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 7.36176e-06,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 29.5212,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 1824.5841240000002,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 97.41996,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.005518200000000008,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "sf_-40c_3.63v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 0.919101,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.17419,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 1.40628,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 100.79540630492569,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 11.649241201011156,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999971,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 8.73212e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999971,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 8.20082e-06,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999971,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 8.07265e-06,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 29.2459,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 2256.8443622999994,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 106.16261700000001,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.0075285000000000005,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "sf_27c_2.97v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.35442,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.79469,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 2.21251,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 181.45692042881663,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 9.890446700841235,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999966,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 1.27925e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999966,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 1.14496e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999966,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 1.10597e-05,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 29.430100000000003,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 1496.5984143,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 87.40739700000002,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.005577400000000003,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "sf_27c_3.30v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.19521,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.5457100000000001,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 1.83784,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 126.8704469983969,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 12.183373169793681,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999963,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 1.53884e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999963,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 1.35068e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999963,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 1.28691e-05,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 29.136799999999997,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 1891.767636,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 96.15143999999998,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.007918000000000001,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "sf_27c_3.63v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.0883099999999999,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.39733,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 1.63012,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 101.09941244225797,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 13.821346398012674,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.99996,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 1.79158e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.99996,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 1.5113e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.99996,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 1.4199e-05,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 28.8486,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 2386.2942642000003,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 104.720418,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.0103782,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "sf_125c_2.97v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.64877,
+     "status": "fail",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 2.1618,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 2.57359,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 178.83812470294,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 12.08802655245278,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999952,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 3.84918e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999952,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 3.39651e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999952,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 3.20867e-05,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 29.011799999999997,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 1577.3207274000004,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 86.165046,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.008547300000000008,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "sf_125c_3.30v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.46465,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.90324,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 2.2285,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 141.25862318385157,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 13.473442945305269,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999947,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 4.03561e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999947,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 3.6124e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999947,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 3.4319e-05,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 28.6961,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 2043.9460470000001,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 94.69713,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.011487500000000005,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  },
+  {
+   "corner_id": "sf_125c_3.63v",
+   "measurements": [
+    {
+     "name": "td_od50_ns",
+     "value": 1.3383800000000001,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od1_ns",
+     "value": 1.73223,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "td_od01_ns",
+     "value": 2.00096,
+     "status": "pass",
+     "unit": "ns"
+    },
+    {
+     "name": "tau_ps",
+     "value": 116.70795612186093,
+     "status": "pass",
+     "unit": "ps"
+    },
+    {
+     "name": "resolve_decades",
+     "value": 14.84243283458145,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_end",
+     "value": 0.999944,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od50_first",
+     "value": 4.09973e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_end",
+     "value": 0.999944,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od1_first",
+     "value": 3.73306e-05,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_end",
+     "value": 0.999944,
+     "status": "pass"
+    },
+    {
+     "name": "dout_od01_first",
+     "value": 3.56574e-05,
+     "status": "pass"
+    },
+    {
+     "name": "i_static_ua",
+     "value": 28.3809,
+     "status": "pass",
+     "unit": "uA"
+    },
+    {
+     "name": "e_dec_fj",
+     "value": 2582.9762673,
+     "status": "pass",
+     "unit": "fJ"
+    },
+    {
+     "name": "p_static_uw",
+     "value": 103.022667,
+     "status": "pass",
+     "unit": "uW"
+    },
+    {
+     "name": "dut_vos_v",
+     "value": -0.0145179,
+     "status": "pass",
+     "unit": "V"
+    }
+   ]
+  }
+ ]
+}
