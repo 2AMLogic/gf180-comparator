@@ -4,6 +4,9 @@ Chronological record of merged pull requests and closed issues. Newest entries a
 
 ### 2026-10-14
 
+- **PR #319**: sim/pex: extracted 45-point reverse-polarity campaign evidence (#164)
+- **PR #317**: pex_measure: opt-in supplemental reverse-polarity campaign + 0.1 mV investigation (#164)
+- **Issue #164** (closed): Extracted reverse-polarity regeneration coverage: fleet probe-leg path, and the 0.1 mV first-strobe referral gap
 - **Issue #165** (closed): layout/pex/pex_measure.py: regeneration bench sha256 pins stale since #141 (and moved again by #158)
 - **Issue #316** (closed): Re-run PEX attribution/budget/combo campaigns against the #158 reverse-polarity bench
 

@@ -5,7 +5,7 @@ This roadmap is generated from the repository's current GitHub label state.
 <!-- guide:plan-body:start -->
 ## Operator Attention: Merge-Risk-Hold Pileup
 
-Judge-approved PRs stuck under a `loom:operator` merge-risk hold — implementation work is done, only a human merge decision is missing.
+Judge-approved PRs under a hold (`loom:blocked` or `loom:operator`) — only a human merge decision is missing.
 
 _None._
 
@@ -31,13 +31,13 @@ _None._
 
 Issues currently being built (`loom:building`).
 
-- **#164**: Extracted reverse-polarity regeneration coverage: fleet probe-leg path, and the 0.1 mV first-strobe referral gap
+_None._
 
 ## PRs Awaiting Review
 
 PRs waiting on Judge (`loom:review-requested`).
 
-- **#317**: pex_measure: opt-in supplemental reverse-polarity campaign + 0.1 mV investigation (#164)
+_None._
 
 ## Approved (Awaiting Merge)
 
@@ -51,7 +51,6 @@ Issues carrying `loom:curated`.
 
 - **#3**: Gap-to-T1 tracker: gf180-comparator artifact-presence survey *(curated)*
 - **#125**: Define and measure the missing average-power operating condition for T1 *(curated)*
-- **#164**: Extracted reverse-polarity regeneration coverage: fleet probe-leg path, and the 0.1 mV first-strobe referral gap *(curated)*
 - **#209**: Extend paired extracted preamp noise measurement to full PVT coverage *(curated)*
 
 ## Proposed (Architect / Hermit)
@@ -70,10 +69,10 @@ _None._
 | Very important | 0 |
 | Important | 1 |
 | Ready (`loom:issue`) | 0 |
-| In Progress (`loom:building`) | 1 |
-| PRs awaiting review | 1 |
+| In Progress (`loom:building`) | 0 |
+| PRs awaiting review | 0 |
 | Approved PRs awaiting merge | 0 |
-| Curated | 4 |
+| Curated | 3 |
 | Architect / Hermit proposals | 0 |
 | Active epics | 0 |
 <!-- guide:plan-body:end -->
