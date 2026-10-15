@@ -20,6 +20,8 @@ _None._
 `loom:important`; taken before unlabelled work.
 
 - **#3**: Gap-to-T1 tracker: gf180-comparator artifact-presence survey
+- **#112**: layout/PEX/signoff re-run for the DR-0004 input-cascode netlist (follow-up to #102)
+- **#125**: Define and measure the missing average-power operating condition for T1
 
 ## Ready
 
@@ -67,7 +69,7 @@ _None._
 |------|-------|
 | Operator merge-risk holds | 0 |
 | Very important | 0 |
-| Important | 1 |
+| Important | 3 |
 | Ready (`loom:issue`) | 0 |
 | In Progress (`loom:building`) | 0 |
 | PRs awaiting review | 0 |
