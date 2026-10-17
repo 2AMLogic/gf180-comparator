@@ -64,7 +64,6 @@ Usage
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import math
 import re
@@ -138,12 +137,8 @@ class Refusal(Exception):
         self.code, self.msg = code, msg
 
 
-def sha256_file(p) -> str:
-    return hashlib.sha256(Path(p).read_bytes()).hexdigest()
-
-
-def finite(v) -> bool:
-    return kr._finite(v)
+sha256_file = mk.sha256_file
+finite = kr._finite
 
 
 # ---------------------------------------------------------------------------
