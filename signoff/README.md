@@ -845,3 +845,12 @@ all-uncited manifest (the twin graded before it had any evidence worth
 citing); the same-PDK-family canaries
 `gf180-rcosc/signoff/` and `gf180-sram/signoff/` follow the same directory
 convention used here.
+
+## Attestation inventories (items 1, 9, 10)
+
+`signoff/inventory/item-{1,9,10}.json` list the exact files (with sha256) and
+the cold-start / CI commands behind T1 items 1, 9 and 10. They are the input
+for `klt signoff --attest`, which no released klt carries yet (latest 0.7.0);
+until it does, those items stay uncited and the schema is unverified. See the
+addendum in `spec/decision-records/DR-0003-t1-items-1-9-10-claim-policy.md`
+(issue #322).
