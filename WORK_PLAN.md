@@ -33,19 +33,20 @@ _None._
 
 Issues currently being built (`loom:building`).
 
-_None._
+- **#323**: Propose a design change that closes the 7 post-layout decision-time misses (T1 item 7)
+- **#325**: Deduplicate shared helpers (parse_klt_version, git_state, sha256) across sim/layout tools
 
 ## PRs Awaiting Review
 
 PRs waiting on Judge (`loom:review-requested`).
 
-_None._
+- **#326**: feat: add device-lever study and proposed DR-0007 for td_od50 misses
 
 ## Approved (Awaiting Merge)
 
 PRs that passed review and are queued for Champion auto-merge (`loom:pr`).
 
-_None._
+- **#327**: refactor: reuse shared sha256/klt-version/git_state helpers in preamp-noise and tran-feasibility tools
 
 ## Proposed
 
@@ -71,9 +72,9 @@ _None._
 | Very important | 0 |
 | Important | 3 |
 | Ready (`loom:issue`) | 0 |
-| In Progress (`loom:building`) | 0 |
-| PRs awaiting review | 0 |
-| Approved PRs awaiting merge | 0 |
+| In Progress (`loom:building`) | 2 |
+| PRs awaiting review | 1 |
+| Approved PRs awaiting merge | 1 |
 | Curated | 3 |
 | Architect / Hermit proposals | 0 |
 | Active epics | 0 |

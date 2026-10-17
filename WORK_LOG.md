@@ -2,6 +2,10 @@
 
 Chronological record of merged pull requests and closed issues. Newest entries appear first.
 
+### 2026-10-17
+
+- **PR #324**: docs(signoff): add T1 item 1/9/10 inventories and DR-0003 re-audit
+
 ### 2026-10-14
 
 - **PR #319**: sim/pex: extracted 45-point reverse-polarity campaign evidence (#164)
