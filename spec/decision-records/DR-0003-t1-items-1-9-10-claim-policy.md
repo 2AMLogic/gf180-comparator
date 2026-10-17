@@ -62,3 +62,29 @@ item 9 only if they record the cold-start invocation and the pinned PDK.
 
 none — claim-policy decision for `signoff/`; no `README.md` target-spec row
 is set, changed or scoped.
+
+## Addendum (issue #322, 2026-10-17): re-audit against `klt signoff --attest`
+
+klayout-tools#2844 (tool-produced, artifact-anchored attestation envelopes
+for items 1, 9, 10) is closed, but no PyPI release carries it: the latest
+release is `klayout-tools` 0.7.0 and `klt signoff --help` there lists no
+`--attest` or inventory option (checked with
+`uvx --from "klayout-tools==0.7.0" klt signoff --help`). The pin stays at
+0.6.0 (a git/dev build would break the PyPI-registry-wheel pin discipline).
+
+Per item, "leave uncited" **still holds**: no tool-produced envelope exists.
+Hand-written native envelopes remain rejected (see Alternatives).
+
+- **Item 1**: still uncited. Inventory committed: `signoff/inventory/item-1.json`.
+- **Item 9**: still uncited. Inventory committed: `signoff/inventory/item-9.json`.
+- **Item 10**: still uncited. Inventory committed: `signoff/inventory/item-10.json`.
+
+The inventory schema is written against the #2844 description and is
+**unverified against a released klt**. Next step, once a release ships
+`--attest`: bump the pin in `signoff/regenerate.sh` and
+`.github/workflows/signoff.yml` together, produce the envelopes from the
+inventories, pin their hashes in `signoff/block-manifest.json`, regenerate
+`signoff/signoff-report.json`, add `--check` steps to `signoff.yml`, and run
+the negative control (edit one inventoried file; the row must go
+stale/unmet). No missing `--attest` check was found beyond the unreleased
+state, so no new upstream issue is filed.
