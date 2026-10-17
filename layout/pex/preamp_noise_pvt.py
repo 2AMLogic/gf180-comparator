@@ -54,7 +54,6 @@ comparator decision noise. Nothing here scores a spec row or promotes T1.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import math
 import os
@@ -73,6 +72,10 @@ sys.path.insert(0, str(REPO / "sim" / "tools"))
 
 import preamp_noise_probe as pnp  # noqa: E402
 from harness import corners as hc  # noqa: E402
+# One definition of the shared helpers (incl. the dirty-state semantics that
+# evidence-gating tools must agree on) lives in the sim tooling.
+from mk_klt_request import (  # noqa: E402,F401
+    git_state, parse_klt_version, sha256_bytes, sha256_file)
 
 ISSUE = 209
 NOMINAL_DIR = REPO / "layout" / "pex" / "artifacts" / "preamp-noise"
@@ -146,14 +149,6 @@ class Refusal(SystemExit):
         self.name = name
 
 
-def sha256_bytes(b: bytes) -> str:
-    return hashlib.sha256(b).hexdigest()
-
-
-def sha256_file(p) -> str:
-    return sha256_bytes(Path(p).read_bytes())
-
-
 def finite_positive(v) -> bool:
     return (isinstance(v, (int, float)) and not isinstance(v, bool)
             and math.isfinite(v) and v > 0)
@@ -162,17 +157,6 @@ def finite_positive(v) -> bool:
 # --------------------------------------------------------------------------- #
 # Executor capability
 # --------------------------------------------------------------------------- #
-
-def parse_klt_version(text) -> tuple[int, int, int] | None:
-    """'0.7.0+g5e5b55' / 'klt 0.5.0' -> (0, 7, 0); None when unparseable."""
-    if not isinstance(text, str):
-        return None
-    for tok in text.replace("klt", " ").split():
-        parts = tok.split("+", 1)[0].split(".")
-        if len(parts) == 3 and all(p.isdigit() for p in parts):
-            return tuple(int(p) for p in parts)
-    return None
-
 
 def executor_capability_gap(runner_version, client_version=None) -> str | None:
     """None when a runner at `runner_version` can execute these requests,
@@ -337,14 +321,6 @@ def expected_corners(g: dict) -> set[str]:
 
 def corner_key(process: str, temp: float, vdd: float) -> str:
     return f"{process}_{float(temp):g}c_{float(vdd):.2f}v"
-
-
-def git_state(paths: list[str]) -> tuple[str, list[str]]:
-    def git(*a):
-        return subprocess.check_output(["git", "-C", str(REPO), *a], text=True)
-    sha = git("rev-parse", "HEAD").strip()
-    status = git("status", "--porcelain", "--untracked-files=all", "--", *paths)
-    return sha, [line[3:] for line in status.splitlines() if line.strip()]
 
 
 def pinned_identity(record: dict) -> dict:
