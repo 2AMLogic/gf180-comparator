@@ -1,0 +1,162 @@
+{
+  "generated_by": "layout/pex/design_lever_study.py run",
+  "issue": 323,
+  "points": [
+    "tt_125c_2.97v",
+    "ss_125c_2.97v"
+  ],
+  "request_cap": 23,
+  "requests_planned": 23,
+  "scope": "diagnostic only: device-W levers applied to the cited extracted netlist, parasitic cards unchanged; each variant centred on its own probed trip point; no spec row scored, T1 item 7 unchanged",
+  "source_sha256": {
+    "cited_report": "385fadcf7cd74c60508e01b3cd0341df7b64341479f437c0446c09bd07497dd8",
+    "design_lever_study_py": "e81b82ac1ab15512a15f01c85cecf5b8a20030a391e12f5aa891c0067a82ba28",
+    "extracted_dut": "a7ca3c00ea4db8a2b00cad69f2edc2d9320738499049cfa9c7faec517b7b5f45",
+    "parasitic_attribution_py": "e1d26edf047f97b99424f8feac005fd03d319a3c645047bcaf5833d6906fcdcf",
+    "pex_measure_py": "9cf7cf7b07ae9596ac875901b93ec8629fa40f626e3c7f3e06f8f9611b1aef4d",
+    "schematic_dut": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a",
+    "tb_json_consumed_fields": "462b79b389613fbc06de8037311ed54b0820a60f48778e1a1322c48c94a13f74"
+  },
+  "variants": [
+    {
+      "cascode_independent": null,
+      "centre": "probed",
+      "description": "cited extracted DUT, unchanged",
+      "device_w_um": {},
+      "device_w_um_source": {},
+      "dut_sha256": "a7ca3c00ea4db8a2b00cad69f2edc2d9320738499049cfa9c7faec517b7b5f45",
+      "id": "ctrl",
+      "probe_deck_sha256": "171b9eace488887991790ec89f3d9bad981a8f810b4a4ad53840801bf41bdb9f",
+      "side": "extracted"
+    },
+    {
+      "cascode_independent": true,
+      "centre": "probed",
+      "description": "latch tail W x1.5",
+      "device_w_um": {
+        "M$12": 24.0
+      },
+      "device_w_um_source": {
+        "M$12": 16.0
+      },
+      "dut_sha256": "d46b5f74ef00d1e5a14639bf5717c6a96d420a0bd5ddeb44361198cac07b0e79",
+      "id": "tail-x1.5",
+      "probe_deck_sha256": "a4803a2402cdcea264458ea74eabfdfb11577a65f2856cf23387a05514ee87f7",
+      "side": "extracted"
+    },
+    {
+      "cascode_independent": false,
+      "centre": "probed",
+      "description": "latch input pair W x1.5",
+      "device_w_um": {
+        "M$13": 12.0,
+        "M$9": 12.0
+      },
+      "device_w_um_source": {
+        "M$13": 8.0,
+        "M$9": 8.0
+      },
+      "dut_sha256": "54cbfe310d13ad4b1366814a7fae1705d51d3a35e6d8a96a10c99ce74cab306f",
+      "id": "pair-x1.5",
+      "probe_deck_sha256": "5897520f615c952eb78d1244533d9fd175af6cafe8d63b41509c42b3d23c5816",
+      "side": "extracted"
+    },
+    {
+      "cascode_independent": true,
+      "centre": "probed",
+      "description": "both regeneration pairs W x1.5",
+      "device_w_um": {
+        "M$11": 9.0,
+        "M$20": 9.0,
+        "M$25": 9.0,
+        "M$8": 9.0
+      },
+      "device_w_um_source": {
+        "M$11": 6.0,
+        "M$20": 6.0,
+        "M$25": 6.0,
+        "M$8": 6.0
+      },
+      "dut_sha256": "b77b416b7f79c199e9b0f77b3a613641b3dd74e8c30f528fd732c24df3209374",
+      "id": "regen-x1.5",
+      "probe_deck_sha256": "40f13c6703fc655723b4482d27e88b32655bacce271211404cdbda4af8417c09",
+      "side": "extracted"
+    },
+    {
+      "cascode_independent": true,
+      "centre": "probed",
+      "description": "sp/sn driver W x0.7 (regeneration-node load reduction)",
+      "device_w_um": {
+        "M$1": 1.4,
+        "M$18": 3.5,
+        "M$24": 3.5,
+        "M$5": 1.4
+      },
+      "device_w_um_source": {
+        "M$1": 2.0,
+        "M$18": 5.0,
+        "M$24": 5.0,
+        "M$5": 2.0
+      },
+      "dut_sha256": "69f65e474ad82ecd6c9fa44423fbe5c21dc5337f90118b57ee3093a972afa723",
+      "id": "regenload-x0.7",
+      "probe_deck_sha256": "f3713de4e6a65a5cf8311d63376ee2cbd05e13421db20246bed10bd605de217a",
+      "side": "extracted"
+    },
+    {
+      "cascode_independent": true,
+      "centre": "probed",
+      "description": "tail W x1.5 with sp/sn driver W x0.7",
+      "device_w_um": {
+        "M$1": 1.4,
+        "M$12": 24.0,
+        "M$18": 3.5,
+        "M$24": 3.5,
+        "M$5": 1.4
+      },
+      "device_w_um_source": {
+        "M$1": 2.0,
+        "M$12": 16.0,
+        "M$18": 5.0,
+        "M$24": 5.0,
+        "M$5": 2.0
+      },
+      "dut_sha256": "c6140fca5e298c8705930014029dd23c9a386f2482b8b466f312ef11cc352cca",
+      "id": "tail+regenload",
+      "probe_deck_sha256": "6566a5db1dda04a6ea52454165270dc0f01fb7e118060f92d26bf84935322379",
+      "side": "extracted"
+    },
+    {
+      "cascode_independent": true,
+      "centre": "probed",
+      "description": "tail W x1.5 with both regeneration pairs W x1.5",
+      "device_w_um": {
+        "M$11": 9.0,
+        "M$12": 24.0,
+        "M$20": 9.0,
+        "M$25": 9.0,
+        "M$8": 9.0
+      },
+      "device_w_um_source": {
+        "M$11": 6.0,
+        "M$12": 16.0,
+        "M$20": 6.0,
+        "M$25": 6.0,
+        "M$8": 6.0
+      },
+      "dut_sha256": "4dc37b35d831985fa189171e50828af36d80cfb4ddac1ca7b6fc3ed62a55146f",
+      "id": "tail+regen",
+      "probe_deck_sha256": "8ef9ca790f501afd1bd89f33183549098fdb95d06dcb597da439d3bdaf875cfe",
+      "side": "extracted"
+    },
+    {
+      "cascode_independent": null,
+      "centre": "zero",
+      "description": "schematic leg as cited (ladder at 0 V)",
+      "dut_sha256": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a",
+      "id": "sch",
+      "probe_deck_sha256": "8bddb05f22e5145d925895b38b5d78d9fe7064a6bf1b64837a0ab25b51abe86a",
+      "side": "schematic"
+    }
+  ]
+}

@@ -1,0 +1,431 @@
+{
+  "candidates": [],
+  "controls": {
+    "ctrl@ss_125c_2.97v": {
+      "abs_diff_ns": 0.0,
+      "cited_dut_vos_v": -0.005186500000000004,
+      "cited_td_od50_ns": 2.02956,
+      "reproduces": true,
+      "rerun_dut_vos_v": -0.005186500000000004,
+      "rerun_td_od50_ns": 2.02956
+    },
+    "ctrl@tt_125c_2.97v": {
+      "abs_diff_ns": 0.0,
+      "cited_dut_vos_v": -0.0089074,
+      "cited_td_od50_ns": 1.58774,
+      "reproduces": true,
+      "rerun_dut_vos_v": -0.0089074,
+      "rerun_td_od50_ns": 1.58774
+    },
+    "sch@ss_125c_2.97v": {
+      "abs_diff_ns": 0.0,
+      "cited_td_od50_ns": 1.23747,
+      "reproduces": true,
+      "rerun_td_od50_ns": 1.23747
+    },
+    "sch@tt_125c_2.97v": {
+      "abs_diff_ns": 0.0,
+      "cited_td_od50_ns": 0.986719,
+      "reproduces": true,
+      "rerun_td_od50_ns": 0.986719
+    }
+  },
+  "generated_by": "layout/pex/design_lever_study.py analyze",
+  "issue": 323,
+  "missing": [],
+  "outcome": "no tested lever meets 1.5 ns at both corners (negative result)",
+  "points": [
+    "tt_125c_2.97v",
+    "ss_125c_2.97v"
+  ],
+  "ranked_by_ss_td_od50": [
+    "pair-x1.5",
+    "tail-x1.5",
+    "tail+regen",
+    "tail+regenload",
+    "regen-x1.5",
+    "regenload-x0.7"
+  ],
+  "scope": "diagnostic only: device-W levers applied to the cited extracted netlist, parasitic cards unchanged; each variant centred on its own probed trip point; no spec row scored, T1 item 7 unchanged",
+  "source_sha256": {
+    "cited_report": "385fadcf7cd74c60508e01b3cd0341df7b64341479f437c0446c09bd07497dd8",
+    "design_lever_study_py": "e81b82ac1ab15512a15f01c85cecf5b8a20030a391e12f5aa891c0067a82ba28",
+    "extracted_dut": "a7ca3c00ea4db8a2b00cad69f2edc2d9320738499049cfa9c7faec517b7b5f45",
+    "parasitic_attribution_py": "e1d26edf047f97b99424f8feac005fd03d319a3c645047bcaf5833d6906fcdcf",
+    "pex_measure_py": "9cf7cf7b07ae9596ac875901b93ec8629fa40f626e3c7f3e06f8f9611b1aef4d",
+    "schematic_dut": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a",
+    "tb_json_consumed_fields": "462b79b389613fbc06de8037311ed54b0820a60f48778e1a1322c48c94a13f74"
+  },
+  "study_valid": true,
+  "variants": [
+    {
+      "cascode_independent": null,
+      "corners": {
+        "ss_125c_2.97v": {
+          "dut_vos_shift_v": 0.0,
+          "dut_vos_v": -0.005186500000000004,
+          "job_ids": [
+            "klt-sim-fa3508c0b661"
+          ],
+          "ladder_netlist_sha256": "f71d3b365d4fdef93ffae4223816b87718bd418108c89967d53e5f511b506410",
+          "margin_to_1p5ns_ns": -0.52956,
+          "meets_1p5ns": false,
+          "probe_job_ids": [
+            "klt-sim-4c5b035720d8"
+          ],
+          "tau_ps": 222.15465632797049,
+          "td_od01_ns": 3.2256,
+          "td_od1_ns": 2.71407,
+          "td_od50_ns": 2.02956,
+          "unresolved_count": 0
+        },
+        "tt_125c_2.97v": {
+          "dut_vos_shift_v": 0.0,
+          "dut_vos_v": -0.0089074,
+          "job_ids": [
+            "klt-sim-21768be0a00d"
+          ],
+          "ladder_netlist_sha256": "6722364fb6609621e4789b8352ab584678bd2ddab08b61b72cf28e484d9bdd07",
+          "margin_to_1p5ns_ns": -0.08773999999999993,
+          "meets_1p5ns": false,
+          "probe_job_ids": [
+            "klt-sim-4c5b035720d8"
+          ],
+          "tau_ps": 130.07988321966207,
+          "td_od01_ns": 2.35539,
+          "td_od1_ns": 2.0558699999999996,
+          "td_od50_ns": 1.58774,
+          "unresolved_count": 0
+        }
+      },
+      "description": "cited extracted DUT, unchanged",
+      "device_w_um": {},
+      "device_w_um_source": {},
+      "id": "ctrl"
+    },
+    {
+      "cascode_independent": true,
+      "corners": {
+        "ss_125c_2.97v": {
+          "dut_vos_shift_v": -0.00032999999999999696,
+          "dut_vos_v": -0.005516500000000001,
+          "job_ids": [
+            "klt-sim-f44122b775aa"
+          ],
+          "ladder_netlist_sha256": "d06d693148ee06b28c3e1f5ef0667759c08596e4f8c410682e7702929f75a432",
+          "margin_to_1p5ns_ns": -0.4846799999999998,
+          "meets_1p5ns": false,
+          "probe_job_ids": [
+            "klt-sim-f834373e30aa"
+          ],
+          "tau_ps": 216.93443665549333,
+          "td_od01_ns": 3.1462499999999998,
+          "td_od1_ns": 2.64674,
+          "td_od50_ns": 1.9846799999999998,
+          "unresolved_count": 0
+        },
+        "tt_125c_2.97v": {
+          "dut_vos_shift_v": -0.0006900000000000031,
+          "dut_vos_v": -0.009597400000000002,
+          "job_ids": [
+            "klt-sim-774a781e9bd9"
+          ],
+          "ladder_netlist_sha256": "093920fea64c643ca8a65489b28810a1950523f7e97e1dda5fd7fe4acc2bcb3b",
+          "margin_to_1p5ns_ns": -0.05579999999999985,
+          "meets_1p5ns": false,
+          "probe_job_ids": [
+            "klt-sim-f834373e30aa"
+          ],
+          "tau_ps": 130.08856910930004,
+          "td_od01_ns": 2.3151200000000003,
+          "td_od1_ns": 2.0155800000000004,
+          "td_od50_ns": 1.5557999999999998,
+          "unresolved_count": 0
+        }
+      },
+      "description": "latch tail W x1.5",
+      "device_w_um": {
+        "M$12": 24.0
+      },
+      "device_w_um_source": {
+        "M$12": 16.0
+      },
+      "id": "tail-x1.5"
+    },
+    {
+      "cascode_independent": false,
+      "corners": {
+        "ss_125c_2.97v": {
+          "dut_vos_shift_v": 0.00038969999999999977,
+          "dut_vos_v": -0.004796800000000004,
+          "job_ids": [
+            "klt-sim-b6670b65656b"
+          ],
+          "ladder_netlist_sha256": "078468a68f79a530a265a073809da6738c238a0fc6470a73e856648df7af8126",
+          "margin_to_1p5ns_ns": -0.4389200000000002,
+          "meets_1p5ns": false,
+          "probe_job_ids": [
+            "klt-sim-8803178d9b4f"
+          ],
+          "tau_ps": 233.72426132587302,
+          "td_od01_ns": 3.07732,
+          "td_od1_ns": 2.53915,
+          "td_od50_ns": 1.9389200000000002,
+          "unresolved_count": 0
+        },
+        "tt_125c_2.97v": {
+          "dut_vos_shift_v": 0.0008098999999999988,
+          "dut_vos_v": -0.0080975,
+          "job_ids": [
+            "klt-sim-a9c5c872639f"
+          ],
+          "ladder_netlist_sha256": "e90400473d09e06d19ddcc79a9508fcad6b43d03f893fa501bedd6b05a12656b",
+          "margin_to_1p5ns_ns": -0.03672999999999993,
+          "meets_1p5ns": false,
+          "probe_job_ids": [
+            "klt-sim-8803178d9b4f"
+          ],
+          "tau_ps": 127.73035007256534,
+          "td_od01_ns": 2.24905,
+          "td_od1_ns": 1.95494,
+          "td_od50_ns": 1.53673,
+          "unresolved_count": 0
+        }
+      },
+      "description": "latch input pair W x1.5",
+      "device_w_um": {
+        "M$13": 12.0,
+        "M$9": 12.0
+      },
+      "device_w_um_source": {
+        "M$13": 8.0,
+        "M$9": 8.0
+      },
+      "id": "pair-x1.5"
+    },
+    {
+      "cascode_independent": true,
+      "corners": {
+        "ss_125c_2.97v": {
+          "dut_vos_shift_v": 0.0007799,
+          "dut_vos_v": -0.004406600000000004,
+          "job_ids": [
+            "klt-sim-014d36bdf7b0"
+          ],
+          "ladder_netlist_sha256": "88ac15ed4a5c2489763ebb32c2c54d67c28ed69525e9c8ee5b1001ea40637df0",
+          "margin_to_1p5ns_ns": -0.6247100000000003,
+          "meets_1p5ns": false,
+          "probe_job_ids": [
+            "klt-sim-5c7c11be5f34"
+          ],
+          "tau_ps": 173.67870625792946,
+          "td_od01_ns": 3.22602,
+          "td_od1_ns": 2.82611,
+          "td_od50_ns": 2.1247100000000003,
+          "unresolved_count": 0
+        },
+        "tt_125c_2.97v": {
+          "dut_vos_shift_v": 0.0014101999999999969,
+          "dut_vos_v": -0.0074972000000000025,
+          "job_ids": [
+            "klt-sim-98e9c7a66447"
+          ],
+          "ladder_netlist_sha256": "f84411168e5199740dee9d808803b181decd0a44ad92007cf2d4192f48c35f8b",
+          "margin_to_1p5ns_ns": -0.1383700000000001,
+          "meets_1p5ns": false,
+          "probe_job_ids": [
+            "klt-sim-5c7c11be5f34"
+          ],
+          "tau_ps": 142.24881460259104,
+          "td_od01_ns": 2.43457,
+          "td_od1_ns": 2.10703,
+          "td_od50_ns": 1.63837,
+          "unresolved_count": 0
+        }
+      },
+      "description": "both regeneration pairs W x1.5",
+      "device_w_um": {
+        "M$11": 9.0,
+        "M$20": 9.0,
+        "M$25": 9.0,
+        "M$8": 9.0
+      },
+      "device_w_um_source": {
+        "M$11": 6.0,
+        "M$20": 6.0,
+        "M$25": 6.0,
+        "M$8": 6.0
+      },
+      "id": "regen-x1.5"
+    },
+    {
+      "cascode_independent": true,
+      "corners": {
+        "ss_125c_2.97v": {
+          "dut_vos_shift_v": -0.00011989999999999224,
+          "dut_vos_v": -0.005306399999999996,
+          "job_ids": [
+            "klt-sim-79a69e3845d3"
+          ],
+          "ladder_netlist_sha256": "1f38438f420d714ebd949ed7977c8d5900b16617bb193db4ea798cf19994125b",
+          "margin_to_1p5ns_ns": -0.6454899999999997,
+          "meets_1p5ns": false,
+          "probe_job_ids": [
+            "klt-sim-b0598c71f027"
+          ],
+          "tau_ps": 203.6580543437108,
+          "td_od01_ns": 3.27206,
+          "td_od1_ns": 2.8031200000000003,
+          "td_od50_ns": 2.1454899999999997,
+          "unresolved_count": 0
+        },
+        "tt_125c_2.97v": {
+          "dut_vos_shift_v": -0.0001500000000000043,
+          "dut_vos_v": -0.009057400000000004,
+          "job_ids": [
+            "klt-sim-e4e321058b7f"
+          ],
+          "ladder_netlist_sha256": "24ab838f99af39370b637ca8c07c48ca822f833ae8d94fa5ccbfd84c53ef2731",
+          "margin_to_1p5ns_ns": -0.18635000000000002,
+          "meets_1p5ns": false,
+          "probe_job_ids": [
+            "klt-sim-b0598c71f027"
+          ],
+          "tau_ps": 127.18313902536741,
+          "td_od01_ns": 2.42668,
+          "td_od1_ns": 2.1338299999999997,
+          "td_od50_ns": 1.68635,
+          "unresolved_count": 0
+        }
+      },
+      "description": "sp/sn driver W x0.7 (regeneration-node load reduction)",
+      "device_w_um": {
+        "M$1": 1.4,
+        "M$18": 3.5,
+        "M$24": 3.5,
+        "M$5": 1.4
+      },
+      "device_w_um_source": {
+        "M$1": 2.0,
+        "M$18": 5.0,
+        "M$24": 5.0,
+        "M$5": 2.0
+      },
+      "id": "regenload-x0.7"
+    },
+    {
+      "cascode_independent": true,
+      "corners": {
+        "ss_125c_2.97v": {
+          "dut_vos_shift_v": -0.0004501000000000019,
+          "dut_vos_v": -0.0056366000000000055,
+          "job_ids": [
+            "klt-sim-fcd3a709fd3b"
+          ],
+          "ladder_netlist_sha256": "68c5e2ab1ccc9e8bf1dcc3450f35776ad7c278768fd89c89fb0dfbc337dd37a1",
+          "margin_to_1p5ns_ns": -0.6003500000000002,
+          "meets_1p5ns": false,
+          "probe_job_ids": [
+            "klt-sim-c50e7a1c1e6e"
+          ],
+          "tau_ps": 193.9863162317255,
+          "td_od01_ns": 3.18275,
+          "td_od1_ns": 2.73608,
+          "td_od50_ns": 2.10035,
+          "unresolved_count": 0
+        },
+        "tt_125c_2.97v": {
+          "dut_vos_shift_v": -0.0008400000000000039,
+          "dut_vos_v": -0.009747400000000003,
+          "job_ids": [
+            "klt-sim-baacb9175a3f"
+          ],
+          "ladder_netlist_sha256": "4f02292a1f2f6832c60ee92d9b5802a07379a69a5208c6927fb7a861d875bf59",
+          "margin_to_1p5ns_ns": -0.15412999999999988,
+          "meets_1p5ns": false,
+          "probe_job_ids": [
+            "klt-sim-c50e7a1c1e6e"
+          ],
+          "tau_ps": 124.22125065878716,
+          "td_od01_ns": 2.3794999999999997,
+          "td_od1_ns": 2.09347,
+          "td_od50_ns": 1.6541299999999999,
+          "unresolved_count": 0
+        }
+      },
+      "description": "tail W x1.5 with sp/sn driver W x0.7",
+      "device_w_um": {
+        "M$1": 1.4,
+        "M$12": 24.0,
+        "M$18": 3.5,
+        "M$24": 3.5,
+        "M$5": 1.4
+      },
+      "device_w_um_source": {
+        "M$1": 2.0,
+        "M$12": 16.0,
+        "M$18": 5.0,
+        "M$24": 5.0,
+        "M$5": 2.0
+      },
+      "id": "tail+regenload"
+    },
+    {
+      "cascode_independent": true,
+      "corners": {
+        "ss_125c_2.97v": {
+          "dut_vos_shift_v": 0.0005099000000000006,
+          "dut_vos_v": -0.004676600000000003,
+          "job_ids": [
+            "klt-sim-61f695b79d72"
+          ],
+          "ladder_netlist_sha256": "ba625d6f5d0ff1b544105959e30f454bcb6cf4ab2945b1cd2fa9eb4f91742f0b",
+          "margin_to_1p5ns_ns": -0.5729100000000003,
+          "meets_1p5ns": false,
+          "probe_job_ids": [
+            "klt-sim-01d3590dc257"
+          ],
+          "tau_ps": 173.87848171960488,
+          "td_od01_ns": 3.14563,
+          "td_od1_ns": 2.74526,
+          "td_od50_ns": 2.0729100000000003,
+          "unresolved_count": 0
+        },
+        "tt_125c_2.97v": {
+          "dut_vos_shift_v": 0.0008402999999999987,
+          "dut_vos_v": -0.0080671,
+          "job_ids": [
+            "klt-sim-74b1af8ed536"
+          ],
+          "ladder_netlist_sha256": "900cae089e410f6ac7f2dc451934ad73d5dde20101fd65c47463bea5189c7998",
+          "margin_to_1p5ns_ns": -0.1003900000000002,
+          "meets_1p5ns": false,
+          "probe_job_ids": [
+            "klt-sim-01d3590dc257"
+          ],
+          "tau_ps": 144.40291523283116,
+          "td_od01_ns": 2.38969,
+          "td_od1_ns": 2.05719,
+          "td_od50_ns": 1.6003900000000002,
+          "unresolved_count": 0
+        }
+      },
+      "description": "tail W x1.5 with both regeneration pairs W x1.5",
+      "device_w_um": {
+        "M$11": 9.0,
+        "M$12": 24.0,
+        "M$20": 9.0,
+        "M$25": 9.0,
+        "M$8": 9.0
+      },
+      "device_w_um_source": {
+        "M$11": 6.0,
+        "M$12": 16.0,
+        "M$20": 6.0,
+        "M$25": 6.0,
+        "M$8": 6.0
+      },
+      "id": "tail+regen"
+    }
+  ]
+}
