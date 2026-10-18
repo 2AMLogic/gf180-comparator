@@ -27,26 +27,25 @@ _None._
 
 Human-approved issues ready for implementation (`loom:issue`).
 
-_None._
+- **#323**: Propose a design change that closes the 7 post-layout decision-time misses (T1 item 7)
 
 ## In Progress
 
 Issues currently being built (`loom:building`).
 
-- **#323**: Propose a design change that closes the 7 post-layout decision-time misses (T1 item 7)
-- **#325**: Deduplicate shared helpers (parse_klt_version, git_state, sha256) across sim/layout tools
+_None._
 
 ## PRs Awaiting Review
 
 PRs waiting on Judge (`loom:review-requested`).
 
-- **#326**: feat: add device-lever study and proposed DR-0007 for td_od50 misses
+_None._
 
 ## Approved (Awaiting Merge)
 
 PRs that passed review and are queued for Champion auto-merge (`loom:pr`).
 
-- **#327**: refactor: reuse shared sha256/klt-version/git_state helpers in preamp-noise and tran-feasibility tools
+_None._
 
 ## Proposed
 
@@ -55,6 +54,8 @@ Issues carrying `loom:curated`.
 - **#3**: Gap-to-T1 tracker: gf180-comparator artifact-presence survey *(curated)*
 - **#125**: Define and measure the missing average-power operating condition for T1 *(curated)*
 - **#209**: Extend paired extracted preamp noise measurement to full PVT coverage *(curated)*
+- **#322**: Re-audit T1 items 1, 9 and 10 under DR-0003 and attest them with klt signoff --attest *(curated)*
+- **#323**: Propose a design change that closes the 7 post-layout decision-time misses (T1 item 7) *(curated)*
 
 ## Proposed (Architect / Hermit)
 
@@ -71,11 +72,11 @@ _None._
 | Operator merge-risk holds | 0 |
 | Very important | 0 |
 | Important | 3 |
-| Ready (`loom:issue`) | 0 |
-| In Progress (`loom:building`) | 2 |
-| PRs awaiting review | 1 |
-| Approved PRs awaiting merge | 1 |
-| Curated | 3 |
+| Ready (`loom:issue`) | 1 |
+| In Progress (`loom:building`) | 0 |
+| PRs awaiting review | 0 |
+| Approved PRs awaiting merge | 0 |
+| Curated | 5 |
 | Architect / Hermit proposals | 0 |
 | Active epics | 0 |
 <!-- guide:plan-body:end -->

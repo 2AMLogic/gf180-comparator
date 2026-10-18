@@ -4,6 +4,9 @@ Chronological record of merged pull requests and closed issues. Newest entries a
 
 ### 2026-10-17
 
+- **PR #326**: feat: add device-lever study and proposed DR-0007 for td_od50 misses
+- **PR #327**: refactor: reuse shared sha256/klt-version/git_state helpers in preamp-noise and tran-feasibility tools
+- **Issue #325** (closed): Deduplicate shared helpers (parse_klt_version, git_state, sha256) across sim/layout tools
 - **PR #324**: docs(signoff): add T1 item 1/9/10 inventories and DR-0003 re-audit
 
 ### 2026-10-14
