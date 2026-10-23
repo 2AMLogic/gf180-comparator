@@ -334,6 +334,7 @@ covered automatically:
 | `sim/<experiment>/yield/**` | Monte-Carlo yield evidence |
 | `sim/<experiment>/probes/**` | committed feasibility probe artifacts (reports, logs, refusals, and the `sources/` / `extract/` copies bundled into each probe) |
 | `sim/corner-matrix/**/*.json` | item-5 corner-matrix revision envelopes |
+| `manifests/artifacts/*.manifest.json` | stored-evidence manifests (issue [#331](https://github.com/2AMLogic/gf180-comparator/issues/331)); see [Stored evidence](#stored-evidence) |
 | `layout/pex/artifacts/parasitic-attribution/<run-id>/**` | committed parasitic-attribution run archives (whole subtree, issue [#266](https://github.com/2AMLogic/gf180-comparator/issues/266)) |
 | `layout/pex/artifacts/ground-c-budget/<run-id>/**` | committed ground-C budget run archives (whole subtree) |
 
@@ -388,6 +389,50 @@ With no `--base`, if `origin/main` is missing, equals `HEAD`, or shares no
 history with it, the check prints `SKIP (local-only)` and exits 0. A `--base`
 or `--head` that does not resolve fails (exit 2). The check compares committed
 trees, so commit your changes before running it.
+
+## Stored evidence
+
+New evidence bytes go to the fleet artifact store; git keeps a manifest and a
+Markdown summary (issue [#331](https://github.com/2AMLogic/gf180-comparator/issues/331),
+part of 2AMLogic/2am#5553). Evidence bytes are private and manifests are
+public: a manifest is safe in this public repo, and only callers the broker
+admits can fetch what it names. Runs committed before #331 stay in git
+(manifest-forward only; history is not rewritten).
+
+1. Write the run's raw outputs into git-ignored scratch (`sim/.work/...`, or
+   anywhere outside the repo).
+2. `python3 sim/run_store_evidence.py <bench> <run-id> <dir> --summary <summary.md>`
+   puts every file with `klt artifact put` under the logical name
+   `sim/<bench>/<kind>/<run-id>/<relative path>` (`--kind` is one of
+   `records` (default), `corners`, `probes`, `yield`). It commits exactly
+   `manifests/artifacts/<bench>-<run-id>.manifest.json` and
+   `sim/<bench>/<kind>/<run-id>.md`, the summary with a "Stored evidence"
+   table (name, size, sha256 per object). Zero-byte files cannot be stored
+   and are listed there as empty.
+3. **Configuration** is the environment only, read by `klt`:
+   `KLT_ARTIFACT_BROKER` (set for agent sessions on fleet workers) and,
+   optionally, `KLT_ARTIFACT_REPO`. There is no default, and no broker URL or
+   bucket is written in this repo.
+4. **Fail closed.** If the broker is unset or unreachable, `klt` lacks
+   `artifact put`, or `klt` predates klayout-tools `7e3561f`, the writer
+   exits 10 with nothing under `manifests/` or `sim/`; staged bytes stay in
+   scratch. There is no option to commit the bytes instead.
+5. **Verify.** `klt artifact verify <manifest>` (or
+   `python3 scripts/check_artifact_manifests.py verify <manifest>`) re-hashes
+   every entry against the store. `klt artifact get <manifest>#<name> -o <out>`
+   fetches one object.
+
+CI runs `python3 scripts/check_artifact_manifests.py check --tree HEAD` (the
+`manifests` step of `scripts/run-pdk-free-tests.sh`): manifest schema, only
+`artifact:<key>` URIs, no stored object's bytes (by `name`) also committed,
+and nothing tracked under `sim/.work/`. CI cannot reach the broker, so it does
+not hash-verify and says so.
+
+Manifests `manifests/artifacts/*.manifest.json` are append-only evidence too:
+they are in the protected set of `signoff/check_append_only_evidence.py`,
+because a manifest is the only committed handle on bytes that live outside git.
+The per-file `sim-size` budget is unchanged: manifests are outside `sim/`, and
+summaries are small.
 
 ## Evidence size budget
 

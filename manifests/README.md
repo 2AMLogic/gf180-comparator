@@ -116,3 +116,11 @@ Refreshing the signoff verdict refreshes this file too: whenever
 `maturity.rung` to the new `tier` and the `provenance` stamp in the same
 change — the CI consistency check above fails a PR that updates one
 without the other.
+
+## Stored-evidence manifests (`manifests/artifacts/`)
+
+Separate from the integrator view above: since issue #331, new simulation
+evidence bytes go to the fleet artifact store and git keeps one manifest per
+run under [`artifacts/`](artifacts/README.md). Writing them needs a `klt` with
+the `artifact` verb (klayout-tools `7e3561f` or later). See `sim/README.md`,
+"Stored evidence".
