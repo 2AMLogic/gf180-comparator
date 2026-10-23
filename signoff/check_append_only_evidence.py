@@ -15,6 +15,7 @@ is protected with no edit here):
     sim/<experiment>/yield/**
     sim/<experiment>/probes/**           (committed feasibility probe artifacts)
     sim/corner-matrix/**/*.json          (item-5 revision envelopes)
+    manifests/artifacts/*.manifest.json  (stored-evidence manifests, issue #331)
     layout/pex/artifacts/parasitic-attribution/<run-id>/**   (issue #266)
     layout/pex/artifacts/ground-c-budget/<run-id>/**
 
@@ -85,6 +86,9 @@ import sys
 from pathlib import Path
 
 PROG = "check_append_only_evidence"
+# Stored-evidence manifests (issue #331): the only committed handle on bytes
+# that live in the artifact store, so they are immutable like the evidence.
+MANIFEST_RE = re.compile(r"^manifests/artifacts/[^/]+\.manifest\.json$")
 FAMILIES = ("records", "corners", "netlist-snapshots", "yield", "probes")
 CORNER_MATRIX = "corner-matrix"
 SHA_RE = re.compile(r"^(?:[0-9a-f]{40}|[0-9a-f]{64})$")
@@ -97,7 +101,7 @@ ARCHIVE_ROOTS = (
 )
 RUN_ID_RE = re.compile(r"^\d{8}-\d{6}-[0-9a-f]{7,40}$")
 # Git pathspecs covering every protected family root (used by the size guard).
-PROTECTED_PATHSPECS = ("sim", *ARCHIVE_ROOTS)
+PROTECTED_PATHSPECS = ("sim", "manifests/artifacts", *ARCHIVE_ROOTS)
 
 ENV_EVENT = "APPEND_ONLY_EVENT"
 ENV_PR_BASE = "APPEND_ONLY_PR_BASE_SHA"
@@ -116,6 +120,8 @@ class BaselineError(Exception):
 
 def is_protected(path: str) -> bool:
     """True if `path` (repo-relative, '/'-separated) is immutable evidence."""
+    if MANIFEST_RE.match(path):
+        return True
     for root in ARCHIVE_ROOTS:
         prefix = root + "/"
         if path.startswith(prefix):

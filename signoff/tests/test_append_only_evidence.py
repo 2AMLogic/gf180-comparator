@@ -37,8 +37,11 @@ NEW_EXP = "sim/comparator-brand-new/records/20261009-000000-abcdef0.md"
 PROBE = "sim/comparator-offset-x/probes/20261010-negative-control/report-mc-tt.json"
 PROBE_SRC = "sim/comparator-offset-x/probes/20261010-negative-control/sources/testbench/tb.spice"
 PROBE_LOG = "sim/comparator-offset-x/probes/20261010-negative-control/err-mc-tt.attempt1.txt"
-PROTECTED = [REC, LOG, SNAP, YIELD, ENVELOPE, NEW_EXP, PROBE, PROBE_SRC, PROBE_LOG]
+MANIFEST = "manifests/artifacts/b-r1.manifest.json"
+PROTECTED = [REC, LOG, SNAP, YIELD, ENVELOPE, NEW_EXP, PROBE, PROBE_SRC, PROBE_LOG, MANIFEST]
 UNPROTECTED = [
+    "manifests/artifacts/README.md",
+    "manifests/artifacts/sub/b.manifest.json",
     "sim/comparator-offset-mc/README.md",
     "sim/comparator-offset-mc/testbench/tb.json",
     "sim/comparator-offset-mc/testbench/tb_offset.spice",
@@ -180,13 +183,14 @@ class TreeComparisonTests(Base):
     def test_additions_pass_in_every_family(self):
         for rel in PROTECTED:
             self.r.write(rel.replace("4805118", "9999999").replace("abcdef0", "1234567")
-                         .replace("20261010-negative-control", "20261011-new-probe"), "new\n")
+                         .replace("20261010-negative-control", "20261011-new-probe")
+                         .replace("b-r1.manifest", "b-r2.manifest"), "new\n")
         self.r.write("sim/corner-matrix/item5-corner-matrix-r3.json", "{}\n")
         self.r.write("sim/comparator-other/records/first.md", "new experiment\n")
         self.r.commit()
         rc, out = self.check()
         self.assertEqual(rc, 0, out)
-        self.assertIn("11 protected path(s) added", out)
+        self.assertIn("12 protected path(s) added", out)
 
     def test_unprotected_changes_pass(self):
         for rel in UNPROTECTED:
