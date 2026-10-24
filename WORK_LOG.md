@@ -2,6 +2,11 @@
 
 Chronological record of merged pull requests and closed issues. Newest entries appear first.
 
+### 2026-10-23
+
+- **PR #332**: feat: store new sim evidence in the artifact store, commit manifests only
+- **Issue #331** (closed): Adopt the common artifact store for sim evidence (manifests in git, bytes via klt artifact)
+
 ### 2026-10-17
 
 - **PR #326**: feat: add device-lever study and proposed DR-0007 for td_od50 misses
