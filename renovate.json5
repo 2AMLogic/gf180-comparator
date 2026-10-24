@@ -1,0 +1,97 @@
+// Renovate configuration for 2AMLogic/gf180-comparator
+// Docs: https://docs.renovatebot.com/configuration-options/
+// Pipeline docs: docs/ops/dependency-security-pipeline.md in noc0dev-template
+// (this repo adopts the policy; the doc itself lives in the template repo)
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+
+  // Extend recommended defaults, plus security-focused presets
+  "extends": [
+    "config:recommended",
+    "security:openssf-scorecard",
+    ":dependencyDashboard"
+  ],
+
+  // Override Mend-hosted "silent" default (applied when app is installed on
+  // "All repositories").  "full" lets Renovate create branches, PRs, and the
+  // Dependency Dashboard issue.
+  "mode": "full",
+
+  // --- Supply chain security ---
+
+  // 14-day quarantine: do not propose updates until 14 days after release.
+  // This lets registries catch and yank malicious packages before we see them.
+  // Ref: https://docs.renovatebot.com/key-concepts/minimum-release-age/
+  "minimumReleaseAge": "14 days",
+
+  // Flag known vulnerabilities from the OSV database
+  "osvVulnerabilityAlerts": true,
+
+  // --- Merge policy ---
+
+  // Never auto-merge. Agents review, humans merge.
+  "automerge": false,
+
+  // Create PRs as drafts — keeps a human/agent review step before anything
+  // is mergeable
+  "draftPR": true,
+
+  // --- Schedule ---
+
+  // Weekly on Monday mornings (UTC). Security/vulnerability PRs bypass
+  // both this schedule and minimumReleaseAge (Renovate built-in behavior).
+  // Ref: https://docs.renovatebot.com/key-concepts/minimum-release-age/
+  // "Security updates bypass any minimumReleaseAge checks"
+  "schedule": ["before 10am on monday"],
+  "timezone": "UTC",
+
+  // --- PR behavior ---
+
+  // Limit concurrent PRs to keep review queue manageable
+  "prConcurrentLimit": 5,
+
+  // Add release notes and changelogs to PR body for agent review.
+  // fetchChangeLogs is the current option name (fetchReleaseNotes is
+  // deprecated); "pr" matches the value config:recommended resolves to.
+  "fetchChangeLogs": "pr",
+
+  // --- Package grouping ---
+
+  "packageRules": [
+    // Group all GitHub Actions updates into one PR (this repo's only
+    // Renovate-managed surface today: .github/workflows/signoff.yml).
+    // Workflows are tag-pinned (actions/checkout@v7); the digest update type
+    // would apply if they move to SHA pinning.
+    {
+      "groupName": "github-actions",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["minor", "patch", "digest"]
+    },
+
+    // GitHub Actions major updates get individual PRs
+    {
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["major"]
+    }
+
+    // Note: security/vulnerability PRs bypass both schedule and
+    // minimumReleaseAge by default (Renovate built-in behavior).
+    // Ref: https://docs.renovatebot.com/key-concepts/minimum-release-age/
+    // No packageRule needed — vulnerabilityAlerts config below handles it.
+  ],
+
+  // --- Ignored paths ---
+
+  // Don't touch vendored dependencies (submodules)
+  "ignorePaths": [
+    "vendor/**",
+    ".claude/**",
+    "infra/pulumi/**"
+  ],
+
+  // --- Vulnerability alerts ---
+
+  "vulnerabilityAlerts": {
+    "enabled": true
+  }
+}
