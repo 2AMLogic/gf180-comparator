@@ -86,8 +86,11 @@ jobs:
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/ngspice-src"
           cd "$RUNNER_TEMP/ngspice-src"
+          # SourceForge moved superseded releases under old-releases/; the
+          # bare ng-spice-rework/<ver>/ path 404s (this workflow failed on it
+          # from 2026-10-12, found while doing issue #322).
           curl -fsSL -o ngspice.tar.gz \
-            "https://downloads.sourceforge.net/project/ngspice/ng-spice-rework/${NGSPICE_VERSION}/ngspice-${NGSPICE_VERSION}.tar.gz"
+            "https://downloads.sourceforge.net/project/ngspice/ng-spice-rework/old-releases/${NGSPICE_VERSION}/ngspice-${NGSPICE_VERSION}.tar.gz"
           sha256sum ngspice.tar.gz | tee ngspice.sha256
           mkdir src && tar -xzf ngspice.tar.gz -C src --strip-components=1
           cd src
