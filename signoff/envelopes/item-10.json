@@ -17,7 +17,7 @@
         "role": "hygiene",
         "path": ".github/workflows/selftest.yml",
         "passed": true,
-        "content_hash": "sha256:6550afad417c27728737fd7320434412af3149cfc02b2d120b4575ddf47a334f"
+        "content_hash": "sha256:3ac5b2463aaca3f05faa756f669e29d3055bcab481553afb8ce84658f870b4a8"
       },
       {
         "check": "present",
