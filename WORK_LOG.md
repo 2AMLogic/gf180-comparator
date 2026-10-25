@@ -2,6 +2,12 @@
 
 Chronological record of merged pull requests and closed issues. Newest entries appear first.
 
+### 2026-10-25
+
+- **PR #337**: feat(selftest): surface failed nominal-bench ngspice logs and upload on failure
+- **PR #335**: ci(selftest): attest item 9 on the toolchain runner and fix ngspice download
+- **PR #334**: feat(signoff): attest T1 items 1 and 10 with klt 0.8.0 envelopes
+
 ### 2026-10-23
 
 - **PR #332**: feat: store new sim evidence in the artifact store, commit manifests only
