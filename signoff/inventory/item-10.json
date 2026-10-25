@@ -1,60 +1,62 @@
 {
-  "schema": "gf180-comparator/signoff-inventory/0",
-  "schema_status": "unverified against a released klt: written to the klayout-tools#2844 description; reshape to `klt signoff --attest` once a release ships it",
+  "schema_version": 1,
+  "kind": "t1-attestation-inventory",
   "t1_item": 10,
-  "title": "Repo hygiene",
-  "files": [
-    {
-      "path": ".github/workflows/selftest.yml",
-      "sha256": "sha256:6550afad417c27728737fd7320434412af3149cfc02b2d120b4575ddf47a334f"
-    },
-    {
-      "path": ".github/workflows/signoff.yml",
-      "sha256": "sha256:f47466f12b4ad48dd3a520b4a6e547673c8514c17b7f60bef7511880d6030d23"
-    },
-    {
-      "path": "LICENSE",
-      "sha256": "sha256:cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
-    },
-    {
-      "path": "README.md",
-      "sha256": "sha256:b9ca79a1a92d4ab1c244175566fa00783aa61f8c3ea9c0e5c2c94b5d20a67623"
-    },
-    {
-      "path": "scripts/check_bench_inventory.py",
-      "sha256": "sha256:0ab73377c166d76f8975be3c94b1692ab7a582a0350b5c9052eef9353397bb1a"
-    },
-    {
-      "path": "scripts/check_claim_drift.py",
-      "sha256": "sha256:9ca0e0b70988c7e7fd3484ae92d73d0827dafe10d42d6383f3a10beebdc8a9e1"
-    },
-    {
-      "path": "scripts/run-pdk-free-tests.sh",
-      "sha256": "sha256:1807061d901693f05081687265468cb8cba1cc4007ffd75a85f0ecc7d3741cfc"
-    },
-    {
-      "path": "signoff/check_klt_pin.py",
-      "sha256": "sha256:b4df2452febcbf345cc514d65efcd01a057a332f23aa9689f80adac58ca17e17"
-    },
-    {
-      "path": "signoff/regenerate.sh",
-      "sha256": "sha256:a0e9b3bfbfca63c8daf76817dfab95328fdeeb495d947048a35f46f537d95ef7"
-    },
-    {
-      "path": "signoff/verify-report.py",
-      "sha256": "sha256:cac6f3035293f68b3ccbc04b43c96a1cbeae7a5d2686c8f8035ee5d54db607ba"
-    }
+  "description": "Repo hygiene: README, license, and the CI files plus the PDK-free verifiers that keep the harness and evidence formats valid. The steps exclude the signoff re-grade (it grades this attestation, so running it here would be circular).",
+  "hygiene": [
+    ".github/workflows/selftest.yml",
+    ".github/workflows/signoff.yml",
+    "LICENSE",
+    "README.md",
+    "scripts/check_bench_inventory.py",
+    "scripts/check_claim_drift.py",
+    "scripts/run-pdk-free-tests.sh",
+    "signoff/check_klt_pin.py",
+    "signoff/regenerate.sh",
+    "signoff/verify-report.py"
   ],
-  "commands": [
+  "checks": [
     {
-      "purpose": "PDK-free tests and --check verifiers",
-      "cmd": "./scripts/run-pdk-free-tests.sh",
-      "ci": ".github/workflows/signoff.yml"
+      "name": "discovery",
+      "argv": [
+        "./scripts/run-pdk-free-tests.sh",
+        "discovery"
+      ]
     },
     {
-      "purpose": "verdict-of-record anti-rot",
-      "cmd": "python3 signoff/verify-report.py",
-      "ci": ".github/workflows/signoff.yml"
+      "name": "harness-tests",
+      "argv": [
+        "./scripts/run-pdk-free-tests.sh",
+        "harness"
+      ]
+    },
+    {
+      "name": "klt-pin",
+      "argv": [
+        "./scripts/run-pdk-free-tests.sh",
+        "klt-pin"
+      ]
+    },
+    {
+      "name": "rulebook-pin",
+      "argv": [
+        "./scripts/run-pdk-free-tests.sh",
+        "rulebook-pin"
+      ]
+    },
+    {
+      "name": "bench-inventory",
+      "argv": [
+        "./scripts/run-pdk-free-tests.sh",
+        "bench-inventory"
+      ]
+    },
+    {
+      "name": "claim-drift",
+      "argv": [
+        "./scripts/run-pdk-free-tests.sh",
+        "claim-drift"
+      ]
     }
   ]
 }

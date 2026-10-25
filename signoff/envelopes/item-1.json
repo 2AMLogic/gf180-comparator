@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "kind": "generic",
+  "status": "pass",
+  "t1_item": 1,
+  "summary": "T1 item 1 (Design sources): 13/13 attestation checks passed (klt signoff --attest)",
+  "source": "signoff/inventory/item-1.json",
+  "attestation": {
+    "producer": "klt signoff --attest",
+    "inventory_schema_version": 1,
+    "hash_algorithm": "sha256-raw-bytes",
+    "check_count": 13,
+    "passed_count": 13,
+    "checks": [
+      {
+        "check": "present",
+        "role": "source",
+        "path": "design/comparator.sch",
+        "passed": true,
+        "content_hash": "sha256:f608dd00db086df99e2e54013fd7715f93c891f68ea5206d1e37743764daa6f2"
+      },
+      {
+        "check": "present",
+        "role": "source",
+        "path": "design/comparator.sources.json",
+        "passed": true,
+        "content_hash": "sha256:c66c431e913c20c50612bfa0374514282c729c4c0492b8a7b60d609ba5c6dd94"
+      },
+      {
+        "check": "present",
+        "role": "source",
+        "path": "design/comparator_dut.sch",
+        "passed": true,
+        "content_hash": "sha256:25798142b5eea6875c187dc27a10d17194cd5c59dbc46440135b3a98a5728a78"
+      },
+      {
+        "check": "present",
+        "role": "source",
+        "path": "design/comparator_dut.sym",
+        "passed": true,
+        "content_hash": "sha256:5b068a36e8d696dddcf24e56f257f36cb2237832646df5662bad2ffc0b184743"
+      },
+      {
+        "check": "present",
+        "role": "source",
+        "path": "design/comparator_dut_analog.sch",
+        "passed": true,
+        "content_hash": "sha256:95269982e13bc52f5e4b9d63cb4e7b3d2741d838da8ca3a7c8ca0dba5424694f"
+      },
+      {
+        "check": "present",
+        "role": "source",
+        "path": "design/comparator_dut_analog.sym",
+        "passed": true,
+        "content_hash": "sha256:d0e3594c1b0044dcde15d597c206e220f3c74ab5c2fce34602836f9f8f2e17a7"
+      },
+      {
+        "check": "present",
+        "role": "source",
+        "path": "design/comparator_dut_latch.sch",
+        "passed": true,
+        "content_hash": "sha256:e6dba702c638e38af50726d4ce64cd7048f40fbd2634c93e65f6bf38b588990e"
+      },
+      {
+        "check": "present",
+        "role": "source",
+        "path": "design/comparator_dut_latch.sym",
+        "passed": true,
+        "content_hash": "sha256:69765f7c3a842d3573640a8c20117ad61a3aea89ff61f0a87fd463bd01640503"
+      },
+      {
+        "check": "present",
+        "role": "source",
+        "path": "design/netlist.sh",
+        "passed": true,
+        "content_hash": "sha256:1edba7eb32a4d2e59eb45bb7b5e6bfe98e1e087b83e287d65d5ef13ff2b950e5"
+      },
+      {
+        "check": "present",
+        "role": "source",
+        "path": "design/verify-netlist-pins.py",
+        "passed": true,
+        "content_hash": "sha256:b1f4d6580991ad8c70e4c608f2c88bff671e29d2c610bc0d3ca0c617049047e3"
+      },
+      {
+        "check": "present",
+        "role": "source",
+        "path": "design/xschemrc",
+        "passed": true,
+        "content_hash": "sha256:eded4cbaf0d466ab70ae931ea5e6935eb8f4c06a60fe44725d1cf50a81dbe18b"
+      },
+      {
+        "check": "present",
+        "role": "derived",
+        "path": "design/comparator.spice",
+        "passed": true,
+        "content_hash": "sha256:0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a"
+      },
+      {
+        "check": "command",
+        "role": "freshness",
+        "target": "design/comparator.spice",
+        "generator": "design/netlist.sh (xschem 3.4.7)",
+        "argv": [
+          "python3",
+          "design/verify-netlist-pins.py",
+          "--check"
+        ],
+        "cwd": ".",
+        "exit_status": 0,
+        "passed": true
+      }
+    ]
+  },
+  "provenance": {
+    "klt_version": "0.8.0",
+    "klayout_version": null,
+    "pdk": null,
+    "deck": null,
+    "input": {
+      "path": {
+        "path": "signoff/inventory/item-1.json",
+        "scope": "repo"
+      },
+      "content_hash": "sha256:3cc20625141706aa47f39ab30a973e50695a80660fb61853ef50a1779a6e7e43"
+    }
+  }
+}

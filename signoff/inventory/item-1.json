@@ -1,72 +1,32 @@
 {
-  "schema": "gf180-comparator/signoff-inventory/0",
-  "schema_status": "unverified against a released klt: written to the klayout-tools#2844 description; reshape to `klt signoff --attest` once a release ships it",
+  "schema_version": 1,
+  "kind": "t1-attestation-inventory",
   "t1_item": 1,
-  "title": "Design sources",
-  "files": [
-    {
-      "path": "design/comparator.sch",
-      "sha256": "sha256:f608dd00db086df99e2e54013fd7715f93c891f68ea5206d1e37743764daa6f2"
-    },
-    {
-      "path": "design/comparator.sources.json",
-      "sha256": "sha256:c66c431e913c20c50612bfa0374514282c729c4c0492b8a7b60d609ba5c6dd94"
-    },
+  "description": "Design sources: the schematic hierarchy and generation inputs of design/comparator.spice. Freshness is the PDK-free source-pin check, which proves the committed sources and netlist match the pin file written by the last ./design/netlist.sh run; it does not re-run xschem (only ./design/netlist.sh --check does, and CI's signoff job has no xschem).",
+  "sources": [
+    "design/comparator.sch",
+    "design/comparator.sources.json",
+    "design/comparator_dut.sch",
+    "design/comparator_dut.sym",
+    "design/comparator_dut_analog.sch",
+    "design/comparator_dut_analog.sym",
+    "design/comparator_dut_latch.sch",
+    "design/comparator_dut_latch.sym",
+    "design/netlist.sh",
+    "design/verify-netlist-pins.py",
+    "design/xschemrc"
+  ],
+  "derived": [
     {
       "path": "design/comparator.spice",
-      "sha256": "sha256:0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a"
-    },
-    {
-      "path": "design/comparator_dut.sch",
-      "sha256": "sha256:25798142b5eea6875c187dc27a10d17194cd5c59dbc46440135b3a98a5728a78"
-    },
-    {
-      "path": "design/comparator_dut.sym",
-      "sha256": "sha256:5b068a36e8d696dddcf24e56f257f36cb2237832646df5662bad2ffc0b184743"
-    },
-    {
-      "path": "design/comparator_dut_analog.sch",
-      "sha256": "sha256:95269982e13bc52f5e4b9d63cb4e7b3d2741d838da8ca3a7c8ca0dba5424694f"
-    },
-    {
-      "path": "design/comparator_dut_analog.sym",
-      "sha256": "sha256:d0e3594c1b0044dcde15d597c206e220f3c74ab5c2fce34602836f9f8f2e17a7"
-    },
-    {
-      "path": "design/comparator_dut_latch.sch",
-      "sha256": "sha256:e6dba702c638e38af50726d4ce64cd7048f40fbd2634c93e65f6bf38b588990e"
-    },
-    {
-      "path": "design/comparator_dut_latch.sym",
-      "sha256": "sha256:69765f7c3a842d3573640a8c20117ad61a3aea89ff61f0a87fd463bd01640503"
-    },
-    {
-      "path": "design/netlist.sh",
-      "sha256": "sha256:1edba7eb32a4d2e59eb45bb7b5e6bfe98e1e087b83e287d65d5ef13ff2b950e5"
-    },
-    {
-      "path": "design/verify-netlist-pins.py",
-      "sha256": "sha256:b1f4d6580991ad8c70e4c608f2c88bff671e29d2c610bc0d3ca0c617049047e3"
-    },
-    {
-      "path": "design/xschemrc",
-      "sha256": "sha256:eded4cbaf0d466ab70ae931ea5e6935eb8f4c06a60fe44725d1cf50a81dbe18b"
-    }
-  ],
-  "commands": [
-    {
-      "purpose": "regenerate netlist from schematic (needs xschem + PDK)",
-      "cmd": "./design/netlist.sh"
-    },
-    {
-      "purpose": "staleness check netlist vs schematic (needs xschem + PDK)",
-      "cmd": "./design/netlist.sh --check",
-      "ci": ".github/workflows/selftest.yml"
-    },
-    {
-      "purpose": "PDK-free source/netlist pin check",
-      "cmd": "python3 design/verify-netlist-pins.py --check",
-      "ci": ".github/workflows/signoff.yml via scripts/run-pdk-free-tests.sh"
+      "generator": "design/netlist.sh (xschem 3.4.7)",
+      "check": {
+        "argv": [
+          "python3",
+          "design/verify-netlist-pins.py",
+          "--check"
+        ]
+      }
     }
   ]
 }

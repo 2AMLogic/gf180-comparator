@@ -2,6 +2,10 @@
   "block": "gf180-comparator",
   "kind": "analog",
   "evidence": {
+    "1": {
+      "file": "signoff/envelopes/item-1.json",
+      "content_hash": "sha256:3cc20625141706aa47f39ab30a973e50695a80660fb61853ef50a1779a6e7e43"
+    },
     "2": {
       "file": "layout/lvs/comparator.extract.json",
       "content_hash": "sha256:d668ccb543c4ec6482ee78fb00805a7472955944fce07022c505e78eeec6b8ed"
@@ -29,6 +33,10 @@
     "8": {
       "file": "measurements/characterization-report.item8.json",
       "content_hash": "sha256:a9ef66b1dfee4f0472474616a2433d6fb516655a76fe0a3097c355998d27f0a4"
+    },
+    "10": {
+      "file": "signoff/envelopes/item-10.json",
+      "content_hash": "sha256:5548e97d3b716534780e60633204612a1d7ed1dbb153afcdb0c9055dc1b78bbd"
     },
     "11": [
       {

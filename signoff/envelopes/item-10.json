@@ -1,0 +1,172 @@
+{
+  "schema_version": 1,
+  "kind": "generic",
+  "status": "pass",
+  "t1_item": 10,
+  "summary": "T1 item 10 (Repo hygiene): 16/16 attestation checks passed (klt signoff --attest)",
+  "source": "signoff/inventory/item-10.json",
+  "attestation": {
+    "producer": "klt signoff --attest",
+    "inventory_schema_version": 1,
+    "hash_algorithm": "sha256-raw-bytes",
+    "check_count": 16,
+    "passed_count": 16,
+    "checks": [
+      {
+        "check": "present",
+        "role": "hygiene",
+        "path": ".github/workflows/selftest.yml",
+        "passed": true,
+        "content_hash": "sha256:6550afad417c27728737fd7320434412af3149cfc02b2d120b4575ddf47a334f"
+      },
+      {
+        "check": "present",
+        "role": "hygiene",
+        "path": ".github/workflows/signoff.yml",
+        "passed": true,
+        "content_hash": "sha256:a690858f0cbee6f777156c25a40ec14f0987bad0131e2cf236dd2744ddeeaedf"
+      },
+      {
+        "check": "present",
+        "role": "hygiene",
+        "path": "LICENSE",
+        "passed": true,
+        "content_hash": "sha256:cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+      },
+      {
+        "check": "present",
+        "role": "hygiene",
+        "path": "README.md",
+        "passed": true,
+        "content_hash": "sha256:b9ca79a1a92d4ab1c244175566fa00783aa61f8c3ea9c0e5c2c94b5d20a67623"
+      },
+      {
+        "check": "present",
+        "role": "hygiene",
+        "path": "scripts/check_bench_inventory.py",
+        "passed": true,
+        "content_hash": "sha256:0ab73377c166d76f8975be3c94b1692ab7a582a0350b5c9052eef9353397bb1a"
+      },
+      {
+        "check": "present",
+        "role": "hygiene",
+        "path": "scripts/check_claim_drift.py",
+        "passed": true,
+        "content_hash": "sha256:9ca0e0b70988c7e7fd3484ae92d73d0827dafe10d42d6383f3a10beebdc8a9e1"
+      },
+      {
+        "check": "present",
+        "role": "hygiene",
+        "path": "scripts/run-pdk-free-tests.sh",
+        "passed": true,
+        "content_hash": "sha256:38516f3ab8a3aec1c4e108ec1614f2cfdef05fe08c0b2b8b1eebbd3c3eade519"
+      },
+      {
+        "check": "present",
+        "role": "hygiene",
+        "path": "signoff/check_klt_pin.py",
+        "passed": true,
+        "content_hash": "sha256:b4df2452febcbf345cc514d65efcd01a057a332f23aa9689f80adac58ca17e17"
+      },
+      {
+        "check": "present",
+        "role": "hygiene",
+        "path": "signoff/regenerate.sh",
+        "passed": true,
+        "content_hash": "sha256:08b8cedfd0d89c1687255f6e1c4374d56d5e40b21c32de4079d59ccf304cd2de"
+      },
+      {
+        "check": "present",
+        "role": "hygiene",
+        "path": "signoff/verify-report.py",
+        "passed": true,
+        "content_hash": "sha256:e57551395e62cd0b97afd49144de1aef2483bd3b592ecd8ec48cd2d8891574e9"
+      },
+      {
+        "check": "command",
+        "role": "audit",
+        "name": "discovery",
+        "argv": [
+          "./scripts/run-pdk-free-tests.sh",
+          "discovery"
+        ],
+        "cwd": ".",
+        "exit_status": 0,
+        "passed": true
+      },
+      {
+        "check": "command",
+        "role": "audit",
+        "name": "harness-tests",
+        "argv": [
+          "./scripts/run-pdk-free-tests.sh",
+          "harness"
+        ],
+        "cwd": ".",
+        "exit_status": 0,
+        "passed": true
+      },
+      {
+        "check": "command",
+        "role": "audit",
+        "name": "klt-pin",
+        "argv": [
+          "./scripts/run-pdk-free-tests.sh",
+          "klt-pin"
+        ],
+        "cwd": ".",
+        "exit_status": 0,
+        "passed": true
+      },
+      {
+        "check": "command",
+        "role": "audit",
+        "name": "rulebook-pin",
+        "argv": [
+          "./scripts/run-pdk-free-tests.sh",
+          "rulebook-pin"
+        ],
+        "cwd": ".",
+        "exit_status": 0,
+        "passed": true
+      },
+      {
+        "check": "command",
+        "role": "audit",
+        "name": "bench-inventory",
+        "argv": [
+          "./scripts/run-pdk-free-tests.sh",
+          "bench-inventory"
+        ],
+        "cwd": ".",
+        "exit_status": 0,
+        "passed": true
+      },
+      {
+        "check": "command",
+        "role": "audit",
+        "name": "claim-drift",
+        "argv": [
+          "./scripts/run-pdk-free-tests.sh",
+          "claim-drift"
+        ],
+        "cwd": ".",
+        "exit_status": 0,
+        "passed": true
+      }
+    ]
+  },
+  "provenance": {
+    "klt_version": "0.8.0",
+    "klayout_version": null,
+    "pdk": null,
+    "deck": null,
+    "input": {
+      "path": {
+        "path": "signoff/inventory/item-10.json",
+        "scope": "repo"
+      },
+      "content_hash": "sha256:5548e97d3b716534780e60633204612a1d7ed1dbb153afcdb0c9055dc1b78bbd"
+    }
+  }
+}

@@ -50,10 +50,10 @@ for the same topology.
 Grading this report reproducibly depends on two pinned things, and
 `verify-report.py` refuses a grade that does not match either:
 
-1. **The grader distribution: `klayout-tools==0.6.0`, the PyPI registry
+1. **The grader distribution: `klayout-tools==0.8.0`, the PyPI registry
    wheel.** `regenerate.sh` grades with a throwaway venv install of exactly
    that wheel and asserts its identity (`klt version --format json` must
-   report `package_version: 0.6.0`, `git_tag: v0.6.0`, `is_release: true`) —
+   report `package_version: 0.8.0`, `git_tag: v0.8.0`, `is_release: true`) —
    same-version builds are *not* the same code (a git snapshot or
    full-checkout install under the same version string can grade a different
    item table than the released wheel), which is why neither regenerate nor
@@ -277,7 +277,7 @@ explicitly labelled yield report with its own adapter, which this change does
 not add. Item 6 therefore stays on preamp-only evidence; a total-offset yield
 report is a candidate follow-up, not claimed here.
 
-**"Met" is weaker than it looks.** The pinned 0.6.0 grader reads the report's
+**"Met" is weaker than it looks.** The pinned 0.8.0 grader reads the report's
 `status` (`reported`: no `target_yield` is declared, so it cannot fail); it
 does not grade the checklist's prose sub-requirements. The disclosed gaps,
 in full in `sim/comparator-offset-mc/yield/README.md`: one seed (`20260909`)
@@ -289,7 +289,7 @@ on `sigma_to_spec` and a normal fit; the negative control is a synthetic
 circuit); MC is mismatch-only at deterministic process corners (no global
 process MC); schematic DUT only. The seed has no field in the `klt yield`
 report format (klayout-tools#2840). The report was produced with
-`klayout-tools==0.6.0` plus a locally built `klt_yield_native` extension
+`klayout-tools 0.6.0` plus a locally built `klt_yield_native` extension
 (no published wheel — upstream klayout-tools#2531); grading it needs no
 extension.
 
@@ -341,7 +341,7 @@ wrapper says so instead of standing static power in for it:
 rule (failure precedes coverage): `fail` if any measured target misses; else
 `pass_partial` while any ratified row is unscored; `pass` only when both
 hold. `pass_partial` is the `sim` kind's partial token in the pinned
-`klayout-tools==0.6.0` grader, which grades it `unmet` with reason
+`klayout-tools==0.8.0` grader, which grades it `unmet` with reason
 **`partial_coverage`** — distinct from `check_failed`, so incomplete coverage
 is never presented as a measured limit violation. Per-corner `status` follows
 the same rule (`fail` / `pass_partial`). Consequence: **closing the kickback
@@ -711,7 +711,7 @@ items 2/3 cite).
 upstream blocker (klayout-tools#2169, `ties[]` collapsing a routed design to
 one island) is closed, as are the follow-ups for implant-free streams (#2234),
 native-substrate ties (#2255) and well-side selectors (#2339, #2540). The
-spec declares two ties and the re-run at the released `klayout-tools==0.6.0`
+spec declares two ties and the re-run at the released `klayout-tools 0.6.0`
 wheel reports `erc_status: "clean"`, zero findings (no false
 `erc.supply_short`), one island per supply, and `erc.missing_tie` *checked*
 for both: `nwell_vdd` (Nwell 21/0, Nplus-narrowed Comp taps, to `vdd`) and
@@ -725,7 +725,7 @@ spec keys, the spec's old `_comment` moved to
 `layout/erc-supply-spec.notes.md`. The manifest pin is unchanged (it is the
 GDS hash, which this change did not touch). The history below is superseded.
 
-**Update (#90): the pin moved to `klayout-tools==0.6.0`, which recognizes
+**Update (#90): the pin moved to `klayout-tools 0.6.0`, which recognizes
 item 11.** Item 11's manifest entry is now the compound list the grader
 requires (the ERC report plus item 4's LVS report, same pin), because a lone
 `erc` citation grades `wrong_kind`. The row now renders `unmet`, reason
@@ -846,11 +846,32 @@ citing); the same-PDK-family canaries
 `gf180-rcosc/signoff/` and `gf180-sram/signoff/` follow the same directory
 convention used here.
 
-## Attestation inventories (items 1, 9, 10)
+## Attestation inventories and envelopes (items 1, 9, 10)
 
-`signoff/inventory/item-{1,9,10}.json` list the exact files (with sha256) and
-the cold-start / CI commands behind T1 items 1, 9 and 10. They are the input
-for `klt signoff --attest`, which no released klt carries yet (latest 0.7.0);
-until it does, those items stay uncited and the schema is unverified. See the
-addendum in `spec/decision-records/DR-0003-t1-items-1-9-10-claim-policy.md`
-(issue #322).
+`signoff/inventory/item-{1,9,10}.json` are `klt signoff --attest` inventories
+(`schema_version` 1, `kind: t1-attestation-inventory`; schema read from the
+pinned 0.8.0 wheel). Items **1 and 10** are attested: the tool-produced
+envelopes are `signoff/envelopes/item-{1,10}.json`, the manifest cites them
+with the inventory's sha256, and `signoff.yml` re-runs
+`klt signoff --attest N --inventory ... --check ...` per item (exit 3 on
+drift). Refresh after editing any inventoried file:
+
+    klt signoff --attest 1  --inventory signoff/inventory/item-1.json  -o signoff/envelopes/item-1.json
+    klt signoff --attest 10 --inventory signoff/inventory/item-10.json -o signoff/envelopes/item-10.json
+
+then re-pin the inventory hash in `block-manifest.json` if the inventory
+itself changed and re-grade. Item 10 inventories `README.md`, the workflows and
+the verifiers, so editing those makes the committed envelope drift by design.
+
+What the attestation does and does not show: item 1's freshness check is
+`design/verify-netlist-pins.py --check`, which proves the committed sources and
+netlist match the pin file from the last `./design/netlist.sh` run, not that
+xschem would regenerate the same netlist (`./design/netlist.sh --check` does,
+but CI's signoff job has no xschem). Item 10's checks are the PDK-free steps
+of `scripts/run-pdk-free-tests.sh`, excluding the re-grade (circular).
+
+**Item 9 stays uncited.** Its cold start (`./sim/selftest.sh`) needs ngspice
+>= 46 and the pinned open_pdks PDK; the inventory declares it `local_only`, and
+the envelope has to be produced on a host that has the toolchain, then pinned in
+the manifest and added to the `signoff.yml` loop. See the addendum in
+`spec/decision-records/DR-0003-t1-items-1-9-10-claim-policy.md` (issue #322).
