@@ -873,5 +873,7 @@ of `scripts/run-pdk-free-tests.sh`, excluding the re-grade (circular).
 **Item 9 stays uncited.** Its cold start (`./sim/selftest.sh`) needs ngspice
 >= 46 and the pinned open_pdks PDK; the inventory declares it `local_only`, and
 the envelope has to be produced on a host that has the toolchain, then pinned in
-the manifest and added to the `signoff.yml` loop. See the addendum in
+the manifest and added to the `signoff.yml` loop. `selftest.yml` now runs the
+attestation on such a host, but its selftest currently fails at the nominal
+kickback bench, so no envelope exists yet. See the addenda in
 `spec/decision-records/DR-0003-t1-items-1-9-10-claim-policy.md` (issue #322).
