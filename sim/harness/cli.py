@@ -144,6 +144,29 @@ def _list() -> int:
     return 0
 
 
+LOG_TAIL_LINES = 60
+
+
+def _print_failed_logs(results, log_dir: Path) -> None:
+    """Print the ngspice error lines and log tail of every non-ok point."""
+    for r in results:
+        if r.status == "ok":
+            continue
+        print("-" * 78)
+        print(f"  FAILED POINT {r.point.corner_id}: {r.message}")
+        for w in r.warnings[:10]:
+            print(f"    warning: {w}")
+        log_path = log_dir / r.log if r.log else None
+        if log_path is None or not log_path.is_file():
+            print("    (no ngspice log found)")
+            continue
+        lines = log_path.read_text(errors="replace").splitlines()
+        print(f"  --- {log_path.name}: last {min(len(lines), LOG_TAIL_LINES)} "
+              f"of {len(lines)} lines")
+        for line in lines[-LOG_TAIL_LINES:]:
+            print(f"    | {line}")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="run_corners.py",
@@ -372,6 +395,13 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  logs:   sim/{tb.experiment}/corners/{rid}/")
     else:
         print("  (--no-write: no evidence record minted)")
+        if not passed:
+            # A failed scratch run is otherwise undiagnosable: its logs live
+            # only in the scratch dir. Surface them and keep the dir so CI
+            # can upload it (sim/.work/ is gitignored).
+            _print_failed_logs(results, log_dir)
+            print(f"  scratch logs kept: {log_dir}")
+            return 1
     shutil.rmtree(workdir, ignore_errors=True)
 
     return 0 if passed else 1

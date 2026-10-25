@@ -52,7 +52,9 @@ for campaign in comparator-offset-mc comparator-preamp-noise \
        >/tmp/loom-selftest-$$.log 2>&1; then
     ok "nominal ${campaign}"
   else
-    tail -20 /tmp/loom-selftest-$$.log
+    # The runner prints each failed point's error lines + ngspice log tail
+    # (harness/cli.py _print_failed_logs); show enough to include them.
+    tail -150 /tmp/loom-selftest-$$.log
     bad "nominal ${campaign}"
   fi
 done
