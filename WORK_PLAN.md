@@ -33,7 +33,7 @@ _None._
 
 Issues currently being built (`loom:building`).
 
-_None._
+- **#336**: selftest.yml: nominal comparator-kickback bench completes no points on the CI toolchain
 
 ## PRs Awaiting Review
 
@@ -56,6 +56,7 @@ Issues carrying `loom:curated`.
 - **#209**: Extend paired extracted preamp noise measurement to full PVT coverage *(curated)*
 - **#322**: Re-audit T1 items 1, 9 and 10 under DR-0003 and attest them with klt signoff --attest *(curated)*
 - **#323**: Propose a design change that closes the 7 post-layout decision-time misses (T1 item 7) *(curated)*
+- **#336**: selftest.yml: nominal comparator-kickback bench completes no points on the CI toolchain *(curated)*
 
 ## Proposed (Architect / Hermit)
 
@@ -73,10 +74,10 @@ _None._
 | Very important | 0 |
 | Important | 3 |
 | Ready (`loom:issue`) | 0 |
-| In Progress (`loom:building`) | 0 |
+| In Progress (`loom:building`) | 1 |
 | PRs awaiting review | 0 |
 | Approved PRs awaiting merge | 0 |
-| Curated | 5 |
+| Curated | 6 |
 | Architect / Hermit proposals | 0 |
 | Active epics | 0 |
 <!-- guide:plan-body:end -->
