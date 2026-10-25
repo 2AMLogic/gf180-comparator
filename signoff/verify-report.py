@@ -62,7 +62,7 @@ Run from anywhere inside the repository:
     python3 signoff/verify-report.py
 
 CI runs exactly this command (``.github/workflows/signoff.yml``), after
-installing the pinned grader (``klayout-tools==0.6.0``, the PyPI registry
+installing the pinned grader (``klayout-tools==0.8.0``, the PyPI registry
 wheel -- the same distribution ``signoff/regenerate.sh`` grades with; see
 that script's header for why the distribution identity matters). Before
 committing a refreshed report locally, run this too -- if the freshly graded
@@ -130,6 +130,14 @@ _pin_spec.loader.exec_module(RULEBOOK_PIN)
 # exactly the citations block-manifest.json makes: adding a citation means
 # adding a row here, and signoff/README.md's refresh contract says so.
 PINNED_ARTIFACTS = {
+    # Items 1 and 10 (issue #322) cite `klt signoff --attest` envelopes; the
+    # pinned artifact is the attestation inventory the envelope binds, whose
+    # raw-byte sha256 is the envelope's provenance.input.content_hash.
+    "1": (
+        REPO_ROOT / "signoff" / "envelopes" / "item-1.json",
+        REPO_ROOT / "signoff" / "inventory" / "item-1.json",
+        ("provenance", "input", "content_hash"),
+    ),
     "2": (
         REPO_ROOT / "layout" / "lvs" / "comparator.extract.json",
         REPO_ROOT / "layout" / "comparator.gds",
@@ -144,6 +152,11 @@ PINNED_ARTIFACTS = {
         REPO_ROOT / "layout" / "lvs" / "comparator.lvs.json",
         REPO_ROOT / "design" / "comparator.spice",
         ("environment", "reference_sha256"),
+    ),
+    "10": (
+        REPO_ROOT / "signoff" / "envelopes" / "item-10.json",
+        REPO_ROOT / "signoff" / "inventory" / "item-10.json",
+        ("provenance", "input", "content_hash"),
     ),
     "11": (
         REPO_ROOT / "layout" / "erc" / "comparator.erc.json",
@@ -233,7 +246,7 @@ def find_klt() -> str:
         "no klt binary found (looked next to "
         f"{sys.executable} and on PATH) -- install the pinned grader per "
         "signoff/README.md, e.g.\n"
-        "  python -m pip install klayout-tools==0.6.0"
+        "  python -m pip install klayout-tools==0.8.0"
     )
 
 

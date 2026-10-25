@@ -88,3 +88,26 @@ inventories, pin their hashes in `signoff/block-manifest.json`, regenerate
 the negative control (edit one inventoried file; the row must go
 stale/unmet). No missing `--attest` check was found beyond the unreleased
 state, so no new upstream issue is filed.
+
+## Addendum 2 (issue #322, 2026-10-25): attestation envelopes, pin 0.8.0
+
+`klayout-tools` 0.8.0 (PyPI) ships `klt signoff --attest` / `--inventory`
+(checked with `uvx --from "klayout-tools==0.8.0" klt signoff --help`). The
+grader pin moved 0.6.0 -> 0.8.0 (`signoff/regenerate.sh`, `signoff.yml`,
+`verify-report.py`); it still grades the 11-item vendored rulebook. The
+inventories were rewritten to the tool's real schema.
+
+- **Item 1**: "leave uncited" **no longer holds**. Cited:
+  `signoff/envelopes/item-1.json` (13/13 checks). Limit: freshness is the
+  PDK-free pin check, not an xschem regeneration (CI has no xschem).
+- **Item 10**: "leave uncited" **no longer holds**. Cited:
+  `signoff/envelopes/item-10.json` (16/16 checks: the PDK-free verifier steps,
+  excluding the circular re-grade).
+- **Item 9**: "leave uncited" **still holds**. The cold start needs ngspice
+  >= 46 plus the pinned PDK, which the producing host lacked (ngspice 42, no
+  PDK); a self-asserted or weakened cold start would not be honest. Open: attest
+  on a toolchain host.
+
+The envelopes are `klt`-produced, not hand-written, so the Alternatives above
+(wrapping hand-checked claims) still stand rejected. No `--attest` gap was
+found that needs filing upstream.

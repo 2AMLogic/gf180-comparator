@@ -9,7 +9,7 @@ is TBD. Item 5 must NOT grade ``met`` on that envelope.
 No PDK, xschem or ngspice is needed: fixtures are copies of the committed
 records in a temporary root, and the wrapper module's ``REPO_ROOT`` is
 pointed there. The grader test additionally needs the pinned
-``klayout-tools==0.6.0`` ``klt`` (CI's signoff job installs it); it looks
+``klayout-tools==0.8.0`` ``klt`` (CI's signoff job installs it); it looks
 for ``$KLT``, then a ``klt`` beside this interpreter, then ``klt`` on PATH,
 and is skipped -- loudly, by name -- when none is found.
 
@@ -173,7 +173,7 @@ class AllMeasuredTargetsPass(_FixtureCase):
     def test_pinned_grader_grades_item5_unmet(self) -> None:
         klt = find_klt()
         if klt is None:
-            self.skipTest("pinned grader `klt` (klayout-tools==0.6.0) not found; set $KLT")
+            self.skipTest("pinned grader `klt` (klayout-tools==0.8.0) not found; set $KLT")
         rc, _ = run_main(self.mod)
         self.assertEqual(rc, 0)
         out = self.mod.output_path()
