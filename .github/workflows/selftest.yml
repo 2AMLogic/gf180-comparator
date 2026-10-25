@@ -8,8 +8,12 @@ name: Scheduled runtime checks
 # committed evidence: it is only weekly + manual, never on push/PR, and it
 # commits nothing. Failures are real failures and are never swallowed.
 #
-# This is not full characterization (no 45-point PVT grids) and not a
-# CI-produced signoff envelope.
+# This is not full characterization (no 45-point PVT grids). The one artifact
+# it produces is the T1 item 9 attestation envelope (issue #322): the last
+# step runs `klt signoff --attest 9` here, the only place with the toolchain
+# the item's local_only cold start needs, and uploads the result as a workflow
+# artifact. The workflow never commits it; a person downloads it with
+# `gh run download` and commits it as signoff/envelopes/item-9.json.
 
 on:
   schedule:
@@ -82,8 +86,11 @@ jobs:
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/ngspice-src"
           cd "$RUNNER_TEMP/ngspice-src"
+          # SourceForge moved superseded releases under old-releases/; the
+          # bare ng-spice-rework/<ver>/ path 404s (this workflow failed on it
+          # from 2026-10-12, found while doing issue #322).
           curl -fsSL -o ngspice.tar.gz \
-            "https://downloads.sourceforge.net/project/ngspice/ng-spice-rework/${NGSPICE_VERSION}/ngspice-${NGSPICE_VERSION}.tar.gz"
+            "https://downloads.sourceforge.net/project/ngspice/ng-spice-rework/old-releases/${NGSPICE_VERSION}/ngspice-${NGSPICE_VERSION}.tar.gz"
           sha256sum ngspice.tar.gz | tee ngspice.sha256
           mkdir src && tar -xzf ngspice.tar.gz -C src --strip-components=1
           cd src
@@ -160,3 +167,29 @@ jobs:
           git status --porcelain
           test -z "$(git status --porcelain --untracked-files=no)" \
             || { echo "runtime checks modified tracked files" >&2; git diff --stat >&2; exit 1; }
+
+      # Issue #322: attest T1 item 9. The inventory's cold start
+      # (./sim/selftest.sh) is local_only: it needs ngspice >= 46 and the
+      # pinned PDK, so it can only run on this job, and signoff.yml's
+      # PDK-free `--check` carries the committed outcome instead of re-running
+      # it. The klt pin is the grader pin (signoff/regenerate.sh KLT_VERSION,
+      # guarded by signoff/check_klt_pin.py). The envelope goes outside the
+      # checkout so it cannot dirty the tree.
+      - name: Attest T1 item 9 (klt signoff --attest 9)
+        run: |
+          set -euo pipefail
+          python3 -m venv "$RUNNER_TEMP/klt-venv"
+          "$RUNNER_TEMP/klt-venv/bin/pip" install --quiet "klayout-tools==0.8.0"
+          export PATH="$HOME/tools/ngspice/bin:$HOME/tools/xschem/bin:$PATH"
+          mkdir -p "$RUNNER_TEMP/attest"
+          "$RUNNER_TEMP/klt-venv/bin/klt" signoff --attest 9 \
+            --inventory signoff/inventory/item-9.json \
+            -o "$RUNNER_TEMP/attest/item-9.json"
+          sha256sum "$RUNNER_TEMP/attest/item-9.json"
+
+      - name: Upload the item 9 envelope
+        uses: actions/upload-artifact@v4
+        with:
+          name: item-9-envelope
+          path: ${{ runner.temp }}/attest/item-9.json
+          if-no-files-found: error
