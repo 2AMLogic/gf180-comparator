@@ -111,3 +111,28 @@ inventories were rewritten to the tool's real schema.
 The envelopes are `klt`-produced, not hand-written, so the Alternatives above
 (wrapping hand-checked claims) still stand rejected. No `--attest` gap was
 found that needs filing upstream.
+
+## Addendum 3 (issue #322, 2026-10-25): item 9 attestation attempt on the toolchain host
+
+`selftest.yml` now has an attest-and-upload step (`klt signoff --attest 9`,
+klt 0.8.0) so the envelope can be produced where ngspice >= 46 and the pinned
+PDK exist. Two findings from the first runs (workflow_dispatch on the issue
+branch, runs 40226985190 and 40227065422):
+
+- The workflow had failed on `main` since at least 2026-10-12 because the
+  ngspice 46 tarball moved to SourceForge's `old-releases/` path (HTTP 404).
+  Fixed in this change; the toolchain now builds.
+- With the toolchain present, `./sim/selftest.sh` fails at the nominal
+  `comparator-kickback` bench ("no completed points"; every other nominal bench,
+  the reverse-polarity controls and all four sabotage controls pass). The cold
+  start therefore does not succeed, so `--attest 9` cannot honestly pass and
+  produces no envelope.
+
+Decision: item 9 **stays uncited** ("leave uncited" still holds). The cold start
+is not weakened or self-asserted to make the row pass. The attest step is
+non-gating (it runs after the selftest step, which must pass first), and
+`signoff.yml` is unchanged for item 9. Follow-up: diagnose the CI kickback
+failure, then download the `item-9-envelope` artifact, commit it as
+`signoff/envelopes/item-9.json`, pin it in the manifest and add item 9 to the
+`signoff.yml` loop. No `--attest` gap was found that needs filing upstream.
+
