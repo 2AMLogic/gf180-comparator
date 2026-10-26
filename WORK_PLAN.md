@@ -27,7 +27,7 @@ _None._
 
 Human-approved issues ready for implementation (`loom:issue`).
 
-_None._
+- **#322**: Re-audit T1 items 1, 9 and 10 under DR-0003 and attest them with klt signoff --attest
 
 ## In Progress
 
@@ -72,7 +72,7 @@ _None._
 | Operator merge-risk holds | 0 |
 | Very important | 0 |
 | Important | 3 |
-| Ready (`loom:issue`) | 0 |
+| Ready (`loom:issue`) | 1 |
 | In Progress (`loom:building`) | 0 |
 | PRs awaiting review | 0 |
 | Approved PRs awaiting merge | 0 |
