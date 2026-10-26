@@ -37,7 +37,7 @@
     "meas tran dc_end find v(dcn) at=55n"
   ],
   "measure": {
-    "kick_1k_peak_mv": "max(abs(ad_pos),abs(ad_neg),abs(adn_pos),abs(adn_neg))*1e3",
+    "kick_1k_peak_mv": "max(max(abs(ad_pos),abs(ad_neg)),max(abs(adn_pos),abs(adn_neg)))*1e3",
     "kick_1k_pnode_peak_mv": "max(abs(ad_pos),abs(ad_neg))*1e3",
     "kick_1k_nnode_peak_mv": "max(abs(adn_pos),abs(adn_neg))*1e3",
     "kick_1k_nnode_pos_mv": "adn_pos*1e3",
