@@ -2,6 +2,11 @@
 
 Chronological record of merged pull requests and closed issues. Newest entries appear first.
 
+### 2026-10-26
+
+- **PR #339**: fix(kickback): nest 4-arg max() for ngspice 46 compatibility
+- **Issue #336** (closed): selftest.yml: nominal comparator-kickback bench completes no points on the CI toolchain
+
 ### 2026-10-25
 
 - **PR #337**: feat(selftest): surface failed nominal-bench ngspice logs and upload on failure
