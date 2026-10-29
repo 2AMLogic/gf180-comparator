@@ -2,6 +2,10 @@
 
 Chronological record of merged pull requests and closed issues. Newest entries appear first.
 
+### 2026-10-29
+
+- **Issue #67** (closed): README: embed the fleet burndown chart (one line)
+
 ### 2026-10-26
 
 - **PR #339**: fix(kickback): nest 4-arg max() for ngspice 46 compatibility
