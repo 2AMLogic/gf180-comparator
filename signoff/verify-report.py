@@ -153,6 +153,11 @@ PINNED_ARTIFACTS = {
         REPO_ROOT / "design" / "comparator.spice",
         ("environment", "reference_sha256"),
     ),
+    "9": (
+        REPO_ROOT / "signoff" / "envelopes" / "item-9.json",
+        REPO_ROOT / "signoff" / "inventory" / "item-9.json",
+        ("provenance", "input", "content_hash"),
+    ),
     "10": (
         REPO_ROOT / "signoff" / "envelopes" / "item-10.json",
         REPO_ROOT / "signoff" / "inventory" / "item-10.json",
