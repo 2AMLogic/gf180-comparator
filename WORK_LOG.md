@@ -2,6 +2,11 @@
 
 Chronological record of merged pull requests and closed issues. Newest entries appear first.
 
+### 2026-11-02
+
+- **PR #343**: feat(signoff): attest T1 item 9 with the selftest.yml-produced klt envelope
+- **Issue #322** (closed): Re-audit T1 items 1, 9 and 10 under DR-0003 and attest them with klt signoff --attest
+
 ### 2026-10-29
 
 - **Issue #67** (closed): README: embed the fleet burndown chart (one line)
