@@ -27,7 +27,7 @@ _None._
 
 Human-approved issues ready for implementation (`loom:issue`).
 
-- **#322**: Re-audit T1 items 1, 9 and 10 under DR-0003 and attest them with klt signoff --attest
+_None._
 
 ## In Progress
 
@@ -54,7 +54,6 @@ Issues carrying `loom:curated`.
 - **#3**: Gap-to-T1 tracker: gf180-comparator artifact-presence survey *(curated)*
 - **#125**: Define and measure the missing average-power operating condition for T1 *(curated)*
 - **#209**: Extend paired extracted preamp noise measurement to full PVT coverage *(curated)*
-- **#322**: Re-audit T1 items 1, 9 and 10 under DR-0003 and attest them with klt signoff --attest *(curated)*
 - **#323**: Propose a design change that closes the 7 post-layout decision-time misses (T1 item 7) *(curated)*
 
 ## Proposed (Architect / Hermit)
@@ -72,11 +71,11 @@ _None._
 | Operator merge-risk holds | 0 |
 | Very important | 0 |
 | Important | 3 |
-| Ready (`loom:issue`) | 1 |
+| Ready (`loom:issue`) | 0 |
 | In Progress (`loom:building`) | 0 |
 | PRs awaiting review | 0 |
 | Approved PRs awaiting merge | 0 |
-| Curated | 5 |
+| Curated | 4 |
 | Architect / Hermit proposals | 0 |
 | Active epics | 0 |
 <!-- guide:plan-body:end -->
