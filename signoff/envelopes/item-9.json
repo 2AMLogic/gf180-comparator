@@ -1,0 +1,515 @@
+{
+  "schema_version": 1,
+  "kind": "generic",
+  "status": "pass",
+  "t1_item": 9,
+  "summary": "T1 item 9 (Testbenches shipped): 68/68 attestation checks passed (klt signoff --attest)",
+  "source": "signoff/inventory/item-9.json",
+  "attestation": {
+    "producer": "klt signoff --attest",
+    "inventory_schema_version": 1,
+    "hash_algorithm": "sha256-raw-bytes",
+    "check_count": 68,
+    "passed_count": 68,
+    "checks": [
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/README.md",
+        "passed": true,
+        "content_hash": "sha256:5f6c6177674f023042b1684c7f755fe2a2ee5814608594a6baf5fbd426b96829"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/characterize.sh",
+        "passed": true,
+        "content_hash": "sha256:e9ee565c7fe9bc5f627de13e314ab401f3a0dcf3470cbb7b15c4db0463d6fdd6"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/comparator-kickback/README.md",
+        "passed": true,
+        "content_hash": "sha256:ed37efcd34ba19b69db5de8bc210ed646226caedf6ce83d11dc745e2b33c66b1"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/comparator-kickback/testbench/tb.json",
+        "passed": true,
+        "content_hash": "sha256:7522a3fff330a0dcd6d0554bc232c4b16e21b949ab98ac4fffac658331bb99fb"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/comparator-kickback/testbench/tb_kickback.spice",
+        "passed": true,
+        "content_hash": "sha256:f42495917522fa2c726d29ad6ef053284482489c93da3b9bc2236678fea4e090"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/comparator-kickback/testbench/tb_vosprobe.spice",
+        "passed": true,
+        "content_hash": "sha256:3a1bd8f03483f1028effeb71342f46e468aa007a4f4902cbc0c0ec25c5bf9632"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/comparator-offset-cm-index/README.md",
+        "passed": true,
+        "content_hash": "sha256:209844cd4a57547a23cdaca47fa44598a2d3f2296c1a1e7b05e3cf834ed8f98c"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/comparator-offset-cm-index/fixtures/semantics_dut.spice",
+        "passed": true,
+        "content_hash": "sha256:8d5b45c86f1cfcbb77fc99168c4fad195c2cf74f659e400aa2c81b4e756e3eff"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/comparator-offset-cm-index/testbench/tb.json",
+        "passed": true,
+        "content_hash": "sha256:63422feb72aafbc5a7b3ad9c9df8826dee23e3c053678aae5454e64d511e9457"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/comparator-offset-cm-index/testbench/tb_offset_cm_index.spice",
+        "passed": true,
+        "content_hash": "sha256:014293424ecff1e2d81bc979e2d9eb5b8e28e346cecc1326be28125f0b5fc344"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/comparator-offset-cm-window/README.md",
+        "passed": true,
+        "content_hash": "sha256:37f1032d1ff3b0e07f1c275817af5b3ef5d8574d1dbc85c1e5312ddd60502952"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/comparator-offset-cm-window/testbench/tb.json",
+        "passed": true,
+        "content_hash": "sha256:adc88c2faa5d7cf23bc14bec40f6128d9c3ae9c0225688dd809f29736fea48ab"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/comparator-offset-cm-window/testbench/tb_offset_cm_window.spice",
+        "passed": true,
+        "content_hash": "sha256:d75b6904573216664157b6c934c7230a5d62f48c50a65d26c492d3de0519fdc6"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/comparator-offset-mc/README.md",
+        "passed": true,
+        "content_hash": "sha256:39a15f2b387559de9f7f65772796ab02ff1358008de97e440fa727c509f80910"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/comparator-offset-mc/testbench/tb.json",
+        "passed": true,
+        "content_hash": "sha256:0bb9677dbffdcecc7d19f20ee37acbb827dc9b0240e4179667cfb098c894a328"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/comparator-offset-mc/testbench/tb_offset_mc.spice",
+        "passed": true,
+        "content_hash": "sha256:6f96e4a440e20786c8aba9bd0da4dec2c21d033d286264f85ec8a7aca8b107e3"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/comparator-offset-tran-extracted-feasibility/README.md",
+        "passed": true,
+        "content_hash": "sha256:08c78093150032310858ef6db91bd5295ce388f8b0add62ae3ffebb50dd342d8"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/comparator-offset-tran-extracted-feasibility/testbench/tb.json",
+        "passed": true,
+        "content_hash": "sha256:bb3ae7154812a6ef0fdde704df16869ec25adff156041529d6f586027eaba5c8"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/comparator-offset-tran-extracted-feasibility/testbench/tb_offset_tran_extracted.spice",
+        "passed": true,
+        "content_hash": "sha256:c7063c072b4f505c6b7f46ece8fe713b8cd0d1210b6ffc2be7f00ed49501780a"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/comparator-offset-tran-extracted-feasibility/testbench/tb_trip_probe.spice",
+        "passed": true,
+        "content_hash": "sha256:6ae89e60cdc0904d2ae938e2810d3be61e2c5385170a246d31df82a4365ee245"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/comparator-offset-tran/README.md",
+        "passed": true,
+        "content_hash": "sha256:ebcbf37bfa891147cd7fdba2d915b159b7b47ab157a3e2e40745a264d12b242b"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/comparator-offset-tran/testbench/tb.json",
+        "passed": true,
+        "content_hash": "sha256:6eb62f241f3476dafc32b2965ddb0ccc2cce650de69d610754de0bc6038b5aaf"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/comparator-offset-tran/testbench/tb_offset_tran.spice",
+        "passed": true,
+        "content_hash": "sha256:1adfed227742098be0c5db0244f2ca248bb9420e8d8b3d5f13b4c2edc7d518fa"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/comparator-preamp-noise/README.md",
+        "passed": true,
+        "content_hash": "sha256:738b408ab77a1fe75afc78a3dfce27692bf32e8fb48b3db0296537773d7eb7dd"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/comparator-preamp-noise/testbench/tb.json",
+        "passed": true,
+        "content_hash": "sha256:bd847cf431f1a779457794b2012bfc55f5f6de8c4bf590426db93b08940a4c69"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/comparator-preamp-noise/testbench/tb_preamp_noise.spice",
+        "passed": true,
+        "content_hash": "sha256:0aeaf85d9364b3e687f2f91c772c0f31d0dca1b7b46f9f768a8e7cfad8d98aa9"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/comparator-regeneration/README.md",
+        "passed": true,
+        "content_hash": "sha256:acb1f7f72e0fdb982d57d9111e5e5880bfd2112339a417fd0dcdf88252a1520c"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/comparator-regeneration/testbench/tb.json",
+        "passed": true,
+        "content_hash": "sha256:50bed78e2f8eb83ad683786756dfc1796fc7c4daef67ce0161b782ba7b59cb68"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/comparator-regeneration/testbench/tb_regeneration.spice",
+        "passed": true,
+        "content_hash": "sha256:ef3dc3be1476a8cbacf2afc13c33abb3b116dd7e7fd7e3e81219f0f12edf66da"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/comparator-regeneration/testbench/tb_regeneration_reverse.spice",
+        "passed": true,
+        "content_hash": "sha256:93df669541d0407e10b8c7c712ee4b5f75de1ffe5062cbd1ea03efaa121c8476"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/comparator-regeneration/testbench/tb_vosprobe.spice",
+        "passed": true,
+        "content_hash": "sha256:56475d33709d034f209970fe4cecd0d8095e2b9a0c9aaa078569dadf9674a0d0"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/env.sh",
+        "passed": true,
+        "content_hash": "sha256:63b0c331bb53ce176eaec003a88a3392ec276415495ad6f239a30353f310ef20"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/README.md",
+        "passed": true,
+        "content_hash": "sha256:843ee64c8f5984a625072f720700ee1fc92b36ca06c6634d40b1b7d4130eeefa"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/__init__.py",
+        "passed": true,
+        "content_hash": "sha256:44813ecf148f09d051fab5a31305fad3012bc15f34b373558d68bd8ad05e1f33"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/cli.py",
+        "passed": true,
+        "content_hash": "sha256:9c780ad0482ff085e31565eb4261c44d4d088a0f8fab4793006cb54af85ce2e4"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/corners.py",
+        "passed": true,
+        "content_hash": "sha256:25b6a6f82b62e709c5e97601d509aa6435ae109bf36515f8f485ced072aac78f"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/dut.py",
+        "passed": true,
+        "content_hash": "sha256:7acae408ffd866959e3fd11d9405cb7d647fdbacb4d13bfaa5a4636bdaab97c5"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/pdk.py",
+        "passed": true,
+        "content_hash": "sha256:81d4df600e838d8a023a496f9e123b0c003b27e4cd7b73c7560e29af11256c82"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/report.py",
+        "passed": true,
+        "content_hash": "sha256:1894ccef106d1ec400f468d2a4ca3601d7bfffea02f393db0fad040c0900e559"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/runner.py",
+        "passed": true,
+        "content_hash": "sha256:861cc97242d0916511a7527b75372b03125545e55f5708623f00e21756ff1a3a"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/testbench.py",
+        "passed": true,
+        "content_hash": "sha256:ed8949beb95797b49af4c7383e14b1ece9ac5caafab56172e2ec2c27863d428f"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/tests/__init__.py",
+        "passed": true,
+        "content_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/tests/test_adapt_samples.py",
+        "passed": true,
+        "content_hash": "sha256:dacedb00a600ffa97e23fa4e8bd4c03e7cce28b1370769dbddb783a5739d13c4"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/tests/test_cli_main.py",
+        "passed": true,
+        "content_hash": "sha256:57f9d1c0f93d6c678c1801b2802380e551333ee600d554afc36c2aa2df650a67"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/tests/test_cm_index_semantics.py",
+        "passed": true,
+        "content_hash": "sha256:6a39b3bbed6eec2a4b14183ef78ea6d9a10f621779fac3f4e2826861e2bde6d1"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/tests/test_corners.py",
+        "passed": true,
+        "content_hash": "sha256:8aca533b226c241b4e0820b15c93a38155692d1b79d8d3ff3296d2728c36e292"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/tests/test_dut.py",
+        "passed": true,
+        "content_hash": "sha256:ca90f365f8a188f262d7ed94c2b6b65851bd8382b02b3162a95c0c1398381f41"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/tests/test_extracted_tran_feasibility.py",
+        "passed": true,
+        "content_hash": "sha256:2b865935371b0209aa8bc8fcf28fc49e05f6d4fd6ca967e2b6f72183948da78c"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/tests/test_klt_record.py",
+        "passed": true,
+        "content_hash": "sha256:a227204acc120b51828eb05fecaf91ef7805dfafa84f4ca18da11a29dff14019"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/tests/test_pdk_discovery.py",
+        "passed": true,
+        "content_hash": "sha256:c37a1e2605c69b62d18c4e015dcbc708bb7df0247f88930d357f30b48c063042"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/tests/test_regeneration_measures.py",
+        "passed": true,
+        "content_hash": "sha256:b2434f9557abef140cc87bdf55226c042b9a2f58746f2eef38f7062cd229a24b"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/tests/test_regeneration_reverse.py",
+        "passed": true,
+        "content_hash": "sha256:6d559a82b5d1406d5e13929a5a8d1246fc954d32076af1e2f2c68e705fbd0ade"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/tests/test_report_baseline.py",
+        "passed": true,
+        "content_hash": "sha256:34f9c824b15b02b331efea7bdfff617b4d06f10b1ac5b8f66e27b0c3e3b3f390"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/tests/test_report_dirty.py",
+        "passed": true,
+        "content_hash": "sha256:14b71e60eedbd02bddf22af0a567fc69a56a4463d41442ac8197e928546965d4"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/tests/test_report_finite.py",
+        "passed": true,
+        "content_hash": "sha256:a19a4c14e9750b453fa8ea1da20c7a68ee55164d38b211b4e8216996fb317877"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/tests/test_report_summarize.py",
+        "passed": true,
+        "content_hash": "sha256:43c1d27cef99f00e90a7ebfa277037bae13bf30d6b8ae8cfc35c3426193c06d7"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/tests/test_reserve.py",
+        "passed": true,
+        "content_hash": "sha256:0748fcc2179b51febfb087fc984535b1208060a7031396bde79c82ac7622e007"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/tests/test_runner.py",
+        "passed": true,
+        "content_hash": "sha256:29aaacaccf59d924a321c337dd2e938cf27f87632098380837d843e321ced757"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/tests/test_testbench_load.py",
+        "passed": true,
+        "content_hash": "sha256:4edfbe688a260df5db078d811308d6600216759c0d5d81d19c7cf6badfab94af"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/tests/test_toolchain.py",
+        "passed": true,
+        "content_hash": "sha256:f455e273ffcc6840185ff71aeaf9479103f390f51f46d96ba288a846cfc0a5db"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/toolchain.py",
+        "passed": true,
+        "content_hash": "sha256:4c08ef9eda226b865a0bd80c18dd43176b883a0507d5b917c9eebe3c71dccbce"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/pdk.json",
+        "passed": true,
+        "content_hash": "sha256:dcf29573a4c08608062a06b045b0ec380d3427df805f480adad23af01528ca2d"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/run_corners.py",
+        "passed": true,
+        "content_hash": "sha256:2a90d98323d874d9888e0eec55414249ae025e84b41cf14200e61b7a63144be7"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/selftest.sh",
+        "passed": true,
+        "content_hash": "sha256:170b30a9d1cf4c01c3d1c9881ecfdbf73e3befc629bfea5f8158f7c4ed97a90f"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/toolchain.json",
+        "passed": true,
+        "content_hash": "sha256:0a6b61bc0987b2ed17d96142f067025144408b16b2d5f9d54a2a722a62f01a20"
+      },
+      {
+        "check": "command",
+        "role": "cold_start",
+        "argv": [
+          "./sim/selftest.sh"
+        ],
+        "cwd": ".",
+        "exit_status": 0,
+        "passed": true,
+        "local_only": true
+      },
+      {
+        "check": "pin",
+        "role": "pdk",
+        "passed": true,
+        "value": {
+          "name": "gf180mcu",
+          "revision": "c6d73a35f524070e85faff4a6a9eef49553ebc2b"
+        }
+      },
+      {
+        "check": "pin",
+        "role": "tools",
+        "passed": true,
+        "value": {
+          "ngspice": ">=46",
+          "python": ">=3.9",
+          "xschem": "3.4.7"
+        }
+      }
+    ]
+  },
+  "provenance": {
+    "klt_version": "0.8.0",
+    "klayout_version": null,
+    "pdk": null,
+    "deck": null,
+    "input": {
+      "path": {
+        "path": "signoff/inventory/item-9.json",
+        "scope": "repo"
+      },
+      "content_hash": "sha256:6e3946b1c69c01ddcdffb8b476f8a6deb65f1678cce808b83b31496d99450e0b"
+    }
+  }
+}

@@ -127,12 +127,13 @@ jobs:
           python -m pip install klayout-tools==0.8.0
           klt version --format json
 
-      # Issue #322: re-attest T1 items 1 and 10 and fail on drift (an edited
-      # inventoried file, inventory, or check outcome). Item 9 is not yet
-      # attested: its cold start needs ngspice >= 46 and the pinned PDK.
-      - name: Re-attest T1 items 1 and 10 (klt signoff --attest --check)
+      # Issue #322: re-attest T1 items 1, 9 and 10 and fail on drift (an edited
+      # inventoried file, inventory, or check outcome). Item 9's cold start
+      # (./sim/selftest.sh) is local_only: --check skips it and carries the
+      # committed outcome; selftest.yml is what re-runs it on the toolchain host.
+      - name: Re-attest T1 items 1, 9 and 10 (klt signoff --attest --check)
         run: |
-          for item in 1 10; do
+          for item in 1 9 10; do
             klt signoff --attest "$item" \
               --inventory "signoff/inventory/item-$item.json" \
               --check "signoff/envelopes/item-$item.json"

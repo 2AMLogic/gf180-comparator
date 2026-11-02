@@ -34,6 +34,10 @@
       "file": "measurements/characterization-report.item8.json",
       "content_hash": "sha256:a9ef66b1dfee4f0472474616a2433d6fb516655a76fe0a3097c355998d27f0a4"
     },
+    "9": {
+      "file": "signoff/envelopes/item-9.json",
+      "content_hash": "sha256:6e3946b1c69c01ddcdffb8b476f8a6deb65f1678cce808b83b31496d99450e0b"
+    },
     "10": {
       "file": "signoff/envelopes/item-10.json",
       "content_hash": "sha256:5548e97d3b716534780e60633204612a1d7ed1dbb153afcdb0c9055dc1b78bbd"

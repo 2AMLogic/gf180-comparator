@@ -136,3 +136,26 @@ failure, then download the `item-9-envelope` artifact, commit it as
 `signoff/envelopes/item-9.json`, pin it in the manifest and add item 9 to the
 `signoff.yml` loop. No `--attest` gap was found that needs filing upstream.
 
+## Addendum 4 (issue #322, 2026-11-02): item 9 attested
+
+The blocker in Addendum 3 is gone: `selftest.yml` is green on `main` (scheduled
+run 41453587640, 2026-11-02), so the CI-produced `--attest 9` envelope exists.
+It was downloaded unmodified from that run's `item-9-envelope` artifact and
+committed as `signoff/envelopes/item-9.json` (68/68 checks, klt 0.8.0). The
+manifest pins the inventory hash, `signoff.yml` loops `--check` over items
+`1 9 10`, and the verdict of record now grades item 9 `met`.
+
+Per item: "leave uncited" no longer holds for items 1, 9 and 10.
+
+Caveat for item 9: the cold start is `local_only`. `--check` skips it and
+carries the committed outcome (`pass`), so the PDK-free job re-verifies the
+inventoried files and the recorded outcome, not the cold start itself.
+`selftest.yml` re-runs the cold start on the toolchain host. Hand-writing the
+envelope or dropping `local_only` was rejected (Alternatives above stand).
+
+Negative control (scratch git repo, not committed; `sim/` evidence is
+append-only): `klt signoff --attest 9 --inventory signoff/inventory/item-9.json
+--check signoff/envelopes/item-9.json` exits 0 on the clean tree; after
+appending a line to `sim/selftest.sh` it reports `status: drifted` and exits 3.
+
+No `--attest` gap was found that needs filing upstream.

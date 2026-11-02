@@ -633,21 +633,14 @@ mode to detect drift), re-pin the item-8 `content_hash` in
 `block-manifest.json`, and re-grade via `./signoff/regenerate.sh` in one
 change.
 
-### unmet — item 9 (Testbenches shipped): present, no `klt sim` envelope
+### met — item 9 (Testbenches shipped): tool-produced attestation
 
-**Re-audited in #89 (DR-0003); still deliberately uncited.** The four
-committed testbench directories (`sim/comparator-*/testbench/`), the
-cold-start drivers (`sim/characterize.sh`, `sim/selftest.sh`; selftest passed
-all 9 checks on 2026-09-15) and the pinned PDK variant (`sim/pdk.json`,
-`gf180mcuD`) are the substance. But no `klt sim` envelope exists: the
-`sim/*/records/*.json` files are this repo's harness format, which the grader
-does not read, and no selftest/characterize run is committed as an envelope.
-The item-6 yield report and item-8 wrapper show different claims. The
-item-5 corner-matrix wrapper
-([#91](https://github.com/2AMLogic/gf180-comparator/issues/91)) is derived
-from records, not a run of the testbenches, and records neither the
-cold-start invocation nor the pinned PDK, so it does not back item 9.
-Tool gap: klayout-tools#2844.
+Supersedes the earlier "deliberately uncited" audit (#89, DR-0003): with
+klayout-tools#2844 in klt 0.8.0 the item is graded from
+`signoff/envelopes/item-9.json`, an artifact-anchored envelope over
+`signoff/inventory/item-9.json` (every bench under `sim/`, the harness, the
+cold-start driver, and the pinned PDK and tool versions). See "Item 9 is
+attested" above for what `--check` does and does not re-run.
 
 ### unmet — item 10 (Repo hygiene): partially true, no CI-produced evidence
 
@@ -870,10 +863,15 @@ xschem would regenerate the same netlist (`./design/netlist.sh --check` does,
 but CI's signoff job has no xschem). Item 10's checks are the PDK-free steps
 of `scripts/run-pdk-free-tests.sh`, excluding the re-grade (circular).
 
-**Item 9 stays uncited.** Its cold start (`./sim/selftest.sh`) needs ngspice
->= 46 and the pinned open_pdks PDK; the inventory declares it `local_only`, and
-the envelope has to be produced on a host that has the toolchain, then pinned in
-the manifest and added to the `signoff.yml` loop. `selftest.yml` now runs the
-attestation on such a host, but its selftest currently fails at the nominal
-kickback bench, so no envelope exists yet. See the addenda in
+**Item 9 is attested (issue #322).** `signoff/envelopes/item-9.json` is the
+`klt signoff --attest 9` envelope (klt 0.8.0), produced by `selftest.yml` on the
+toolchain host (ngspice >= 46, pinned open_pdks) in scheduled run 41453587640
+and downloaded unmodified. The manifest pins the inventory hash it is bound to,
+and `signoff.yml` re-runs `--check` for items 1, 9 and 10. Caveat: item 9's cold
+start (`./sim/selftest.sh`) is `local_only`, so the PDK-free `--check`
+re-verifies the 68 inventoried files and carries the committed cold-start
+outcome (`pass`); it does not re-run the cold start. `selftest.yml` does. If an
+inventoried file changes, `--check` exits 3 until the envelope is re-produced
+from a green `selftest.yml` run (download the `item-9-envelope` artifact, commit
+it, re-pin, re-grade). See the addenda in
 `spec/decision-records/DR-0003-t1-items-1-9-10-claim-policy.md` (issue #322).
