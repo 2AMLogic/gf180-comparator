@@ -53,7 +53,6 @@ Issues carrying `loom:curated`.
 
 - **#3**: Gap-to-T1 tracker: gf180-comparator artifact-presence survey *(curated)*
 - **#125**: Define and measure the missing average-power operating condition for T1 *(curated)*
-- **#209**: Extend paired extracted preamp noise measurement to full PVT coverage *(curated)*
 - **#323**: Propose a design change that closes the 7 post-layout decision-time misses (T1 item 7) *(curated)*
 
 ## Proposed (Architect / Hermit)
@@ -75,7 +74,7 @@ _None._
 | In Progress (`loom:building`) | 0 |
 | PRs awaiting review | 0 |
 | Approved PRs awaiting merge | 0 |
-| Curated | 4 |
+| Curated | 3 |
 | Architect / Hermit proposals | 0 |
 | Active epics | 0 |
 <!-- guide:plan-body:end -->
