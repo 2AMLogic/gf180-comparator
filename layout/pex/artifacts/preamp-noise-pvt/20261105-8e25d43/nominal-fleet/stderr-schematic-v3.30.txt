@@ -1,0 +1,6 @@
+klt: warning: 2 installs provide PDK variant 'gf180mcuD'; read /home/ubuntu/.ciel (search root: ~/.ciel), skipped /home/ubuntu/.volare (search root: ~/.volare). Resolution is first-match-wins, so a pinned open_pdks build may not be the one this run read -- pin the root explicitly (--pdk-root, or a request's models.pdk_root) to disable the search and choose deliberately.
+klt: batch job klt-sim-1f5f946987d9 submitting to s3://<bucket>/jobs/klt-sim-1f5f946987d9
+klt sim: batch job klt-sim-1f5f946987d9: submitted
+klt sim: batch job klt-sim-1f5f946987d9 launched; re-attach with `klt sim <request> --backend batch --attach klt-sim-1f5f946987d9`
+klt sim: batch job klt-sim-1f5f946987d9 state=no status.json yet elapsed=1s
+klt sim: batch job klt-sim-1f5f946987d9: done

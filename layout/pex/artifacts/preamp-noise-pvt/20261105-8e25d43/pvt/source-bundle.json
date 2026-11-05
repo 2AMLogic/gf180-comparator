@@ -1,0 +1,178 @@
+{
+ "schema": "gf180-comparator/preamp-noise-pvt-bundle",
+ "version": 1,
+ "generator": "layout/pex/preamp_noise_pvt.py",
+ "issue": 209,
+ "generated_utc": "2026-11-05T08:03:17Z",
+ "origin": {
+  "commit": "8e25d43f847a3a017d94c309ec2305cf1031bec6",
+  "dirty": false,
+  "dirty_paths": []
+ },
+ "nominal_only": false,
+ "params": {
+  "dut_ib": 1e-05,
+  "dut_vcm": 1.65
+ },
+ "grid": {
+  "process": [
+   "tt",
+   "ff",
+   "ss",
+   "fs",
+   "sf"
+  ],
+  "process_sections": {
+   "tt": [
+    "typical",
+    "res_typical",
+    "bjt_typical",
+    "diode_typical",
+    "moscap_typical",
+    "mimcap_typical"
+   ],
+   "ff": [
+    "ff",
+    "res_ff",
+    "bjt_ff",
+    "diode_ff",
+    "moscap_ff",
+    "mimcap_ff"
+   ],
+   "ss": [
+    "ss",
+    "res_ss",
+    "bjt_ss",
+    "diode_ss",
+    "moscap_ss",
+    "mimcap_ss"
+   ],
+   "fs": [
+    "fs",
+    "res_typical",
+    "bjt_typical",
+    "diode_typical",
+    "moscap_typical",
+    "mimcap_typical"
+   ],
+   "sf": [
+    "sf",
+    "res_typical",
+    "bjt_typical",
+    "diode_typical",
+    "moscap_typical",
+    "mimcap_typical"
+   ]
+  },
+  "temperatures_c": [
+   -40.0,
+   27.0,
+   125.0
+  ],
+  "supply_v": [
+   2.97,
+   3.3,
+   3.63
+  ]
+ },
+ "stimulus_sha256": "9fc67e0bfb2675ef3b1dc09a0784adbd9c25cb6e0c60f122e9002f1e2dbfb006",
+ "pinned_identity": {
+  "record": "layout/pex/artifacts/preamp-noise/record.json",
+  "record_sha256": "e5b64f03f928b65df086b003b2e1635ed473b32bba11c80058c779e15a5429bf",
+  "schematic": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a",
+  "extracted": "a7ca3c00ea4db8a2b00cad69f2edc2d9320738499049cfa9c7faec517b7b5f45",
+  "params": {
+   "dut_ib": 1e-05,
+   "dut_vcm": 1.65
+  }
+ },
+ "legs": {
+  "schematic": {
+   "dut_source": "design/comparator.spice",
+   "dut_sha256": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a",
+   "staged_dut": "sources/schematic/comparator.spice",
+   "observation": [
+    "xdut.aop",
+    "xdut.aon"
+   ],
+   "c_route": "0"
+  },
+  "extracted": {
+   "dut_source": "layout/pex/artifacts/preamp-noise/comparator.dut-layout.cir",
+   "dut_sha256": "a7ca3c00ea4db8a2b00cad69f2edc2d9320738499049cfa9c7faec517b7b5f45",
+   "staged_dut": "sources/extracted/comparator.dut-layout.cir",
+   "observation": [
+    "xdut.xlayout_dut.aop",
+    "xdut.xlayout_dut.aon"
+   ],
+   "c_route": "0"
+  }
+ },
+ "requests": {
+  "schematic-v2.97": {
+   "leg": "schematic",
+   "vdd": 2.97,
+   "request": "request-schematic-v2.97.json",
+   "request_sha256": "7a63d9fb23d03c5b9f85650e6ef36672908dc6b8899564de0ebe915e0383ba42",
+   "netlist": "body-schematic-v2.97.spice",
+   "netlist_sha256": "a5c37c6a9185e932b9e932b3a9436d0ec8bbd175aa532322e0eb7df46ab3ae17"
+  },
+  "schematic-v3.30": {
+   "leg": "schematic",
+   "vdd": 3.3,
+   "request": "request-schematic-v3.30.json",
+   "request_sha256": "cbb98828ea86fd06709d14702472ea68b0d97dbd449b2487c7f57357feefe833",
+   "netlist": "body-schematic-v3.30.spice",
+   "netlist_sha256": "90d978214d8779da5d910335f6e541146fc8db03f32b1e3e802f85857933034b"
+  },
+  "schematic-v3.63": {
+   "leg": "schematic",
+   "vdd": 3.63,
+   "request": "request-schematic-v3.63.json",
+   "request_sha256": "3e7fa6f1456c3215fe967a2789af1ab6a486cfd2fbf96786be5be3468ceb21b6",
+   "netlist": "body-schematic-v3.63.spice",
+   "netlist_sha256": "5e78cd52784631a136616a4aaa11a61fee2226d694a30fbbca0a5e87914afaed"
+  },
+  "extracted-v2.97": {
+   "leg": "extracted",
+   "vdd": 2.97,
+   "request": "request-extracted-v2.97.json",
+   "request_sha256": "5f40725319b4a226ef6c9bcfc251234f6568ac631b35c41bd6069590dca4c1c2",
+   "netlist": "body-extracted-v2.97.spice",
+   "netlist_sha256": "7a4d1c9f2d13d6ca649f5b63e2fec170cb2a2727d0df285373b24077231b7313"
+  },
+  "extracted-v3.30": {
+   "leg": "extracted",
+   "vdd": 3.3,
+   "request": "request-extracted-v3.30.json",
+   "request_sha256": "bd8a90bf9daf0ae7f1683ade6a0f60028aa3570719db7d30a481c103b0e74687",
+   "netlist": "body-extracted-v3.30.spice",
+   "netlist_sha256": "f60b60e540c0a91ed3eff5e4327ad4442c91e07eb6a116f680fc9648baee0e3d"
+  },
+  "extracted-v3.63": {
+   "leg": "extracted",
+   "vdd": 3.63,
+   "request": "request-extracted-v3.63.json",
+   "request_sha256": "b952adfda3194c9964300ec98338543c1d612cc8a8f5c8cfe430ff941754d45c",
+   "netlist": "body-extracted-v3.63.spice",
+   "netlist_sha256": "886f284cee7e930d2815f5ed91a9df259fb86092979ca61c9c929501da0668d6"
+  }
+ },
+ "staged": {
+  "body-extracted-v2.97.spice": "7a4d1c9f2d13d6ca649f5b63e2fec170cb2a2727d0df285373b24077231b7313",
+  "body-extracted-v3.30.spice": "f60b60e540c0a91ed3eff5e4327ad4442c91e07eb6a116f680fc9648baee0e3d",
+  "body-extracted-v3.63.spice": "886f284cee7e930d2815f5ed91a9df259fb86092979ca61c9c929501da0668d6",
+  "body-schematic-v2.97.spice": "a5c37c6a9185e932b9e932b3a9436d0ec8bbd175aa532322e0eb7df46ab3ae17",
+  "body-schematic-v3.30.spice": "90d978214d8779da5d910335f6e541146fc8db03f32b1e3e802f85857933034b",
+  "body-schematic-v3.63.spice": "5e78cd52784631a136616a4aaa11a61fee2226d694a30fbbca0a5e87914afaed",
+  "design.ngspice": "091cb530bf85160a1f07878fb81f789ca367d018991c8ab41a584cd1a85c6692",
+  "request-extracted-v2.97.json": "5f40725319b4a226ef6c9bcfc251234f6568ac631b35c41bd6069590dca4c1c2",
+  "request-extracted-v3.30.json": "bd8a90bf9daf0ae7f1683ade6a0f60028aa3570719db7d30a481c103b0e74687",
+  "request-extracted-v3.63.json": "b952adfda3194c9964300ec98338543c1d612cc8a8f5c8cfe430ff941754d45c",
+  "request-schematic-v2.97.json": "7a63d9fb23d03c5b9f85650e6ef36672908dc6b8899564de0ebe915e0383ba42",
+  "request-schematic-v3.30.json": "cbb98828ea86fd06709d14702472ea68b0d97dbd449b2487c7f57357feefe833",
+  "request-schematic-v3.63.json": "3e7fa6f1456c3215fe967a2789af1ab6a486cfd2fbf96786be5be3468ceb21b6",
+  "sources/extracted/comparator.dut-layout.cir": "a7ca3c00ea4db8a2b00cad69f2edc2d9320738499049cfa9c7faec517b7b5f45",
+  "sources/schematic/comparator.spice": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a"
+ }
+}
