@@ -1,9 +1,8 @@
 # Paired extracted vs schematic preamp noise over 45-point PVT (issue #209)
 
-**Status: STOPPED at the executor-capability gate. No PVT result exists.**
-The fleet runner (klt 0.5.0) cannot execute the request. The 45-point grid was
-not submitted and was not run locally. Nothing in this directory is a PVT
-record, a spec verdict, a signoff input or a T1 promotion.
+**Status: COMPLETE (run `20261105-8e25d43`); the earlier run `20261010-040759-c40d49e`
+is kept as the append-only record of the executor-capability stop.**
+Neither run is a spec verdict, a signoff input or a T1 promotion.
 
 This directory extends the nominal feasibility probe of issue #202
 (`../preamp-noise/`). The tool is `layout/pex/preamp_noise_pvt.py` and its
@@ -134,3 +133,46 @@ and the binding corners (highest extracted and schematic `vn_in`, largest
 report, netlist sha256 and klt corner id of both legs. Gain, noise, white
 density and ENBW are always reported together, so a reader cannot mistake a
 narrower noise bandwidth from heavier extracted loading for a quieter preamp.
+
+## Run `20261105-8e25d43` (batch runner klt 0.9.0): complete 45/45 on both legs
+
+The runner premise from the first run is cleared. The fleet runner is now klt
+0.9.0 (client 0.9.1.dev17), `runner_compatibility: match`, and the request
+features `analysis_steps`, `measurements[].expr` and `options.ngspice_init` all
+report `supported`. The campaign was submitted with `KLT_SIM_BACKEND=batch`;
+no part of the grid ran locally.
+
+* `nominal-fleet/`: the nominal fleet probe. All eight quantities on both legs
+  are within `NOMINAL_TOLERANCE_REL = 1e-4` of the #202 record
+  (`within_tolerance: true`; the largest difference is the band-integrated white
+  density, about 2.5e-7).
+* `pvt/`: the 45-point campaign, six fleet jobs (one per leg and supply):
+  schematic `klt-sim-223f0f5ebeea`, `-fa08737a6553`, `-9c1e2a2f2dd6` and
+  extracted `klt-sim-81d7cf92a474`, `-1e857f2f8081`, `-beed424fb4c8` (2.97, 3.30
+  and 3.63 V). `ingest` verdict: **complete**, coverage 45/45 on each leg, no
+  issues. `pvt/paired-summary.json` carries per-corner deltas and binding
+  corners, each citing request, report, netlist sha256 and klt corner id.
+
+Reading the table (gain, noise, white density and ENBW together):
+
+| quantity | schematic (no 10 fF allowance) | extracted |
+|---|---|---|
+| input-referred noise `vn_in` (uV) | 74.4 (ss, -40 C, 2.97 V) to 146.6 (ff, 125 C, 3.63 V) | 52.9 (ss, -40 C, 2.97 V) to 98.8 (ff, 125 C, 3.63 V) |
+| white density (nV/rtHz) | 190.0 (ff, 125 C, 3.63 V) to 315.3 (ss, -40 C, 3.30 V) | 191.6 (ff, 125 C, 3.63 V) to 317.3 (ss, -40 C, 3.30 V) |
+| ENBW (MHz) | 38.8 to 78.8 | 19.2 to 35.0 |
+| DC gain (V/V) | 11.50 to 26.46 | 11.46 to 26.31 |
+
+Extracted-vs-schematic `vn_in` change spans -32.6 % to -28.9 % across the
+grid. White density changes by +0.6 to +0.9 %, DC gain by -0.6 to -0.3 % and ENBW by
+-56 to -51 % (`delta_pct` in `paired-summary.json`). The extracted loading narrows the noise bandwidth while white
+density and gain barely move, so the lower integrated noise is a narrower
+bandwidth, **not** quieter devices. The highest extracted `vn_in` (ff, 125 C,
+3.63 V) and the lowest extracted gain (ff, 125 C, 2.97 V) are the binding
+corners for reset-state noise.
+
+Caveats carried forward: the scope exclusions above (no regenerative latch
+noise, no T1 promotion, `spec_row_verdict: null`) and the #202 body-bias and
+lumped-RC extraction disclosures. The reports also carry
+`engine_build_comparison: mismatch` (the worker's ngspice banner differs from
+the local binary); the nominal fleet results nonetheless agree with the #202
+record within the 1e-4 tolerance.

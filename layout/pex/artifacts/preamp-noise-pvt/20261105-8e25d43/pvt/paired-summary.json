@@ -1,0 +1,2194 @@
+{
+ "binding_corners": {
+  "max_delta_vn_in_pct": {
+   "corner": "ss_-40c_2.97v",
+   "sources": {
+    "extracted": {
+     "corner_id": "ss/novdd/-40C",
+     "netlist_sha256": "7a4d1c9f2d13d6ca649f5b63e2fec170cb2a2727d0df285373b24077231b7313",
+     "report": "report-extracted-v2.97.json",
+     "request": "request-extracted-v2.97.json"
+    },
+    "schematic": {
+     "corner_id": "ss/novdd/-40C",
+     "netlist_sha256": "a5c37c6a9185e932b9e932b3a9436d0ec8bbd175aa532322e0eb7df46ab3ae17",
+     "report": "report-schematic-v2.97.json",
+     "request": "request-schematic-v2.97.json"
+    }
+   },
+   "value": -28.891425683543105,
+   "what": "largest (least negative) extracted-vs-schematic vn_in change"
+  },
+  "max_delta_white_pct": {
+   "corner": "ff_-40c_3.63v",
+   "sources": {
+    "extracted": {
+     "corner_id": "ff/novdd/-40C",
+     "netlist_sha256": "886f284cee7e930d2815f5ed91a9df259fb86092979ca61c9c929501da0668d6",
+     "report": "report-extracted-v3.63.json",
+     "request": "request-extracted-v3.63.json"
+    },
+    "schematic": {
+     "corner_id": "ff/novdd/-40C",
+     "netlist_sha256": "5e78cd52784631a136616a4aaa11a61fee2226d694a30fbbca0a5e87914afaed",
+     "report": "report-schematic-v3.63.json",
+     "request": "request-schematic-v3.63.json"
+    }
+   },
+   "value": 0.9032002436556528,
+   "what": "largest white-density change"
+  },
+  "max_extracted_vn_in_uv": {
+   "corner": "ff_125c_3.63v",
+   "sources": {
+    "extracted": {
+     "corner_id": "ff/novdd/125C",
+     "netlist_sha256": "886f284cee7e930d2815f5ed91a9df259fb86092979ca61c9c929501da0668d6",
+     "report": "report-extracted-v3.63.json",
+     "request": "request-extracted-v3.63.json"
+    },
+    "schematic": {
+     "corner_id": "ff/novdd/125C",
+     "netlist_sha256": "5e78cd52784631a136616a4aaa11a61fee2226d694a30fbbca0a5e87914afaed",
+     "report": "report-schematic-v3.63.json",
+     "request": "request-schematic-v3.63.json"
+    }
+   },
+   "value": 98.79966992995102,
+   "what": "highest extracted vn_in_uv"
+  },
+  "max_schematic_vn_in_uv": {
+   "corner": "ff_125c_3.63v",
+   "sources": {
+    "extracted": {
+     "corner_id": "ff/novdd/125C",
+     "netlist_sha256": "886f284cee7e930d2815f5ed91a9df259fb86092979ca61c9c929501da0668d6",
+     "report": "report-extracted-v3.63.json",
+     "request": "request-extracted-v3.63.json"
+    },
+    "schematic": {
+     "corner_id": "ff/novdd/125C",
+     "netlist_sha256": "5e78cd52784631a136616a4aaa11a61fee2226d694a30fbbca0a5e87914afaed",
+     "report": "report-schematic-v3.63.json",
+     "request": "request-schematic-v3.63.json"
+    }
+   },
+   "value": 146.5589095336225,
+   "what": "highest like-for-like schematic vn_in_uv"
+  },
+  "min_extracted_av_dc": {
+   "corner": "ff_125c_2.97v",
+   "sources": {
+    "extracted": {
+     "corner_id": "ff/novdd/125C",
+     "netlist_sha256": "7a4d1c9f2d13d6ca649f5b63e2fec170cb2a2727d0df285373b24077231b7313",
+     "report": "report-extracted-v2.97.json",
+     "request": "request-extracted-v2.97.json"
+    },
+    "schematic": {
+     "corner_id": "ff/novdd/125C",
+     "netlist_sha256": "a5c37c6a9185e932b9e932b3a9436d0ec8bbd175aa532322e0eb7df46ab3ae17",
+     "report": "report-schematic-v2.97.json",
+     "request": "request-schematic-v2.97.json"
+    }
+   },
+   "value": 11.46217034626,
+   "what": "lowest extracted gain"
+  }
+ },
+ "coverage": {
+  "extracted": "45/45",
+  "schematic": "45/45"
+ },
+ "grid": {
+  "process": [
+   "tt",
+   "ff",
+   "ss",
+   "fs",
+   "sf"
+  ],
+  "process_sections": {
+   "ff": [
+    "ff",
+    "res_ff",
+    "bjt_ff",
+    "diode_ff",
+    "moscap_ff",
+    "mimcap_ff"
+   ],
+   "fs": [
+    "fs",
+    "res_typical",
+    "bjt_typical",
+    "diode_typical",
+    "moscap_typical",
+    "mimcap_typical"
+   ],
+   "sf": [
+    "sf",
+    "res_typical",
+    "bjt_typical",
+    "diode_typical",
+    "moscap_typical",
+    "mimcap_typical"
+   ],
+   "ss": [
+    "ss",
+    "res_ss",
+    "bjt_ss",
+    "diode_ss",
+    "moscap_ss",
+    "mimcap_ss"
+   ],
+   "tt": [
+    "typical",
+    "res_typical",
+    "bjt_typical",
+    "diode_typical",
+    "moscap_typical",
+    "mimcap_typical"
+   ]
+  },
+  "supply_v": [
+   2.97,
+   3.3,
+   3.63
+  ],
+  "temperatures_c": [
+   -40.0,
+   27.0,
+   125.0
+  ]
+ },
+ "issue": 209,
+ "issues": [],
+ "legs": {
+  "extracted": {
+   "c_route": "0",
+   "dut_sha256": "a7ca3c00ea4db8a2b00cad69f2edc2d9320738499049cfa9c7faec517b7b5f45",
+   "dut_source": "layout/pex/artifacts/preamp-noise/comparator.dut-layout.cir",
+   "observation": [
+    "xdut.xlayout_dut.aop",
+    "xdut.xlayout_dut.aon"
+   ],
+   "staged_dut": "sources/extracted/comparator.dut-layout.cir"
+  },
+  "schematic": {
+   "c_route": "0",
+   "dut_sha256": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a",
+   "dut_source": "design/comparator.spice",
+   "observation": [
+    "xdut.aop",
+    "xdut.aon"
+   ],
+   "staged_dut": "sources/schematic/comparator.spice"
+  }
+ },
+ "params": {
+  "dut_ib": 1e-05,
+  "dut_vcm": 1.65
+ },
+ "per_corner": {
+  "ff_-40c_2.97v": {
+   "delta_pct": {
+    "av_dc": -0.5676697124670756,
+    "enbw_mhz": -54.525169181744026,
+    "inoise_band_uv": 3.346535437349068,
+    "vn_in_hf_uv": -31.771592531160913,
+    "vn_in_uv": -31.577573239775308,
+    "white_nv_rthz": 0.8882398107148366
+   },
+   "extracted": {
+    "av_dc": 18.79574292431,
+    "enbw_mhz": 29.72992220584275,
+    "inoise_band_uv": 293.2909821222,
+    "onoise_hf_uv": 1181.902678433,
+    "onoise_uv": 1188.214570381,
+    "vn_in_hf_uv": 62.88140262358839,
+    "vn_in_uv": 63.21721759900159,
+    "white_nv_rthz": 217.920450069
+   },
+   "schematic": {
+    "av_dc": 18.90304981283,
+    "enbw_mhz": 65.3766526909378,
+    "inoise_band_uv": 283.7937245608,
+    "onoise_hf_uv": 1742.163316119,
+    "onoise_uv": 1746.500774505,
+    "vn_in_hf_uv": 92.16308126832251,
+    "vn_in_uv": 92.39253939433644,
+    "white_nv_rthz": 216.0018357718
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "ff/novdd/-40C",
+     "netlist_sha256": "7a4d1c9f2d13d6ca649f5b63e2fec170cb2a2727d0df285373b24077231b7313",
+     "report": "report-extracted-v2.97.json",
+     "request": "request-extracted-v2.97.json"
+    },
+    "schematic": {
+     "corner_id": "ff/novdd/-40C",
+     "netlist_sha256": "a5c37c6a9185e932b9e932b3a9436d0ec8bbd175aa532322e0eb7df46ab3ae17",
+     "report": "report-schematic-v2.97.json",
+     "request": "request-schematic-v2.97.json"
+    }
+   }
+  },
+  "ff_-40c_3.30v": {
+   "delta_pct": {
+    "av_dc": -0.5681145263279357,
+    "enbw_mhz": -55.31716424871408,
+    "inoise_band_uv": 3.349496201561987,
+    "vn_in_hf_uv": -32.36429442808904,
+    "vn_in_uv": -32.17043927686453,
+    "white_nv_rthz": 0.8960851530195226
+   },
+   "extracted": {
+    "av_dc": 18.80065859045,
+    "enbw_mhz": 30.243790111579592,
+    "inoise_band_uv": 293.64499787610004,
+    "onoise_hf_uv": 1190.2427490100001,
+    "onoise_uv": 1196.553852051,
+    "vn_in_hf_uv": 63.30856673364608,
+    "vn_in_uv": 63.64425194438681,
+    "white_nv_rthz": 217.5775797422
+   },
+   "schematic": {
+    "av_dc": 18.90807812895,
+    "enbw_mhz": 67.68547609628651,
+    "inoise_band_uv": 284.12813672880003,
+    "onoise_hf_uv": 1769.83934138,
+    "onoise_uv": 1774.138702055,
+    "vn_in_hf_uv": 93.60228624559224,
+    "vn_in_uv": 93.82966845999177,
+    "white_nv_rthz": 215.64521498749997
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "ff/novdd/-40C",
+     "netlist_sha256": "f60b60e540c0a91ed3eff5e4327ad4442c91e07eb6a116f680fc9648baee0e3d",
+     "report": "report-extracted-v3.30.json",
+     "request": "request-extracted-v3.30.json"
+    },
+    "schematic": {
+     "corner_id": "ff/novdd/-40C",
+     "netlist_sha256": "90d978214d8779da5d910335f6e541146fc8db03f32b1e3e802f85857933034b",
+     "report": "report-schematic-v3.30.json",
+     "request": "request-schematic-v3.30.json"
+    }
+   }
+  },
+  "ff_-40c_3.63v": {
+   "delta_pct": {
+    "av_dc": -0.5685183800785724,
+    "enbw_mhz": -55.88460513680814,
+    "inoise_band_uv": 3.356339383377039,
+    "vn_in_hf_uv": -32.7912860192064,
+    "vn_in_uv": -32.597482926884496,
+    "white_nv_rthz": 0.9032002436556528
+   },
+   "extracted": {
+    "av_dc": 18.78849056943,
+    "enbw_mhz": 30.651763178411333,
+    "inoise_band_uv": 293.57664672920004,
+    "onoise_hf_uv": 1195.3496237539998,
+    "onoise_uv": 1201.659056426,
+    "vn_in_hf_uv": 63.62137604065466,
+    "vn_in_uv": 63.957189747917866,
+    "white_nv_rthz": 217.0468729276
+   },
+   "schematic": {
+    "av_dc": 18.89591733255,
+    "enbw_mhz": 69.48087685368526,
+    "inoise_band_uv": 284.04319317100004,
+    "onoise_hf_uv": 1788.732726817,
+    "onoise_uv": 1793.0039155480001,
+    "vn_in_hf_uv": 94.6623916339716,
+    "vn_in_uv": 94.88842928304845,
+    "white_nv_rthz": 215.1040526004
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "ff/novdd/-40C",
+     "netlist_sha256": "886f284cee7e930d2815f5ed91a9df259fb86092979ca61c9c929501da0668d6",
+     "report": "report-extracted-v3.63.json",
+     "request": "request-extracted-v3.63.json"
+    },
+    "schematic": {
+     "corner_id": "ff/novdd/-40C",
+     "netlist_sha256": "5e78cd52784631a136616a4aaa11a61fee2226d694a30fbbca0a5e87914afaed",
+     "report": "report-schematic-v3.63.json",
+     "request": "request-schematic-v3.63.json"
+    }
+   }
+  },
+  "ff_125c_2.97v": {
+   "delta_pct": {
+    "av_dc": -0.33797946918216965,
+    "enbw_mhz": -54.42599178762326,
+    "inoise_band_uv": 3.4111699218696208,
+    "vn_in_hf_uv": -31.797227929647896,
+    "vn_in_uv": -31.696808769149925,
+    "white_nv_rthz": 0.835178093394587
+   },
+   "extracted": {
+    "av_dc": 11.46217034626,
+    "enbw_mhz": 33.96073184738518,
+    "inoise_band_uv": 387.56135897319996,
+    "onoise_hf_uv": 1116.491991137,
+    "onoise_uv": 1119.571734893,
+    "vn_in_hf_uv": 97.40668280168258,
+    "vn_in_uv": 97.67537046405054,
+    "white_nv_rthz": 192.1159422885
+   },
+   "schematic": {
+    "av_dc": 11.50104150529,
+    "enbw_mhz": 74.51776391737761,
+    "inoise_band_uv": 374.7770760799,
+    "onoise_hf_uv": 1642.570041932,
+    "onoise_uv": 1644.679361986,
+    "vn_in_hf_uv": 142.81924303781412,
+    "vn_in_uv": 143.0026455629706,
+    "white_nv_rthz": 190.5247215516
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "ff/novdd/125C",
+     "netlist_sha256": "7a4d1c9f2d13d6ca649f5b63e2fec170cb2a2727d0df285373b24077231b7313",
+     "report": "report-extracted-v2.97.json",
+     "request": "request-extracted-v2.97.json"
+    },
+    "schematic": {
+     "corner_id": "ff/novdd/125C",
+     "netlist_sha256": "a5c37c6a9185e932b9e932b3a9436d0ec8bbd175aa532322e0eb7df46ab3ae17",
+     "report": "report-schematic-v2.97.json",
+     "request": "request-schematic-v2.97.json"
+    }
+   }
+  },
+  "ff_125c_3.30v": {
+   "delta_pct": {
+    "av_dc": -0.3381619909965503,
+    "enbw_mhz": -55.09941313435739,
+    "inoise_band_uv": 3.408506937156034,
+    "vn_in_hf_uv": -32.29926368588755,
+    "vn_in_uv": -32.199071660447245,
+    "white_nv_rthz": 0.84132048402474
+   },
+   "extracted": {
+    "av_dc": 11.47057255743,
+    "enbw_mhz": 34.516102984768985,
+    "inoise_band_uv": 387.9566241368,
+    "onoise_hf_uv": 1124.483012202,
+    "onoise_uv": 1127.561334834,
+    "vn_in_hf_uv": 98.03198633477301,
+    "vn_in_uv": 98.30035329000454,
+    "white_nv_rthz": 191.92400467710002
+   },
+   "schematic": {
+    "av_dc": 11.50949328909,
+    "enbw_mhz": 76.87227583027493,
+    "inoise_band_uv": 375.1689639737,
+    "onoise_hf_uv": 1666.5970715610001,
+    "onoise_uv": 1668.689919466,
+    "vn_in_hf_uv": 144.80194998165464,
+    "vn_in_uv": 144.98378664921532,
+    "white_nv_rthz": 190.322780142
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "ff/novdd/125C",
+     "netlist_sha256": "f60b60e540c0a91ed3eff5e4327ad4442c91e07eb6a116f680fc9648baee0e3d",
+     "report": "report-extracted-v3.30.json",
+     "request": "request-extracted-v3.30.json"
+    },
+    "schematic": {
+     "corner_id": "ff/novdd/125C",
+     "netlist_sha256": "90d978214d8779da5d910335f6e541146fc8db03f32b1e3e802f85857933034b",
+     "report": "report-schematic-v3.30.json",
+     "request": "request-schematic-v3.30.json"
+    }
+   }
+  },
+  "ff_125c_3.63v": {
+   "delta_pct": {
+    "av_dc": -0.33819832181174475,
+    "enbw_mhz": -55.616899382152674,
+    "inoise_band_uv": 3.4100711147026423,
+    "vn_in_hf_uv": -32.687053792360544,
+    "vn_in_uv": -32.587059876230114,
+    "white_nv_rthz": 0.8470464357785112
+   },
+   "extracted": {
+    "av_dc": 11.46983867149,
+    "enbw_mhz": 34.98167598356594,
+    "inoise_band_uv": 387.9306368885,
+    "onoise_hf_uv": 1130.1406179599999,
+    "onoise_uv": 1133.216274893,
+    "vn_in_hf_uv": 98.53151821299227,
+    "vn_in_uv": 98.79966992995102,
+    "white_nv_rthz": 191.5986729203
+   },
+   "schematic": {
+    "av_dc": 11.50876110842,
+    "enbw_mhz": 78.81755780149149,
+    "inoise_band_uv": 375.1381588919,
+    "onoise_hf_uv": 1684.632405281,
+    "onoise_uv": 1686.7114781330001,
+    "vn_in_hf_uv": 146.3782582165595,
+    "vn_in_uv": 146.5589095336225,
+    "white_nv_rthz": 189.98937469359998
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "ff/novdd/125C",
+     "netlist_sha256": "886f284cee7e930d2815f5ed91a9df259fb86092979ca61c9c929501da0668d6",
+     "report": "report-extracted-v3.63.json",
+     "request": "request-extracted-v3.63.json"
+    },
+    "schematic": {
+     "corner_id": "ff/novdd/125C",
+     "netlist_sha256": "5e78cd52784631a136616a4aaa11a61fee2226d694a30fbbca0a5e87914afaed",
+     "report": "report-schematic-v3.63.json",
+     "request": "request-schematic-v3.63.json"
+    }
+   }
+  },
+  "ff_27c_2.97v": {
+   "delta_pct": {
+    "av_dc": -0.4473033347443046,
+    "enbw_mhz": -54.54883512945968,
+    "inoise_band_uv": 3.337233099288406,
+    "vn_in_hf_uv": -31.834267886863206,
+    "vn_in_uv": -31.6924914014669,
+    "white_nv_rthz": 0.8669676633695111
+   },
+   "extracted": {
+    "av_dc": 14.83290305663,
+    "enbw_mhz": 31.790953657870084,
+    "inoise_band_uv": 336.2910925377,
+    "onoise_hf_uv": 1148.624326861,
+    "onoise_uv": 1153.0994544599998,
+    "vn_in_hf_uv": 77.43759414294755,
+    "vn_in_uv": 77.73929689000349,
+    "white_nv_rthz": 204.5102071796
+   },
+   "schematic": {
+    "av_dc": 14.89954923723,
+    "enbw_mhz": 69.94530007849315,
+    "inoise_band_uv": 325.4307111306,
+    "onoise_hf_uv": 1692.617699507,
+    "onoise_uv": 1695.68544578,
+    "vn_in_hf_uv": 113.60194006927404,
+    "vn_in_uv": 113.80783530973773,
+    "white_nv_rthz": 202.75240935379998
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "ff/novdd/27C",
+     "netlist_sha256": "7a4d1c9f2d13d6ca649f5b63e2fec170cb2a2727d0df285373b24077231b7313",
+     "report": "report-extracted-v2.97.json",
+     "request": "request-extracted-v2.97.json"
+    },
+    "schematic": {
+     "corner_id": "ff/novdd/27C",
+     "netlist_sha256": "a5c37c6a9185e932b9e932b3a9436d0ec8bbd175aa532322e0eb7df46ab3ae17",
+     "report": "report-schematic-v2.97.json",
+     "request": "request-schematic-v2.97.json"
+    }
+   }
+  },
+  "ff_27c_3.30v": {
+   "delta_pct": {
+    "av_dc": -0.447618092009407,
+    "enbw_mhz": -55.269294972480274,
+    "inoise_band_uv": 3.3378506963476338,
+    "vn_in_hf_uv": -32.37254735489338,
+    "vn_in_uv": -32.23099951660483,
+    "white_nv_rthz": 0.8741444006061527
+   },
+   "extracted": {
+    "av_dc": 14.84121151053,
+    "enbw_mhz": 32.31978626879336,
+    "inoise_band_uv": 336.6447153107,
+    "onoise_hf_uv": 1156.649767213,
+    "onoise_uv": 1161.123359584,
+    "vn_in_hf_uv": 77.93499650566562,
+    "vn_in_uv": 78.23642690896025,
+    "white_nv_rthz": 204.2415615559
+   },
+   "schematic": {
+    "av_dc": 14.90794215677,
+    "enbw_mhz": 72.25414007874282,
+    "inoise_band_uv": 325.77096682599995,
+    "onoise_hf_uv": 1718.015945376,
+    "onoise_uv": 1721.0584759869998,
+    "vn_in_hf_uv": 115.24165624668821,
+    "vn_in_uv": 115.44574414688296,
+    "white_nv_rthz": 202.4716668176
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "ff/novdd/27C",
+     "netlist_sha256": "f60b60e540c0a91ed3eff5e4327ad4442c91e07eb6a116f680fc9648baee0e3d",
+     "report": "report-extracted-v3.30.json",
+     "request": "request-extracted-v3.30.json"
+    },
+    "schematic": {
+     "corner_id": "ff/novdd/27C",
+     "netlist_sha256": "90d978214d8779da5d910335f6e541146fc8db03f32b1e3e802f85857933034b",
+     "report": "report-schematic-v3.30.json",
+     "request": "request-schematic-v3.30.json"
+    }
+   }
+  },
+  "ff_27c_3.63v": {
+   "delta_pct": {
+    "av_dc": -0.447830961665634,
+    "enbw_mhz": -55.805915370506476,
+    "inoise_band_uv": 3.3424604679241536,
+    "vn_in_hf_uv": -32.775500092105524,
+    "vn_in_uv": -32.634129965824926,
+    "white_nv_rthz": 0.8808141347191172
+   },
+   "extracted": {
+    "av_dc": 14.83624392701,
+    "enbw_mhz": 32.75524636031315,
+    "inoise_band_uv": 336.57663024320004,
+    "onoise_hf_uv": 1161.9423934069998,
+    "onoise_uv": 1166.4127661569999,
+    "vn_in_hf_uv": 78.3178275528104,
+    "vn_in_uv": 78.61914187279551,
+    "white_nv_rthz": 203.8035896829
+   },
+   "schematic": {
+    "av_dc": 14.90298410404,
+    "enbw_mhz": 74.11681141247915,
+    "inoise_band_uv": 325.69055228530004,
+    "onoise_hf_uv": 1736.2261388059999,
+    "onoise_uv": 1739.248407256,
+    "vn_in_hf_uv": 116.50191174365759,
+    "vn_in_uv": 116.70470793728573,
+    "white_nv_rthz": 202.0241325677
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "ff/novdd/27C",
+     "netlist_sha256": "886f284cee7e930d2815f5ed91a9df259fb86092979ca61c9c929501da0668d6",
+     "report": "report-extracted-v3.63.json",
+     "request": "request-extracted-v3.63.json"
+    },
+    "schematic": {
+     "corner_id": "ff/novdd/27C",
+     "netlist_sha256": "5e78cd52784631a136616a4aaa11a61fee2226d694a30fbbca0a5e87914afaed",
+     "report": "report-schematic-v3.63.json",
+     "request": "request-schematic-v3.63.json"
+    }
+   }
+  },
+  "fs_-40c_2.97v": {
+   "delta_pct": {
+    "av_dc": -0.5768435752183276,
+    "enbw_mhz": -53.08128703762418,
+    "inoise_band_uv": 3.2622704415895583,
+    "vn_in_hf_uv": -30.808531446863753,
+    "vn_in_uv": -30.5600257560707,
+    "white_nv_rthz": 0.7915334469761526
+   },
+   "extracted": {
+    "av_dc": 23.02284699331,
+    "enbw_mhz": 23.5904533051509,
+    "inoise_band_uv": 294.13602963159997,
+    "onoise_hf_uv": 1299.6128290049999,
+    "onoise_uv": 1308.612355643,
+    "vn_in_hf_uv": 56.448832300481456,
+    "vn_in_uv": 56.839727772297564,
+    "white_nv_rthz": 269.4280906393
+   },
+   "schematic": {
+    "av_dc": 23.15642333356,
+    "enbw_mhz": 50.27941266007896,
+    "inoise_band_uv": 284.8436591349,
+    "onoise_hf_uv": 1889.182416227,
+    "onoise_uv": 1895.456922026,
+    "vn_in_hf_uv": 81.58351525250694,
+    "vn_in_uv": 81.85447703743453,
+    "white_nv_rthz": 267.3122249708
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "fs/novdd/-40C",
+     "netlist_sha256": "7a4d1c9f2d13d6ca649f5b63e2fec170cb2a2727d0df285373b24077231b7313",
+     "report": "report-extracted-v2.97.json",
+     "request": "request-extracted-v2.97.json"
+    },
+    "schematic": {
+     "corner_id": "fs/novdd/-40C",
+     "netlist_sha256": "a5c37c6a9185e932b9e932b3a9436d0ec8bbd175aa532322e0eb7df46ab3ae17",
+     "report": "report-schematic-v2.97.json",
+     "request": "request-schematic-v2.97.json"
+    }
+   }
+  },
+  "fs_-40c_3.30v": {
+   "delta_pct": {
+    "av_dc": -0.5782507880122182,
+    "enbw_mhz": -54.09498060359957,
+    "inoise_band_uv": 3.2566782475077445,
+    "vn_in_hf_uv": -31.555002291293132,
+    "vn_in_uv": -31.306659250676827,
+    "white_nv_rthz": 0.8012575067679516
+   },
+   "extracted": {
+    "av_dc": 23.05289576405,
+    "enbw_mhz": 24.08610729688468,
+    "inoise_band_uv": 294.952796621,
+    "onoise_hf_uv": 1312.4799526269999,
+    "onoise_uv": 1321.482977002,
+    "vn_in_hf_uv": 56.933409410272695,
+    "vn_in_uv": 57.323947087931394,
+    "white_nv_rthz": 269.2639823992
+   },
+   "schematic": {
+    "av_dc": 23.18697462755,
+    "enbw_mhz": 52.46944149809761,
+    "inoise_band_uv": 285.6500922042,
+    "onoise_hf_uv": 1928.721694278,
+    "onoise_uv": 1934.931235226,
+    "vn_in_hf_uv": 83.18125694528325,
+    "vn_in_uv": 83.44905992724804,
+    "white_nv_rthz": 267.1236342276
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "fs/novdd/-40C",
+     "netlist_sha256": "f60b60e540c0a91ed3eff5e4327ad4442c91e07eb6a116f680fc9648baee0e3d",
+     "report": "report-extracted-v3.30.json",
+     "request": "request-extracted-v3.30.json"
+    },
+    "schematic": {
+     "corner_id": "fs/novdd/-40C",
+     "netlist_sha256": "90d978214d8779da5d910335f6e541146fc8db03f32b1e3e802f85857933034b",
+     "report": "report-schematic-v3.30.json",
+     "request": "request-schematic-v3.30.json"
+    }
+   }
+  },
+  "fs_-40c_3.63v": {
+   "delta_pct": {
+    "av_dc": -0.5789741172910069,
+    "enbw_mhz": -54.845200283429676,
+    "inoise_band_uv": 3.2567027529273993,
+    "vn_in_hf_uv": -32.11219932827226,
+    "vn_in_uv": -31.86395576390455,
+    "white_nv_rthz": 0.8099028379415394
+   },
+   "extracted": {
+    "av_dc": 23.05988659623,
+    "enbw_mhz": 24.47712780524723,
+    "inoise_band_uv": 295.2508890573,
+    "onoise_hf_uv": 1321.224583481,
+    "onoise_uv": 1330.228732331,
+    "vn_in_hf_uv": 57.29536344281084,
+    "vn_in_uv": 57.68583148836802,
+    "white_nv_rthz": 268.8723211487
+   },
+   "schematic": {
+    "av_dc": 23.19417486542,
+    "enbw_mhz": 54.20714510724522,
+    "inoise_band_uv": 285.9387150525,
+    "onoise_hf_uv": 1957.5220665880001,
+    "onoise_uv": 1963.682039072,
+    "vn_in_hf_uv": 84.39714186627322,
+    "vn_in_uv": 84.66272460503163,
+    "white_nv_rthz": 266.7122113796
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "fs/novdd/-40C",
+     "netlist_sha256": "886f284cee7e930d2815f5ed91a9df259fb86092979ca61c9c929501da0668d6",
+     "report": "report-extracted-v3.63.json",
+     "request": "request-extracted-v3.63.json"
+    },
+    "schematic": {
+     "corner_id": "fs/novdd/-40C",
+     "netlist_sha256": "5e78cd52784631a136616a4aaa11a61fee2226d694a30fbbca0a5e87914afaed",
+     "report": "report-schematic-v3.63.json",
+     "request": "request-schematic-v3.63.json"
+    }
+   }
+  },
+  "fs_125c_2.97v": {
+   "delta_pct": {
+    "av_dc": -0.35484585712921757,
+    "enbw_mhz": -53.32453695886645,
+    "inoise_band_uv": 3.3128154498542166,
+    "vn_in_hf_uv": -31.055685005203237,
+    "vn_in_uv": -30.925844248461594,
+    "white_nv_rthz": 0.7459163285946303
+   },
+   "extracted": {
+    "av_dc": 14.07118305537,
+    "enbw_mhz": 26.84510850138483,
+    "inoise_band_uv": 388.9520743856,
+    "onoise_hf_uv": 1229.885518785,
+    "onoise_uv": 1234.311808244,
+    "vn_in_hf_uv": 87.4045568127008,
+    "vn_in_uv": 87.7191209429223,
+    "white_nv_rthz": 238.2277242147
+   },
+   "schematic": {
+    "av_dc": 14.12129187456,
+    "enbw_mhz": 57.514391400310515,
+    "inoise_band_uv": 376.4799872039,
+    "onoise_hf_uv": 1790.235000539,
+    "onoise_uv": 1793.3006872649999,
+    "vn_in_hf_uv": 126.77558232219326,
+    "vn_in_uv": 126.99267908311516,
+    "white_nv_rthz": 236.4639013632
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "fs/novdd/125C",
+     "netlist_sha256": "7a4d1c9f2d13d6ca649f5b63e2fec170cb2a2727d0df285373b24077231b7313",
+     "report": "report-extracted-v2.97.json",
+     "request": "request-extracted-v2.97.json"
+    },
+    "schematic": {
+     "corner_id": "fs/novdd/125C",
+     "netlist_sha256": "a5c37c6a9185e932b9e932b3a9436d0ec8bbd175aa532322e0eb7df46ab3ae17",
+     "report": "report-schematic-v2.97.json",
+     "request": "request-schematic-v2.97.json"
+    }
+   }
+  },
+  "fs_125c_3.30v": {
+   "delta_pct": {
+    "av_dc": -0.3553079562357783,
+    "enbw_mhz": -54.21450902975942,
+    "inoise_band_uv": 3.2994948614327684,
+    "vn_in_hf_uv": -31.711209143544117,
+    "vn_in_uv": -31.581741952286222,
+    "white_nv_rthz": 0.753987765200226
+   },
+   "extracted": {
+    "av_dc": 14.09216665145,
+    "enbw_mhz": 27.390398629296694,
+    "inoise_band_uv": 390.1034322284,
+    "onoise_hf_uv": 1241.923719873,
+    "onoise_uv": 1246.347087781,
+    "vn_in_hf_uv": 88.12865690494893,
+    "vn_in_uv": 88.44254532377094,
+    "white_nv_rthz": 238.1441002483
+   },
+   "schematic": {
+    "av_dc": 14.14241577992,
+    "enbw_mhz": 59.823315309864796,
+    "inoise_band_uv": 377.6431169888,
+    "onoise_hf_uv": 1825.1196022719998,
+    "onoise_uv": 1828.154186169,
+    "vn_in_hf_uv": 129.05288818218608,
+    "vn_in_uv": 129.26746141664782,
+    "white_nv_rthz": 236.3619599884
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "fs/novdd/125C",
+     "netlist_sha256": "f60b60e540c0a91ed3eff5e4327ad4442c91e07eb6a116f680fc9648baee0e3d",
+     "report": "report-extracted-v3.30.json",
+     "request": "request-extracted-v3.30.json"
+    },
+    "schematic": {
+     "corner_id": "fs/novdd/125C",
+     "netlist_sha256": "90d978214d8779da5d910335f6e541146fc8db03f32b1e3e802f85857933034b",
+     "report": "report-schematic-v3.30.json",
+     "request": "request-schematic-v3.30.json"
+    }
+   }
+  },
+  "fs_125c_3.63v": {
+   "delta_pct": {
+    "av_dc": -0.3555759229829467,
+    "enbw_mhz": -54.83632857464943,
+    "inoise_band_uv": 3.2947864387134906,
+    "vn_in_hf_uv": -32.172396598049794,
+    "vn_in_uv": -32.04317831306123,
+    "white_nv_rthz": 0.7607614230952368
+   },
+   "extracted": {
+    "av_dc": 14.10135576033,
+    "enbw_mhz": 27.80526598496727,
+    "inoise_band_uv": 390.3851209959,
+    "onoise_hf_uv": 1250.0832717150001,
+    "onoise_uv": 1254.5051276180002,
+    "vn_in_hf_uv": 88.64986409546097,
+    "vn_in_uv": 88.96344074568914,
+    "white_nv_rthz": 237.90792756200003
+   },
+   "schematic": {
+    "av_dc": 14.15167571186,
+    "enbw_mhz": 61.56555724422361,
+    "inoise_band_uv": 377.9330346237,
+    "onoise_hf_uv": 1849.6070414649998,
+    "onoise_uv": 1852.620137893,
+    "vn_in_hf_uv": 130.69880056076414,
+    "vn_in_uv": 130.91171502328783,
+    "white_nv_rthz": 236.1116809777
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "fs/novdd/125C",
+     "netlist_sha256": "886f284cee7e930d2815f5ed91a9df259fb86092979ca61c9c929501da0668d6",
+     "report": "report-extracted-v3.63.json",
+     "request": "request-extracted-v3.63.json"
+    },
+    "schematic": {
+     "corner_id": "fs/novdd/125C",
+     "netlist_sha256": "5e78cd52784631a136616a4aaa11a61fee2226d694a30fbbca0a5e87914afaed",
+     "report": "report-schematic-v3.63.json",
+     "request": "request-schematic-v3.63.json"
+    }
+   }
+  },
+  "fs_27c_2.97v": {
+   "delta_pct": {
+    "av_dc": -0.46072913853333775,
+    "enbw_mhz": -53.26334768252012,
+    "inoise_band_uv": 3.248157325810929,
+    "vn_in_hf_uv": -30.97053125310749,
+    "vn_in_uv": -30.78791798084051,
+    "white_nv_rthz": 0.7737844431923385
+   },
+   "extracted": {
+    "av_dc": 18.19240562716,
+    "enbw_mhz": 25.159108912264678,
+    "inoise_band_uv": 337.2878508037,
+    "onoise_hf_uv": 1264.0493531280001,
+    "onoise_uv": 1270.460964669,
+    "vn_in_hf_uv": 69.4822542457421,
+    "vn_in_uv": 69.83468765517684,
+    "white_nv_rthz": 253.28746543389997
+   },
+   "schematic": {
+    "av_dc": 18.27661130096,
+    "enbw_mhz": 53.83164532487273,
+    "inoise_band_uv": 326.6768720524,
+    "onoise_hf_uv": 1839.649321104,
+    "onoise_uv": 1844.102076346,
+    "vn_in_hf_uv": 100.65593073084453,
+    "vn_in_uv": 100.89956206756646,
+    "white_nv_rthz": 251.342615377
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "fs/novdd/27C",
+     "netlist_sha256": "7a4d1c9f2d13d6ca649f5b63e2fec170cb2a2727d0df285373b24077231b7313",
+     "report": "report-extracted-v2.97.json",
+     "request": "request-extracted-v2.97.json"
+    },
+    "schematic": {
+     "corner_id": "fs/novdd/27C",
+     "netlist_sha256": "a5c37c6a9185e932b9e932b3a9436d0ec8bbd175aa532322e0eb7df46ab3ae17",
+     "report": "report-schematic-v2.97.json",
+     "request": "request-schematic-v2.97.json"
+    }
+   }
+  },
+  "fs_27c_3.30v": {
+   "delta_pct": {
+    "av_dc": -0.4615693755143766,
+    "enbw_mhz": -54.234138388849054,
+    "inoise_band_uv": 3.238158753727305,
+    "vn_in_hf_uv": -31.685858523941267,
+    "vn_in_uv": -31.503648562913476,
+    "white_nv_rthz": 0.7830289056085241
+   },
+   "extracted": {
+    "av_dc": 18.21821521321,
+    "enbw_mhz": 25.688789925408237,
+    "inoise_band_uv": 338.3370600583,
+    "onoise_hf_uv": 1276.658588264,
+    "onoise_uv": 1283.066561309,
+    "vn_in_hf_uv": 70.07594176065594,
+    "vn_in_uv": 70.42767616328575,
+    "white_nv_rthz": 253.1496685634
+   },
+   "schematic": {
+    "av_dc": 18.30269484752,
+    "enbw_mhz": 56.13089980403452,
+    "inoise_band_uv": 327.72481042149997,
+    "onoise_hf_uv": 1877.471560771,
+    "onoise_uv": 1881.875805926,
+    "vn_in_hf_uv": 102.57896863889395,
+    "vn_in_uv": 102.8196023374663,
+    "white_nv_rthz": 251.18283436439998
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "fs/novdd/27C",
+     "netlist_sha256": "f60b60e540c0a91ed3eff5e4327ad4442c91e07eb6a116f680fc9648baee0e3d",
+     "report": "report-extracted-v3.30.json",
+     "request": "request-extracted-v3.30.json"
+    },
+    "schematic": {
+     "corner_id": "fs/novdd/27C",
+     "netlist_sha256": "90d978214d8779da5d910335f6e541146fc8db03f32b1e3e802f85857933034b",
+     "report": "report-schematic-v3.30.json",
+     "request": "request-schematic-v3.30.json"
+    }
+   }
+  },
+  "fs_27c_3.63v": {
+   "delta_pct": {
+    "av_dc": -0.462053360237299,
+    "enbw_mhz": -54.90547854923279,
+    "inoise_band_uv": 3.236345288401035,
+    "vn_in_hf_uv": -32.18423963969771,
+    "vn_in_uv": -32.00225197727071,
+    "white_nv_rthz": 0.7908983361729663
+   },
+   "extracted": {
+    "av_dc": 18.22767121832,
+    "enbw_mhz": 26.08671567798822,
+    "inoise_band_uv": 338.60195977060005,
+    "onoise_hf_uv": 1284.913176228,
+    "onoise_uv": 1291.3200998050002,
+    "vn_in_hf_uv": 70.49244858753971,
+    "vn_in_uv": 70.84394294467738,
+    "white_nv_rthz": 252.82744079720004
+   },
+   "schematic": {
+    "av_dc": 18.31228374068,
+    "enbw_mhz": 57.84896887412117,
+    "inoise_band_uv": 327.9871626845,
+    "onoise_hf_uv": 1903.5069624700002,
+    "onoise_uv": 1907.878455148,
+    "vn_in_hf_uv": 103.94700024450997,
+    "vn_in_uv": 104.18571938734898,
+    "white_nv_rthz": 250.84352354310002
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "fs/novdd/27C",
+     "netlist_sha256": "886f284cee7e930d2815f5ed91a9df259fb86092979ca61c9c929501da0668d6",
+     "report": "report-extracted-v3.63.json",
+     "request": "request-extracted-v3.63.json"
+    },
+    "schematic": {
+     "corner_id": "fs/novdd/27C",
+     "netlist_sha256": "5e78cd52784631a136616a4aaa11a61fee2226d694a30fbbca0a5e87914afaed",
+     "report": "report-schematic-v3.63.json",
+     "request": "request-schematic-v3.63.json"
+    }
+   }
+  },
+  "sf_-40c_2.97v": {
+   "delta_pct": {
+    "av_dc": -0.5655712105750714,
+    "enbw_mhz": -51.91545433306977,
+    "inoise_band_uv": 3.2184559565131137,
+    "vn_in_hf_uv": -30.007844315339376,
+    "vn_in_uv": -29.743263780734964,
+    "white_nv_rthz": 0.7446507231293985
+   },
+   "extracted": {
+    "av_dc": 22.31335950345,
+    "enbw_mhz": 23.068835750208113,
+    "inoise_band_uv": 297.1919919861,
+    "onoise_hf_uv": 1274.381570112,
+    "onoise_uv": 1283.877805524,
+    "vn_in_hf_uv": 57.11294034029077,
+    "vn_in_uv": 57.538525533346615,
+    "white_nv_rthz": 267.30732066269996
+   },
+   "schematic": {
+    "av_dc": 22.44027523978,
+    "enbw_mhz": 47.97557183965143,
+    "inoise_band_uv": 287.9252447947,
+    "onoise_hf_uv": 1831.105340952,
+    "onoise_uv": 1837.802920178,
+    "vn_in_hf_uv": 81.59905889683515,
+    "vn_in_uv": 81.8975213334334,
+    "white_nv_rthz": 265.3315275243
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "sf/novdd/-40C",
+     "netlist_sha256": "7a4d1c9f2d13d6ca649f5b63e2fec170cb2a2727d0df285373b24077231b7313",
+     "report": "report-extracted-v2.97.json",
+     "request": "request-extracted-v2.97.json"
+    },
+    "schematic": {
+     "corner_id": "sf/novdd/-40C",
+     "netlist_sha256": "a5c37c6a9185e932b9e932b3a9436d0ec8bbd175aa532322e0eb7df46ab3ae17",
+     "report": "report-schematic-v2.97.json",
+     "request": "request-schematic-v2.97.json"
+    }
+   }
+  },
+  "sf_-40c_3.30v": {
+   "delta_pct": {
+    "av_dc": -0.566574527842364,
+    "enbw_mhz": -52.95312729113515,
+    "inoise_band_uv": 3.2095362800412857,
+    "vn_in_hf_uv": -30.761982487411625,
+    "vn_in_uv": -30.497839841017505,
+    "white_nv_rthz": 0.7547022100481712
+   },
+   "extracted": {
+    "av_dc": 22.33290252288,
+    "enbw_mhz": 23.57893904306831,
+    "inoise_band_uv": 298.1995654697,
+    "onoise_hf_uv": 1287.319015222,
+    "onoise_uv": 1296.803257845,
+    "vn_in_hf_uv": 57.64226185571468,
+    "vn_in_uv": 58.06693762785327,
+    "white_nv_rthz": 267.0619175775
+   },
+   "schematic": {
+    "av_dc": 22.46015604595,
+    "enbw_mhz": 50.11797317322098,
+    "inoise_band_uv": 288.9263688392,
+    "onoise_hf_uv": 1869.860291545,
+    "onoise_uv": 1876.4776191830001,
+    "vn_in_hf_uv": 83.25232860001309,
+    "vn_in_uv": 83.54695378536184,
+    "white_nv_rthz": 265.06149263460003
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "sf/novdd/-40C",
+     "netlist_sha256": "f60b60e540c0a91ed3eff5e4327ad4442c91e07eb6a116f680fc9648baee0e3d",
+     "report": "report-extracted-v3.30.json",
+     "request": "request-extracted-v3.30.json"
+    },
+    "schematic": {
+     "corner_id": "sf/novdd/-40C",
+     "netlist_sha256": "90d978214d8779da5d910335f6e541146fc8db03f32b1e3e802f85857933034b",
+     "report": "report-schematic-v3.30.json",
+     "request": "request-schematic-v3.30.json"
+    }
+   }
+  },
+  "sf_-40c_3.63v": {
+   "delta_pct": {
+    "av_dc": -0.5672843411579065,
+    "enbw_mhz": -53.711497232431014,
+    "inoise_band_uv": 3.207505086805587,
+    "vn_in_hf_uv": -31.31778199598536,
+    "vn_in_uv": -31.053890973068672,
+    "white_nv_rthz": 0.7633263741402039
+   },
+   "extracted": {
+    "av_dc": 22.33135106816,
+    "enbw_mhz": 23.97842897396819,
+    "inoise_band_uv": 298.5931175027,
+    "onoise_hf_uv": 1295.946568053,
+    "onoise_uv": 1305.421838287,
+    "vn_in_hf_uv": 58.03260913759751,
+    "vn_in_uv": 58.456912629360254,
+    "white_nv_rthz": 266.5879474966
+   },
+   "schematic": {
+    "av_dc": 22.45875607459,
+    "enbw_mhz": 51.802126965247496,
+    "inoise_band_uv": 289.3133762429,
+    "onoise_hf_uv": 1897.638502177,
+    "onoise_uv": 1904.196712687,
+    "vn_in_hf_uv": 84.49437252332964,
+    "vn_in_uv": 84.7863838212047,
+    "white_nv_rthz": 264.56842691630004
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "sf/novdd/-40C",
+     "netlist_sha256": "886f284cee7e930d2815f5ed91a9df259fb86092979ca61c9c929501da0668d6",
+     "report": "report-extracted-v3.63.json",
+     "request": "request-extracted-v3.63.json"
+    },
+    "schematic": {
+     "corner_id": "sf/novdd/-40C",
+     "netlist_sha256": "5e78cd52784631a136616a4aaa11a61fee2226d694a30fbbca0a5e87914afaed",
+     "report": "report-schematic-v3.63.json",
+     "request": "request-schematic-v3.63.json"
+    }
+   }
+  },
+  "sf_125c_2.97v": {
+   "delta_pct": {
+    "av_dc": -0.3465547143803016,
+    "enbw_mhz": -52.260218377819314,
+    "inoise_band_uv": 3.2725778027797157,
+    "vn_in_hf_uv": -30.315802841211692,
+    "vn_in_uv": -30.177157471303474,
+    "white_nv_rthz": 0.7046743008369717
+   },
+   "extracted": {
+    "av_dc": 13.62169256337,
+    "enbw_mhz": 26.29640591230019,
+    "inoise_band_uv": 392.9088428412,
+    "onoise_hf_uv": 1207.4492358500002,
+    "onoise_uv": 1212.133055966,
+    "vn_in_hf_uv": 88.64164495218043,
+    "vn_in_uv": 88.98549503499578,
+    "white_nv_rthz": 236.37530244579997
+   },
+   "schematic": {
+    "av_dc": 13.66906334681,
+    "enbw_mhz": 55.08279472330566,
+    "inoise_band_uv": 380.4580569215,
+    "onoise_hf_uv": 1738.7704952039999,
+    "onoise_uv": 1742.049341633,
+    "vn_in_hf_uv": 127.20480190105954,
+    "vn_in_uv": 127.4446754275631,
+    "white_nv_rthz": 234.72128189369997
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "sf/novdd/125C",
+     "netlist_sha256": "7a4d1c9f2d13d6ca649f5b63e2fec170cb2a2727d0df285373b24077231b7313",
+     "report": "report-extracted-v2.97.json",
+     "request": "request-extracted-v2.97.json"
+    },
+    "schematic": {
+     "corner_id": "sf/novdd/125C",
+     "netlist_sha256": "a5c37c6a9185e932b9e932b3a9436d0ec8bbd175aa532322e0eb7df46ab3ae17",
+     "report": "report-schematic-v2.97.json",
+     "request": "request-schematic-v2.97.json"
+    }
+   }
+  },
+  "sf_125c_3.30v": {
+   "delta_pct": {
+    "av_dc": -0.34690944139631436,
+    "enbw_mhz": -53.161837339611026,
+    "inoise_band_uv": 3.2561505635349333,
+    "vn_in_hf_uv": -30.972022303085456,
+    "vn_in_uv": -30.833887885130817,
+    "white_nv_rthz": 0.7126935216321083
+   },
+   "extracted": {
+    "av_dc": 13.63727482466,
+    "enbw_mhz": 26.850923167521533,
+    "inoise_band_uv": 394.282009682,
+    "onoise_hf_uv": 1219.463332159,
+    "onoise_uv": 1224.1380058030002,
+    "vn_in_hf_uv": 89.42133584885082,
+    "vn_in_uv": 89.76412234425435,
+    "white_nv_rthz": 236.2385513185
+   },
+   "schematic": {
+    "av_dc": 13.68474850927,
+    "enbw_mhz": 57.327020622500534,
+    "inoise_band_uv": 381.8484492499,
+    "onoise_hf_uv": 1772.771756153,
+    "onoise_uv": 1776.013428941,
+    "vn_in_hf_uv": 129.54361236175666,
+    "vn_in_uv": 129.7804945219077,
+    "white_nv_rthz": 234.5668088678
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "sf/novdd/125C",
+     "netlist_sha256": "f60b60e540c0a91ed3eff5e4327ad4442c91e07eb6a116f680fc9648baee0e3d",
+     "report": "report-extracted-v3.30.json",
+     "request": "request-extracted-v3.30.json"
+    },
+    "schematic": {
+     "corner_id": "sf/novdd/125C",
+     "netlist_sha256": "90d978214d8779da5d910335f6e541146fc8db03f32b1e3e802f85857933034b",
+     "report": "report-schematic-v3.30.json",
+     "request": "request-schematic-v3.30.json"
+    }
+   }
+  },
+  "sf_125c_3.63v": {
+   "delta_pct": {
+    "av_dc": -0.34710979236938255,
+    "enbw_mhz": -53.78518719203888,
+    "inoise_band_uv": 3.2495677668528926,
+    "vn_in_hf_uv": -31.428706790544332,
+    "vn_in_uv": -31.29091107242486,
+    "white_nv_rthz": 0.7194834337055201
+   },
+   "extracted": {
+    "av_dc": 13.6410065989,
+    "enbw_mhz": 27.272800130225626,
+    "inoise_band_uv": 394.6644850948,
+    "onoise_hf_uv": 1227.421468651,
+    "onoise_uv": 1232.0900695100001,
+    "vn_in_hf_uv": 89.98027086578627,
+    "vn_in_uv": 90.32251839899811,
+    "white_nv_rthz": 235.92697121689997
+   },
+   "schematic": {
+    "av_dc": 13.68852079501,
+    "enbw_mhz": 59.01311391988918,
+    "inoise_band_uv": 382.2432322293,
+    "onoise_hf_uv": 1796.228058766,
+    "onoise_uv": 1799.4441356450002,
+    "vn_in_hf_uv": 131.22148738092983,
+    "vn_in_uv": 131.4564343797445,
+    "white_nv_rthz": 234.24164141210002
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "sf/novdd/125C",
+     "netlist_sha256": "886f284cee7e930d2815f5ed91a9df259fb86092979ca61c9c929501da0668d6",
+     "report": "report-extracted-v3.63.json",
+     "request": "request-extracted-v3.63.json"
+    },
+    "schematic": {
+     "corner_id": "sf/novdd/125C",
+     "netlist_sha256": "5e78cd52784631a136616a4aaa11a61fee2226d694a30fbbca0a5e87914afaed",
+     "report": "report-schematic-v3.63.json",
+     "request": "request-schematic-v3.63.json"
+    }
+   }
+  },
+  "sf_27c_2.97v": {
+   "delta_pct": {
+    "av_dc": -0.45121123049513884,
+    "enbw_mhz": -52.14551234713366,
+    "inoise_band_uv": 3.2076396341302353,
+    "vn_in_hf_uv": -30.19705427786277,
+    "vn_in_uv": -30.002359548440666,
+    "white_nv_rthz": 0.7298171149924293
+   },
+   "extracted": {
+    "av_dc": 17.62361703977,
+    "enbw_mhz": 24.622401833403867,
+    "inoise_band_uv": 340.70918934490004,
+    "onoise_hf_uv": 1240.2592333100001,
+    "onoise_uv": 1247.0336495239999,
+    "vn_in_hf_uv": 70.37484022214014,
+    "vn_in_uv": 70.75923442446039,
+    "white_nv_rthz": 251.3118488366
+   },
+   "schematic": {
+    "av_dc": 17.70349720736,
+    "enbw_mhz": 51.45264956551898,
+    "inoise_band_uv": 330.1201253635,
+    "onoise_hf_uv": 1784.854169766,
+    "onoise_uv": 1789.6116225449998,
+    "vn_in_hf_uv": 100.81929851825943,
+    "vn_in_uv": 101.08802806492899,
+    "white_nv_rthz": 249.49102066740002
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "sf/novdd/27C",
+     "netlist_sha256": "7a4d1c9f2d13d6ca649f5b63e2fec170cb2a2727d0df285373b24077231b7313",
+     "report": "report-extracted-v2.97.json",
+     "request": "request-extracted-v2.97.json"
+    },
+    "schematic": {
+     "corner_id": "sf/novdd/27C",
+     "netlist_sha256": "a5c37c6a9185e932b9e932b3a9436d0ec8bbd175aa532322e0eb7df46ab3ae17",
+     "report": "report-schematic-v2.97.json",
+     "request": "request-schematic-v2.97.json"
+    }
+   }
+  },
+  "sf_27c_3.30v": {
+   "delta_pct": {
+    "av_dc": -0.4518329168882729,
+    "enbw_mhz": -53.13447278264518,
+    "inoise_band_uv": 3.194309770514229,
+    "vn_in_hf_uv": -30.916677100958413,
+    "vn_in_uv": -30.722578497041447,
+    "white_nv_rthz": 0.7391377859062161
+   },
+   "extracted": {
+    "av_dc": 17.64202209351,
+    "enbw_mhz": 25.163888392273662,
+    "inoise_band_uv": 341.97242436060003,
+    "onoise_hf_uv": 1252.905522644,
+    "onoise_uv": 1259.666480452,
+    "vn_in_hf_uv": 71.01824926888105,
+    "vn_in_uv": 71.4014795909022,
+    "white_nv_rthz": 251.1115552469
+   },
+   "schematic": {
+    "av_dc": 17.72209635842,
+    "enbw_mhz": 53.6938126729431,
+    "inoise_band_uv": 331.3869002284,
+    "onoise_hf_uv": 1821.846726436,
+    "onoise_uv": 1826.5458990700001,
+    "vn_in_hf_uv": 102.8008588594778,
+    "vn_in_uv": 103.06601781917206,
+    "white_nv_rthz": 249.2691130438
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "sf/novdd/27C",
+     "netlist_sha256": "f60b60e540c0a91ed3eff5e4327ad4442c91e07eb6a116f680fc9648baee0e3d",
+     "report": "report-extracted-v3.30.json",
+     "request": "request-extracted-v3.30.json"
+    },
+    "schematic": {
+     "corner_id": "sf/novdd/27C",
+     "netlist_sha256": "90d978214d8779da5d910335f6e541146fc8db03f32b1e3e802f85857933034b",
+     "report": "report-schematic-v3.30.json",
+     "request": "request-schematic-v3.30.json"
+    }
+   }
+  },
+  "sf_27c_3.63v": {
+   "delta_pct": {
+    "av_dc": -0.4522944765719202,
+    "enbw_mhz": -53.8103781845212,
+    "inoise_band_uv": 3.1905639140250805,
+    "vn_in_hf_uv": -31.41203949017696,
+    "vn_in_uv": -31.218286095949765,
+    "white_nv_rthz": 0.7469818634587672
+   },
+   "extracted": {
+    "av_dc": 17.64405958659,
+    "enbw_mhz": 25.570201028355637,
+    "inoise_band_uv": 342.333919949,
+    "onoise_hf_uv": 1260.9800389260001,
+    "onoise_uv": 1267.732875877,
+    "vn_in_hf_uv": 71.4676819548026,
+    "vn_in_uv": 71.85040776219742,
+    "white_nv_rthz": 250.70366434569996
+   },
+   "schematic": {
+    "av_dc": 17.72422527854,
+    "enbw_mhz": 55.35919114147564,
+    "inoise_band_uv": 331.7492481524,
+    "onoise_hf_uv": 1846.839132825,
+    "onoise_uv": 1851.499099468,
+    "vn_in_hf_uv": 104.19858153468076,
+    "vn_in_uv": 104.4614966449193,
+    "white_nv_rthz": 248.84483853369997
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "sf/novdd/27C",
+     "netlist_sha256": "886f284cee7e930d2815f5ed91a9df259fb86092979ca61c9c929501da0668d6",
+     "report": "report-extracted-v3.63.json",
+     "request": "request-extracted-v3.63.json"
+    },
+    "schematic": {
+     "corner_id": "sf/novdd/27C",
+     "netlist_sha256": "5e78cd52784631a136616a4aaa11a61fee2226d694a30fbbca0a5e87914afaed",
+     "report": "report-schematic-v3.63.json",
+     "request": "request-schematic-v3.63.json"
+    }
+   }
+  },
+  "ss_-40c_2.97v": {
+   "delta_pct": {
+    "av_dc": -0.5676273243447009,
+    "enbw_mhz": -50.64130403315994,
+    "inoise_band_uv": 3.159735833354376,
+    "vn_in_hf_uv": -29.213868226996915,
+    "vn_in_uv": -28.891425683543105,
+    "white_nv_rthz": 0.639376036934693
+   },
+   "extracted": {
+    "av_dc": 26.22335566233,
+    "enbw_mhz": 19.15728388766164,
+    "inoise_band_uv": 298.6884185272,
+    "onoise_hf_uv": 1375.510270314,
+    "onoise_uv": 1388.156093724,
+    "vn_in_hf_uv": 52.45363286171374,
+    "vn_in_uv": 52.93586799488419,
+    "white_nv_rthz": 317.15483487140006
+   },
+   "schematic": {
+    "av_dc": 26.37305633636,
+    "enbw_mhz": 38.812378472340114,
+    "inoise_band_uv": 289.5397279901,
+    "onoise_hf_uv": 1954.284801075,
+    "onoise_uv": 1963.308422737,
+    "vn_in_hf_uv": 74.10156699891726,
+    "vn_in_uv": 74.44372004886768,
+    "white_nv_rthz": 315.1399058307
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "ss/novdd/-40C",
+     "netlist_sha256": "7a4d1c9f2d13d6ca649f5b63e2fec170cb2a2727d0df285373b24077231b7313",
+     "report": "report-extracted-v2.97.json",
+     "request": "request-extracted-v2.97.json"
+    },
+    "schematic": {
+     "corner_id": "ss/novdd/-40C",
+     "netlist_sha256": "a5c37c6a9185e932b9e932b3a9436d0ec8bbd175aa532322e0eb7df46ab3ae17",
+     "report": "report-schematic-v2.97.json",
+     "request": "request-schematic-v2.97.json"
+    }
+   }
+  },
+  "ss_-40c_3.30v": {
+   "delta_pct": {
+    "av_dc": -0.5703758628779403,
+    "enbw_mhz": -51.414966641109615,
+    "inoise_band_uv": 3.1549934610154073,
+    "vn_in_hf_uv": -29.765810688851552,
+    "vn_in_uv": -29.44222955082579,
+    "white_nv_rthz": 0.6489837457014935
+   },
+   "extracted": {
+    "av_dc": 26.28772154766,
+    "enbw_mhz": 19.48031793353441,
+    "inoise_band_uv": 298.859179611,
+    "onoise_hf_uv": 1387.794803341,
+    "onoise_uv": 1400.499585451,
+    "vn_in_hf_uv": 52.792510025066605,
+    "vn_in_uv": 53.275807220944394,
+    "white_nv_rthz": 317.3108805806
+   },
+   "schematic": {
+    "av_dc": 26.43852048702,
+    "enbw_mhz": 40.095306284213514,
+    "inoise_band_uv": 289.7185774375,
+    "onoise_hf_uv": 1987.28834425,
+    "onoise_uv": 1996.2840544800001,
+    "vn_in_hf_uv": 75.1663976517014,
+    "vn_in_uv": 75.50664778916341,
+    "white_nv_rthz": 315.2648628647
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "ss/novdd/-40C",
+     "netlist_sha256": "f60b60e540c0a91ed3eff5e4327ad4442c91e07eb6a116f680fc9648baee0e3d",
+     "report": "report-extracted-v3.30.json",
+     "request": "request-extracted-v3.30.json"
+    },
+    "schematic": {
+     "corner_id": "ss/novdd/-40C",
+     "netlist_sha256": "90d978214d8779da5d910335f6e541146fc8db03f32b1e3e802f85857933034b",
+     "report": "report-schematic-v3.30.json",
+     "request": "request-schematic-v3.30.json"
+    }
+   }
+  },
+  "ss_-40c_3.63v": {
+   "delta_pct": {
+    "av_dc": -0.5716073086842933,
+    "enbw_mhz": -52.453982533769164,
+    "inoise_band_uv": 3.1426908347433606,
+    "vn_in_hf_uv": -30.514720364339038,
+    "vn_in_uv": -30.19164805244482,
+    "white_nv_rthz": 0.6608819761658106
+   },
+   "extracted": {
+    "av_dc": 26.31168582049,
+    "enbw_mhz": 19.902745115157607,
+    "inoise_band_uv": 299.9367909326,
+    "onoise_hf_uv": 1401.816772319,
+    "onoise_uv": 1414.5031814699998,
+    "vn_in_hf_uv": 53.27734535456285,
+    "vn_in_uv": 53.7595040895657,
+    "white_nv_rthz": 317.0643677397
+   },
+   "schematic": {
+    "av_dc": 26.46294997665,
+    "enbw_mhz": 41.85996257056306,
+    "inoise_band_uv": 290.7979116166,
+    "onoise_hf_uv": 2029.027921308,
+    "onoise_uv": 2037.915274895,
+    "vn_in_hf_uv": 76.67429077628704,
+    "vn_in_uv": 77.01013215432091,
+    "white_nv_rthz": 314.9827038221
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "ss/novdd/-40C",
+     "netlist_sha256": "886f284cee7e930d2815f5ed91a9df259fb86092979ca61c9c929501da0668d6",
+     "report": "report-extracted-v3.63.json",
+     "request": "request-extracted-v3.63.json"
+    },
+    "schematic": {
+     "corner_id": "ss/novdd/-40C",
+     "netlist_sha256": "5e78cd52784631a136616a4aaa11a61fee2226d694a30fbbca0a5e87914afaed",
+     "report": "report-schematic-v3.63.json",
+     "request": "request-schematic-v3.63.json"
+    }
+   }
+  },
+  "ss_125c_2.97v": {
+   "delta_pct": {
+    "av_dc": -0.3562164007995444,
+    "enbw_mhz": -51.002971368622354,
+    "inoise_band_uv": 3.216959067718355,
+    "vn_in_hf_uv": -29.494757432113776,
+    "vn_in_uv": -29.323418931418004,
+    "white_nv_rthz": 0.6099355416180667
+   },
+   "extracted": {
+    "av_dc": 16.05343804272,
+    "enbw_mhz": 21.61391025338151,
+    "inoise_band_uv": 393.76340676210003,
+    "onoise_hf_uv": 1301.801775658,
+    "onoise_uv": 1308.1158775009999,
+    "vn_in_hf_uv": 81.09177437217869,
+    "vn_in_uv": 81.4850921042556,
+    "white_nv_rthz": 281.3711367236
+   },
+   "schematic": {
+    "av_dc": 16.11082745241,
+    "enbw_mhz": 44.11269592691174,
+    "inoise_band_uv": 381.4909975247,
+    "onoise_hf_uv": 1852.990695638,
+    "onoise_uv": 1857.4642957919998,
+    "vn_in_hf_uv": 115.01524059590206,
+    "vn_in_uv": 115.29291721848489,
+    "white_nv_rthz": 279.6653583057
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "ss/novdd/125C",
+     "netlist_sha256": "7a4d1c9f2d13d6ca649f5b63e2fec170cb2a2727d0df285373b24077231b7313",
+     "report": "report-extracted-v2.97.json",
+     "request": "request-extracted-v2.97.json"
+    },
+    "schematic": {
+     "corner_id": "ss/novdd/125C",
+     "netlist_sha256": "a5c37c6a9185e932b9e932b3a9436d0ec8bbd175aa532322e0eb7df46ab3ae17",
+     "report": "report-schematic-v2.97.json",
+     "request": "request-schematic-v2.97.json"
+    }
+   }
+  },
+  "ss_125c_3.30v": {
+   "delta_pct": {
+    "av_dc": -0.35699974470838,
+    "enbw_mhz": -52.05189189914803,
+    "inoise_band_uv": 3.1893051501891407,
+    "vn_in_hf_uv": -30.246861355021576,
+    "vn_in_uv": -30.076053335550455,
+    "white_nv_rthz": 0.6206203822641382
+   },
+   "extracted": {
+    "av_dc": 16.08819893718,
+    "enbw_mhz": 22.12818969441768,
+    "inoise_band_uv": 395.6705360139,
+    "onoise_hf_uv": 1317.69488532,
+    "onoise_uv": 1324.001908278,
+    "vn_in_hf_uv": 81.90443756104936,
+    "vn_in_uv": 82.29646546812752,
+    "white_nv_rthz": 281.4593420835
+   },
+   "schematic": {
+    "av_dc": 16.14583954313,
+    "enbw_mhz": 46.1502874062814,
+    "inoise_band_uv": 383.441419087,
+    "onoise_hf_uv": 1895.851473382,
+    "onoise_uv": 1900.2724957609998,
+    "vn_in_hf_uv": 117.42043319070879,
+    "vn_in_uv": 117.69425124564424,
+    "white_nv_rthz": 279.72332213239997
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "ss/novdd/125C",
+     "netlist_sha256": "f60b60e540c0a91ed3eff5e4327ad4442c91e07eb6a116f680fc9648baee0e3d",
+     "report": "report-extracted-v3.30.json",
+     "request": "request-extracted-v3.30.json"
+    },
+    "schematic": {
+     "corner_id": "ss/novdd/125C",
+     "netlist_sha256": "90d978214d8779da5d910335f6e541146fc8db03f32b1e3e802f85857933034b",
+     "report": "report-schematic-v3.30.json",
+     "request": "request-schematic-v3.30.json"
+    }
+   }
+  },
+  "ss_125c_3.63v": {
+   "delta_pct": {
+    "av_dc": -0.3574470895318024,
+    "enbw_mhz": -52.860922871479254,
+    "inoise_band_uv": 3.17320200033583,
+    "vn_in_hf_uv": -30.83227258638483,
+    "vn_in_uv": -30.661978977315858,
+    "white_nv_rthz": 0.629600910834494
+   },
+   "extracted": {
+    "av_dc": 16.10495561457,
+    "enbw_mhz": 22.54856379680606,
+    "inoise_band_uv": 396.75825752369997,
+    "onoise_hf_uv": 1329.454617108,
+    "onoise_uv": 1335.752121656,
+    "vn_in_hf_uv": 82.54941205210496,
+    "vn_in_uv": 82.9404410433493,
+    "white_nv_rthz": 281.29786117279997
+   },
+   "schematic": {
+    "av_dc": 16.16272881832,
+    "enbw_mhz": 47.83412228315223,
+    "inoise_band_uv": 384.5555336379,
+    "onoise_hf_uv": 1928.9686259769999,
+    "onoise_uv": 1933.346001059,
+    "vn_in_hf_uv": 119.3467172319669,
+    "vn_in_uv": 119.61754866960376,
+    "white_nv_rthz": 279.5378880833
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "ss/novdd/125C",
+     "netlist_sha256": "886f284cee7e930d2815f5ed91a9df259fb86092979ca61c9c929501da0668d6",
+     "report": "report-extracted-v3.63.json",
+     "request": "request-extracted-v3.63.json"
+    },
+    "schematic": {
+     "corner_id": "ss/novdd/125C",
+     "netlist_sha256": "5e78cd52784631a136616a4aaa11a61fee2226d694a30fbbca0a5e87914afaed",
+     "report": "report-schematic-v3.63.json",
+     "request": "request-schematic-v3.63.json"
+    }
+   }
+  },
+  "ss_27c_2.97v": {
+   "delta_pct": {
+    "av_dc": -0.4576766793767357,
+    "enbw_mhz": -50.8699023243659,
+    "inoise_band_uv": 3.15211012319698,
+    "vn_in_hf_uv": -29.380798463006286,
+    "vn_in_uv": -29.14165573357404,
+    "white_nv_rthz": 0.6294176104177798
+   },
+   "extracted": {
+    "av_dc": 20.74688687832,
+    "enbw_mhz": 20.328091412415436,
+    "inoise_band_uv": 341.881855518,
+    "onoise_hf_uv": 1337.889832803,
+    "onoise_uv": 1346.974778568,
+    "vn_in_hf_uv": 64.48629332437643,
+    "vn_in_uv": 64.92418773322355,
+    "white_nv_rthz": 298.75223388100005
+   },
+   "schematic": {
+    "av_dc": 20.84227712015,
+    "enbw_mhz": 41.37604518237521,
+    "inoise_band_uv": 331.4346697413,
+    "onoise_hf_uv": 1903.2234387610001,
+    "onoise_uv": 1909.6804004459998,
+    "vn_in_hf_uv": 91.31552314506902,
+    "vn_in_uv": 91.6253243077624,
+    "white_nv_rthz": 296.88359624379996
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "ss/novdd/27C",
+     "netlist_sha256": "7a4d1c9f2d13d6ca649f5b63e2fec170cb2a2727d0df285373b24077231b7313",
+     "report": "report-extracted-v2.97.json",
+     "request": "request-extracted-v2.97.json"
+    },
+    "schematic": {
+     "corner_id": "ss/novdd/27C",
+     "netlist_sha256": "a5c37c6a9185e932b9e932b3a9436d0ec8bbd175aa532322e0eb7df46ab3ae17",
+     "report": "report-schematic-v2.97.json",
+     "request": "request-schematic-v2.97.json"
+    }
+   }
+  },
+  "ss_27c_3.30v": {
+   "delta_pct": {
+    "av_dc": -0.4591651631784002,
+    "enbw_mhz": -51.81794870940705,
+    "inoise_band_uv": 3.1356391140253583,
+    "vn_in_hf_uv": -30.059033390998014,
+    "vn_in_uv": -29.81998543739935,
+    "white_nv_rthz": 0.6403387683451318
+   },
+   "extracted": {
+    "av_dc": 20.79360544452,
+    "enbw_mhz": 20.755783223309013,
+    "inoise_band_uv": 342.89018851730003,
+    "onoise_hf_uv": 1352.349340488,
+    "onoise_uv": 1361.443636407,
+    "vn_in_hf_uv": 65.03678951186417,
+    "vn_in_uv": 65.47414973509551,
+    "white_nv_rthz": 298.83406548199997
+   },
+   "schematic": {
+    "av_dc": 20.88952285623,
+    "enbw_mhz": 43.07783223700433,
+    "inoise_band_uv": 332.4652772435,
+    "onoise_hf_uv": 1942.477444727,
+    "onoise_uv": 1948.879258444,
+    "vn_in_hf_uv": 92.98811935992516,
+    "vn_in_uv": 93.29457986460304,
+    "white_nv_rthz": 296.9326903498
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "ss/novdd/27C",
+     "netlist_sha256": "f60b60e540c0a91ed3eff5e4327ad4442c91e07eb6a116f680fc9648baee0e3d",
+     "report": "report-extracted-v3.30.json",
+     "request": "request-extracted-v3.30.json"
+    },
+    "schematic": {
+     "corner_id": "ss/novdd/27C",
+     "netlist_sha256": "90d978214d8779da5d910335f6e541146fc8db03f32b1e3e802f85857933034b",
+     "report": "report-schematic-v3.30.json",
+     "request": "request-schematic-v3.30.json"
+    }
+   }
+  },
+  "ss_27c_3.63v": {
+   "delta_pct": {
+    "av_dc": -0.4599440695051466,
+    "enbw_mhz": -52.74229267907793,
+    "inoise_band_uv": 3.12116218424011,
+    "vn_in_hf_uv": -30.72699378310393,
+    "vn_in_uv": -30.488554282939273,
+    "white_nv_rthz": 0.6509497940004612
+   },
+   "extracted": {
+    "av_dc": 20.8143346742,
+    "enbw_mhz": 21.179381746880203,
+    "inoise_band_uv": 344.0199648409,
+    "onoise_hf_uv": 1365.16924111,
+    "onoise_uv": 1374.24808879,
+    "vn_in_hf_uv": 65.58793554915636,
+    "vn_in_uv": 66.02411800812553,
+    "white_nv_rthz": 298.6128568707
+   },
+   "schematic": {
+    "av_dc": 20.91051133097,
+    "enbw_mhz": 44.8167779343447,
+    "inoise_band_uv": 333.6075326869,
+    "onoise_hf_uv": 1979.814857726,
+    "onoise_uv": 1986.144948482,
+    "vn_in_hf_uv": 94.6803656012825,
+    "vn_in_uv": 94.98308850727977,
+    "white_nv_rthz": 296.681608551
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "ss/novdd/27C",
+     "netlist_sha256": "886f284cee7e930d2815f5ed91a9df259fb86092979ca61c9c929501da0668d6",
+     "report": "report-extracted-v3.63.json",
+     "request": "request-extracted-v3.63.json"
+    },
+    "schematic": {
+     "corner_id": "ss/novdd/27C",
+     "netlist_sha256": "5e78cd52784631a136616a4aaa11a61fee2226d694a30fbbca0a5e87914afaed",
+     "report": "report-schematic-v3.63.json",
+     "request": "request-schematic-v3.63.json"
+    }
+   }
+  },
+  "tt_-40c_2.97v": {
+   "delta_pct": {
+    "av_dc": -0.5712743525830314,
+    "enbw_mhz": -52.49305951919615,
+    "inoise_band_uv": 3.240567871674655,
+    "vn_in_hf_uv": -30.40276794501789,
+    "vn_in_uv": -30.146112613212058,
+    "white_nv_rthz": 0.7682976740821711
+   },
+   "extracted": {
+    "av_dc": 22.66991638695,
+    "enbw_mhz": 23.325952166422425,
+    "inoise_band_uv": 295.6168596736,
+    "onoise_hf_uv": 1286.8091240909998,
+    "onoise_uv": 1296.060994163,
+    "vn_in_hf_uv": 56.762852677822636,
+    "vn_in_uv": 57.17096490523809,
+    "white_nv_rthz": 268.3525645724
+   },
+   "schematic": {
+    "av_dc": 22.8001678985,
+    "enbw_mhz": 49.100093439710676,
+    "inoise_band_uv": 286.3378861312,
+    "onoise_hf_uv": 1859.560406698,
+    "onoise_uv": 1866.048759092,
+    "vn_in_hf_uv": 81.55906636197793,
+    "vn_in_uv": 81.84364112576405,
+    "white_nv_rthz": 266.30653763780003
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "tt/novdd/-40C",
+     "netlist_sha256": "7a4d1c9f2d13d6ca649f5b63e2fec170cb2a2727d0df285373b24077231b7313",
+     "report": "report-extracted-v2.97.json",
+     "request": "request-extracted-v2.97.json"
+    },
+    "schematic": {
+     "corner_id": "tt/novdd/-40C",
+     "netlist_sha256": "a5c37c6a9185e932b9e932b3a9436d0ec8bbd175aa532322e0eb7df46ab3ae17",
+     "report": "report-schematic-v2.97.json",
+     "request": "request-schematic-v2.97.json"
+    }
+   }
+  },
+  "tt_-40c_3.30v": {
+   "delta_pct": {
+    "av_dc": -0.5724402113505375,
+    "enbw_mhz": -53.51886231061289,
+    "inoise_band_uv": 3.233281293487965,
+    "vn_in_hf_uv": -31.153136705891736,
+    "vn_in_uv": -30.8967907268688,
+    "white_nv_rthz": 0.7782060741409608
+   },
+   "extracted": {
+    "av_dc": 22.69410879561,
+    "enbw_mhz": 23.829381489319243,
+    "inoise_band_uv": 296.5282032842,
+    "onoise_hf_uv": 1299.701320283,
+    "onoise_uv": 1308.948602256,
+    "vn_in_hf_uv": 57.2704278448871,
+    "vn_in_uv": 57.677902844512936,
+    "white_nv_rthz": 268.14284236609996
+   },
+   "schematic": {
+    "av_dc": 22.82476693972,
+    "enbw_mhz": 51.26677760893131,
+    "inoise_band_uv": 287.2408970913,
+    "onoise_hf_uv": 1898.68369531,
+    "onoise_uv": 1905.099204285,
+    "vn_in_hf_uv": 83.18523910120994,
+    "vn_in_uv": 83.46631574886831,
+    "white_nv_rthz": 266.0722519399
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "tt/novdd/-40C",
+     "netlist_sha256": "f60b60e540c0a91ed3eff5e4327ad4442c91e07eb6a116f680fc9648baee0e3d",
+     "report": "report-extracted-v3.30.json",
+     "request": "request-extracted-v3.30.json"
+    },
+    "schematic": {
+     "corner_id": "tt/novdd/-40C",
+     "netlist_sha256": "90d978214d8779da5d910335f6e541146fc8db03f32b1e3e802f85857933034b",
+     "report": "report-schematic-v3.30.json",
+     "request": "request-schematic-v3.30.json"
+    }
+   }
+  },
+  "tt_-40c_3.63v": {
+   "delta_pct": {
+    "av_dc": -0.5731446795904112,
+    "enbw_mhz": -54.273273921613864,
+    "inoise_band_uv": 3.2322263558122954,
+    "vn_in_hf_uv": -31.709691979693577,
+    "vn_in_uv": -31.4535167119956,
+    "white_nv_rthz": 0.7868398796144329
+   },
+   "extracted": {
+    "av_dc": 22.69711418705,
+    "enbw_mhz": 24.224276788781964,
+    "inoise_band_uv": 296.8741230928,
+    "onoise_hf_uv": 1308.401072954,
+    "onoise_uv": 1317.644740639,
+    "vn_in_hf_uv": 57.64614224395617,
+    "vn_in_uv": 58.05340404864295,
+    "white_nv_rthz": 267.71513410230006
+   },
+   "schematic": {
+    "av_dc": 22.82795137582,
+    "enbw_mhz": 52.97618890811465,
+    "inoise_band_uv": 287.5789214015,
+    "onoise_hf_uv": 1926.984033748,
+    "onoise_uv": 1933.345404833,
+    "vn_in_hf_uv": 84.41335808122997,
+    "vn_in_uv": 84.69202395799971,
+    "white_nv_rthz": 265.6250899642
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "tt/novdd/-40C",
+     "netlist_sha256": "886f284cee7e930d2815f5ed91a9df259fb86092979ca61c9c929501da0668d6",
+     "report": "report-extracted-v3.63.json",
+     "request": "request-extracted-v3.63.json"
+    },
+    "schematic": {
+     "corner_id": "tt/novdd/-40C",
+     "netlist_sha256": "5e78cd52784631a136616a4aaa11a61fee2226d694a30fbbca0a5e87914afaed",
+     "report": "report-schematic-v3.63.json",
+     "request": "request-schematic-v3.63.json"
+    }
+   }
+  },
+  "tt_125c_2.97v": {
+   "delta_pct": {
+    "av_dc": -0.3506605691302139,
+    "enbw_mhz": -52.79022117163756,
+    "inoise_band_uv": 3.2926002561549637,
+    "vn_in_hf_uv": -30.682974431689914,
+    "vn_in_uv": -30.54871244649991,
+    "white_nv_rthz": 0.7253401628712985
+   },
+   "extracted": {
+    "av_dc": 13.8458949917,
+    "enbw_mhz": 26.568511041071137,
+    "inoise_band_uv": 390.893083622,
+    "onoise_hf_uv": 1218.502551136,
+    "onoise_uv": 1223.058196152,
+    "vn_in_hf_uv": 88.00460727648434,
+    "vn_in_uv": 88.33363223433147,
+    "white_nv_rthz": 237.2813006225
+   },
+   "schematic": {
+    "av_dc": 13.89461793804,
+    "enbw_mhz": 56.277558803366915,
+    "inoise_band_uv": 378.4328041434,
+    "onoise_hf_uv": 1764.054912727,
+    "onoise_uv": 1767.227238271,
+    "vn_in_hf_uv": 126.95958396217988,
+    "vn_in_uv": 127.18789722405914,
+    "white_nv_rthz": 235.5725979568
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "tt/novdd/125C",
+     "netlist_sha256": "7a4d1c9f2d13d6ca649f5b63e2fec170cb2a2727d0df285373b24077231b7313",
+     "report": "report-extracted-v2.97.json",
+     "request": "request-extracted-v2.97.json"
+    },
+    "schematic": {
+     "corner_id": "tt/novdd/125C",
+     "netlist_sha256": "a5c37c6a9185e932b9e932b3a9436d0ec8bbd175aa532322e0eb7df46ab3ae17",
+     "report": "report-schematic-v2.97.json",
+     "request": "request-schematic-v2.97.json"
+    }
+   }
+  },
+  "tt_125c_3.30v": {
+   "delta_pct": {
+    "av_dc": -0.3510637783977565,
+    "enbw_mhz": -53.68613041628048,
+    "inoise_band_uv": 3.2776930126009907,
+    "vn_in_hf_uv": -31.338912120097568,
+    "vn_in_uv": -31.20509554223718,
+    "white_nv_rthz": 0.7333795431848199
+   },
+   "extracted": {
+    "av_dc": 13.86391939543,
+    "enbw_mhz": 27.118858936388218,
+    "inoise_band_uv": 392.1550342113,
+    "onoise_hf_uv": 1230.523352307,
+    "onoise_uv": 1235.072861874,
+    "vn_in_hf_uv": 88.75724946241542,
+    "vn_in_uv": 89.08540410882078,
+    "white_nv_rthz": 237.1684269583
+   },
+   "schematic": {
+    "av_dc": 13.91276206361,
+    "enbw_mhz": 58.554509005918106,
+    "inoise_band_uv": 379.70932809609997,
+    "onoise_hf_uv": 1798.483728296,
+    "onoise_uv": 1801.621850449,
+    "vn_in_hf_uv": 129.26863264628707,
+    "vn_in_uv": 129.49418973830464,
+    "white_nv_rthz": 235.4417453617
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "tt/novdd/125C",
+     "netlist_sha256": "f60b60e540c0a91ed3eff5e4327ad4442c91e07eb6a116f680fc9648baee0e3d",
+     "report": "report-extracted-v3.30.json",
+     "request": "request-extracted-v3.30.json"
+    },
+    "schematic": {
+     "corner_id": "tt/novdd/125C",
+     "netlist_sha256": "90d978214d8779da5d910335f6e541146fc8db03f32b1e3e802f85857933034b",
+     "report": "report-schematic-v3.30.json",
+     "request": "request-schematic-v3.30.json"
+    }
+   }
+  },
+  "tt_125c_3.63v": {
+   "delta_pct": {
+    "av_dc": -0.3512970852449382,
+    "enbw_mhz": -54.30878358721739,
+    "inoise_band_uv": 3.272019354976066,
+    "vn_in_hf_uv": -31.797883842260045,
+    "vn_in_uv": -31.664357662873094,
+    "white_nv_rthz": 0.740144849567249
+   },
+   "extracted": {
+    "av_dc": 13.87060130982,
+    "enbw_mhz": 27.536715471527653,
+    "inoise_band_uv": 392.4875622392,
+    "onoise_hf_uv": 1238.596537302,
+    "onoise_uv": 1243.142444593,
+    "vn_in_hf_uv": 89.2965279324342,
+    "vn_in_uv": 89.62426479037285,
+    "white_nv_rthz": 236.89987209019998
+   },
+   "schematic": {
+    "av_dc": 13.91950010798,
+    "enbw_mhz": 60.26697828036805,
+    "inoise_band_uv": 380.0521813078,
+    "onoise_hf_uv": 1822.469888358,
+    "onoise_uv": 1825.584600892,
+    "vn_in_hf_uv": 130.92926284854042,
+    "vn_in_uv": 131.15302896871987,
+    "white_nv_rthz": 235.1593522562
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "tt/novdd/125C",
+     "netlist_sha256": "886f284cee7e930d2815f5ed91a9df259fb86092979ca61c9c929501da0668d6",
+     "report": "report-extracted-v3.63.json",
+     "request": "request-extracted-v3.63.json"
+    },
+    "schematic": {
+     "corner_id": "tt/novdd/125C",
+     "netlist_sha256": "5e78cd52784631a136616a4aaa11a61fee2226d694a30fbbca0a5e87914afaed",
+     "report": "report-schematic-v3.63.json",
+     "request": "request-schematic-v3.63.json"
+    }
+   }
+  },
+  "tt_27c_2.97v": {
+   "delta_pct": {
+    "av_dc": -0.4559742538316389,
+    "enbw_mhz": -52.69942846390793,
+    "inoise_band_uv": 3.22786784349696,
+    "vn_in_hf_uv": -30.578777717965732,
+    "vn_in_uv": -30.390065198799622,
+    "white_nv_rthz": 0.75189729387836
+   },
+   "extracted": {
+    "av_dc": 17.90826369049,
+    "enbw_mhz": 24.88722379604778,
+    "inoise_band_uv": 338.9592463724,
+    "onoise_hf_uv": 1251.969548708,
+    "onoise_uv": 1258.564573732,
+    "vn_in_hf_uv": 69.91015825687477,
+    "vn_in_uv": 70.27842539533007,
+    "white_nv_rthz": 252.2825873783
+   },
+   "schematic": {
+    "av_dc": 17.99029480298,
+    "enbw_mhz": 52.615059369965365,
+    "inoise_band_uv": 328.3602126572,
+    "onoise_hf_uv": 1811.700104695,
+    "onoise_uv": 1816.306242438,
+    "vn_in_hf_uv": 100.70430332219465,
+    "vn_in_uv": 100.96033791159098,
+    "white_nv_rthz": 250.3998377742
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "tt/novdd/27C",
+     "netlist_sha256": "7a4d1c9f2d13d6ca649f5b63e2fec170cb2a2727d0df285373b24077231b7313",
+     "report": "report-extracted-v2.97.json",
+     "request": "request-extracted-v2.97.json"
+    },
+    "schematic": {
+     "corner_id": "tt/novdd/27C",
+     "netlist_sha256": "a5c37c6a9185e932b9e932b3a9436d0ec8bbd175aa532322e0eb7df46ab3ae17",
+     "report": "report-schematic-v2.97.json",
+     "request": "request-schematic-v2.97.json"
+    }
+   }
+  },
+  "tt_27c_3.30v": {
+   "delta_pct": {
+    "av_dc": -0.45669080300886716,
+    "enbw_mhz": -53.67946367916269,
+    "inoise_band_uv": 3.2161673810898304,
+    "vn_in_hf_uv": -31.296338478918152,
+    "vn_in_uv": -31.108130702303427,
+    "white_nv_rthz": 0.761182038805643
+   },
+   "extracted": {
+    "av_dc": 17.93000457507,
+    "enbw_mhz": 25.423275110575528,
+    "inoise_band_uv": 340.1149753047,
+    "onoise_hf_uv": 1264.591387558,
+    "onoise_uv": 1271.177692019,
+    "vn_in_hf_uv": 70.5293399264547,
+    "vn_in_uv": 70.89667415849152,
+    "white_nv_rthz": 252.1102565012
+   },
+   "schematic": {
+    "av_dc": 18.01226493243,
+    "enbw_mhz": 54.88553702073362,
+    "inoise_band_uv": 329.5171521424,
+    "onoise_hf_uv": 1849.090904529,
+    "onoise_uv": 1853.643529765,
+    "vn_in_hf_uv": 102.65732329973801,
+    "vn_in_uv": 102.91007470291125,
+    "white_nv_rthz": 250.2057353834
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "tt/novdd/27C",
+     "netlist_sha256": "f60b60e540c0a91ed3eff5e4327ad4442c91e07eb6a116f680fc9648baee0e3d",
+     "report": "report-extracted-v3.30.json",
+     "request": "request-extracted-v3.30.json"
+    },
+    "schematic": {
+     "corner_id": "tt/novdd/27C",
+     "netlist_sha256": "90d978214d8779da5d910335f6e541146fc8db03f32b1e3e802f85857933034b",
+     "report": "report-schematic-v3.30.json",
+     "request": "request-schematic-v3.30.json"
+    }
+   }
+  },
+  "tt_27c_3.63v": {
+   "delta_pct": {
+    "av_dc": -0.45715436549096944,
+    "enbw_mhz": -54.353152494793356,
+    "inoise_band_uv": 3.213356258208983,
+    "vn_in_hf_uv": -31.793234021148287,
+    "vn_in_uv": -31.605305116972342,
+    "white_nv_rthz": 0.7690289502440673
+   },
+   "extracted": {
+    "av_dc": 17.93605209072,
+    "enbw_mhz": 25.824879027890788,
+    "inoise_band_uv": 340.42859175840005,
+    "onoise_hf_uv": 1272.7717335129998,
+    "onoise_uv": 1279.353734735,
+    "vn_in_hf_uv": 70.96164345840208,
+    "vn_in_uv": 71.32861391481627,
+    "white_nv_rthz": 251.75116755079998
+   },
+   "schematic": {
+    "av_dc": 18.0184241031,
+    "enbw_mhz": 56.575383491587466,
+    "inoise_band_uv": 329.8299794716,
+    "onoise_hf_uv": 1874.618989094,
+    "onoise_uv": 1879.1358283000002,
+    "vn_in_hf_uv": 104.03900909244773,
+    "vn_in_uv": 104.28968801864876,
+    "white_nv_rthz": 249.8299032683
+   },
+   "sources": {
+    "extracted": {
+     "corner_id": "tt/novdd/27C",
+     "netlist_sha256": "886f284cee7e930d2815f5ed91a9df259fb86092979ca61c9c929501da0668d6",
+     "report": "report-extracted-v3.63.json",
+     "request": "request-extracted-v3.63.json"
+    },
+    "schematic": {
+     "corner_id": "tt/novdd/27C",
+     "netlist_sha256": "5e78cd52784631a136616a4aaa11a61fee2226d694a30fbbca0a5e87914afaed",
+     "report": "report-schematic-v3.63.json",
+     "request": "request-schematic-v3.63.json"
+    }
+   }
+  }
+ },
+ "pinned_identity": {
+  "extracted": "a7ca3c00ea4db8a2b00cad69f2edc2d9320738499049cfa9c7faec517b7b5f45",
+  "params": {
+   "dut_ib": 1e-05,
+   "dut_vcm": 1.65
+  },
+  "record": "layout/pex/artifacts/preamp-noise/record.json",
+  "record_sha256": "e5b64f03f928b65df086b003b2e1635ed473b32bba11c80058c779e15a5429bf",
+  "schematic": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a"
+ },
+ "scope": {
+  "bandwidth_note": "Report gain, noise, white density AND ENBW together: a lower vn_in from heavier extracted loading is a narrower noise bandwidth, not a quieter preamp.",
+  "disclosures": "Body bias: preamp NMOS bulks and resistor substrate resolve to vss (#202 mapping). Extraction: first-order lumped RC per net, no lateral coupling, distributed_rc false (#202 record identity).",
+  "excludes": "Reset-state `.noise` about the clk-low operating point: the preamp's thermal and flicker noise with the real latch gate load, referred by the measured DC gain. It EXCLUDES the latch's regenerative noise (no operating point to linearise about during regeneration) and is NOT whole-comparator decision noise; it cannot by itself complete T1 item 7.",
+  "promotion": "No T1 promotion, spec-row verdict or signoff input follows from this summary, complete or not; a partial-coverage result is never presented as complete.",
+  "schematic_allowance": "The like-for-like schematic leg has NO 10 fF routing allowance; the bench's 10 fF-allowance numbers are the committed sim/comparator-preamp-noise/ records and are not the like-for-like comparison. Extracted capacitance supplies the extracted leg's loading.",
+  "spec_row_verdict": null,
+  "t1_promotion": false
+ },
+ "verdict": "complete"
+}

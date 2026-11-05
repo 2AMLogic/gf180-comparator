@@ -1,0 +1,4321 @@
+{
+  "schema_version": 3,
+  "netlist": {
+    "path": "layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/body-extracted-v2.97.spice",
+    "scope": "repo"
+  },
+  "status": "pass",
+  "corner_count": 15,
+  "passed": 15,
+  "failed": 0,
+  "errored": 0,
+  "inconclusive": 0,
+  "diagnostic_counts": {
+    "by_code": {},
+    "by_severity": {},
+    "corners_with_diagnostics": 0
+  },
+  "metrics": {
+    "sim__corner__count": 15,
+    "sim__corner__passed_count": 15,
+    "sim__corner__failed_count": 0,
+    "sim__corner__errored_count": 0,
+    "sim__corner__inconclusive_count": 0
+  },
+  "environment": {
+    "engine": "ngspice",
+    "engine_version": "46",
+    "ngspice_binary": "/usr/local/bin/ngspice",
+    "engine_build": {
+      "version_banner": "******\n** ngspice-42 : Circuit level simulation program\n** Compiled with KLU Direct Linear Solver\n** The U. C. Berkeley CAD Group\n** Copyright 1985-1994, Regents of the University of California.\n** Copyright 2001-2023, The ngspice team.\n** Please get your ngspice manual from https://ngspice.sourceforge.io/docs.html\n** Please file your bug-reports at http://ngspice.sourceforge.net/bugrep.html\n** Creation Date: Sun Mar 31 20:15:14 UTC 2024\n******",
+      "binary_sha256": "820658317b0b54035208da41936fd6871ce924036e5ea4113a4168b821b7fc45",
+      "probe": "ok",
+      "reason": null
+    },
+    "models_lib": {
+      "path": null,
+      "scope": "external"
+    },
+    "models_lib_sha256": "f6f4a96e18fc5ad11270ad3451aaecc7ac37fc81eb61e15b0d7d94c7bc594a24",
+    "models_lib_sha256_scope": "client",
+    "netlist_sha256": "7a4d1c9f2d13d6ca649f5b63e2fec170cb2a2727d0df285373b24077231b7313",
+    "corner_coverage": {
+      "pdk": "gf180mcuD",
+      "sections": [
+        {
+          "process": "ff",
+          "unmoved_devices": [
+            "06v0",
+            "06v0_nvt",
+            "fets_mm",
+            "noise_corner"
+          ]
+        },
+        {
+          "process": "ss",
+          "unmoved_devices": [
+            "06v0",
+            "06v0_nvt",
+            "fets_mm",
+            "noise_corner"
+          ]
+        },
+        {
+          "process": "fs",
+          "unmoved_devices": [
+            "06v0",
+            "06v0_nvt",
+            "fets_mm",
+            "noise_corner"
+          ]
+        },
+        {
+          "process": "sf",
+          "unmoved_devices": [
+            "06v0",
+            "06v0_nvt",
+            "fets_mm",
+            "noise_corner"
+          ]
+        }
+      ]
+    },
+    "netlist_closure": [
+      {
+        "path": "layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/body-extracted-v2.97.spice",
+        "scope": "repo",
+        "sha256": "7a4d1c9f2d13d6ca649f5b63e2fec170cb2a2727d0df285373b24077231b7313"
+      },
+      {
+        "path": "layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/design.ngspice",
+        "scope": "repo",
+        "sha256": "091cb530bf85160a1f07878fb81f789ca367d018991c8ab41a584cd1a85c6692"
+      },
+      {
+        "path": "layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/sources/extracted/comparator.dut-layout.cir",
+        "scope": "repo",
+        "sha256": "a7ca3c00ea4db8a2b00cad69f2edc2d9320738499049cfa9c7faec517b7b5f45"
+      }
+    ],
+    "netlist_identity": "sha256:cea67b8e7913f810468acc6ad5fd014cab1f67973a30764701759fcc8f018628",
+    "remote": {
+      "provider": "aws-batch-fleet",
+      "job_id": "klt-sim-81d7cf92a474",
+      "region": "us-east-1",
+      "instance_id": "i-02e1891d147338a54",
+      "instance_type": "m7i.4xlarge",
+      "availability_zone": "us-east-1a",
+      "ami_id": "ami-04591566329422a44",
+      "lifecycle": "spot",
+      "spot": true,
+      "state": "done",
+      "exit_code": "0",
+      "concurrency": "1",
+      "physical_cores": "8",
+      "elapsed_seconds": 7,
+      "client_submitted_at": "2026-11-05T08:03:17.838472Z",
+      "client_launched_at": "2026-11-05T08:03:40.007940Z",
+      "client_status_terminal_at": "2026-11-05T08:04:11.433156Z",
+      "client_collected_at": "2026-11-05T08:04:12.352948Z",
+      "runner_klt_version": "0.9.0",
+      "client_klt_version": "0.9.1.dev17+gd76e6fe1cb7a",
+      "runner_compatibility": "match",
+      "runner_request_features": {
+        "required": [
+          "analysis_steps",
+          "measurements[].expr",
+          "options.ngspice_init"
+        ],
+        "missing": [],
+        "status": "supported"
+      },
+      "worker_environment": {
+        "capture": "ok",
+        "simulator": {
+          "requested_binary": "ngspice",
+          "binary_source": "PATH",
+          "selected_path": "/usr/local/bin/ngspice",
+          "version_banner": "******\n** ngspice-46 : Circuit level simulation program\n** Compiled with KLU Direct Linear Solver\n** The U. C. Berkeley CAD Group\n** Copyright 1985-1994, Regents of the University of California.\n** Copyright 2001-2025, The ngspice team.\n** Please get your ngspice manual from https://ngspice.sourceforge.io/docs.html\n** Please file your bug-reports at http://ngspice.sourceforge.net/bugrep.html\n** Creation Date: Thu Oct  1 23:51:59 UTC 2026\n******\n",
+          "version_probe": "ok"
+        },
+        "pdk": {
+          "variant": "gf180mcuD",
+          "root": "/opt/pdk",
+          "stamp_scheme": "sources-sha256",
+          "stamp_sha256": "d5ac52956829da3fee35d0b307d4e6cb83ae0e6535b56dba2eefed61cdffaf9b",
+          "stamp_text": "open_pdks c6d73a35f524070e85faff4a6a9eef49553ebc2b",
+          "models_staged": false,
+          "stamp_scope": "executed"
+        },
+        "cpu_model": "Intel(R) Xeon(R) Platinum 8488C",
+        "omp_num_threads": null,
+        "image_manifest": null,
+        "model_inputs": null,
+        "diagnostics": [],
+        "pdk_stamp_comparison": {
+          "status": "not_comparable",
+          "reason": "client_stamp_unavailable"
+        },
+        "engine_build_comparison": {
+          "status": "mismatch",
+          "warning": "the worker's ngspice --version banner differs from the local binary's; build options (e.g. FFT linkage) may differ, so results derived from them can differ from a local run"
+        }
+      },
+      "runner_model_inputs": null,
+      "job_ceiling": {
+        "basis": "conservative_serial_bound",
+        "unit_count": 15,
+        "per_unit_timeout_s": 900,
+        "overhead_s": 120.0,
+        "job_bound_s": 13620.0,
+        "max_job_seconds": 3600.0,
+        "max_job_seconds_source": "fleet_config",
+        "exceeds_ceiling": true,
+        "check": "warn",
+        "max_units_per_job": 3,
+        "recommended_hosts": 5,
+        "warning": "batch job bound 13620s (options.timeout_s 900s x 15 units + 120s; a conservative fully-serial upper bound, not a runtime estimate) exceeds the fleet's whole-job ceiling of 3600s (max_job_seconds from fleet_config); a job still running at the ceiling is killed and every unit is reported batch_job_timeout. Set request.remote.hosts to at least 5 to run one job per shard of at most 3 units, each within the ceiling"
+      }
+    },
+    "engine_host": "worker",
+    "client_ngspice_binary": "/usr/bin/ngspice",
+    "backend": {
+      "resolved": "batch",
+      "source": "flag",
+      "requested": "batch"
+    }
+  },
+  "coverage": {
+    "corners_simulated": 15,
+    "measurements_declared": 15,
+    "measurements_with_limits": 0,
+    "unrecognized_limit_keys": [],
+    "schema_version": 1,
+    "known": true,
+    "checked": [
+      "measurement:[0,\"tt/novdd/-40C\",\"ac.av_dc\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"enbw_mhz\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"inoise_band_uv\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"nfull.inoise\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"nfull.onoise\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"nhf.onoise\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"nwhite.onoise\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"onoise_hf_uv\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"onoise_uv\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"op.dc_n\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"op.dc_p\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"op.vbias_mv\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"vn_in_hf_uv\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"vn_in_uv\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"white_nv_rthz\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"ac.av_dc\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"enbw_mhz\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"inoise_band_uv\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"nfull.inoise\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"nfull.onoise\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"nhf.onoise\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"nwhite.onoise\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"onoise_hf_uv\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"onoise_uv\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"op.dc_n\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"op.dc_p\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"op.vbias_mv\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"vn_in_hf_uv\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"vn_in_uv\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"white_nv_rthz\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"ac.av_dc\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"enbw_mhz\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"inoise_band_uv\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"nfull.inoise\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"nfull.onoise\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"nhf.onoise\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"nwhite.onoise\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"onoise_hf_uv\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"onoise_uv\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"op.dc_n\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"op.dc_p\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"op.vbias_mv\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"vn_in_hf_uv\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"vn_in_uv\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"white_nv_rthz\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"ac.av_dc\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"enbw_mhz\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"inoise_band_uv\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"nfull.inoise\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"nfull.onoise\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"nhf.onoise\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"nwhite.onoise\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"onoise_hf_uv\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"onoise_uv\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"op.dc_n\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"op.dc_p\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"op.vbias_mv\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"vn_in_hf_uv\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"vn_in_uv\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"white_nv_rthz\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"ac.av_dc\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"enbw_mhz\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"inoise_band_uv\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"nfull.inoise\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"nfull.onoise\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"nhf.onoise\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"nwhite.onoise\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"onoise_hf_uv\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"onoise_uv\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"op.dc_n\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"op.dc_p\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"op.vbias_mv\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"vn_in_hf_uv\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"vn_in_uv\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"white_nv_rthz\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"ac.av_dc\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"enbw_mhz\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"inoise_band_uv\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"nfull.inoise\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"nfull.onoise\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"nhf.onoise\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"nwhite.onoise\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"onoise_hf_uv\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"onoise_uv\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"op.dc_n\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"op.dc_p\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"op.vbias_mv\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"vn_in_hf_uv\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"vn_in_uv\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"white_nv_rthz\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"ac.av_dc\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"enbw_mhz\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"inoise_band_uv\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"nfull.inoise\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"nfull.onoise\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"nhf.onoise\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"nwhite.onoise\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"onoise_hf_uv\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"onoise_uv\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"op.dc_n\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"op.dc_p\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"op.vbias_mv\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"vn_in_hf_uv\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"vn_in_uv\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"white_nv_rthz\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"ac.av_dc\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"enbw_mhz\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"inoise_band_uv\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"nfull.inoise\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"nfull.onoise\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"nhf.onoise\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"nwhite.onoise\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"onoise_hf_uv\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"onoise_uv\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"op.dc_n\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"op.dc_p\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"op.vbias_mv\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"vn_in_hf_uv\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"vn_in_uv\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"white_nv_rthz\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"ac.av_dc\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"enbw_mhz\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"inoise_band_uv\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"nfull.inoise\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"nfull.onoise\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"nhf.onoise\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"nwhite.onoise\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"onoise_hf_uv\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"onoise_uv\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"op.dc_n\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"op.dc_p\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"op.vbias_mv\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"vn_in_hf_uv\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"vn_in_uv\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"white_nv_rthz\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"ac.av_dc\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"enbw_mhz\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"inoise_band_uv\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"nfull.inoise\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"nfull.onoise\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"nhf.onoise\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"nwhite.onoise\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"onoise_hf_uv\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"onoise_uv\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"op.dc_n\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"op.dc_p\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"op.vbias_mv\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"vn_in_hf_uv\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"vn_in_uv\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"white_nv_rthz\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"ac.av_dc\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"enbw_mhz\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"inoise_band_uv\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"nfull.inoise\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"nfull.onoise\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"nhf.onoise\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"nwhite.onoise\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"onoise_hf_uv\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"onoise_uv\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"op.dc_n\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"op.dc_p\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"op.vbias_mv\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"vn_in_hf_uv\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"vn_in_uv\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"white_nv_rthz\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"ac.av_dc\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"enbw_mhz\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"inoise_band_uv\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"nfull.inoise\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"nfull.onoise\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"nhf.onoise\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"nwhite.onoise\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"onoise_hf_uv\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"onoise_uv\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"op.dc_n\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"op.dc_p\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"op.vbias_mv\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"vn_in_hf_uv\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"vn_in_uv\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"white_nv_rthz\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"ac.av_dc\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"enbw_mhz\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"inoise_band_uv\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"nfull.inoise\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"nfull.onoise\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"nhf.onoise\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"nwhite.onoise\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"onoise_hf_uv\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"onoise_uv\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"op.dc_n\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"op.dc_p\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"op.vbias_mv\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"vn_in_hf_uv\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"vn_in_uv\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"white_nv_rthz\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"ac.av_dc\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"enbw_mhz\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"inoise_band_uv\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"nfull.inoise\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"nfull.onoise\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"nhf.onoise\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"nwhite.onoise\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"onoise_hf_uv\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"onoise_uv\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"op.dc_n\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"op.dc_p\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"op.vbias_mv\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"vn_in_hf_uv\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"vn_in_uv\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"white_nv_rthz\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"ac.av_dc\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"enbw_mhz\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"inoise_band_uv\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"nfull.inoise\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"nfull.onoise\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"nhf.onoise\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"nwhite.onoise\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"onoise_hf_uv\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"onoise_uv\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"op.dc_n\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"op.dc_p\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"op.vbias_mv\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"vn_in_hf_uv\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"vn_in_uv\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"white_nv_rthz\"]/observation"
+    ],
+    "skipped": [],
+    "inapplicable": [
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"ac.av_dc\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"enbw_mhz\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"inoise_band_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"nfull.inoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"nfull.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"nhf.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"nwhite.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"onoise_hf_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"onoise_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"op.dc_n\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"op.dc_p\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"op.vbias_mv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"vn_in_hf_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"vn_in_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"white_nv_rthz\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"ac.av_dc\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"enbw_mhz\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"inoise_band_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"nfull.inoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"nfull.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"nhf.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"nwhite.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"onoise_hf_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"onoise_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"op.dc_n\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"op.dc_p\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"op.vbias_mv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"vn_in_hf_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"vn_in_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"white_nv_rthz\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"ac.av_dc\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"enbw_mhz\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"inoise_band_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"nfull.inoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"nfull.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"nhf.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"nwhite.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"onoise_hf_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"onoise_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"op.dc_n\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"op.dc_p\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"op.vbias_mv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"vn_in_hf_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"vn_in_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"white_nv_rthz\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"ac.av_dc\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"enbw_mhz\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"inoise_band_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"nfull.inoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"nfull.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"nhf.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"nwhite.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"onoise_hf_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"onoise_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"op.dc_n\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"op.dc_p\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"op.vbias_mv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"vn_in_hf_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"vn_in_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"white_nv_rthz\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"ac.av_dc\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"enbw_mhz\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"inoise_band_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"nfull.inoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"nfull.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"nhf.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"nwhite.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"onoise_hf_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"onoise_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"op.dc_n\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"op.dc_p\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"op.vbias_mv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"vn_in_hf_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"vn_in_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"white_nv_rthz\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"ac.av_dc\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"enbw_mhz\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"inoise_band_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"nfull.inoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"nfull.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"nhf.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"nwhite.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"onoise_hf_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"onoise_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"op.dc_n\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"op.dc_p\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"op.vbias_mv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"vn_in_hf_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"vn_in_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"white_nv_rthz\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"ac.av_dc\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"enbw_mhz\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"inoise_band_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"nfull.inoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"nfull.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"nhf.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"nwhite.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"onoise_hf_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"onoise_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"op.dc_n\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"op.dc_p\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"op.vbias_mv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"vn_in_hf_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"vn_in_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"white_nv_rthz\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"ac.av_dc\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"enbw_mhz\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"inoise_band_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"nfull.inoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"nfull.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"nhf.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"nwhite.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"onoise_hf_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"onoise_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"op.dc_n\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"op.dc_p\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"op.vbias_mv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"vn_in_hf_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"vn_in_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"white_nv_rthz\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"ac.av_dc\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"enbw_mhz\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"inoise_band_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"nfull.inoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"nfull.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"nhf.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"nwhite.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"onoise_hf_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"onoise_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"op.dc_n\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"op.dc_p\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"op.vbias_mv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"vn_in_hf_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"vn_in_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"white_nv_rthz\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"ac.av_dc\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"enbw_mhz\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"inoise_band_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"nfull.inoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"nfull.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"nhf.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"nwhite.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"onoise_hf_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"onoise_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"op.dc_n\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"op.dc_p\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"op.vbias_mv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"vn_in_hf_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"vn_in_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"white_nv_rthz\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"ac.av_dc\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"enbw_mhz\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"inoise_band_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"nfull.inoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"nfull.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"nhf.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"nwhite.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"onoise_hf_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"onoise_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"op.dc_n\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"op.dc_p\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"op.vbias_mv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"vn_in_hf_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"vn_in_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"white_nv_rthz\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"ac.av_dc\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"enbw_mhz\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"inoise_band_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"nfull.inoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"nfull.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"nhf.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"nwhite.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"onoise_hf_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"onoise_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"op.dc_n\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"op.dc_p\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"op.vbias_mv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"vn_in_hf_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"vn_in_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"white_nv_rthz\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"ac.av_dc\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"enbw_mhz\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"inoise_band_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"nfull.inoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"nfull.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"nhf.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"nwhite.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"onoise_hf_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"onoise_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"op.dc_n\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"op.dc_p\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"op.vbias_mv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"vn_in_hf_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"vn_in_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"white_nv_rthz\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"ac.av_dc\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"enbw_mhz\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"inoise_band_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"nfull.inoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"nfull.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"nhf.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"nwhite.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"onoise_hf_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"onoise_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"op.dc_n\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"op.dc_p\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"op.vbias_mv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"vn_in_hf_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"vn_in_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"white_nv_rthz\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"ac.av_dc\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"enbw_mhz\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"inoise_band_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"nfull.inoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"nfull.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"nhf.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"nwhite.onoise\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"onoise_hf_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"onoise_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"op.dc_n\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"op.dc_p\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"op.vbias_mv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"vn_in_hf_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"vn_in_uv\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"white_nv_rthz\"]/limits",
+        "reason": "characterization_without_limits"
+      }
+    ],
+    "unknown": [],
+    "nothing_checked": false,
+    "nothing_checked_reasons": []
+  },
+  "provenance": {
+    "klt_version": "0.9.1.dev17+gd76e6fe1cb7a",
+    "klt_git_commit": "d76e6fe1cb7afe591b87a7906dd417125cb7a147",
+    "klt_reinstall_spec": "klayout-tools @ git+https://github.com/2AMLogic/klayout-tools@d76e6fe1cb7afe591b87a7906dd417125cb7a147",
+    "klayout_version": "0.30.12",
+    "pdk": {
+      "name": "gf180mcuD",
+      "source": "search root: ~/.ciel",
+      "version": "open_pdks f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7",
+      "ambiguous_sources": [
+        "search root: ~/.volare"
+      ]
+    },
+    "deck": {
+      "name": "sm141064.ngspice",
+      "content_hash": "sha256:f6f4a96e18fc5ad11270ad3451aaecc7ac37fc81eb61e15b0d7d94c7bc594a24",
+      "released": false
+    },
+    "input": {
+      "content_hash": "sha256:7a4d1c9f2d13d6ca649f5b63e2fec170cb2a2727d0df285373b24077231b7313",
+      "role": "netlist"
+    }
+  },
+  "measurements": [
+    {
+      "name": "op.vbias_mv",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 1009.696402826,
+        "margin": null
+      },
+      "step": "op"
+    },
+    {
+      "name": "op.dc_p",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 1.619578138654,
+        "margin": null
+      },
+      "step": "op"
+    },
+    {
+      "name": "op.dc_n",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 1.612053482018,
+        "margin": null
+      },
+      "step": "op"
+    },
+    {
+      "name": "nfull.onoise",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 0.001296060994163,
+        "margin": null
+      },
+      "step": "nfull"
+    },
+    {
+      "name": "nfull.inoise",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 0.0002956168596736,
+        "margin": null
+      },
+      "step": "nfull"
+    },
+    {
+      "name": "nhf.onoise",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 0.001286809124091,
+        "margin": null
+      },
+      "step": "nhf"
+    },
+    {
+      "name": "nwhite.onoise",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 2.683525645724e-05,
+        "margin": null
+      },
+      "step": "nwhite"
+    },
+    {
+      "name": "ac.av_dc",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 22.66991638695,
+        "margin": null
+      },
+      "step": "ac"
+    },
+    {
+      "name": "vn_in_uv",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 57.17096490524,
+        "margin": null
+      },
+      "derived_from": [
+        "nfull.onoise",
+        "ac.av_dc"
+      ]
+    },
+    {
+      "name": "vn_in_hf_uv",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 56.76285267782,
+        "margin": null
+      },
+      "derived_from": [
+        "nhf.onoise",
+        "ac.av_dc"
+      ]
+    },
+    {
+      "name": "onoise_uv",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 1296.060994163,
+        "margin": null
+      },
+      "derived_from": [
+        "nfull.onoise"
+      ]
+    },
+    {
+      "name": "onoise_hf_uv",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 1286.809124091,
+        "margin": null
+      },
+      "derived_from": [
+        "nhf.onoise"
+      ]
+    },
+    {
+      "name": "inoise_band_uv",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 295.6168596736,
+        "margin": null
+      },
+      "derived_from": [
+        "nfull.inoise"
+      ]
+    },
+    {
+      "name": "white_nv_rthz",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 268.3525645724,
+        "margin": null
+      },
+      "derived_from": [
+        "nwhite.onoise"
+      ]
+    },
+    {
+      "name": "enbw_mhz",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 23.32595216641,
+        "margin": null
+      },
+      "derived_from": [
+        "nfull.onoise",
+        "nwhite.onoise"
+      ]
+    }
+  ],
+  "corners": [
+    {
+      "corner_id": "tt/novdd/-40C",
+      "process": "tt",
+      "supply_v": {},
+      "temperature_c": -40.0,
+      "status": "pass",
+      "runtime_s": 0.268,
+      "peak_rss_bytes": 49565696,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "op.vbias_mv",
+          "value": 1009.696402826,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "op.dc_p",
+          "value": 1.619578138654,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "op.dc_n",
+          "value": 1.612053482018,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "nfull.onoise",
+          "value": 0.001296060994163,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nfull"
+        },
+        {
+          "name": "nfull.inoise",
+          "value": 0.0002956168596736,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nfull"
+        },
+        {
+          "name": "nhf.onoise",
+          "value": 0.001286809124091,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nhf"
+        },
+        {
+          "name": "nwhite.onoise",
+          "value": 2.683525645724e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nwhite"
+        },
+        {
+          "name": "ac.av_dc",
+          "value": 22.66991638695,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "ac"
+        },
+        {
+          "name": "vn_in_uv",
+          "value": 57.17096490524,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise",
+            "ac.av_dc"
+          ]
+        },
+        {
+          "name": "vn_in_hf_uv",
+          "value": 56.76285267782,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nhf.onoise",
+            "ac.av_dc"
+          ]
+        },
+        {
+          "name": "onoise_uv",
+          "value": 1296.060994163,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise"
+          ]
+        },
+        {
+          "name": "onoise_hf_uv",
+          "value": 1286.809124091,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nhf.onoise"
+          ]
+        },
+        {
+          "name": "inoise_band_uv",
+          "value": 295.6168596736,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.inoise"
+          ]
+        },
+        {
+          "name": "white_nv_rthz",
+          "value": 268.3525645724,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nwhite.onoise"
+          ]
+        },
+        {
+          "name": "enbw_mhz",
+          "value": 23.32595216641,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise",
+            "nwhite.onoise"
+          ]
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-209/layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/out-extracted-v2.97/tt_novdd_n40C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-209/layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/out-extracted-v2.97/tt_novdd_n40C/corner.cir"
+      },
+      "monte_carlo": null,
+      "steps": [
+        {
+          "name": "op",
+          "kind": "op",
+          "status": "ok"
+        },
+        {
+          "name": "nfull",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "nhf",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "nwhite",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "ac",
+          "kind": "ac",
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "corner_id": "tt/novdd/27C",
+      "process": "tt",
+      "supply_v": {},
+      "temperature_c": 27.0,
+      "status": "pass",
+      "runtime_s": 0.267,
+      "peak_rss_bytes": 49565696,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "op.vbias_mv",
+          "value": 1001.666944806,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "op.dc_p",
+          "value": 1.720382867565,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "op.dc_n",
+          "value": 1.714346904383,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "nfull.onoise",
+          "value": 0.001258564573732,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nfull"
+        },
+        {
+          "name": "nfull.inoise",
+          "value": 0.0003389592463724,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nfull"
+        },
+        {
+          "name": "nhf.onoise",
+          "value": 0.001251969548708,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nhf"
+        },
+        {
+          "name": "nwhite.onoise",
+          "value": 2.522825873783e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nwhite"
+        },
+        {
+          "name": "ac.av_dc",
+          "value": 17.90826369049,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "ac"
+        },
+        {
+          "name": "vn_in_uv",
+          "value": 70.27842539535,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise",
+            "ac.av_dc"
+          ]
+        },
+        {
+          "name": "vn_in_hf_uv",
+          "value": 69.91015825691,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nhf.onoise",
+            "ac.av_dc"
+          ]
+        },
+        {
+          "name": "onoise_uv",
+          "value": 1258.564573732,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise"
+          ]
+        },
+        {
+          "name": "onoise_hf_uv",
+          "value": 1251.969548708,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nhf.onoise"
+          ]
+        },
+        {
+          "name": "inoise_band_uv",
+          "value": 338.9592463724,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.inoise"
+          ]
+        },
+        {
+          "name": "white_nv_rthz",
+          "value": 252.2825873783,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nwhite.onoise"
+          ]
+        },
+        {
+          "name": "enbw_mhz",
+          "value": 24.88722379605,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise",
+            "nwhite.onoise"
+          ]
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-209/layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/out-extracted-v2.97/tt_novdd_27C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-209/layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/out-extracted-v2.97/tt_novdd_27C/corner.cir"
+      },
+      "monte_carlo": null,
+      "steps": [
+        {
+          "name": "op",
+          "kind": "op",
+          "status": "ok"
+        },
+        {
+          "name": "nfull",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "nhf",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "nwhite",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "ac",
+          "kind": "ac",
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "corner_id": "tt/novdd/125C",
+      "process": "tt",
+      "supply_v": {},
+      "temperature_c": 125.0,
+      "status": "pass",
+      "runtime_s": 0.271,
+      "peak_rss_bytes": 49565696,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "op.vbias_mv",
+          "value": 988.1900913768,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "op.dc_p",
+          "value": 1.81105948182,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "op.dc_n",
+          "value": 1.806279773869,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "nfull.onoise",
+          "value": 0.001223058196152,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nfull"
+        },
+        {
+          "name": "nfull.inoise",
+          "value": 0.000390893083622,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nfull"
+        },
+        {
+          "name": "nhf.onoise",
+          "value": 0.001218502551136,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nhf"
+        },
+        {
+          "name": "nwhite.onoise",
+          "value": 2.372813006225e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nwhite"
+        },
+        {
+          "name": "ac.av_dc",
+          "value": 13.8458949917,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "ac"
+        },
+        {
+          "name": "vn_in_uv",
+          "value": 88.33363223431,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise",
+            "ac.av_dc"
+          ]
+        },
+        {
+          "name": "vn_in_hf_uv",
+          "value": 88.00460727649,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nhf.onoise",
+            "ac.av_dc"
+          ]
+        },
+        {
+          "name": "onoise_uv",
+          "value": 1223.058196152,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise"
+          ]
+        },
+        {
+          "name": "onoise_hf_uv",
+          "value": 1218.502551136,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nhf.onoise"
+          ]
+        },
+        {
+          "name": "inoise_band_uv",
+          "value": 390.893083622,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.inoise"
+          ]
+        },
+        {
+          "name": "white_nv_rthz",
+          "value": 237.2813006225,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nwhite.onoise"
+          ]
+        },
+        {
+          "name": "enbw_mhz",
+          "value": 26.56851104107,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise",
+            "nwhite.onoise"
+          ]
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-209/layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/out-extracted-v2.97/tt_novdd_125C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-209/layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/out-extracted-v2.97/tt_novdd_125C/corner.cir"
+      },
+      "monte_carlo": null,
+      "steps": [
+        {
+          "name": "op",
+          "kind": "op",
+          "status": "ok"
+        },
+        {
+          "name": "nfull",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "nhf",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "nwhite",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "ac",
+          "kind": "ac",
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "corner_id": "ff/novdd/-40C",
+      "process": "ff",
+      "supply_v": {},
+      "temperature_c": -40.0,
+      "status": "pass",
+      "runtime_s": 0.267,
+      "peak_rss_bytes": 49565696,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "op.vbias_mv",
+          "value": 890.9532341561,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "op.dc_p",
+          "value": 1.886941481892,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "op.dc_n",
+          "value": 1.880685646115,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "nfull.onoise",
+          "value": 0.001188214570381,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nfull"
+        },
+        {
+          "name": "nfull.inoise",
+          "value": 0.0002932909821222,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nfull"
+        },
+        {
+          "name": "nhf.onoise",
+          "value": 0.001181902678433,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nhf"
+        },
+        {
+          "name": "nwhite.onoise",
+          "value": 2.17920450069e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nwhite"
+        },
+        {
+          "name": "ac.av_dc",
+          "value": 18.79574292431,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "ac"
+        },
+        {
+          "name": "vn_in_uv",
+          "value": 63.21721759899,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise",
+            "ac.av_dc"
+          ]
+        },
+        {
+          "name": "vn_in_hf_uv",
+          "value": 62.88140262357,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nhf.onoise",
+            "ac.av_dc"
+          ]
+        },
+        {
+          "name": "onoise_uv",
+          "value": 1188.214570381,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise"
+          ]
+        },
+        {
+          "name": "onoise_hf_uv",
+          "value": 1181.902678433,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nhf.onoise"
+          ]
+        },
+        {
+          "name": "inoise_band_uv",
+          "value": 293.2909821222,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.inoise"
+          ]
+        },
+        {
+          "name": "white_nv_rthz",
+          "value": 217.920450069,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nwhite.onoise"
+          ]
+        },
+        {
+          "name": "enbw_mhz",
+          "value": 29.72992220584,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise",
+            "nwhite.onoise"
+          ]
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-209/layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/out-extracted-v2.97/ff_novdd_n40C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-209/layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/out-extracted-v2.97/ff_novdd_n40C/corner.cir"
+      },
+      "monte_carlo": null,
+      "steps": [
+        {
+          "name": "op",
+          "kind": "op",
+          "status": "ok"
+        },
+        {
+          "name": "nfull",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "nhf",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "nwhite",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "ac",
+          "kind": "ac",
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "corner_id": "ff/novdd/27C",
+      "process": "ff",
+      "supply_v": {},
+      "temperature_c": 27.0,
+      "status": "pass",
+      "runtime_s": 0.267,
+      "peak_rss_bytes": 49565696,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "op.vbias_mv",
+          "value": 880.1115318147,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "op.dc_p",
+          "value": 1.968374298655,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "op.dc_n",
+          "value": 1.96333735877,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "nfull.onoise",
+          "value": 0.00115309945446,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nfull"
+        },
+        {
+          "name": "nfull.inoise",
+          "value": 0.0003362910925377,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nfull"
+        },
+        {
+          "name": "nhf.onoise",
+          "value": 0.001148624326861,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nhf"
+        },
+        {
+          "name": "nwhite.onoise",
+          "value": 2.045102071796e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nwhite"
+        },
+        {
+          "name": "ac.av_dc",
+          "value": 14.83290305663,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "ac"
+        },
+        {
+          "name": "vn_in_uv",
+          "value": 77.73929688996,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise",
+            "ac.av_dc"
+          ]
+        },
+        {
+          "name": "vn_in_hf_uv",
+          "value": 77.43759414295,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nhf.onoise",
+            "ac.av_dc"
+          ]
+        },
+        {
+          "name": "onoise_uv",
+          "value": 1153.09945446,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise"
+          ]
+        },
+        {
+          "name": "onoise_hf_uv",
+          "value": 1148.624326861,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nhf.onoise"
+          ]
+        },
+        {
+          "name": "inoise_band_uv",
+          "value": 336.2910925377,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.inoise"
+          ]
+        },
+        {
+          "name": "white_nv_rthz",
+          "value": 204.5102071796,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nwhite.onoise"
+          ]
+        },
+        {
+          "name": "enbw_mhz",
+          "value": 31.79095365785,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise",
+            "nwhite.onoise"
+          ]
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-209/layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/out-extracted-v2.97/ff_novdd_27C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-209/layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/out-extracted-v2.97/ff_novdd_27C/corner.cir"
+      },
+      "monte_carlo": null,
+      "steps": [
+        {
+          "name": "op",
+          "kind": "op",
+          "status": "ok"
+        },
+        {
+          "name": "nfull",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "nhf",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "nwhite",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "ac",
+          "kind": "ac",
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "corner_id": "ff/novdd/125C",
+      "process": "ff",
+      "supply_v": {},
+      "temperature_c": 125.0,
+      "status": "pass",
+      "runtime_s": 0.266,
+      "peak_rss_bytes": 49565696,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "op.vbias_mv",
+          "value": 862.34244164,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "op.dc_p",
+          "value": 2.041435762278,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "op.dc_n",
+          "value": 2.03742361627,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "nfull.onoise",
+          "value": 0.001119571734893,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nfull"
+        },
+        {
+          "name": "nfull.inoise",
+          "value": 0.0003875613589732,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nfull"
+        },
+        {
+          "name": "nhf.onoise",
+          "value": 0.001116491991137,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nhf"
+        },
+        {
+          "name": "nwhite.onoise",
+          "value": 1.921159422885e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nwhite"
+        },
+        {
+          "name": "ac.av_dc",
+          "value": 11.46217034626,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "ac"
+        },
+        {
+          "name": "vn_in_uv",
+          "value": 97.67537046407,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise",
+            "ac.av_dc"
+          ]
+        },
+        {
+          "name": "vn_in_hf_uv",
+          "value": 97.40668280174,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nhf.onoise",
+            "ac.av_dc"
+          ]
+        },
+        {
+          "name": "onoise_uv",
+          "value": 1119.571734893,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise"
+          ]
+        },
+        {
+          "name": "onoise_hf_uv",
+          "value": 1116.491991137,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nhf.onoise"
+          ]
+        },
+        {
+          "name": "inoise_band_uv",
+          "value": 387.5613589732,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.inoise"
+          ]
+        },
+        {
+          "name": "white_nv_rthz",
+          "value": 192.1159422885,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nwhite.onoise"
+          ]
+        },
+        {
+          "name": "enbw_mhz",
+          "value": 33.96073184738,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise",
+            "nwhite.onoise"
+          ]
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-209/layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/out-extracted-v2.97/ff_novdd_125C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-209/layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/out-extracted-v2.97/ff_novdd_125C/corner.cir"
+      },
+      "monte_carlo": null,
+      "steps": [
+        {
+          "name": "op",
+          "kind": "op",
+          "status": "ok"
+        },
+        {
+          "name": "nfull",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "nhf",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "nwhite",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "ac",
+          "kind": "ac",
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "corner_id": "ss/novdd/-40C",
+      "process": "ss",
+      "supply_v": {},
+      "temperature_c": -40.0,
+      "status": "pass",
+      "runtime_s": 0.267,
+      "peak_rss_bytes": 49565696,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "op.vbias_mv",
+          "value": 1128.830165806,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "op.dc_p",
+          "value": 1.353225827072,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "op.dc_n",
+          "value": 1.344484386157,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "nfull.onoise",
+          "value": 0.001388156093724,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nfull"
+        },
+        {
+          "name": "nfull.inoise",
+          "value": 0.0002986884185272,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nfull"
+        },
+        {
+          "name": "nhf.onoise",
+          "value": 0.001375510270314,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nhf"
+        },
+        {
+          "name": "nwhite.onoise",
+          "value": 3.171548348714e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nwhite"
+        },
+        {
+          "name": "ac.av_dc",
+          "value": 26.22335566233,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "ac"
+        },
+        {
+          "name": "vn_in_uv",
+          "value": 52.93586799488,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise",
+            "ac.av_dc"
+          ]
+        },
+        {
+          "name": "vn_in_hf_uv",
+          "value": 52.45363286174,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nhf.onoise",
+            "ac.av_dc"
+          ]
+        },
+        {
+          "name": "onoise_uv",
+          "value": 1388.156093724,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise"
+          ]
+        },
+        {
+          "name": "onoise_hf_uv",
+          "value": 1375.510270314,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nhf.onoise"
+          ]
+        },
+        {
+          "name": "inoise_band_uv",
+          "value": 298.6884185272,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.inoise"
+          ]
+        },
+        {
+          "name": "white_nv_rthz",
+          "value": 317.1548348714,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nwhite.onoise"
+          ]
+        },
+        {
+          "name": "enbw_mhz",
+          "value": 19.15728388765,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise",
+            "nwhite.onoise"
+          ]
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-209/layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/out-extracted-v2.97/ss_novdd_n40C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-209/layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/out-extracted-v2.97/ss_novdd_n40C/corner.cir"
+      },
+      "monte_carlo": null,
+      "steps": [
+        {
+          "name": "op",
+          "kind": "op",
+          "status": "ok"
+        },
+        {
+          "name": "nfull",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "nhf",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "nwhite",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "ac",
+          "kind": "ac",
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "corner_id": "ss/novdd/27C",
+      "process": "ss",
+      "supply_v": {},
+      "temperature_c": 27.0,
+      "status": "pass",
+      "runtime_s": 0.216,
+      "peak_rss_bytes": 49565696,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "op.vbias_mv",
+          "value": 1123.611664117,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "op.dc_p",
+          "value": 1.473186253946,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "op.dc_n",
+          "value": 1.466187484397,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "nfull.onoise",
+          "value": 0.001346974778568,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nfull"
+        },
+        {
+          "name": "nfull.inoise",
+          "value": 0.000341881855518,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nfull"
+        },
+        {
+          "name": "nhf.onoise",
+          "value": 0.001337889832803,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nhf"
+        },
+        {
+          "name": "nwhite.onoise",
+          "value": 2.98752233881e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nwhite"
+        },
+        {
+          "name": "ac.av_dc",
+          "value": 20.74688687832,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "ac"
+        },
+        {
+          "name": "vn_in_uv",
+          "value": 64.92418773322,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise",
+            "ac.av_dc"
+          ]
+        },
+        {
+          "name": "vn_in_hf_uv",
+          "value": 64.4862933244,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nhf.onoise",
+            "ac.av_dc"
+          ]
+        },
+        {
+          "name": "onoise_uv",
+          "value": 1346.974778568,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise"
+          ]
+        },
+        {
+          "name": "onoise_hf_uv",
+          "value": 1337.889832803,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nhf.onoise"
+          ]
+        },
+        {
+          "name": "inoise_band_uv",
+          "value": 341.881855518,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.inoise"
+          ]
+        },
+        {
+          "name": "white_nv_rthz",
+          "value": 298.752233881,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nwhite.onoise"
+          ]
+        },
+        {
+          "name": "enbw_mhz",
+          "value": 20.32809141241,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise",
+            "nwhite.onoise"
+          ]
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-209/layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/out-extracted-v2.97/ss_novdd_27C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-209/layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/out-extracted-v2.97/ss_novdd_27C/corner.cir"
+      },
+      "monte_carlo": null,
+      "steps": [
+        {
+          "name": "op",
+          "kind": "op",
+          "status": "ok"
+        },
+        {
+          "name": "nfull",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "nhf",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "nwhite",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "ac",
+          "kind": "ac",
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "corner_id": "ss/novdd/125C",
+      "process": "ss",
+      "supply_v": {},
+      "temperature_c": 125.0,
+      "status": "pass",
+      "runtime_s": 0.116,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "op.vbias_mv",
+          "value": 1114.3668462,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "op.dc_p",
+          "value": 1.581337287091,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "op.dc_n",
+          "value": 1.575816754829,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "nfull.onoise",
+          "value": 0.001308115877501,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nfull"
+        },
+        {
+          "name": "nfull.inoise",
+          "value": 0.0003937634067621,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nfull"
+        },
+        {
+          "name": "nhf.onoise",
+          "value": 0.001301801775658,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nhf"
+        },
+        {
+          "name": "nwhite.onoise",
+          "value": 2.813711367236e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nwhite"
+        },
+        {
+          "name": "ac.av_dc",
+          "value": 16.05343804272,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "ac"
+        },
+        {
+          "name": "vn_in_uv",
+          "value": 81.48509210422,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise",
+            "ac.av_dc"
+          ]
+        },
+        {
+          "name": "vn_in_hf_uv",
+          "value": 81.09177437216,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nhf.onoise",
+            "ac.av_dc"
+          ]
+        },
+        {
+          "name": "onoise_uv",
+          "value": 1308.115877501,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise"
+          ]
+        },
+        {
+          "name": "onoise_hf_uv",
+          "value": 1301.801775658,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nhf.onoise"
+          ]
+        },
+        {
+          "name": "inoise_band_uv",
+          "value": 393.7634067621,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.inoise"
+          ]
+        },
+        {
+          "name": "white_nv_rthz",
+          "value": 281.3711367236,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nwhite.onoise"
+          ]
+        },
+        {
+          "name": "enbw_mhz",
+          "value": 21.61391025338,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise",
+            "nwhite.onoise"
+          ]
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-209/layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/out-extracted-v2.97/ss_novdd_125C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-209/layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/out-extracted-v2.97/ss_novdd_125C/corner.cir"
+      },
+      "monte_carlo": null,
+      "steps": [
+        {
+          "name": "op",
+          "kind": "op",
+          "status": "ok"
+        },
+        {
+          "name": "nfull",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "nhf",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "nwhite",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "ac",
+          "kind": "ac",
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "corner_id": "fs/novdd/-40C",
+      "process": "fs",
+      "supply_v": {},
+      "temperature_c": -40.0,
+      "status": "pass",
+      "runtime_s": 0.066,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "op.vbias_mv",
+          "value": 924.8057156523,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "op.dc_p",
+          "value": 1.617530624299,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "op.dc_n",
+          "value": 1.609962822845,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "nfull.onoise",
+          "value": 0.001308612355643,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nfull"
+        },
+        {
+          "name": "nfull.inoise",
+          "value": 0.0002941360296316,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nfull"
+        },
+        {
+          "name": "nhf.onoise",
+          "value": 0.001299612829005,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nhf"
+        },
+        {
+          "name": "nwhite.onoise",
+          "value": 2.694280906393e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nwhite"
+        },
+        {
+          "name": "ac.av_dc",
+          "value": 23.02284699331,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "ac"
+        },
+        {
+          "name": "vn_in_uv",
+          "value": 56.8397277723,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise",
+            "ac.av_dc"
+          ]
+        },
+        {
+          "name": "vn_in_hf_uv",
+          "value": 56.44883230048,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nhf.onoise",
+            "ac.av_dc"
+          ]
+        },
+        {
+          "name": "onoise_uv",
+          "value": 1308.612355643,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise"
+          ]
+        },
+        {
+          "name": "onoise_hf_uv",
+          "value": 1299.612829005,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nhf.onoise"
+          ]
+        },
+        {
+          "name": "inoise_band_uv",
+          "value": 294.1360296316,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.inoise"
+          ]
+        },
+        {
+          "name": "white_nv_rthz",
+          "value": 269.4280906393,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nwhite.onoise"
+          ]
+        },
+        {
+          "name": "enbw_mhz",
+          "value": 23.59045330514,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise",
+            "nwhite.onoise"
+          ]
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-209/layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/out-extracted-v2.97/fs_novdd_n40C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-209/layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/out-extracted-v2.97/fs_novdd_n40C/corner.cir"
+      },
+      "monte_carlo": null,
+      "steps": [
+        {
+          "name": "op",
+          "kind": "op",
+          "status": "ok"
+        },
+        {
+          "name": "nfull",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "nhf",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "nwhite",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "ac",
+          "kind": "ac",
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "corner_id": "fs/novdd/27C",
+      "process": "fs",
+      "supply_v": {},
+      "temperature_c": 27.0,
+      "status": "pass",
+      "runtime_s": 0.116,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "op.vbias_mv",
+          "value": 915.2052167948,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "op.dc_p",
+          "value": 1.718770077288,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "op.dc_n",
+          "value": 1.71269802441,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "nfull.onoise",
+          "value": 0.001270460964669,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nfull"
+        },
+        {
+          "name": "nfull.inoise",
+          "value": 0.0003372878508037,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nfull"
+        },
+        {
+          "name": "nhf.onoise",
+          "value": 0.001264049353128,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nhf"
+        },
+        {
+          "name": "nwhite.onoise",
+          "value": 2.532874654339e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nwhite"
+        },
+        {
+          "name": "ac.av_dc",
+          "value": 18.19240562716,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "ac"
+        },
+        {
+          "name": "vn_in_uv",
+          "value": 69.8346876552,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise",
+            "ac.av_dc"
+          ]
+        },
+        {
+          "name": "vn_in_hf_uv",
+          "value": 69.48225424574,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nhf.onoise",
+            "ac.av_dc"
+          ]
+        },
+        {
+          "name": "onoise_uv",
+          "value": 1270.460964669,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise"
+          ]
+        },
+        {
+          "name": "onoise_hf_uv",
+          "value": 1264.049353128,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nhf.onoise"
+          ]
+        },
+        {
+          "name": "inoise_band_uv",
+          "value": 337.2878508037,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.inoise"
+          ]
+        },
+        {
+          "name": "white_nv_rthz",
+          "value": 253.2874654339,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nwhite.onoise"
+          ]
+        },
+        {
+          "name": "enbw_mhz",
+          "value": 25.15910891228,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise",
+            "nwhite.onoise"
+          ]
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-209/layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/out-extracted-v2.97/fs_novdd_27C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-209/layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/out-extracted-v2.97/fs_novdd_27C/corner.cir"
+      },
+      "monte_carlo": null,
+      "steps": [
+        {
+          "name": "op",
+          "kind": "op",
+          "status": "ok"
+        },
+        {
+          "name": "nfull",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "nhf",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "nwhite",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "ac",
+          "kind": "ac",
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "corner_id": "fs/novdd/125C",
+      "process": "fs",
+      "supply_v": {},
+      "temperature_c": 125.0,
+      "status": "pass",
+      "runtime_s": 0.117,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "op.vbias_mv",
+          "value": 899.2655050003,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "op.dc_p",
+          "value": 1.809770777066,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "op.dc_n",
+          "value": 1.804960349871,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "nfull.onoise",
+          "value": 0.001234311808244,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nfull"
+        },
+        {
+          "name": "nfull.inoise",
+          "value": 0.0003889520743856,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nfull"
+        },
+        {
+          "name": "nhf.onoise",
+          "value": 0.001229885518785,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nhf"
+        },
+        {
+          "name": "nwhite.onoise",
+          "value": 2.382277242147e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nwhite"
+        },
+        {
+          "name": "ac.av_dc",
+          "value": 14.07118305537,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "ac"
+        },
+        {
+          "name": "vn_in_uv",
+          "value": 87.71912094294,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise",
+            "ac.av_dc"
+          ]
+        },
+        {
+          "name": "vn_in_hf_uv",
+          "value": 87.40455681272,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nhf.onoise",
+            "ac.av_dc"
+          ]
+        },
+        {
+          "name": "onoise_uv",
+          "value": 1234.311808244,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise"
+          ]
+        },
+        {
+          "name": "onoise_hf_uv",
+          "value": 1229.885518785,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nhf.onoise"
+          ]
+        },
+        {
+          "name": "inoise_band_uv",
+          "value": 388.9520743856,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.inoise"
+          ]
+        },
+        {
+          "name": "white_nv_rthz",
+          "value": 238.2277242147,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nwhite.onoise"
+          ]
+        },
+        {
+          "name": "enbw_mhz",
+          "value": 26.84510850138,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise",
+            "nwhite.onoise"
+          ]
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-209/layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/out-extracted-v2.97/fs_novdd_125C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-209/layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/out-extracted-v2.97/fs_novdd_125C/corner.cir"
+      },
+      "monte_carlo": null,
+      "steps": [
+        {
+          "name": "op",
+          "kind": "op",
+          "status": "ok"
+        },
+        {
+          "name": "nfull",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "nhf",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "nwhite",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "ac",
+          "kind": "ac",
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "corner_id": "sf/novdd/-40C",
+      "process": "sf",
+      "supply_v": {},
+      "temperature_c": -40.0,
+      "status": "pass",
+      "runtime_s": 0.117,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "op.vbias_mv",
+          "value": 1094.889684265,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "op.dc_p",
+          "value": 1.621657083005,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "op.dc_n",
+          "value": 1.614175834105,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "nfull.onoise",
+          "value": 0.001283877805524,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nfull"
+        },
+        {
+          "name": "nfull.inoise",
+          "value": 0.0002971919919861,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nfull"
+        },
+        {
+          "name": "nhf.onoise",
+          "value": 0.001274381570112,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nhf"
+        },
+        {
+          "name": "nwhite.onoise",
+          "value": 2.673073206627e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nwhite"
+        },
+        {
+          "name": "ac.av_dc",
+          "value": 22.31335950345,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "ac"
+        },
+        {
+          "name": "vn_in_uv",
+          "value": 57.53852553333,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise",
+            "ac.av_dc"
+          ]
+        },
+        {
+          "name": "vn_in_hf_uv",
+          "value": 57.11294034026,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nhf.onoise",
+            "ac.av_dc"
+          ]
+        },
+        {
+          "name": "onoise_uv",
+          "value": 1283.877805524,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise"
+          ]
+        },
+        {
+          "name": "onoise_hf_uv",
+          "value": 1274.381570112,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nhf.onoise"
+          ]
+        },
+        {
+          "name": "inoise_band_uv",
+          "value": 297.1919919861,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.inoise"
+          ]
+        },
+        {
+          "name": "white_nv_rthz",
+          "value": 267.3073206627,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nwhite.onoise"
+          ]
+        },
+        {
+          "name": "enbw_mhz",
+          "value": 23.0688357502,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise",
+            "nwhite.onoise"
+          ]
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-209/layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/out-extracted-v2.97/sf_novdd_n40C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-209/layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/out-extracted-v2.97/sf_novdd_n40C/corner.cir"
+      },
+      "monte_carlo": null,
+      "steps": [
+        {
+          "name": "op",
+          "kind": "op",
+          "status": "ok"
+        },
+        {
+          "name": "nfull",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "nhf",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "nwhite",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "ac",
+          "kind": "ac",
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "corner_id": "sf/novdd/27C",
+      "process": "sf",
+      "supply_v": {},
+      "temperature_c": 27.0,
+      "status": "pass",
+      "runtime_s": 0.065,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "op.vbias_mv",
+          "value": 1088.436982927,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "op.dc_p",
+          "value": 1.722036579495,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "op.dc_n",
+          "value": 1.716036386938,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "nfull.onoise",
+          "value": 0.001247033649524,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nfull"
+        },
+        {
+          "name": "nfull.inoise",
+          "value": 0.0003407091893449,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nfull"
+        },
+        {
+          "name": "nhf.onoise",
+          "value": 0.00124025923331,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nhf"
+        },
+        {
+          "name": "nwhite.onoise",
+          "value": 2.513118488366e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nwhite"
+        },
+        {
+          "name": "ac.av_dc",
+          "value": 17.62361703977,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "ac"
+        },
+        {
+          "name": "vn_in_uv",
+          "value": 70.75923442446,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise",
+            "ac.av_dc"
+          ]
+        },
+        {
+          "name": "vn_in_hf_uv",
+          "value": 70.37484022214,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nhf.onoise",
+            "ac.av_dc"
+          ]
+        },
+        {
+          "name": "onoise_uv",
+          "value": 1247.033649524,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise"
+          ]
+        },
+        {
+          "name": "onoise_hf_uv",
+          "value": 1240.25923331,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nhf.onoise"
+          ]
+        },
+        {
+          "name": "inoise_band_uv",
+          "value": 340.7091893449,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.inoise"
+          ]
+        },
+        {
+          "name": "white_nv_rthz",
+          "value": 251.3118488366,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nwhite.onoise"
+          ]
+        },
+        {
+          "name": "enbw_mhz",
+          "value": 24.62240183339,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise",
+            "nwhite.onoise"
+          ]
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-209/layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/out-extracted-v2.97/sf_novdd_27C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-209/layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/out-extracted-v2.97/sf_novdd_27C/corner.cir"
+      },
+      "monte_carlo": null,
+      "steps": [
+        {
+          "name": "op",
+          "kind": "op",
+          "status": "ok"
+        },
+        {
+          "name": "nfull",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "nhf",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "nwhite",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "ac",
+          "kind": "ac",
+          "status": "ok"
+        }
+      ]
+    },
+    {
+      "corner_id": "sf/novdd/125C",
+      "process": "sf",
+      "supply_v": {},
+      "temperature_c": 125.0,
+      "status": "pass",
+      "runtime_s": 0.115,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "op.vbias_mv",
+          "value": 1077.392153136,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "op.dc_p",
+          "value": 1.812403323617,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "op.dc_n",
+          "value": 1.807653842663,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "op"
+        },
+        {
+          "name": "nfull.onoise",
+          "value": 0.001212133055966,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nfull"
+        },
+        {
+          "name": "nfull.inoise",
+          "value": 0.0003929088428412,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nfull"
+        },
+        {
+          "name": "nhf.onoise",
+          "value": 0.00120744923585,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nhf"
+        },
+        {
+          "name": "nwhite.onoise",
+          "value": 2.363753024458e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "nwhite"
+        },
+        {
+          "name": "ac.av_dc",
+          "value": 13.62169256337,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "step": "ac"
+        },
+        {
+          "name": "vn_in_uv",
+          "value": 88.98549503497,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise",
+            "ac.av_dc"
+          ]
+        },
+        {
+          "name": "vn_in_hf_uv",
+          "value": 88.64164495222,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nhf.onoise",
+            "ac.av_dc"
+          ]
+        },
+        {
+          "name": "onoise_uv",
+          "value": 1212.133055966,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise"
+          ]
+        },
+        {
+          "name": "onoise_hf_uv",
+          "value": 1207.44923585,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nhf.onoise"
+          ]
+        },
+        {
+          "name": "inoise_band_uv",
+          "value": 392.9088428412,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.inoise"
+          ]
+        },
+        {
+          "name": "white_nv_rthz",
+          "value": 236.3753024458,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nwhite.onoise"
+          ]
+        },
+        {
+          "name": "enbw_mhz",
+          "value": 26.29640591228,
+          "unit": null,
+          "status": "pass",
+          "margin": null,
+          "derived_from": [
+            "nfull.onoise",
+            "nwhite.onoise"
+          ]
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-209/layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/out-extracted-v2.97/sf_novdd_125C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-209/layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/out-extracted-v2.97/sf_novdd_125C/corner.cir"
+      },
+      "monte_carlo": null,
+      "steps": [
+        {
+          "name": "op",
+          "kind": "op",
+          "status": "ok"
+        },
+        {
+          "name": "nfull",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "nhf",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "nwhite",
+          "kind": "noise",
+          "status": "ok"
+        },
+        {
+          "name": "ac",
+          "kind": "ac",
+          "status": "ok"
+        }
+      ]
+    }
+  ]
+}
