@@ -2,6 +2,11 @@
 
 Chronological record of merged pull requests and closed issues. Newest entries appear first.
 
+### 2026-11-05
+
+- **PR #346**: data: add complete 45-point paired preamp noise PVT campaign
+- **Issue #209** (closed): Extend paired extracted preamp noise measurement to full PVT coverage
+
 ### 2026-11-02
 
 - **PR #343**: feat(signoff): attest T1 item 9 with the selftest.yml-produced klt envelope
