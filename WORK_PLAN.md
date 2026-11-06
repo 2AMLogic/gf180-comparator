@@ -27,7 +27,7 @@ _None._
 
 Human-approved issues ready for implementation (`loom:issue`).
 
-_None._
+- **#88**: Auditor Capability Request: worker ngspice 42 below pinned floor 46, selftest cannot run
 
 ## In Progress
 
@@ -70,7 +70,7 @@ _None._
 | Operator merge-risk holds | 0 |
 | Very important | 0 |
 | Important | 3 |
-| Ready (`loom:issue`) | 0 |
+| Ready (`loom:issue`) | 1 |
 | In Progress (`loom:building`) | 0 |
 | PRs awaiting review | 0 |
 | Approved PRs awaiting merge | 0 |
