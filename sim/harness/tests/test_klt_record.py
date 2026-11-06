@@ -1584,7 +1584,10 @@ class PdkQualificationIngest(_IngestMatrix):
 
     def test_committed_fleet_report_shape_parses(self):
         rep = json.loads(next((SIM / "comparator-offset-tran/corners").glob("*/report-main-v3.30.json")).read_text())
-        self.assertEqual(kr.report_pdk_identity(rep), ("gf180mcuD", PDK_REV, []))
+        # Shape test over append-only evidence taken under the pre-#349 pin:
+        # it asserts what the committed report says, not the live pin.
+        self.assertEqual(kr.report_pdk_identity(rep),
+                         ("gf180mcuD", "c6d73a35f524070e85faff4a6a9eef49553ebc2b", []))
 
 
 def _edit_snapshot(work: Path, **kw) -> None:

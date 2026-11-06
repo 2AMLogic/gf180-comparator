@@ -3,7 +3,7 @@ name: Scheduled runtime checks
 # Non-gating, independent runtime coverage (issue #280). The PDK-free merge
 # gate (signoff.yml) never runs ngspice, xschem or the PDK. This workflow does:
 # it source-builds the pinned tools on a hosted runner, installs the pinned
-# open_pdks revision with volare, and runs the harness selftest and the
+# open_pdks revision with ciel, and runs the harness selftest and the
 # netlist regeneration check. It is NOT a required check and it produces no
 # committed evidence: it is only weekly + manual, never on push/PR, and it
 # commits nothing. Failures are real failures and are never swallowed.
@@ -141,15 +141,15 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .ci-pdk
-          key: pdk-${{ runner.os }}-${{ env.OPEN_PDKS }}-${{ env.PDK }}-v1
+          key: pdk-${{ runner.os }}-${{ env.OPEN_PDKS }}-${{ env.PDK }}-ciel-v2
 
-      - name: Install volare and enable pinned open_pdks
+      - name: Install ciel and enable pinned open_pdks
         run: |
           set -euo pipefail
-          python3 -m pip install volare
+          python3 -m pip install ciel==2.6.1
           python3 -m pip --version
-          volare --version || true
-          volare enable --pdk gf180mcu --pdk-root "$PDK_ROOT" "$OPEN_PDKS"
+          ciel --version || true
+          ciel enable --pdk-family gf180mcu --pdk-root "$PDK_ROOT" "$OPEN_PDKS"
           test -d "$PDK_ROOT/$PDK" || { echo "PDK variant $PDK not found under $PDK_ROOT" >&2; ls -la "$PDK_ROOT" >&2; exit 1; }
           echo "open_pdks: $OPEN_PDKS  variant: $PDK  root: $PDK_ROOT"
 
