@@ -113,105 +113,16 @@
     ]
   },
   "provenance": {
-    "klt_version": "0.9.2.dev103+g9f4cec35997a",
+    "klt_version": "0.8.0",
     "klayout_version": null,
     "pdk": null,
     "deck": null,
     "input": {
-      "paths": [
-        {
-          "path": {
-            "path": "design/comparator.sch",
-            "scope": "repo"
-          },
-          "content_hash": "sha256:f608dd00db086df99e2e54013fd7715f93c891f68ea5206d1e37743764daa6f2"
-        },
-        {
-          "path": {
-            "path": "design/comparator.sources.json",
-            "scope": "repo"
-          },
-          "content_hash": "sha256:99a5cbdff3416877d58edc91600d58f045975941ca1373e9c0fc7654a31f002f"
-        },
-        {
-          "path": {
-            "path": "design/comparator.spice",
-            "scope": "repo"
-          },
-          "content_hash": "sha256:0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a"
-        },
-        {
-          "path": {
-            "path": "design/comparator_dut.sch",
-            "scope": "repo"
-          },
-          "content_hash": "sha256:25798142b5eea6875c187dc27a10d17194cd5c59dbc46440135b3a98a5728a78"
-        },
-        {
-          "path": {
-            "path": "design/comparator_dut.sym",
-            "scope": "repo"
-          },
-          "content_hash": "sha256:5b068a36e8d696dddcf24e56f257f36cb2237832646df5662bad2ffc0b184743"
-        },
-        {
-          "path": {
-            "path": "design/comparator_dut_analog.sch",
-            "scope": "repo"
-          },
-          "content_hash": "sha256:95269982e13bc52f5e4b9d63cb4e7b3d2741d838da8ca3a7c8ca0dba5424694f"
-        },
-        {
-          "path": {
-            "path": "design/comparator_dut_analog.sym",
-            "scope": "repo"
-          },
-          "content_hash": "sha256:d0e3594c1b0044dcde15d597c206e220f3c74ab5c2fce34602836f9f8f2e17a7"
-        },
-        {
-          "path": {
-            "path": "design/comparator_dut_latch.sch",
-            "scope": "repo"
-          },
-          "content_hash": "sha256:e6dba702c638e38af50726d4ce64cd7048f40fbd2634c93e65f6bf38b588990e"
-        },
-        {
-          "path": {
-            "path": "design/comparator_dut_latch.sym",
-            "scope": "repo"
-          },
-          "content_hash": "sha256:69765f7c3a842d3573640a8c20117ad61a3aea89ff61f0a87fd463bd01640503"
-        },
-        {
-          "path": {
-            "path": "design/netlist.sh",
-            "scope": "repo"
-          },
-          "content_hash": "sha256:1edba7eb32a4d2e59eb45bb7b5e6bfe98e1e087b83e287d65d5ef13ff2b950e5"
-        },
-        {
-          "path": {
-            "path": "design/verify-netlist-pins.py",
-            "scope": "repo"
-          },
-          "content_hash": "sha256:b1f4d6580991ad8c70e4c608f2c88bff671e29d2c610bc0d3ca0c617049047e3"
-        },
-        {
-          "path": {
-            "path": "design/xschemrc",
-            "scope": "repo"
-          },
-          "content_hash": "sha256:fc58f662ed123c9b89cbf989e110aa57bf7c51cfd22c6edddba3291ab254fe78"
-        },
-        {
-          "path": {
-            "path": "signoff/inventory/item-1.json",
-            "scope": "repo"
-          },
-          "content_hash": "sha256:3cc20625141706aa47f39ab30a973e50695a80660fb61853ef50a1779a6e7e43"
-        }
-      ],
-      "content_hash": "sha256:8207a0117b6ffa9aaf23b8f321a45fe84263ed356b889b6a17033904978ce818"
+      "path": {
+        "path": "signoff/inventory/item-1.json",
+        "scope": "repo"
+      },
+      "content_hash": "sha256:3cc20625141706aa47f39ab30a973e50695a80660fb61853ef50a1779a6e7e43"
     }
   }
 }
