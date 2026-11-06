@@ -14,7 +14,7 @@
     "design/comparator_dut_latch.sym": "69765f7c3a842d3573640a8c20117ad61a3aea89ff61f0a87fd463bd01640503"
   },
   "generation_inputs": {
-    "design/xschemrc": "eded4cbaf0d466ab70ae931ea5e6935eb8f4c06a60fe44725d1cf50a81dbe18b",
+    "design/xschemrc": "fc58f662ed123c9b89cbf989e110aa57bf7c51cfd22c6edddba3291ab254fe78",
     "design/netlist.sh": "1edba7eb32a4d2e59eb45bb7b5e6bfe98e1e087b83e287d65d5ef13ff2b950e5"
   },
   "netlist": {
