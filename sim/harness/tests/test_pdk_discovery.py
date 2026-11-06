@@ -163,5 +163,64 @@ class FindPdkTests(unittest.TestCase):
             self.assertEqual(_REAL_LOAD_CONFIG(), {"variant": "gf180mcuB", "x": 1})
 
 
+class PinCheckTests(FindPdkTests):
+    """Revision-vs-pin behaviour of the search-root walk (issue #349)."""
+
+    PIN = "f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7"
+    OLD = "c6d73a35f524070e85faff4a6a9eef49553ebc2b"
+
+    def setUp(self):
+        super().setUp()
+        patcher = mock.patch.object(pdk_mod, "pinned_open_pdks", lambda: self.PIN)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        stderr = mock.patch.object(sys, "stderr", new_callable=__import__("io").StringIO)
+        self.err = stderr.start()
+        self.addCleanup(stderr.stop)
+
+    def tree(self, parent: Path, rev: str | None) -> Path:
+        v = self.make_variant(parent)
+        if rev is not None:
+            (v / "SOURCES").write_text(f"open_pdks {rev}\n")
+        return v
+
+    def test_match_is_silent(self):
+        v = self.tree(self.tmp / "ciel", self.PIN)
+        self.set_builtin(self.tmp / "ciel")
+        found = pdk_mod.find_pdk()
+        self.assertEqual(found.path, v)
+        self.assertIsNone(found.pin_mismatch)
+        self.assertNotIn("pin_mismatch", found.provenance())
+        self.assertEqual(self.err.getvalue(), "")
+
+    def test_mismatched_tree_is_reported(self):
+        self.tree(self.tmp / "volare", self.OLD)
+        self.set_builtin(self.tmp / "volare")
+        found = pdk_mod.find_pdk()
+        self.assertIn(self.OLD, found.pin_mismatch)
+        self.assertIn(self.PIN, found.pin_mismatch)
+        self.assertEqual(found.provenance()["pin_mismatch"], found.pin_mismatch)
+        self.assertIn("WARNING", self.err.getvalue())
+
+    def test_matching_tree_beats_stale_tree_listed_first(self):
+        self.tree(self.tmp / "volare", self.OLD)
+        good = self.tree(self.tmp / "ciel", self.PIN)
+        self.set_builtin(self.tmp / "volare", self.tmp / "ciel")
+        found = pdk_mod.find_pdk()
+        self.assertEqual(found.path, good)
+        self.assertIsNone(found.pin_mismatch)
+
+    def test_missing_revision_metadata_is_a_mismatch(self):
+        self.tree(self.tmp / "ciel", None)
+        self.set_builtin(self.tmp / "ciel")
+        found = pdk_mod.find_pdk()
+        self.assertIn("unknown", found.pin_mismatch)
+
+    def test_ciel_searched_before_volare(self):
+        # BUILTIN_SEARCH_ROOTS is patched to () in setUp; read the source default.
+        src = Path(pdk_mod.__file__).read_text()
+        self.assertLess(src.index('"~/.ciel"'), src.index('"~/.volare"'))
+
+
 if __name__ == "__main__":
     unittest.main()

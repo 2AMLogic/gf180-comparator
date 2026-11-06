@@ -101,8 +101,8 @@ Everything is stdlib Python plus ngspice; there is no virtualenv to create.
 ```bash
 # 1. Install the pinned PDK (~5 GB). The hash is not decorative -- it IS the
 #    device models, and it is checked before any point is simulated.
-pip install volare
-volare enable --pdk gf180mcu c6d73a35f524070e85faff4a6a9eef49553ebc2b
+pip install ciel==2.6.1
+ciel enable --pdk-family gf180mcu f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7
 
 # 2. Install ngspice 46 or newer (Debian/Ubuntu: apt-get install ngspice).
 
@@ -175,7 +175,7 @@ under it).
 
 | pin | value | checked? |
 |---|---|---|
-| open_pdks | `c6d73a35f524070e85faff4a6a9eef49553ebc2b` | **exact** — the hash *is* the device models |
+| open_pdks | `f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7` | **exact** — the hash *is* the device models |
 | ngspice | ≥ 46 (major) | floor |
 | Python | ≥ 3.9 | floor |
 | xschem | 3.4.7 | recorded only — `--check-env` reports the installed version but does not gate on it. `./design/netlist.sh` is what invokes xschem, and it runs outside the corner runner |

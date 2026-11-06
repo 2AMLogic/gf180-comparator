@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -38,8 +39,8 @@ DEFAULT_VARIANT = "gf180mcuD"
 # Search roots used when nothing else pins the PDK down. Each is a directory
 # that is expected to *contain* variant directories (gf180mcuA..D).
 BUILTIN_SEARCH_ROOTS = (
-    "~/.volare",
     "~/.ciel",
+    "~/.volare",  # legacy; a stale tree here is reported, never used silently
     "/usr/share/pdk",
     "/usr/local/share/pdk",
     "~/share/pdk",
@@ -49,12 +50,12 @@ BUILTIN_SEARCH_ROOTS = (
 INSTALL_HINT = """\
 gf180mcu PDK not found.
 
-Install it with volare (recommended, ~5 GB):
+Install it with ciel (recommended, ~5 GB):
 
-    pip install volare
-    volare enable --pdk gf180mcu <version-hash>   # see sim/toolchain.json
+    pip install ciel==2.6.1
+    ciel enable --pdk-family gf180mcu <version-hash>   # see sim/toolchain.json
 
-volare installs into ~/.volare/<variant> and this harness finds it there
+ciel installs into ~/.ciel/<variant> and this harness finds it there
 automatically. If your PDK lives somewhere else, point the harness at it:
 
     export GF180_PDK_PATH=/path/to/gf180mcuD      # variant dir, has libs.tech/
@@ -81,6 +82,7 @@ class Pdk:
     path: Path          # .../gf180mcuD
     variant: str        # gf180mcuD
     source: str         # how we found it (for provenance in records)
+    pin_mismatch: str | None = None  # set when the tree's revision differs from the pin
 
     @property
     def ngspice_dir(self) -> Path:
@@ -98,7 +100,7 @@ class Pdk:
 
     @property
     def version(self) -> str:
-        """open_pdks commit recorded by volare, or 'unknown'."""
+        """open_pdks commit recorded by ciel/volare in SOURCES, or 'unknown'."""
         sources = self.path / "SOURCES"
         if sources.is_file():
             for line in sources.read_text().splitlines():
@@ -111,12 +113,32 @@ class Pdk:
         return "unknown"
 
     def provenance(self) -> dict:
-        return {
+        prov = {
             "path": str(self.path),
             "variant": self.variant,
             "open_pdks_version": self.version,
             "discovered_via": self.source,
         }
+        if self.pin_mismatch:
+            prov["pin_mismatch"] = self.pin_mismatch
+        return prov
+
+
+def pinned_open_pdks() -> str | None:
+    """The open_pdks revision pinned in ``sim/toolchain.json`` (None if absent)."""
+    try:
+        return json.loads((SIM_DIR / "toolchain.json").read_text()).get("open_pdks")
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def _with_pin_check(pdk: Pdk, pin: str | None) -> Pdk:
+    """Return ``pdk`` annotated with a mismatch note if its revision != pin."""
+    if not pin or pdk.version == pin:
+        return pdk
+    note = f"open_pdks pinned {pin}, tree at {pdk.path} reports {pdk.version}"
+    print(f"WARNING: {note}", file=sys.stderr)
+    return Pdk(path=pdk.path, variant=pdk.variant, source=pdk.source, pin_mismatch=note)
 
 
 def _is_valid_variant_dir(path: Path) -> bool:
@@ -165,12 +187,22 @@ def find_pdk(variant: str | None = None) -> Pdk:
         if _is_valid_variant_dir(path):
             return Pdk(path=path, variant=variant, source="PDK_ROOT")
 
+    pin = pinned_open_pdks()
     roots = list(config.get("search_roots") or ()) + list(BUILTIN_SEARCH_ROOTS)
+    found: list[Pdk] = []
     for root in roots:
         path = _expand(root) / variant
         tried.append(str(path))
         if _is_valid_variant_dir(path):
-            return Pdk(path=path, variant=variant, source=f"search_root:{root}")
+            found.append(Pdk(path=path, variant=variant, source=f"search_root:{root}"))
+    # Prefer the first tree whose revision matches the pin, so a leftover
+    # ~/.volare at an old revision is never picked over a matching ~/.ciel.
+    # With no matching tree, fall back to the first one but flag the mismatch.
+    for cand in found:
+        if not pin or cand.version == pin:
+            return cand
+    if found:
+        return _with_pin_check(found[0], pin)
 
     raise PdkNotFound(
         "Looked for gf180mcu variant %r in:\n  %s\n\n%s"

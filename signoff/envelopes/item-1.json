@@ -24,7 +24,7 @@
         "role": "source",
         "path": "design/comparator.sources.json",
         "passed": true,
-        "content_hash": "sha256:c66c431e913c20c50612bfa0374514282c729c4c0492b8a7b60d609ba5c6dd94"
+        "content_hash": "sha256:99a5cbdff3416877d58edc91600d58f045975941ca1373e9c0fc7654a31f002f"
       },
       {
         "check": "present",
@@ -87,7 +87,7 @@
         "role": "source",
         "path": "design/xschemrc",
         "passed": true,
-        "content_hash": "sha256:eded4cbaf0d466ab70ae931ea5e6935eb8f4c06a60fe44725d1cf50a81dbe18b"
+        "content_hash": "sha256:fc58f662ed123c9b89cbf989e110aa57bf7c51cfd22c6edddba3291ab254fe78"
       },
       {
         "check": "present",

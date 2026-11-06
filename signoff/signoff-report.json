@@ -251,7 +251,7 @@
         "command": null,
         "kind": "generic",
         "check_status": "pass",
-        "content_hash": "sha256:6e3946b1c69c01ddcdffb8b476f8a6deb65f1678cce808b83b31496d99450e0b",
+        "content_hash": "sha256:38157c75456d127a37a2fae48d92fb90f2eeb390ab6ac5e79ecf32b4e03b4752",
         "input_verified": true,
         "exit_status": 0,
         "artifact_binding": {
@@ -260,7 +260,7 @@
             "path": "signoff/inventory/item-9.json",
             "scope": "repo"
           },
-          "content_hash": "sha256:6e3946b1c69c01ddcdffb8b476f8a6deb65f1678cce808b83b31496d99450e0b",
+          "content_hash": "sha256:38157c75456d127a37a2fae48d92fb90f2eeb390ab6ac5e79ecf32b4e03b4752",
           "input_verified": true,
           "summary": "T1 item 9 (Testbenches shipped): 68/68 attestation checks passed (klt signoff --attest)",
           "source": "signoff/inventory/item-9.json",
