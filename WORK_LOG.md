@@ -2,6 +2,11 @@
 
 Chronological record of merged pull requests and closed issues. Newest entries appear first.
 
+### 2026-11-06
+
+- **PR #350**: fix: re-pin open_pdks to f6eeac7 with ciel 2.6.1 and check tree revision
+- **Issue #349** (closed): Re-pin sim open_pdks to f6eeac7 via ciel, with a revision-checked PDK search
+
 ### 2026-11-05
 
 - **PR #346**: data: add complete 45-point paired preamp noise PVT campaign
