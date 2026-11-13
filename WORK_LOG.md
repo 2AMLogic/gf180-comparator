@@ -2,6 +2,10 @@
 
 Chronological record of merged pull requests and closed issues. Newest entries appear first.
 
+### 2026-11-13
+
+- **Issue #88** (closed): Auditor Capability Request: worker ngspice 42 below pinned floor 46, selftest cannot run
+
 ### 2026-11-06
 
 - **PR #350**: fix: re-pin open_pdks to f6eeac7 with ciel 2.6.1 and check tree revision
