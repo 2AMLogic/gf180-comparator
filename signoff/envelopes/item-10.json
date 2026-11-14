@@ -38,14 +38,14 @@
         "role": "hygiene",
         "path": "README.md",
         "passed": true,
-        "content_hash": "sha256:b9ca79a1a92d4ab1c244175566fa00783aa61f8c3ea9c0e5c2c94b5d20a67623"
+        "content_hash": "sha256:a08366030c5537ab9fbf159c344c5fba8208136b4c04d53d29a254091fcac2d0"
       },
       {
         "check": "present",
         "role": "hygiene",
         "path": "scripts/check_bench_inventory.py",
         "passed": true,
-        "content_hash": "sha256:0ab73377c166d76f8975be3c94b1692ab7a582a0350b5c9052eef9353397bb1a"
+        "content_hash": "sha256:ef808fe5816ab4cae781acae7fc8fa4ef94bdc9206145e1ff1524027b440eb7e"
       },
       {
         "check": "present",
