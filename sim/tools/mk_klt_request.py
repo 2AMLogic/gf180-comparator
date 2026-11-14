@@ -366,19 +366,41 @@ def declared_source_shas(body_text: str) -> dict[str, str]:
     return got
 
 
-def tran_meas_cards(tb) -> list[dict]:
+def tran_meas_cards(tb, *, drop_let_pairs: bool = False) -> list[dict]:
     """`meas tran ...` analysis lines -> klt `.meas` measurement entries.
 
     The forward `analyses` cards first, then any supplemental
     reverse-ladder cards (tb.json `reverse_ladder.analyses`) -- the fleet
-    request must measure everything the local harness deck measures."""
+    request must measure everything the local harness deck measures.
+
+    `drop_let_pairs` (issue #372): the fleet request schema has no position
+    for an interactive `let` between the run and the `.meas` cards, so a
+    `let`-defined vector cannot be shipped. A `let` card is dropped TOGETHER
+    with the adjacent `meas` card that consumes its vector -- shipping the
+    `meas` alone leaves a WHEN card whose right-hand side is an undefined
+    vector, the 2AMLogic/klayout-tools#5651 shape that passes `--dry-run`
+    and then errors every corner. A `let` that does not form that adjacent
+    pair is refused, never silently dropped."""
     out = []
     cards = list(tb.analyses[1:]) + list(tb.reverse_ladder.get("analyses", ()))
-    for line in cards:
+    i = 0
+    while i < len(cards):
+        line = cards[i]
         parts = line.split()
+        if parts[0] == "let":
+            if not drop_let_pairs:
+                raise SystemExit(f"{tb.name}: unexpected analysis card {line!r}")
+            nxt = cards[i + 1] if i + 1 < len(cards) else ""
+            if not nxt.startswith("meas ") or parts[1] not in nxt:
+                raise SystemExit(
+                    f"{tb.name}: 'let' card {line!r} is not followed by a 'meas' card "
+                    f"consuming {parts[1]!r}; refusing to drop it alone")
+            i += 2  # the adjacent pair goes together (issue #372)
+            continue
         if parts[0] != "meas":
             raise SystemExit(f"{tb.name}: unexpected analysis card {line!r}")
         out.append({"name": parts[2], "spice": "." + line})
+        i += 1
     return out
 
 
@@ -388,6 +410,17 @@ def legs_for(bench: str, tb, mc_n: int) -> dict[str, dict]:
         kind, args = tb.analyses[0].split(None, 1)
         return {"main": {"analysis": {"kind": kind, "args": args},
                          "measurements": tran_meas_cards(tb)}}
+    if bench == "comparator-avg-power":
+        # DR-0006 pre-ratification bring-up bench (issue #372): a plain tran
+        # plus `.meas` cards, except the `let i_rst_thr` / `meas tran t_rst`
+        # pair tran_meas_cards drops together -- the fleet request has no
+        # `let` position, and t_rst's only consumer, `reset_margin_ns`,
+        # carries no manifest check, so fleet records lose one unchecked
+        # proxy and nothing checked (klt_record.py omits the derived
+        # quantity and names the gap; see sim/comparator-avg-power/README.md).
+        kind, args = tb.analyses[0].split(None, 1)
+        return {"main": {"analysis": {"kind": kind, "args": args},
+                         "measurements": tran_meas_cards(tb, drop_let_pairs=True)}}
     # The fleet runner's klt (0.5.0) accepts only `{name, spice}` measurement
     # entries (no `expr` algebra), so every leg below is expressed as raw
     # `.meas` cards; the derived quantities are computed by klt_record.py.
