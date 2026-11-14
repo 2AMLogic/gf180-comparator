@@ -113,6 +113,11 @@ CITED_REPORT = HERE / "comparator.pex.json"
 CITED_MEASURE = HERE / "artifacts" / "measure"
 SCHEMATIC_DUT = REPO / "design" / "comparator.spice"
 
+#: The #229 attribution artifact whose net selection the budget and combo
+#: studies reuse; hashed into both stage manifests.
+ATTRIBUTION_JSON_229 = (HERE / "artifacts" / "parasitic-attribution"
+                        / "20261010-120720-230574b" / "attribution.json")
+
 #: The two worst failing corners named by issue #229. Both are 125 C / 2.97 V,
 #: so one probe request (process tt + ss) covers both.
 TEMP_C = 125.0
@@ -957,6 +962,23 @@ def file_sha(path: Path) -> str:
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
+def common_source_sha256(text: str) -> dict:
+    """The six stage hashes every parasitic study records identically (#371).
+
+    One source of truth for the integrity gate `budget_manifest_diff` enforces:
+    each manifest builder spreads this and adds only its own study's extras,
+    so the key set a study gates on cannot silently diverge from the others.
+    """
+    return {
+        "extracted_dut": sha(text),
+        "schematic_dut": file_sha(SCHEMATIC_DUT),
+        "cited_report": file_sha(CITED_REPORT),
+        "tb_json_consumed_fields": TB_JSON_CONSUMED_SHA256,
+        "pex_measure_py": file_sha(HERE / "pex_measure.py"),
+        "parasitic_attribution_py": file_sha(Path(__file__).resolve()),
+    }
+
+
 def budget_manifest(text: str, plan: list[dict], points, nets) -> dict:
     """Everything the stage depends on, hashed, plus the variant manifest."""
     return {
@@ -968,15 +990,8 @@ def budget_manifest(text: str, plan: list[dict], points, nets) -> dict:
         "nets": list(nets),
         "points": [pid(p) for p in points],
         "source_sha256": {
-            "extracted_dut": sha(text),
-            "schematic_dut": file_sha(SCHEMATIC_DUT),
-            "cited_report": file_sha(CITED_REPORT),
-            "attribution_json_229": file_sha(
-                HERE / "artifacts" / "parasitic-attribution" / "20261010-120720-230574b"
-                / "attribution.json"),
-            "tb_json_consumed_fields": TB_JSON_CONSUMED_SHA256,
-            "pex_measure_py": file_sha(HERE / "pex_measure.py"),
-            "parasitic_attribution_py": file_sha(Path(__file__).resolve()),
+            **common_source_sha256(text),
+            "attribution_json_229": file_sha(ATTRIBUTION_JSON_229),
         },
         "variants": [{
             "id": x["id"], "side": x["side"], "centre": x["centre"], "fraction": x["fraction"],
@@ -1498,17 +1513,10 @@ def combo_manifest(text: str, plan: list[dict], points, kind: str,
         "points": [pid(x) for x in points],
         "requests_planned": count_requests(plan, points),
         "source_sha256": {
-            "extracted_dut": sha(text),
-            "schematic_dut": file_sha(SCHEMATIC_DUT),
-            "cited_report": file_sha(CITED_REPORT),
-            "attribution_json_229": file_sha(
-                HERE / "artifacts" / "parasitic-attribution" / "20261010-120720-230574b"
-                / "attribution.json"),
+            **common_source_sha256(text),
+            "attribution_json_229": file_sha(ATTRIBUTION_JSON_229),
             "ground_c_budget_243_readme": file_sha(
                 HERE / "artifacts" / "ground-c-budget" / "20261010-154019-b9fff0f" / "README.md"),
-            "tb_json_consumed_fields": TB_JSON_CONSUMED_SHA256,
-            "pex_measure_py": file_sha(HERE / "pex_measure.py"),
-            "parasitic_attribution_py": file_sha(Path(__file__).resolve()),
         },
         "variants": [],
     }
