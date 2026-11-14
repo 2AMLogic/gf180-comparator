@@ -17,6 +17,13 @@ NOT_RUN_BY_CHARACTERIZE = {
         "sim/tools/klt_record.py (45-point record committed), see its README",
     "comparator-offset-tran-extracted-feasibility": "bounded feasibility "
         "probe, not a campaign; fleet-only, mints_record: false, no record",
+    "comparator-avg-power": "supplemental, unscored pre-ratification "
+        "validation of DR-0006's proposed average-power operating condition "
+        "(issue #356); scores no spec row, so it is deliberately outside the "
+        "characterization campaign. No fleet branch yet in "
+        "sim/tools/mk_klt_request.py / klt_record.py, so the 45-corner run is "
+        "a follow-up; the committed record is a 1-of-45 bring-up probe run "
+        "locally via run_corners.py, see its README",
 }
 
 
