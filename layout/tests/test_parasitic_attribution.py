@@ -345,6 +345,65 @@ class BudgetCommittedEvidence(unittest.TestCase):
         self.assertEqual(errors, [])
         self.assertEqual(len(drift), 2)
 
+    def test_the_provenance_key_set_is_a_rule_not_an_allowlist(self):
+        """#358: the discriminator classifies by key name, so the code hashes
+        of a study module that does not exist yet are provenance without any
+        module amending a list. Data-input hashes stay integrity gates."""
+        for k in ("parasitic_attribution_py", "pex_measure_py", "design_lever_study_py",
+                  "a_study_nobody_has_written_yet_py", "tb_json_consumed_fields"):
+            self.assertTrue(pa.is_provenance_source_key(k), k)
+        for k in ("extracted_dut", "schematic_dut", "cited_report",
+                  "attribution_json_229", "ground_c_budget_243_readme"):
+            self.assertFalse(pa.is_provenance_source_key(k), k)
+
+    def test_a_code_key_no_allowlist_names_is_drift_not_an_error(self):
+        """The #249 invariant, exercised on keys that are hardcoded nowhere:
+        `design_lever_study_py` (layout/pex/design_lever_study.py:209, the key
+        the fixed tuple missed) and a stand-in for the next study's."""
+        st = sorted((pa.HERE / "artifacts" / "ground-c-budget").glob("*/stage*/stage.json"))[0]
+        man = json.loads(st.read_text())
+        for k in ("design_lever_study_py", "a_study_nobody_has_written_yet_py"):
+            committed = json.loads(json.dumps(man))
+            committed["source_sha256"][k] = "a" * 64
+            regen = json.loads(json.dumps(committed))
+            regen["source_sha256"][k] = "0" * 64
+            errors, drift = pa.budget_manifest_diff(committed, regen)
+            self.assertEqual(errors, [], k)
+            self.assertEqual(
+                drift, [f"source_sha256.{k}: recorded {'a' * 64}, working tree {'0' * 64}"])
+            # a key only one side records (a study that just started hashing
+            # its own source) is drift too, not a missing-key error
+            regen = json.loads(json.dumps(man))
+            errors, drift = pa.budget_manifest_diff(committed, regen)
+            self.assertEqual(errors, [], k)
+            self.assertEqual(drift, [f"source_sha256.{k}: recorded {'a' * 64}, working tree None"])
+
+    def test_every_data_input_hash_of_every_committed_stage_stays_strict(self):
+        """Step 2 of #358: loosening the code-hash comparison must not loosen
+        any data-input hash. Driven off what the stages actually record, so a
+        new non-code key is strict by default rather than by being listed."""
+        stages = sorted((pa.HERE / "artifacts").glob("*/*/stage*/stage.json")) + \
+            sorted((pa.HERE / "artifacts" / "design-levers").glob("*/stage.json"))
+        self.assertTrue(stages)
+        seen = set()
+        for st in stages:
+            man = json.loads(st.read_text())
+            data_keys = [k for k in sorted(man["source_sha256"])
+                         if not pa.is_provenance_source_key(k)]
+            self.assertTrue(data_keys, st.parent)
+            for k in data_keys:
+                other = json.loads(json.dumps(man))
+                other["source_sha256"][k] = "0" * 64
+                errors, drift = pa.budget_manifest_diff(man, other)
+                self.assertTrue(errors, f"{st.parent}: {k} is not gated")
+                self.assertEqual(drift, [], f"{st.parent}: {k} was treated as provenance")
+                seen.add(k)
+        # subset, not equality: a new data-input key joins the loop above
+        # (strict by default) without this test needing a list amended -- the
+        # maintenance step #358 removed. These five prove it is not vacuous.
+        self.assertLessEqual({"extracted_dut", "schematic_dut", "cited_report",
+                              "attribution_json_229", "ground_c_budget_243_readme"}, seen)
+
 
 class ComboScaling(unittest.TestCase):
     """Combined ground-C x series-R scaling (#264), on the synthetic netlist."""
