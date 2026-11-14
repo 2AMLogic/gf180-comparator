@@ -55,14 +55,18 @@ publishes what this block takes and exposes (consumer requirement rows:
 ## Verification harness
 
 Every row of the table below has a testbench, a committed PVT corner matrix,
-and a documented way to reproduce it — see [`sim/`](sim/). `sim/` holds eight bench directories: four corner-grid benches
+and a documented way to reproduce it — see [`sim/`](sim/). `sim/` holds nine bench directories: four corner-grid benches
 (`comparator-offset-mc`, `comparator-preamp-noise`, `comparator-regeneration`,
 `comparator-kickback`) that `characterize.sh` runs, the fleet-only
 `comparator-offset-tran` (whole-comparator offset evidence), the
 supplemental, unscored `comparator-offset-cm-window` (no record yet) and its
 monotonic-index variant `comparator-offset-cm-index` (unscored; complete
-45-point record, verdict Unknown), and `comparator-offset-tran-extracted-feasibility`
-(bounded, unscored, fleet-only feasibility probe; no record).
+45-point record, verdict Unknown), `comparator-offset-tran-extracted-feasibility`
+(bounded, unscored, fleet-only feasibility probe; no record), and
+`comparator-avg-power` (supplemental, unscored; the periodic-clock bench that
+measures what DR-0006's own feasibility list leaves unestablished, with a
+1-of-45 bring-up probe record — it scores no row and the Supply / power row
+below keeps its TBD clock rate).
 
 ```bash
 python3 sim/run_corners.py --check-env   # PDK, pinned toolchain, DUT contract

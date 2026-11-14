@@ -1,0 +1,1133 @@
+{
+  "record_id": "20261114-032046866512-d02a882",
+  "context": {
+    "record_id": "20261114-032046866512-d02a882",
+    "commit": "d02a882",
+    "dirty": false,
+    "dirty_paths": [],
+    "pdk": {
+      "path": "/home/ubuntu/.ciel/gf180mcuD",
+      "variant": "gf180mcuD",
+      "open_pdks_version": "f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7",
+      "discovered_via": "search_root:~/.ciel"
+    },
+    "toolchain": {
+      "pins": {
+        "open_pdks": "f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7",
+        "ngspice_min_major": 46,
+        "python_min": "3.9",
+        "xschem_tag": "3.4.7"
+      },
+      "observed": {
+        "open_pdks": "f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7",
+        "ngspice": "ngspice-47 : Circuit level simulation program",
+        "python": "3.12.3",
+        "platform": "Linux-7.0.0-1014-aws-x86_64-with-glibc2.39"
+      },
+      "drift": []
+    },
+    "dut_id": "comparator-dr0001",
+    "dut_provenance": "schematic",
+    "dut_netlist": "design/comparator.spice",
+    "dut_netlist_sha256": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a",
+    "dut_params": {
+      "dut_ib": 1e-05,
+      "dut_vcm": 1.65
+    }
+  },
+  "testbench": {
+    "name": "comparator-avg-power",
+    "description": "SUPPLEMENTAL, UNSCORED (issue #356): the average-power operating condition PROPOSED by spec/decision-records/DR-0006-average-power-operating-condition.md, implemented as written -- a 16 MHz / 50 % clock, one decision per cycle with the differential input alternating sign every cycle at 10 mV above/below the DUT's own trip point, 20 fF loads on both outputs, 8 warm-up cycles discarded and the DUT's supply charge integrated over the following 16 whole cycles. Measures per-cycle decision correctness, a reset-completion margin, the half-window settledness DR-0006 requires, and average supply power with that record's stated sign and integration conventions.",
+    "claim": "SUPPLEMENTAL PRE-RATIFICATION VALIDATION, NOT A VERDICT, AND NOT A SCORED ROW. DR-0006 is `proposed -- not ratified`; ratification is the DR-0002 two-key ceremony and nothing here performs it. This bench measures the quantities DR-0006's own \"Feasibility status\" section lists as NOT established -- reset completion, a dynamic-power figure, and whether the proposed 8-cycle warm-up and 16-cycle window are adequate -- so that the ratification reviewers have evidence instead of a proposal. It carries NO pass/fail bound against README.md's Supply / power row: that row keeps the \"(TBD)\" clock rate it was ratified with, its <= 1 mW target and <= 500 uW stretch are untouched, no ceiling on power or charge exists in this manifest, spec/claim-registry.json registers no average-power row, and signoff/make_item5_envelope.py keeps its average_power_clock_rate_tbd skip reason. The checks here are functional decision-correctness checks, measurement-plumbing checks and DR-0006's own same-run settledness criterion -- none of them is a spec verdict. The first committed record is a 1-of-45 bring-up validation probe at tt_27c_3.30v on the schematic binding, not a corner result: the 45-point campaign and the post-layout extracted run are separate landings, and until they exist nothing here says anything about the worst corner. If a number DR-0006 chose turns out to be unworkable, the record is revised -- no bound in this manifest moves to make a result pass.",
+    "experiment": "comparator-avg-power",
+    "directory": "testbench",
+    "netlist": "tb_avg_power.spice",
+    "netlist_sha256": "a2bb5545b89137e1f21332108f28575697b771b05030bc829ee0eea26051986e",
+    "manifest_sha256": "a44581ad7618f23f0fb754b88baeb57c33070a43f36a0b3bdd1db1f31e36552b",
+    "nominal_supply_v": 3.3,
+    "supply_tolerance": 0.1
+  },
+  "checks": {
+    "dout_c08": {
+      "min": 0.9,
+      "description": "PER-CYCLE DECISION CORRECTNESS, the FIRST post-warm-up cycle -- the one DR-0006's \"Feasibility status\" item 1 names explicitly (\"show every cycle decides correctly, including the first post-warm-up cycle\"). Cycle 8 is even, so its evaluate phase saw +v_od and the output, read 250 ps before the falling edge and normalized to its own supply, must be high. A FUNCTIONAL check -- it says the latch decided, and decided the right way, on a settled overdrive after a reset phase that had to complete first. It is NOT a bound on any spec row, and nothing scored reads it: the README target table's Supply / power row keeps its TBD clock rate and is not evaluated by this bench. Same 0.9/0.1 envelope and same reasoning as sim/comparator-regeneration/'s dout_*_end / dout_*_first pair."
+    },
+    "dout_c09": {
+      "max": 0.1,
+      "description": "the same for window cycle 9 (odd -> -v_od -> output low)."
+    },
+    "dout_c10": {
+      "min": 0.9,
+      "description": "the same for window cycle 10 (even -> +v_od -> output high)."
+    },
+    "dout_c11": {
+      "max": 0.1,
+      "description": "the same for window cycle 11 (odd -> -v_od -> output low)."
+    },
+    "dout_c12": {
+      "min": 0.9,
+      "description": "the same for window cycle 12 (even -> +v_od -> output high)."
+    },
+    "dout_c13": {
+      "max": 0.1,
+      "description": "the same for window cycle 13 (odd -> -v_od -> output low)."
+    },
+    "dout_c14": {
+      "min": 0.9,
+      "description": "the same for window cycle 14 (even -> +v_od -> output high)."
+    },
+    "dout_c15": {
+      "max": 0.1,
+      "description": "the same for window cycle 15 (odd -> -v_od -> output low)."
+    },
+    "dout_c16": {
+      "min": 0.9,
+      "description": "the same for window cycle 16 (even -> +v_od -> output high)."
+    },
+    "dout_c17": {
+      "max": 0.1,
+      "description": "the same for window cycle 17 (odd -> -v_od -> output low)."
+    },
+    "dout_c18": {
+      "min": 0.9,
+      "description": "the same for window cycle 18 (even -> +v_od -> output high)."
+    },
+    "dout_c19": {
+      "max": 0.1,
+      "description": "the same for window cycle 19 (odd -> -v_od -> output low)."
+    },
+    "dout_c20": {
+      "min": 0.9,
+      "description": "the same for window cycle 20 (even -> +v_od -> output high)."
+    },
+    "dout_c21": {
+      "max": 0.1,
+      "description": "the same for window cycle 21 (odd -> -v_od -> output low)."
+    },
+    "dout_c22": {
+      "min": 0.9,
+      "description": "the same for window cycle 22 (even -> +v_od -> output high)."
+    },
+    "dout_c23": {
+      "max": 0.1,
+      "description": "the same for window cycle 23 (odd -> -v_od -> output low)."
+    },
+    "doutb_c08": {
+      "max": 0.1,
+      "description": "COMPLEMENTARY-OUTPUT half of the same functional check: with dout high at window cycle 8, doutb must be low. Without it a latch stuck with both outputs high would still pass every dout_c* check. Not a spec bound."
+    },
+    "doutb_c23": {
+      "min": 0.9,
+      "description": "the same at window cycle 23 (odd -> dout low -> doutb high)."
+    },
+    "dec_cycles_correct": {
+      "min": 16.0,
+      "description": "ROLLUP of the per-cycle decision reads: the number of window cycles whose decision followed the stimulus sign, out of 16. DR-0006 states that a run \"whose decisions do not follow the stimulus sign in every window cycle ... is invalid, never a pass\", so the floor is the full count and the quantity exists to make that invalidity one number a consumer can read. Fail-closed by construction: an exactly-0.5 metastable read makes the term non-finite, which the harness rejects as a missing measurement and the point fails rather than scoring a tie. A functional check, not a spec bound."
+    },
+    "q_half_mismatch_pct": {
+      "max": 1.0,
+      "description": "SETTLEDNESS CHECK, required by DR-0006 in the same run: \"the same integral over the window's two 8-cycle halves must agree within 1 %; otherwise the corner is a miss (not-settled), not a pass, and the warm-up and window must be lengthened (and re-recorded) rather than the tolerance widened.\" The 1 % here is that record's number, transcribed, not calibrated from a run -- so if a corner misses it the answer is a longer warm-up/window and a revised record, never a wider bound. abs() appears on the half-window DIFFERENCE only, which is the one place DR-0006 permits it; the denominator is the signed sum, so an invalid (negative) window integral cannot be hidden here -- q_win_pc's floor catches that separately. This is a check on whether the proposed window is adequate, not a bound on the supply/power row."
+    },
+    "q_split_delta_pct": {
+      "max": 0.01,
+      "description": "INTEGRATION PLUMBING, not a circuit property: the whole-window charge must equal the sum of the two half-window charges to integration precision. It catches a mis-typed window boundary, a half-window split that is not at the window's midpoint, and an integral whose endpoint fell outside the transient -- any of which would make q_half_mismatch_pct meaningless. 0.01 % is a numerical-identity tolerance; the three integrals are over the same vector."
+    },
+    "p_avg_form_delta_pct": {
+      "max": 1.0,
+      "description": "FORM-AGREEMENT CHECK required by DR-0006: \"Because VDD is constant within a corner, v*i integration reduces to the charge form above; an implementation that integrates v(vdd)*i_DD directly must agree with it (a check, not a second definition).\" p_avg_vi_uw integrates the instantaneous product through the pwr probe; p_avg_uw is VDD*Q_win/(N*T). This is the percentage disagreement between the two, and it is a check on the IMPLEMENTATION, not on the circuit -- it would fail for a sign error or a mis-scaled probe and says nothing about whether the power meets any row."
+    },
+    "q_win_pc": {
+      "min": 0.0,
+      "description": "SIGN-VALIDITY FLOOR, DR-0006's own clause: \"Define the delivered DUT supply current i_DD(t) = -i(v_supply)(t) (positive when delivering). Charge, energy and power are then positive for delivered energy; a negative window integral is invalid, not clamped with abs().\" This floor is the mechanism that makes a negative integral invalid instead of silently absorbing it. It is NOT the supply/power row's bound -- that row's numbers are a <= 1 mW target and a <= 500 uW stretch (a ceiling), this bench scores neither, and no ceiling on power or charge appears anywhere in this manifest."
+    },
+    "clk_period_ns": {
+      "min": 62.49,
+      "max": 62.51,
+      "description": "CLOCK-GRID PLUMBING. Every integration boundary and decision-read instant in this manifest is a hard-coded time derived from params.t_per, because an ngspice `meas` card takes literal times. This measures the period the simulator actually produced, from the 0.5 crossings of the normalized clock at the window's first and last cycle (15 periods apart), so a deck whose clock no longer matches the windows fails loudly here instead of integrating over the wrong interval. The +/-10 ps envelope is the edge resolution, not a specification; sim/harness/tests/test_avg_power_semantics.py checks the same consistency statically, against the committed manifest."
+    },
+    "i_static_ua": {
+      "min": 0.1,
+      "description": "Static supply current of the DUT late in the last reset phase, delivered-positive. A FLOOR ONLY, with the same reason as sim/comparator-regeneration/'s i_static_ua: zero would mean the bias never came up and every dynamic number in the record was taken on a dead circuit. No ceiling -- and this is not the row's static-power evidence either: signoff/make_item5_envelope.py's partial static-power evidence stays the regeneration record's i_static_ua and is untouched by this bench."
+    }
+  },
+  "points": [
+    {
+      "corner": "tt",
+      "corner_sections": [
+        "typical",
+        "res_typical",
+        "bjt_typical",
+        "diode_typical",
+        "moscap_typical",
+        "mimcap_typical"
+      ],
+      "temp_c": 27.0,
+      "vdd": 3.3,
+      "corner_id": "tt_27c_3.30v",
+      "status": "ok",
+      "measurements": {
+        "vsup_v": 3.3,
+        "clk_period_ns": 62.5,
+        "t_win_start_ns": 510.05,
+        "dout_c08": 1.0,
+        "dout_c09": 7.417936e-10,
+        "dout_c10": 1.0,
+        "dout_c11": 7.418175e-10,
+        "dout_c12": 1.0,
+        "dout_c13": 7.41805e-10,
+        "dout_c14": 1.0,
+        "dout_c15": 7.418803e-10,
+        "dout_c16": 1.0,
+        "dout_c17": 7.418902e-10,
+        "dout_c18": 1.0,
+        "dout_c19": 7.418228e-10,
+        "dout_c20": 1.0,
+        "dout_c21": 7.417292e-10,
+        "dout_c22": 1.0,
+        "dout_c23": 7.418702e-10,
+        "doutb_c08": 7.418685e-10,
+        "doutb_c23": 1.0,
+        "dec_cycles_correct": 16.0,
+        "q_win_pc": 43.90516,
+        "q_half1_pc": 21.95242,
+        "q_half2_pc": 21.95292,
+        "q_half_mismatch_pct": 0.0022776272772,
+        "q_split_delta_pct": 0.00040997459067,
+        "p_avg_uw": 144.887028,
+        "e_dec_fj": 9055.43925,
+        "p_avg_vi_uw": 144.887,
+        "p_avg_form_delta_pct": 1.9325401574e-05,
+        "q_clk_pc": 0.00707357,
+        "i_static_ua": 30.27536,
+        "reset_margin_ns": 30.484
+      },
+      "seconds": 14.372,
+      "deck": "tt_27c_3.30v.spice",
+      "log": "tt_27c_3.30v.log",
+      "check_outcome": {
+        "status": "pass",
+        "failures": []
+      }
+    }
+  ],
+  "summary": {
+    "vsup_v": {
+      "min": 3.3,
+      "max": 3.3,
+      "mean": 3.3,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "clk_period_ns": {
+      "min": 62.5,
+      "max": 62.5,
+      "mean": 62.5,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "t_win_start_ns": {
+      "min": 510.05,
+      "max": 510.05,
+      "mean": 510.05,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "dout_c08": {
+      "min": 1.0,
+      "max": 1.0,
+      "mean": 1.0,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "dout_c09": {
+      "min": 7.417936e-10,
+      "max": 7.417936e-10,
+      "mean": 7.417936e-10,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "dout_c10": {
+      "min": 1.0,
+      "max": 1.0,
+      "mean": 1.0,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "dout_c11": {
+      "min": 7.418175e-10,
+      "max": 7.418175e-10,
+      "mean": 7.418175e-10,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "dout_c12": {
+      "min": 1.0,
+      "max": 1.0,
+      "mean": 1.0,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "dout_c13": {
+      "min": 7.41805e-10,
+      "max": 7.41805e-10,
+      "mean": 7.41805e-10,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "dout_c14": {
+      "min": 1.0,
+      "max": 1.0,
+      "mean": 1.0,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "dout_c15": {
+      "min": 7.418803e-10,
+      "max": 7.418803e-10,
+      "mean": 7.418803e-10,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "dout_c16": {
+      "min": 1.0,
+      "max": 1.0,
+      "mean": 1.0,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "dout_c17": {
+      "min": 7.418902e-10,
+      "max": 7.418902e-10,
+      "mean": 7.418902e-10,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "dout_c18": {
+      "min": 1.0,
+      "max": 1.0,
+      "mean": 1.0,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "dout_c19": {
+      "min": 7.418228e-10,
+      "max": 7.418228e-10,
+      "mean": 7.418228e-10,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "dout_c20": {
+      "min": 1.0,
+      "max": 1.0,
+      "mean": 1.0,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "dout_c21": {
+      "min": 7.417292e-10,
+      "max": 7.417292e-10,
+      "mean": 7.417292e-10,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "dout_c22": {
+      "min": 1.0,
+      "max": 1.0,
+      "mean": 1.0,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "dout_c23": {
+      "min": 7.418702e-10,
+      "max": 7.418702e-10,
+      "mean": 7.418702e-10,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "doutb_c08": {
+      "min": 7.418685e-10,
+      "max": 7.418685e-10,
+      "mean": 7.418685e-10,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "doutb_c23": {
+      "min": 1.0,
+      "max": 1.0,
+      "mean": 1.0,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "dec_cycles_correct": {
+      "min": 16.0,
+      "max": 16.0,
+      "mean": 16.0,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "q_win_pc": {
+      "min": 43.90516,
+      "max": 43.90516,
+      "mean": 43.90516,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "q_half1_pc": {
+      "min": 21.95242,
+      "max": 21.95242,
+      "mean": 21.95242,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "q_half2_pc": {
+      "min": 21.95292,
+      "max": 21.95292,
+      "mean": 21.95292,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "q_half_mismatch_pct": {
+      "min": 0.0022776272772,
+      "max": 0.0022776272772,
+      "mean": 0.0022776272772,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "q_split_delta_pct": {
+      "min": 0.00040997459067,
+      "max": 0.00040997459067,
+      "mean": 0.00040997459067,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "p_avg_uw": {
+      "min": 144.887028,
+      "max": 144.887028,
+      "mean": 144.887028,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "e_dec_fj": {
+      "min": 9055.43925,
+      "max": 9055.43925,
+      "mean": 9055.43925,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "p_avg_vi_uw": {
+      "min": 144.887,
+      "max": 144.887,
+      "mean": 144.887,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "p_avg_form_delta_pct": {
+      "min": 1.9325401574e-05,
+      "max": 1.9325401574e-05,
+      "mean": 1.9325401574e-05,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "q_clk_pc": {
+      "min": 0.00707357,
+      "max": 0.00707357,
+      "mean": 0.00707357,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "i_static_ua": {
+      "min": 30.27536,
+      "max": 30.27536,
+      "mean": 30.27536,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    },
+    "reset_margin_ns": {
+      "min": 30.484,
+      "max": 30.484,
+      "mean": 30.484,
+      "at_min": "tt_27c_3.30v",
+      "at_max": "tt_27c_3.30v",
+      "spread_pct": 0.0,
+      "per_axis": {
+        "process": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "temperature": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        },
+        "supply": {
+          "weakest": 0.0,
+          "strongest": 0.0,
+          "varies": false
+        }
+      },
+      "failures": [],
+      "skipped_checks": []
+    }
+  }
+}

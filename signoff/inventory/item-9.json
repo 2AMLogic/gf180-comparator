@@ -6,6 +6,10 @@
   "testbenches": [
     "sim/README.md",
     "sim/characterize.sh",
+    "sim/comparator-avg-power/README.md",
+    "sim/comparator-avg-power/testbench/tb.json",
+    "sim/comparator-avg-power/testbench/tb_avg_power.spice",
+    "sim/comparator-avg-power/testbench/tb_vosprobe.spice",
     "sim/comparator-kickback/README.md",
     "sim/comparator-kickback/testbench/tb.json",
     "sim/comparator-kickback/testbench/tb_kickback.spice",
@@ -47,6 +51,7 @@
     "sim/harness/testbench.py",
     "sim/harness/tests/__init__.py",
     "sim/harness/tests/test_adapt_samples.py",
+    "sim/harness/tests/test_avg_power_semantics.py",
     "sim/harness/tests/test_cli_main.py",
     "sim/harness/tests/test_cm_index_semantics.py",
     "sim/harness/tests/test_corners.py",

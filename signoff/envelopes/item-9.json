@@ -3,21 +3,21 @@
   "kind": "generic",
   "status": "pass",
   "t1_item": 9,
-  "summary": "T1 item 9 (Testbenches shipped): 68/68 attestation checks passed (klt signoff --attest)",
+  "summary": "T1 item 9 (Testbenches shipped): 73/73 attestation checks passed (klt signoff --attest)",
   "source": "signoff/inventory/item-9.json",
   "attestation": {
     "producer": "klt signoff --attest",
     "inventory_schema_version": 1,
     "hash_algorithm": "sha256-raw-bytes",
-    "check_count": 68,
-    "passed_count": 68,
+    "check_count": 73,
+    "passed_count": 73,
     "checks": [
       {
         "check": "present",
         "role": "testbench",
         "path": "sim/README.md",
         "passed": true,
-        "content_hash": "sha256:3a19cc5e77632ca0711dda6d6402b6a2fa8c87c2c25e0a4b7f9b2ab697876c2a"
+        "content_hash": "sha256:e1144faecdaa1adbcffa552f77877d010f27e3e1764fd0ab564a9d74aea86a91"
       },
       {
         "check": "present",
@@ -25,6 +25,34 @@
         "path": "sim/characterize.sh",
         "passed": true,
         "content_hash": "sha256:e9ee565c7fe9bc5f627de13e314ab401f3a0dcf3470cbb7b15c4db0463d6fdd6"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/comparator-avg-power/README.md",
+        "passed": true,
+        "content_hash": "sha256:7bc915d91b593c167c89dda8e133b3652a7dbecdb16c9d83bd5b8d9a707bed79"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/comparator-avg-power/testbench/tb.json",
+        "passed": true,
+        "content_hash": "sha256:a44581ad7618f23f0fb754b88baeb57c33070a43f36a0b3bdd1db1f31e36552b"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/comparator-avg-power/testbench/tb_avg_power.spice",
+        "passed": true,
+        "content_hash": "sha256:a2bb5545b89137e1f21332108f28575697b771b05030bc829ee0eea26051986e"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/comparator-avg-power/testbench/tb_vosprobe.spice",
+        "passed": true,
+        "content_hash": "sha256:35c7012038e6ffadf3db48e3b34982d93157f36e493d2e526a710c4fe5bc144f"
       },
       {
         "check": "present",
@@ -316,6 +344,13 @@
       {
         "check": "present",
         "role": "testbench",
+        "path": "sim/harness/tests/test_avg_power_semantics.py",
+        "passed": true,
+        "content_hash": "sha256:2959a786adfdf3de0844bcea747378833b4fa6fd71a9b793c010d956733f875c"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
         "path": "sim/harness/tests/test_cli_main.py",
         "passed": true,
         "content_hash": "sha256:57f9d1c0f93d6c678c1801b2802380e551333ee600d554afc36c2aa2df650a67"
@@ -509,7 +544,7 @@
         "path": "signoff/inventory/item-9.json",
         "scope": "repo"
       },
-      "content_hash": "sha256:38157c75456d127a37a2fae48d92fb90f2eeb390ab6ac5e79ecf32b4e03b4752"
+      "content_hash": "sha256:0515a7c8b08426894bf50e39b397320fca60cff1bef040544a79633c91ee34b1"
     }
   }
 }

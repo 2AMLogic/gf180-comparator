@@ -1,0 +1,230 @@
+{
+  "name": "comparator-avg-power",
+  "description": "SUPPLEMENTAL, UNSCORED (issue #356): the average-power operating condition PROPOSED by spec/decision-records/DR-0006-average-power-operating-condition.md, implemented as written -- a 16 MHz / 50 % clock, one decision per cycle with the differential input alternating sign every cycle at 10 mV above/below the DUT's own trip point, 20 fF loads on both outputs, 8 warm-up cycles discarded and the DUT's supply charge integrated over the following 16 whole cycles. Measures per-cycle decision correctness, a reset-completion margin, the half-window settledness DR-0006 requires, and average supply power with that record's stated sign and integration conventions.",
+  "claim": "SUPPLEMENTAL PRE-RATIFICATION VALIDATION, NOT A VERDICT, AND NOT A SCORED ROW. DR-0006 is `proposed -- not ratified`; ratification is the DR-0002 two-key ceremony and nothing here performs it. This bench measures the quantities DR-0006's own \"Feasibility status\" section lists as NOT established -- reset completion, a dynamic-power figure, and whether the proposed 8-cycle warm-up and 16-cycle window are adequate -- so that the ratification reviewers have evidence instead of a proposal. It carries NO pass/fail bound against README.md's Supply / power row: that row keeps the \"(TBD)\" clock rate it was ratified with, its <= 1 mW target and <= 500 uW stretch are untouched, no ceiling on power or charge exists in this manifest, spec/claim-registry.json registers no average-power row, and signoff/make_item5_envelope.py keeps its average_power_clock_rate_tbd skip reason. The checks here are functional decision-correctness checks, measurement-plumbing checks and DR-0006's own same-run settledness criterion -- none of them is a spec verdict. The first committed record is a 1-of-45 bring-up validation probe at tt_27c_3.30v on the schematic binding, not a corner result: the 45-point campaign and the post-layout extracted run are separate landings, and until they exist nothing here says anything about the worst corner. If a number DR-0006 chose turns out to be unworkable, the record is revised -- no bound in this manifest moves to make a result pass.",
+  "netlist": "tb_avg_power.spice",
+  "nominal_supply_v": 3.3,
+  "supply_tolerance": 0.1,
+  "temperatures_c": [
+    -40,
+    27,
+    125
+  ],
+  "corners": [
+    "mos"
+  ],
+  "params": {
+    "f_clk": 16000000.0,
+    "t_per": 6.25e-08,
+    "t_hi": 3.125e-08,
+    "t_edge": 1e-10,
+    "t_rise0": 1e-08,
+    "n_warm": 8,
+    "n_win": 16,
+    "v_od": 0.01,
+    "c_load": 2e-14,
+    "t_setup": 2e-08
+  },
+  "analyses": [
+    "tran 10p 1510n",
+    "meas tran vsup_v find v(vdda) at=510n",
+    "meas tran t_elo when v(clkn)=0.5 rise=9",
+    "meas tran t_ehi when v(clkn)=0.5 rise=24",
+    "meas tran d08 find v(dn) at=541n",
+    "meas tran d09 find v(dn) at=603.5n",
+    "meas tran d10 find v(dn) at=666n",
+    "meas tran d11 find v(dn) at=728.5n",
+    "meas tran d12 find v(dn) at=791n",
+    "meas tran d13 find v(dn) at=853.5n",
+    "meas tran d14 find v(dn) at=916n",
+    "meas tran d15 find v(dn) at=978.5n",
+    "meas tran d16 find v(dn) at=1041n",
+    "meas tran d17 find v(dn) at=1103.5n",
+    "meas tran d18 find v(dn) at=1166n",
+    "meas tran d19 find v(dn) at=1228.5n",
+    "meas tran d20 find v(dn) at=1291n",
+    "meas tran d21 find v(dn) at=1353.5n",
+    "meas tran d22 find v(dn) at=1416n",
+    "meas tran d23 find v(dn) at=1478.5n",
+    "meas tran db08 find v(dbn) at=541n",
+    "meas tran db23 find v(dbn) at=1478.5n",
+    "meas tran q_win integ i(vsupa) from=510n to=1510n",
+    "meas tran q_h1 integ i(vsupa) from=510n to=1010n",
+    "meas tran q_h2 integ i(vsupa) from=1010n to=1510n",
+    "meas tran e_win integ v(pwr) from=510n to=1510n",
+    "meas tran q_clk integ i(vclk) from=510n to=1510n",
+    "meas tran i_q avg i(vsupa) from=1507n to=1509.9n",
+    "let i_rst_thr = -1.1*i_q*1e6",
+    "meas tran t_rst when v(irst)=i_rst_thr fall=LAST td=1478.85n"
+  ],
+  "measure": {
+    "vsup_v": "vsup_v",
+    "clk_period_ns": "(t_ehi-t_elo)/15*1e9",
+    "t_win_start_ns": "t_elo*1e9",
+    "dout_c08": "d08",
+    "dout_c09": "d09",
+    "dout_c10": "d10",
+    "dout_c11": "d11",
+    "dout_c12": "d12",
+    "dout_c13": "d13",
+    "dout_c14": "d14",
+    "dout_c15": "d15",
+    "dout_c16": "d16",
+    "dout_c17": "d17",
+    "dout_c18": "d18",
+    "dout_c19": "d19",
+    "dout_c20": "d20",
+    "dout_c21": "d21",
+    "dout_c22": "d22",
+    "dout_c23": "d23",
+    "doutb_c08": "db08",
+    "doutb_c23": "db23",
+    "dec_cycles_correct": "(16 + (d08-0.5)/abs(d08-0.5) - (d09-0.5)/abs(d09-0.5) + (d10-0.5)/abs(d10-0.5) - (d11-0.5)/abs(d11-0.5) + (d12-0.5)/abs(d12-0.5) - (d13-0.5)/abs(d13-0.5) + (d14-0.5)/abs(d14-0.5) - (d15-0.5)/abs(d15-0.5) + (d16-0.5)/abs(d16-0.5) - (d17-0.5)/abs(d17-0.5) + (d18-0.5)/abs(d18-0.5) - (d19-0.5)/abs(d19-0.5) + (d20-0.5)/abs(d20-0.5) - (d21-0.5)/abs(d21-0.5) + (d22-0.5)/abs(d22-0.5) - (d23-0.5)/abs(d23-0.5))/2",
+    "q_win_pc": "-q_win*1e12",
+    "q_half1_pc": "-q_h1*1e12",
+    "q_half2_pc": "-q_h2*1e12",
+    "q_half_mismatch_pct": "abs(q_h2-q_h1)/(-(q_h1+q_h2))*200",
+    "q_split_delta_pct": "abs(q_win-(q_h1+q_h2))/(-q_win)*100",
+    "p_avg_uw": "-q_win*vsup_v*1e12",
+    "e_dec_fj": "-q_win*vsup_v/16*1e15",
+    "p_avg_vi_uw": "e_win*1e12",
+    "p_avg_form_delta_pct": "abs(e_win+q_win*vsup_v)/(-q_win*vsup_v)*100",
+    "q_clk_pc": "-q_clk*1e12",
+    "i_static_ua": "-i_q*1e6",
+    "reset_margin_ns": "(1.51e-06-t_rst)*1e9"
+  },
+  "checks": {
+    "dout_c08": {
+      "min": 0.9,
+      "description": "PER-CYCLE DECISION CORRECTNESS, the FIRST post-warm-up cycle -- the one DR-0006's \"Feasibility status\" item 1 names explicitly (\"show every cycle decides correctly, including the first post-warm-up cycle\"). Cycle 8 is even, so its evaluate phase saw +v_od and the output, read 250 ps before the falling edge and normalized to its own supply, must be high. A FUNCTIONAL check -- it says the latch decided, and decided the right way, on a settled overdrive after a reset phase that had to complete first. It is NOT a bound on any spec row, and nothing scored reads it: the README target table's Supply / power row keeps its TBD clock rate and is not evaluated by this bench. Same 0.9/0.1 envelope and same reasoning as sim/comparator-regeneration/'s dout_*_end / dout_*_first pair."
+    },
+    "dout_c09": {
+      "max": 0.1,
+      "description": "the same for window cycle 9 (odd -> -v_od -> output low)."
+    },
+    "dout_c10": {
+      "min": 0.9,
+      "description": "the same for window cycle 10 (even -> +v_od -> output high)."
+    },
+    "dout_c11": {
+      "max": 0.1,
+      "description": "the same for window cycle 11 (odd -> -v_od -> output low)."
+    },
+    "dout_c12": {
+      "min": 0.9,
+      "description": "the same for window cycle 12 (even -> +v_od -> output high)."
+    },
+    "dout_c13": {
+      "max": 0.1,
+      "description": "the same for window cycle 13 (odd -> -v_od -> output low)."
+    },
+    "dout_c14": {
+      "min": 0.9,
+      "description": "the same for window cycle 14 (even -> +v_od -> output high)."
+    },
+    "dout_c15": {
+      "max": 0.1,
+      "description": "the same for window cycle 15 (odd -> -v_od -> output low)."
+    },
+    "dout_c16": {
+      "min": 0.9,
+      "description": "the same for window cycle 16 (even -> +v_od -> output high)."
+    },
+    "dout_c17": {
+      "max": 0.1,
+      "description": "the same for window cycle 17 (odd -> -v_od -> output low)."
+    },
+    "dout_c18": {
+      "min": 0.9,
+      "description": "the same for window cycle 18 (even -> +v_od -> output high)."
+    },
+    "dout_c19": {
+      "max": 0.1,
+      "description": "the same for window cycle 19 (odd -> -v_od -> output low)."
+    },
+    "dout_c20": {
+      "min": 0.9,
+      "description": "the same for window cycle 20 (even -> +v_od -> output high)."
+    },
+    "dout_c21": {
+      "max": 0.1,
+      "description": "the same for window cycle 21 (odd -> -v_od -> output low)."
+    },
+    "dout_c22": {
+      "min": 0.9,
+      "description": "the same for window cycle 22 (even -> +v_od -> output high)."
+    },
+    "dout_c23": {
+      "max": 0.1,
+      "description": "the same for window cycle 23 (odd -> -v_od -> output low)."
+    },
+    "doutb_c08": {
+      "max": 0.1,
+      "description": "COMPLEMENTARY-OUTPUT half of the same functional check: with dout high at window cycle 8, doutb must be low. Without it a latch stuck with both outputs high would still pass every dout_c* check. Not a spec bound."
+    },
+    "doutb_c23": {
+      "min": 0.9,
+      "description": "the same at window cycle 23 (odd -> dout low -> doutb high)."
+    },
+    "dec_cycles_correct": {
+      "min": 16.0,
+      "description": "ROLLUP of the per-cycle decision reads: the number of window cycles whose decision followed the stimulus sign, out of 16. DR-0006 states that a run \"whose decisions do not follow the stimulus sign in every window cycle ... is invalid, never a pass\", so the floor is the full count and the quantity exists to make that invalidity one number a consumer can read. Fail-closed by construction: an exactly-0.5 metastable read makes the term non-finite, which the harness rejects as a missing measurement and the point fails rather than scoring a tie. A functional check, not a spec bound."
+    },
+    "q_half_mismatch_pct": {
+      "max": 1.0,
+      "description": "SETTLEDNESS CHECK, required by DR-0006 in the same run: \"the same integral over the window's two 8-cycle halves must agree within 1 %; otherwise the corner is a miss (not-settled), not a pass, and the warm-up and window must be lengthened (and re-recorded) rather than the tolerance widened.\" The 1 % here is that record's number, transcribed, not calibrated from a run -- so if a corner misses it the answer is a longer warm-up/window and a revised record, never a wider bound. abs() appears on the half-window DIFFERENCE only, which is the one place DR-0006 permits it; the denominator is the signed sum, so an invalid (negative) window integral cannot be hidden here -- q_win_pc's floor catches that separately. This is a check on whether the proposed window is adequate, not a bound on the supply/power row."
+    },
+    "q_split_delta_pct": {
+      "max": 0.01,
+      "description": "INTEGRATION PLUMBING, not a circuit property: the whole-window charge must equal the sum of the two half-window charges to integration precision. It catches a mis-typed window boundary, a half-window split that is not at the window's midpoint, and an integral whose endpoint fell outside the transient -- any of which would make q_half_mismatch_pct meaningless. 0.01 % is a numerical-identity tolerance; the three integrals are over the same vector."
+    },
+    "p_avg_form_delta_pct": {
+      "max": 1.0,
+      "description": "FORM-AGREEMENT CHECK required by DR-0006: \"Because VDD is constant within a corner, v*i integration reduces to the charge form above; an implementation that integrates v(vdd)*i_DD directly must agree with it (a check, not a second definition).\" p_avg_vi_uw integrates the instantaneous product through the pwr probe; p_avg_uw is VDD*Q_win/(N*T). This is the percentage disagreement between the two, and it is a check on the IMPLEMENTATION, not on the circuit -- it would fail for a sign error or a mis-scaled probe and says nothing about whether the power meets any row."
+    },
+    "q_win_pc": {
+      "min": 0.0,
+      "description": "SIGN-VALIDITY FLOOR, DR-0006's own clause: \"Define the delivered DUT supply current i_DD(t) = -i(v_supply)(t) (positive when delivering). Charge, energy and power are then positive for delivered energy; a negative window integral is invalid, not clamped with abs().\" This floor is the mechanism that makes a negative integral invalid instead of silently absorbing it. It is NOT the supply/power row's bound -- that row's numbers are a <= 1 mW target and a <= 500 uW stretch (a ceiling), this bench scores neither, and no ceiling on power or charge appears anywhere in this manifest."
+    },
+    "clk_period_ns": {
+      "min": 62.49,
+      "max": 62.51,
+      "description": "CLOCK-GRID PLUMBING. Every integration boundary and decision-read instant in this manifest is a hard-coded time derived from params.t_per, because an ngspice `meas` card takes literal times. This measures the period the simulator actually produced, from the 0.5 crossings of the normalized clock at the window's first and last cycle (15 periods apart), so a deck whose clock no longer matches the windows fails loudly here instead of integrating over the wrong interval. The +/-10 ps envelope is the edge resolution, not a specification; sim/harness/tests/test_avg_power_semantics.py checks the same consistency statically, against the committed manifest."
+    },
+    "i_static_ua": {
+      "min": 0.1,
+      "description": "Static supply current of the DUT late in the last reset phase, delivered-positive. A FLOOR ONLY, with the same reason as sim/comparator-regeneration/'s i_static_ua: zero would mean the bias never came up and every dynamic number in the record was taken on a dead circuit. No ceiling -- and this is not the row's static-power evidence either: signoff/make_item5_envelope.py's partial static-power evidence stays the regeneration record's i_static_ua and is untouched by this bench."
+    }
+  },
+  "evidence": {
+    "record_kind": "corner-matrix",
+    "notes": [
+      "SUPPLEMENTAL AND UNSCORED, 1 OF 45 PVT POINTS IN THE FIRST RECORD. This bench scores no row of README.md's target specification and creates none. The Supply / power row keeps the \"(TBD)\" clock rate it was ratified with (DR-0002); spec/claim-registry.json deliberately does not register average power (\"Average power is deliberately not registered (UNSCORED)\"); and signoff/make_item5_envelope.py keeps its average_power_clock_rate_tbd skip reason. The bench exists to validate the operating condition DR-0006 PROPOSES, against that record's own \"Feasibility status\" list, before any ratification ceremony -- it is evidence FOR a decision, not a verdict under one.",
+      "WHAT A RECORD FROM THIS BENCH DOES NOT ESTABLISH. DR-0006's \"Feasibility status\" item 1 asks for all 45 PVT points on the schematic DUT AND on the post-layout extracted DUT. The first committed record is a ONE-POINT (tt_27c_3.30v) bring-up validation probe on the schematic binding, in the manner of sim/comparator-offset-cm-index/records/20261011-091529310543-f16ddbe-tolerance-probe.md -- it establishes that the stimulus, the integral and the settledness criterion work and what they read at the nominal point, and it establishes nothing about the worst corner, which is where DR-0006 expects reset to be slowest (ss, 125 C, 2.97 V is its stated hypothesis, not a result). The 45-corner campaign and the extracted run are separate landings.",
+      "SIGN CONVENTION, AND THE ONE PLACE abs() IS ALLOWED. ngspice reports i(vsupa) as the current into the source's positive terminal, i.e. negative while the source delivers. Every charge, energy and power quantity here is built from i_DD = -i(vsupa), so it is positive for delivered energy. DR-0006 forbids clamping the window integral with abs(): a negative q_win_pc is invalid, and its min-0 floor is what makes that so. abs() appears in exactly three places, none of them the window integral: the half-window |difference| of the settledness check (which DR-0006 permits explicitly), the form-agreement |difference| of p_avg_form_delta_pct, and the instantaneous magnitude of the irst reset-activity probe. This is a deliberate departure from sim/comparator-regeneration/'s e_dec_fj = abs(q_dec - i_stat*8.1e-9)*..., which also subtracts a hard-coded static term; no static subtraction is applied here, because DR-0006's P_avg is the TOTAL delivered supply power.",
+      "THE ACCOUNTING BOUNDARY IS THE DUT'S OWN SUPPLY SOURCE. One DUT instance hangs on vsupa and nothing else does, and the bias reference current is drawn from that same rail (iba vdda ibn), which is DR-0006's boundary verbatim -- it counts the bias current's charge and forbids a separate ibias supply. The 20 fF output loads recharge through the DUT's output stages from the same rail, so their energy is counted exactly once, in the supply charge, and never added again as a C*V^2 term. The ideal clock, input and common-mode sources are referenced to ground and are outside the boundary; q_clk_pc records the clock source's own charge as the separate informational line DR-0006 asks for, and nothing derives power from it. How much the figure MOVES if that boundary or the 20 fF load is changed is DR-0006's sensitivity list and is not run here.",
+      "WHY THE WINDOW IS WHERE IT IS. Cycle 0's rising edge is at t = 10 ns (the instant sim/comparator-regeneration/'s deck also uses). The first 8 cycles (500 ns) are warm-up and are discarded, so the window runs from the rising edge at 510 ns to the rising edge at 1510 ns: N = 16 whole cycles, 1.000 us. N is even, so the window holds a whole number (8) of the two-cycle input-polarity period -- without that, alternating-polarity charge would not average out over the window and the two halves could not be compared. Both ends are anchored at the START of a rising edge, so the interval is an exact integer number of periods however the edge is anchored. The warm-up and window lengths are DR-0006's PROPOSED numbers, and item 3 of its feasibility list is precisely that they are not yet shown adequate: q_half_mismatch_pct is the measurement that tests them.",
+      "THE 20 ns SETUP TIME IS DR-0006'S INPUT-TIMING CLAUSE, NOT A FREE CHOICE. The stimulus pulse is shaped so that every polarity transition COMPLETES exactly 20 ns before the next rising edge and BEGINS 11.15 ns after the preceding falling edge -- inside the reset phase, as the record requires, so no decision is taken on a transient. sim/comparator-regeneration/'s own settling argument (\">10 time constants\" for the front-end output pole at a 20 ns flip) is what that number is inherited from.",
+      "RESET COMPLETION IS MEASURED ON THE SUPPLY CURRENT, NOT ON AN INTERNAL NODE, AND THAT IS A REAL LIMITATION. In this topology (DR-0001: StrongARM latch, isolation inverters, NOR SR output latch) the SR latch HOLDS dout through the reset phase by design, so no observable output node resets; what resets is the StrongARM's internal precharge nodes, whose names exist only in the schematic hierarchy and not in a flat extracted netlist, so probing them would make the bench unusable against the extracted binding the 45-corner follow-up needs. reset_margin_ns is therefore defined on the DUT's supply current: the time left in the last window cycle's reset phase after the last instant at which the current magnitude exceeded 110 % of the SAME RUN's quiescent value (measured over the final 2.9 ns of that phase). It is a 10 %-settling margin for the precharge transient, which is a PROXY for reset completion and not a direct measurement of the latch's internal state; what directly establishes that reset completed is that all 16 window cycles decided correctly on alternating inputs (dec_cycles_correct). The quantity carries NO CHECK: DR-0006 states no bound on it and inventing one here would be a bound the record never proposed.",
+      "SOLVER TOLERANCES ARE sim/comparator-regeneration/'s, DELIBERATELY. reltol = 1e-4 and vntol = 1e-9 are tightened from the ngspice defaults so a charge integral over 16 cycles is resolved rather than smeared. abstol is 1e-13 and NOT 1e-15 for the reason that deck records: the PWL/pulse-driven controlled sources present branch currents far below a 1e-15 floor at t = 0, and six of the 45 points of that grid failed to take their first transient step at all. A re-run that changes any of the three is not bit-comparable with a record minted under them.",
+      "THE OFFSET PROBE RUNS ONLY AGAINST AN EXTRACTED DUT (issue #23), and it is declared here because DR-0006 defines the overdrive as \"+/- Vod above/below the DUT's own trip point (schematic: trip point 0 V; extracted: the per-corner probed dut_vos, as the existing tb_vosprobe.spice flow does)\". Against the schematic binding the probe does not run, dut_vos is 0, and the stimulus is +/- v_od about 0 V. The probe's clock is this bench's 16 MHz / 50 % clock rather than the regeneration deck's 30 ns rig, so the trip point is located under the same clocking as the measurement it refers; the ramp moves (2*vspan)/tramp = 1 V/ms and the decision updates once per 62.5 ns period, so the trip point is resolved to about 62.5 uV -- 160x finer than the 10 mV overdrive it refers. No extracted record is minted by this issue.",
+      "NOT WIRED INTO THE CAMPAIGN OR FLEET PATHS, BY DESIGN. sim/characterize.sh's CAMPAIGNS list is unchanged, and this bench is listed in scripts/check_bench_inventory.py's NOT_RUN_BY_CHARACTERIZE with its reason. sim/tools/mk_klt_request.py and sim/tools/klt_record.py are per-bench dispatch tables and carry no branch for this bench, so the Spot-batch fleet path does not reach it yet; adding it is the 45-corner follow-up's work. The local runner (sim/run_corners.py) is generic over tb.json and needs no tool change."
+    ]
+  },
+  "options": [
+    "reltol=1e-4",
+    "vntol=1e-9",
+    "abstol=1e-13"
+  ],
+  "offset_probe": {
+    "netlist": "tb_vosprobe.spice",
+    "analyses": [
+      "tran 100n 80u 0 100n",
+      "meas tran t_flip when v(dn)=0.5 rise=1 td=8u",
+      "meas tran vos_v find v(rmp) at=t_flip"
+    ],
+    "measure": {
+      "dut_vos": "vos_v"
+    }
+  }
+}
