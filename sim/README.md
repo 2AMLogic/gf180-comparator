@@ -34,6 +34,28 @@ executable on the 0.5.0 runner and has a complete unscored 45-point x N=200
 record ([`20261011-210628443577-7e20c78`](comparator-offset-cm-index/records/20261011-210628443577-7e20c78.md)); the
 consumer's rejection verdict stays Unknown. **Re-qualified (#288):** the earlier record `20261010-130605300890-d8e9253` showed `open_pdks f6eeac7`, not the `sim/toolchain.json` pin, so it is superseded by this one (pin `c6d73a35...`, identical results); see [`qualification-notes/20261011-288-open-pdks-requalification.md`](qualification-notes/20261011-288-open-pdks-requalification.md).
 
+A supplemental, unscored **pre-ratification validation** bench,
+[`comparator-avg-power/`](comparator-avg-power/) (issue #356), implements the
+average-power operating condition
+[`DR-0006`](../spec/decision-records/DR-0006-average-power-operating-condition.md)
+**proposes** — 16 MHz, 50 % duty, one decision per cycle with the differential
+input alternating sign every cycle, 20 fF output loads, 8 warm-up cycles
+discarded and the DUT's supply charge integrated over the next 16 whole cycles.
+It is the only bench here that applies a periodic stimulus and integrates
+supply charge over a steady state, which is why it exists: DR-0006's own
+"Feasibility status" section lists reset completion, a dynamic-power figure and
+the adequacy of the proposed warm-up/window as **not established**, and no
+other committed bench can measure them. DR-0006 stays `proposed — not
+ratified`; this bench scores nothing, the README target table's Supply / power
+row keeps its `(TBD)` clock rate, and `signoff/make_item5_envelope.py` keeps
+its `average_power_clock_rate_tbd` skip reason. Its first record is a **1-of-45
+bring-up validation probe** (`tt_27c_3.30v`, schematic DUT, run locally), not a
+corner result — the 45-point campaign and the extracted run are separate
+landings, and the bench is not wired into `characterize.sh` or the fleet
+dispatch tables. See its [README](comparator-avg-power/README.md) for the
+clause-by-clause implementation and for why the reset-completion margin is a
+proxy.
+
 A further supplemental feasibility stage,
 [`comparator-offset-tran-extracted-feasibility/`](comparator-offset-tran-extracted-feasibility/)
 (issue #219), establishes the measurement contract for the whole-comparator
