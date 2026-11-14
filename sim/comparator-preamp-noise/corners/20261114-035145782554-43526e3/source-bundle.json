@@ -1,0 +1,139 @@
+{
+ "schema": "gf180-comparator/klt-source-bundle",
+ "version": 2,
+ "generator": "sim/tools/mk_klt_request.py",
+ "generated_utc": "2026-11-14T03:50:11Z",
+ "bench": "comparator-preamp-noise",
+ "origin": {
+  "commit": "43526e392676dce26109fe8de83111f68b54805c",
+  "dirty": false,
+  "dirty_paths": [],
+  "checked_paths": [
+   "design",
+   "sim/tools",
+   "sim/harness",
+   "sim/comparator-preamp-noise/testbench",
+   "sim/dut.json",
+   "sim/dut/experiment_comparator_dr0004_cascode.spice"
+  ]
+ },
+ "dut": {
+  "selector": "comparator-dr0004-cascode-exp",
+  "key": "comparator-dr0004-cascode-exp",
+  "dut_id": "comparator-dr0004-cascode-exp",
+  "provenance": "schematic",
+  "netlist": "sim/dut/experiment_comparator_dr0004_cascode.spice",
+  "netlist_sha256": "79dcc79fb6a876bc46ab258af5eae3f2d24b3e41281df2c23d81897ddf34ed24",
+  "params": {
+   "dut_ib": 1e-05,
+   "dut_vcm": 1.65
+  },
+  "binding_config": "sim/dut.json",
+  "binding_entry_sha256": "29ab7f333144bc69288da09fb033807ee9ba428f6ca085a50eecd7b06dedf841",
+  "staged_netlist": "sources/dut/experiment_comparator_dr0004_cascode.spice",
+  "staged_binding": "sources/dut-binding.json"
+ },
+ "testbench": {
+  "experiment": "comparator-preamp-noise",
+  "dir": "sim/comparator-preamp-noise/testbench",
+  "netlist": "tb_preamp_noise.spice",
+  "netlist_sha256": "0aeaf85d9364b3e687f2f91c772c0f31d0dca1b7b46f9f768a8e7cfad8d98aa9",
+  "manifest_sha256": "bd847cf431f1a779457794b2012bfc55f5f6de8c4bf590426db93b08940a4c69",
+  "staged_dir": "sources/testbench"
+ },
+ "toolchain": {
+  "file": "sim/toolchain.json",
+  "sha256": "9f31fd9f7b46d10913524529b7d39070594913954a753e1d608639525f68f60b",
+  "commit": "43526e392676dce26109fe8de83111f68b54805c",
+  "ngspice_min_major": 46,
+  "open_pdks": "f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7",
+  "pdk_variant": "gf180mcuD"
+ },
+ "parameters": {
+  "corners": [
+   "tt",
+   "ff",
+   "ss",
+   "fs",
+   "sf"
+  ],
+  "temperatures_c": [
+   -40.0,
+   27.0,
+   125.0
+  ],
+  "supply_tolerance": 0.1,
+  "supply_v": [
+   2.97,
+   3.3,
+   3.63
+  ],
+  "mc_n": null
+ },
+ "requests": {
+  "noise-v2.97": {
+   "leg": "noise",
+   "vdd": 2.97,
+   "request": "request-noise-v2.97.json",
+   "request_sha256": "4efebcd93dae7e77ee499d500c149a23742bea31404258624f96e8c9adca45a2",
+   "netlist": "body-v2.97.spice",
+   "netlist_sha256": "ad56ec92de9301217d6d504f4a67ed47e1f7a341e2a7dee9b7cb9b450bd640c3"
+  },
+  "ac-v2.97": {
+   "leg": "ac",
+   "vdd": 2.97,
+   "request": "request-ac-v2.97.json",
+   "request_sha256": "5183cb0fa56dda42c6f903eb658e00616ad38782f68b86f0731d938f409af2d1",
+   "netlist": "body-v2.97.spice",
+   "netlist_sha256": "ad56ec92de9301217d6d504f4a67ed47e1f7a341e2a7dee9b7cb9b450bd640c3"
+  },
+  "noise-v3.30": {
+   "leg": "noise",
+   "vdd": 3.3,
+   "request": "request-noise-v3.30.json",
+   "request_sha256": "033277ed1e848ec3f855eb96f9c96b8454cfbecb9c103fad1da34503955aa554",
+   "netlist": "body-v3.30.spice",
+   "netlist_sha256": "42a3b53228748440fc4b78603acadce9f6c7f149b9dd58efc4b60310681d27ff"
+  },
+  "ac-v3.30": {
+   "leg": "ac",
+   "vdd": 3.3,
+   "request": "request-ac-v3.30.json",
+   "request_sha256": "59ed62774cff3a6350cbcdbf5364fe7ff90732eb4204325506e14ccca4edc523",
+   "netlist": "body-v3.30.spice",
+   "netlist_sha256": "42a3b53228748440fc4b78603acadce9f6c7f149b9dd58efc4b60310681d27ff"
+  },
+  "noise-v3.63": {
+   "leg": "noise",
+   "vdd": 3.63,
+   "request": "request-noise-v3.63.json",
+   "request_sha256": "a39cabf4971efec18f552c80f5dc354bf241c838ff06c7e61a8df0b29ab01aa0",
+   "netlist": "body-v3.63.spice",
+   "netlist_sha256": "91c36e0ebc24896364a52c4adf396a613c35ebd02866c01136b969d1530bf0eb"
+  },
+  "ac-v3.63": {
+   "leg": "ac",
+   "vdd": 3.63,
+   "request": "request-ac-v3.63.json",
+   "request_sha256": "5c404aea87332a2ed69c553c32036db402eb1c32b4993fc70acb2cc4a6d18eb7",
+   "netlist": "body-v3.63.spice",
+   "netlist_sha256": "91c36e0ebc24896364a52c4adf396a613c35ebd02866c01136b969d1530bf0eb"
+  }
+ },
+ "staged": {
+  "body-v2.97.spice": "ad56ec92de9301217d6d504f4a67ed47e1f7a341e2a7dee9b7cb9b450bd640c3",
+  "body-v3.30.spice": "42a3b53228748440fc4b78603acadce9f6c7f149b9dd58efc4b60310681d27ff",
+  "body-v3.63.spice": "91c36e0ebc24896364a52c4adf396a613c35ebd02866c01136b969d1530bf0eb",
+  "design.ngspice": "7e222f050318388f37543a64fbd0be55cc15e4b93f57501a09f7c159c4c9e561",
+  "request-ac-v2.97.json": "5183cb0fa56dda42c6f903eb658e00616ad38782f68b86f0731d938f409af2d1",
+  "request-ac-v3.30.json": "59ed62774cff3a6350cbcdbf5364fe7ff90732eb4204325506e14ccca4edc523",
+  "request-ac-v3.63.json": "5c404aea87332a2ed69c553c32036db402eb1c32b4993fc70acb2cc4a6d18eb7",
+  "request-noise-v2.97.json": "4efebcd93dae7e77ee499d500c149a23742bea31404258624f96e8c9adca45a2",
+  "request-noise-v3.30.json": "033277ed1e848ec3f855eb96f9c96b8454cfbecb9c103fad1da34503955aa554",
+  "request-noise-v3.63.json": "a39cabf4971efec18f552c80f5dc354bf241c838ff06c7e61a8df0b29ab01aa0",
+  "sources/dut/experiment_comparator_dr0004_cascode.spice": "79dcc79fb6a876bc46ab258af5eae3f2d24b3e41281df2c23d81897ddf34ed24",
+  "sources/dut-binding.json": "7a94e29ac2751b285a86edb5d55956262a0708faaedb5f554e7391fb0f8b49c9",
+  "sources/testbench/tb.json": "bd847cf431f1a779457794b2012bfc55f5f6de8c4bf590426db93b08940a4c69",
+  "sources/testbench/tb_preamp_noise.spice": "0aeaf85d9364b3e687f2f91c772c0f31d0dca1b7b46f9f768a8e7cfad8d98aa9"
+ }
+}

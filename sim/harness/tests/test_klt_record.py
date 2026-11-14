@@ -443,9 +443,115 @@ class MkKltRequest(unittest.TestCase):
                 self.assertNotIn(".control", body)
                 self.assertNotIn("num_threads", body)
 
-    def test_noise_bench_refused(self):
+    # -- preamp-noise fleet legs (issue #355) -------------------------------
+    # The bench was refused outright until 2026-11-14 on a stale rationale
+    # ("the fleet runner's klt (0.5.0) has no `noise` analysis / `.meas
+    # noise`"); a 2026-11-05 batch report records runner klt 0.9.0 executing
+    # exactly this analysis + measurement form. These cases pin the request
+    # shape -- above all the measurement NAMES `klt_record.derive` indexes --
+    # so a regression is caught here instead of by 45 empty fleet corners.
+
+    def test_noise_bench_legs_requested(self):
+        tb = htb.load(SIM / "comparator-preamp-noise")
+        rc, reqs, bodies = self._mk("comparator-preamp-noise")
+        self.assertEqual(rc, 0)
+        # Two legs x three supply points; one body netlist per supply point.
+        self.assertEqual(sorted(reqs), [f"request-{leg}-v{v}.json"
+                                        for leg in ("ac", "noise")
+                                        for v in ("2.97", "3.30", "3.63")])
+        self.assertEqual(len(bodies), 3)
+        self.assertEqual(sorted(reqs), sorted(f"request-{n}.json" for n in (
+            f"{leg}-v{v:.2f}" for leg in kr.LEGS["comparator-preamp-noise"]
+            for v in mk.hc.supply_points(tb.nominal_supply_v, tb.supply_tolerance))))
+        for name, req in reqs.items():
+            self.assertNotIn("monte_carlo", req)
+            self.assertEqual(req["corners"]["temperature_c"],
+                             [float(t) for t in tb.temperatures_c])
+            self.assertEqual([c["name"] for c in req["corners"]["process"]],
+                             [c.name for c in mk.hc.resolve_corners(list(tb.corners))])
+            # 5 process corners x 3 temperatures = 15 units per request,
+            # 45 per leg over the three supply points.
+            self.assertEqual(len(req["corners"]["process"]) * len(req["corners"]["temperature_c"]), 15)
+        # The analyses are the BENCH MANIFEST's own cards, not strings copied
+        # from another campaign's PEX deck (which probes `v(xdut.aop,...)`).
+        for v in ("2.97", "3.30", "3.63"):
+            self.assertEqual(reqs[f"request-noise-v{v}.json"]["analysis"],
+                             {"kind": "noise", "args": "v(aop,aon) vd dec 20 1 1e9"})
+            self.assertEqual(reqs[f"request-ac-v{v}.json"]["analysis"],
+                             {"kind": "ac", "args": "dec 20 1 1e9"})
+        self.assertEqual(reqs["request-noise-v3.30.json"]["analysis"]["args"],
+                         tb.analyses[mk.NOISE_LEG_ANALYSIS["noise"]].split(None, 1)[1])
+        self.assertEqual(reqs["request-ac-v3.30.json"]["analysis"]["args"],
+                         tb.analyses[mk.NOISE_LEG_ANALYSIS["ac"]].split(None, 1)[1])
+
+    def test_noise_bench_measurement_names_match_ingest(self):
+        """The leg/measurement names are the contract `kr.derive` indexes."""
+        _, reqs, _ = self._mk("comparator-preamp-noise")
+        for v in ("2.97", "3.30", "3.63"):
+            self.assertEqual([m["name"] for m in reqs[f"request-noise-v{v}.json"]["measurements"]],
+                             ["onoise_total", "inoise_total"])
+            self.assertEqual([m["name"] for m in reqs[f"request-ac-v{v}.json"]["measurements"]],
+                             ["av_dc"])
+        # Feed `derive` exactly the names the requests ask for: it must
+        # produce the four quantities this executor computes, no problems.
+        legs = {"noise": {"tt_27c_3.30v": {"": {"onoise_total": 1.8394146366e-3,
+                                               "inoise_total": 4.1468391002e-4}}},
+                "ac": {"tt_27c_3.30v": {"": {"av_dc": 18.493554794}}}}
+        res, problems = kr.derive("comparator-preamp-noise", None,
+                                  {k: (v, []) for k, v in legs.items()})
+        self.assertEqual(problems, [])
+        self.assertEqual(sorted(res["tt_27c_3.30v"]),
+                         ["av_dc", "inoise_band_uv", "onoise_uv", "vn_in_uv"])
+        self.assertAlmostEqual(res["tt_27c_3.30v"]["vn_in_uv"], 99.462469874, places=6)
+
+    def test_noise_bench_measurements_are_expr_form(self):
+        """`onoise_total`/`inoise_total` have no `.meas noise` target in
+        ngspice and `av_dc` is a vector reduction, so every entry is `expr`
+        and none is a `.meas` card."""
+        _, reqs, _ = self._mk("comparator-preamp-noise")
+        tb = htb.load(SIM / "comparator-preamp-noise")
+        for name, req in reqs.items():
+            for m in req["measurements"]:
+                self.assertIn("expr", m, name)
+                self.assertNotIn("spice", m, name)
+        self.assertEqual([m["expr"] for m in reqs["request-noise-v3.30.json"]["measurements"]],
+                         ["onoise_total", "inoise_total"])
+        # The gain expression is the manifest's own `measure.av_dc`.
+        self.assertEqual(reqs["request-ac-v3.30.json"]["measurements"][0]["expr"],
+                         tb.measure["av_dc"])
+
+    def test_noise_bench_enforces_runner_version(self):
+        """An `expr`-dependent request must be refused BEFORE simulating, so
+        a runner skew cannot be discovered after 45 corners have run."""
+        _, reqs, _ = self._mk("comparator-preamp-noise")
+        for name, req in reqs.items():
+            self.assertEqual(req["batch"]["runner_version_check"], "enforce", name)
+            self.assertEqual(req["batch"]["capacity_wait_s"], mk.BATCH_CAPACITY_WAIT_S, name)
+        self.assertIn("comparator-preamp-noise", mk.EXPR_MEASUREMENT_BENCHES)
+        # Benches measured with plain `.meas` cards run on any runner.
+        for bench in ("comparator-regeneration", "comparator-offset-mc"):
+            _, other, _ = self._mk(bench, "--mc-n", "2")
+            for req in other.values():
+                self.assertEqual(req["batch"]["runner_version_check"], "warn")
+
+    def test_noise_bench_asserts_manifest_analysis_order(self):
+        """A manifest edit that reorders `analyses` fails at request time,
+        instead of silently requesting the wrong analysis for 45 corners."""
+        tb = htb.load(SIM / "comparator-preamp-noise")
+        shuffled = types.SimpleNamespace(
+            name=tb.name, measure=tb.measure,
+            analyses=["op", "ac dec 20 1 1e9", tb.analyses[2], tb.analyses[1]])
+        with self.assertRaises(SystemExit) as cm:
+            mk.noise_legs(shuffled)
+        self.assertIn("expected a `noise` card", str(cm.exception))
+
+    def test_cm_window_bench_still_refused(self):
+        """Un-refusing the nested-sweep bench is separate work (issue #182):
+        issue #355 must not have lifted its pre-launch floor as a side effect."""
+        self.assertEqual(mk.FLEET_RUNNER_KLT_OBSERVED, "0.5.0")
+        self.assertIsNotNone(mk.cm_window_capability_gap(mk.FLEET_RUNNER_KLT_OBSERVED))
         with self.assertRaises(SystemExit):
-            self._mk("comparator-preamp-noise")
+            self._mk(mk.CM_WINDOW_BENCH, "--mc-n", "2")
 
 
 # ---------------------------------------------------------------------------

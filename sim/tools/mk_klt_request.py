@@ -119,6 +119,31 @@ CM_WINDOW_MIN_RUNNER_KLT = (0, 7, 0)
 FLEET_RUNNER_KLT_OBSERVED = "0.5.0"
 
 
+
+#: Input-referred preamp noise (issue #355). Its two legs are expressed with
+#: `measurements[].expr` rather than `.meas` cards: `onoise_total` /
+#: `inoise_total` are `.noise` OUTPUT VECTORS with no `.meas noise` target in
+#: ngspice at all, and `av_dc` is a vector reduction (`mag(v(a)-v(b))[0]`),
+#: not a card's search. Both forms need a runner at EXPR_MIN_RUNNER_KLT.
+NOISE_BENCH = "comparator-preamp-noise"
+#: tb.json `analyses` index -> leg. One `klt sim` request carries ONE
+#: analysis, so the bench's four analysis cards become two requested legs:
+#: leg `noise` is the full-band 1 Hz .. 1 GHz `.noise` (analyses[1]) and leg
+#: `ac` the gain sweep (analyses[3]). The >1 kHz band (analyses[2]) and the
+#: `.op` (analyses[0]) are deliberately NOT requested -- klt_record.py's
+#: "Not computed by this executor" line declares the six quantities that
+#: would need them (`vn_in_hf_uv`, `onoise_hf_uv`, `flicker_frac_pct`,
+#: `white_nv_rthz`, `enbw_mhz`, `vbias_anchor_mv`) out of scope here;
+#: `vn_in_uv` is the row-facing quantity and needs only these two legs.
+NOISE_LEG_ANALYSIS = {"noise": 1, "ac": 3}
+#: Benches whose requests depend on `measurements[].expr`, and which therefore
+#: carry `batch.runner_version_check: "enforce"`: an `expr`-dependent request
+#: must be refused BEFORE simulating, never diagnosed after a grid has burned
+#: fleet time (the precedent CM_WINDOW_BENCH set in issue #182).
+EXPR_MEASUREMENT_BENCHES = (NOISE_BENCH,)
+#: `measurements[].expr` (klt #2533) first shipped in klt 0.7.0.
+EXPR_MIN_RUNNER_KLT = (0, 7, 0)
+
 #: Monotonic-index variant of the consumer-window bench (issue #218). A SEPARATE
 #: bench: the nested-sweep bench above keeps its refused/expr contract, and
 #: historical sources are not rewritten. ONE source `vidx` is swept 0..5 in
@@ -194,6 +219,48 @@ def cm_window_leg(mc_n: int) -> dict:
         "measurements": cm_window_measurements(),
         "monte_carlo": {"n": mc_n, "seed": OFFSET_MC_SEED, "vary": "mismatch"},
     }
+
+def noise_analysis(tb, leg: str) -> dict:
+    """tb.json `analyses[NOISE_LEG_ANALYSIS[leg]]` -> a klt `analysis` block.
+
+    The card is read from the bench's OWN manifest (never a literal copied
+    from another campaign): a sibling repo's PEX deck instantiates the DUT as
+    `Xdut` and so probes `v(xdut.aop,xdut.aon)`, whereas this bench's
+    fragment exposes `aop`/`aon` directly. The `kind` is asserted against the
+    leg name so a manifest edit that reorders `analyses` fails here rather
+    than silently requesting the wrong analysis for 45 corners."""
+    card = tb.analyses[NOISE_LEG_ANALYSIS[leg]]
+    kind, args = card.split(None, 1)
+    if kind != leg:
+        raise SystemExit(f"{tb.name}: analyses[{NOISE_LEG_ANALYSIS[leg]}] is {card!r}, "
+                         f"expected a `{leg}` card for leg {leg!r}")
+    return {"kind": kind, "args": args}
+
+
+def noise_legs(tb) -> dict[str, dict]:
+    """The preamp-noise bench's two legs (issue #355).
+
+    The measurement NAMES are a contract with `klt_record.derive`, which
+    indexes exactly `legs["noise"][cid][""]["onoise_total"]`,
+    `["inoise_total"]` and `legs["ac"][cid][""]["av_dc"]` and derives
+    `av_dc`, `onoise_uv`, `vn_in_uv` and `inoise_band_uv` from them. Renaming
+    one here silently empties the record, so they are spelled literally.
+
+    Every entry is an `expr` (see NOISE_BENCH): ngspice implements no
+    `.MEASURE NOISE` at all, so `onoise_total`/`inoise_total` have no `.meas`
+    card to be written as, and `av_dc` is a reduction of an `ac` sweep's
+    vector rather than a card's search. ngspice leaves the INTEGRATED noise
+    plot current after `.noise`, so both totals resolve by bare name; the
+    `av_dc` expression is the bench manifest's own, so the record's gain is
+    the quantity `tb.json`'s `measure` block defines."""
+    return {
+        "noise": {"analysis": noise_analysis(tb, "noise"),
+                  "measurements": [{"name": "onoise_total", "expr": "onoise_total", "unit": "V"},
+                                   {"name": "inoise_total", "expr": "inoise_total", "unit": "V"}]},
+        "ac": {"analysis": noise_analysis(tb, "ac"),
+               "measurements": [{"name": "av_dc", "expr": tb.measure["av_dc"], "unit": "V/V"}]},
+    }
+
 
 #: Pin ngspice to ONE OpenMP device-evaluation thread per unit (issue #157).
 #: The batch job runs one ngspice per physical core, so any extra threads
@@ -388,16 +455,24 @@ def legs_for(bench: str, tb, mc_n: int) -> dict[str, dict]:
         kind, args = tb.analyses[0].split(None, 1)
         return {"main": {"analysis": {"kind": kind, "args": args},
                          "measurements": tran_meas_cards(tb)}}
-    # The fleet runner's klt (0.5.0) accepts only `{name, spice}` measurement
-    # entries (no `expr` algebra), so every leg below is expressed as raw
-    # `.meas` cards; the derived quantities are computed by klt_record.py.
-    if bench == "comparator-preamp-noise":
-        raise SystemExit(
-            "comparator-preamp-noise cannot be expressed for the fleet runner: its klt "
-            "(0.5.0) has no `noise` analysis / `.meas noise`. Run it as a single "
-            "nominal point with sim/run_corners.py instead (see sim/tools/README note "
-            "in the DR); file/track the tool gap at 2AMLogic/klayout-tools."
-        )
+    # Issue #355: this bench's two legs ARE expressible for the fleet runner,
+    # and were refused here until 2026-11-14 on a rationale that went stale.
+    # The refusal said the fleet runner's klt (0.5.0) had "no `noise`
+    # analysis / `.meas noise`" and accepted only `{name, spice}` entries.
+    # Measured since: a batch report from 2026-11-05
+    # (layout/pex/artifacts/preamp-noise-pvt/20261105-8e25d43/pvt/) records
+    # `runner_klt_version: "0.9.0"`, `runner_compatibility: "match"` and
+    # `runner_request_features.required: ["analysis_steps",
+    # "measurements[].expr", "options.ngspice_init"], "missing": []` for a
+    # `{"kind": "noise", ...}` request with `expr` measurements -- i.e. the
+    # runner executes both the analysis and the measurement form. The benches
+    # below that still use raw `.meas` cards do so on their own merits (a
+    # `.meas` card is the exact shape for a transient/dc search), not because
+    # `expr` is unavailable. FLEET_RUNNER_KLT_OBSERVED is deliberately left
+    # at "0.5.0": it is the pre-launch floor CM_WINDOW_BENCH's refusal is
+    # judged against, and un-refusing THAT bench is separate work (#182).
+    if bench == NOISE_BENCH:
+        return noise_legs(tb)
     if bench == "comparator-offset-tran":
         # Whole-comparator transient Monte Carlo: ONE staircase transient per
         # draw; the `.meas` cards in tb.json are the raw ingredients, and
@@ -542,10 +617,15 @@ def main() -> int:
                 # A Spot capacity refusal is retried with the client's own
                 # backoff for up to BATCH_CAPACITY_WAIT_S instead of being
                 # terminal on the first refusal (issue #157; klt #2721).
-                # The six-point request depends on `expr`, which an older
-                # runner may not honour: it must be refused BEFORE simulating
-                # (`enforce`), never detected after the fact (issue #182).
-                "batch": {"runner_version_check": "enforce" if a.bench == CM_WINDOW_BENCH else "warn",
+                # A request that depends on `expr` must be refused BEFORE
+                # simulating (`enforce`), never detected after the fact
+                # (issue #182's precedent; issue #355 for the noise legs,
+                # whose 45 corners would otherwise burn fleet time before a
+                # skew surfaced). Benches whose measurements are plain
+                # `.meas` cards stay on `warn`: they run on any runner, and
+                # the record states the runner/client versions it saw.
+                "batch": {"runner_version_check":
+                          "enforce" if a.bench in (CM_WINDOW_BENCH,) + EXPR_MEASUREMENT_BENCHES else "warn",
                           "capacity_wait_s": BATCH_CAPACITY_WAIT_S},
                 "analysis": spec["analysis"],
                 "measurements": spec["measurements"],
