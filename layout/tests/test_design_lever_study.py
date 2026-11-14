@@ -2,14 +2,18 @@
 """PDK-free regressions for layout/pex/design_lever_study.py (#323).
 
 No ngspice, no klt, no fleet. Covers the device-W transforms, fail-closed
-inputs, the lever plan against the committed extracted DUT, and the declared
-request budget.
+inputs, the lever plan against the committed extracted DUT, the declared
+request budget, and (#358) the committed design-levers evidence: every stage
+still verifies, and an edit to the study's own source is provenance drift
+rather than a verify error (#249).
 
     python3 layout/tests/test_design_lever_study.py
 """
 
 from __future__ import annotations
 
+import contextlib
+import io
 import sys
 import unittest
 from pathlib import Path
@@ -89,6 +93,56 @@ class Plan(unittest.TestCase):
     def test_duplicate_ids_refused(self):
         with self.assertRaises(ValueError):
             dl.lever_variants(self.text, dl.LEVERS + dl.LEVERS[:1])
+
+
+class CommittedEvidence(unittest.TestCase):
+    """The two guards parasitic_attribution's committed evidence already has
+    and this study lacked (#358)."""
+
+    def stages(self):
+        stages = sorted((dl.HERE / "artifacts" / "design-levers").glob("*/stage.json"))
+        self.assertTrue(stages, "no committed design-levers stage found")
+        return stages
+
+    def test_verify_every_committed_design_levers_stage(self):
+        for st in self.stages():
+            with contextlib.redirect_stdout(io.StringIO()) as out:
+                rc = dl.main(["verify", str(st.parent)])
+            self.assertEqual(rc, 0, f"{st.parent}:\n{out.getvalue()}")
+
+    def test_source_edit_alone_cannot_break_committed_verification(self):
+        """#249 for this study (#358): perturbing what `pa.file_sha` returns
+        for the three Python sources a lever stage records -- including
+        `design_lever_study.py`, which no allowlist names -- plus the tb.json
+        pin must be reported as provenance drift, never fail `verify`."""
+        stages = self.stages()
+        real_sha, real_pin, real_check = pa.file_sha, pa.TB_JSON_CONSUMED_SHA256, pa.check_bench
+        code = {(dl.HERE / "pex_measure.py").resolve(),
+                (dl.HERE / "parasitic_attribution.py").resolve(),
+                Path(dl.__file__).resolve()}
+
+        def edited_file_sha(path):
+            h = real_sha(path)
+            return ("0" * 64 if h != "0" * 64 else "1" * 64) if Path(path).resolve() in code else h
+
+        try:
+            pa.file_sha = edited_file_sha
+            # a re-pin of tb.json's consumed fields moves the constant and
+            # tb.json together; the bench gate itself is not under test here
+            pa.TB_JSON_CONSUMED_SHA256 = "f" * 64
+            pa.check_bench = lambda: None
+            for st in stages:
+                with contextlib.redirect_stdout(io.StringIO()) as out:
+                    rc = dl.main(["verify", str(st.parent)])
+                text = out.getvalue()
+                self.assertEqual(rc, 0, f"{st.parent}:\n{text}")
+                self.assertIn("provenance drift", text)
+                for key in ("design_lever_study_py", "parasitic_attribution_py",
+                            "pex_measure_py", "tb_json_consumed_fields"):
+                    self.assertIn(key, text, f"{st.parent}: {key}")
+        finally:
+            pa.file_sha, pa.TB_JSON_CONSUMED_SHA256, pa.check_bench = \
+                real_sha, real_pin, real_check
 
 
 if __name__ == "__main__":

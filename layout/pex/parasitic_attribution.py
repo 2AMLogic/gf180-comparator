@@ -1219,15 +1219,34 @@ def cmd_budget_analyze(args) -> int:
     return 0 if a["study_valid"] and not a["missing"] else 1
 
 
-#: stage.json `source_sha256` keys that record the CODE the stage ran with.
-#: They are provenance: verifying committed evidence must not require the
-#: working tree's source to still hash the same (any later, unrelated edit to
-#: pex_measure.py would otherwise break every committed stage -- the #249
-#: failure). Drift is reported, never an error. The integrity gates are the
-#: data-input hashes below, the regenerated deck sha256s vs. each report's
-#: netlist_sha256, and the control / study_valid derivation of budget.json.
-BUDGET_PROVENANCE_SOURCE_KEYS = ("parasitic_attribution_py", "pex_measure_py",
-                                 "tb_json_consumed_fields")
+#: stage.json `source_sha256` keys that are provenance but do not name a
+#: Python source file: a hash of code *constants* rather than of a data input.
+BUDGET_PROVENANCE_CONSTANT_KEYS = ("tb_json_consumed_fields",)
+
+
+def is_provenance_source_key(key: str) -> bool:
+    """True if a stage.json `source_sha256` key records the CODE the stage ran
+    with rather than one of its data inputs.
+
+    Code hashes are provenance: verifying committed evidence must not require
+    the working tree's source to still hash the same (any later, unrelated
+    edit to pex_measure.py would otherwise break every committed stage -- the
+    #249 failure). Drift is reported, never an error. The integrity gates are
+    the data-input hashes (`extracted_dut`, `schematic_dut`, `cited_report`,
+    `attribution_json_229`, `ground_c_budget_243_readme`), the regenerated
+    deck sha256s vs. each report's netlist_sha256, and the control /
+    study_valid derivation of budget.json.
+
+    Decided BY RULE -- a `_py` suffix -- and not by a list of key names, so a
+    new study module recording its own source hash (as
+    design_lever_study.py:209 does) is covered without amending anything
+    here. A hardcoded tuple already missed that one and turned the #249
+    invariant back off for the lever study (#358); every writer of a
+    `source_sha256` block spells code hashes `<module>_py`, so the suffix is
+    the discriminator the invariant actually meant."""
+    return key.endswith("_py") or key in BUDGET_PROVENANCE_CONSTANT_KEYS
+
+
 #: Narrative manifest fields written from code constants; provenance as well.
 BUDGET_PROVENANCE_FIELDS = ("generated_by", "scope")
 
@@ -1238,14 +1257,18 @@ def budget_manifest_diff(committed: dict, regenerated: dict) -> tuple[list[str],
     Returns (errors, drift). Errors: anything that defines the plan or its
     data inputs (issue, nets, points, variants with their DUT / probe-deck /
     retained-C values, and the extracted / schematic DUT, cited report and
-    #229 attribution hashes). Drift: provenance keys whose working-tree value
-    differs from the recorded one -- informational only."""
+    #229 attribution hashes). Drift: the `source_sha256` keys
+    `is_provenance_source_key` classifies as code, plus
+    BUDGET_PROVENANCE_FIELDS, whose working-tree value differs from the
+    recorded one -- informational only. Every other `source_sha256` key is
+    compared strictly, so a key neither side classifies is a gate by
+    default."""
     a = json.loads(json.dumps(committed))
     b = json.loads(json.dumps(regenerated))
     drift = []
-    for k in BUDGET_PROVENANCE_SOURCE_KEYS:
-        x = a.get("source_sha256", {}).pop(k, None)
-        y = b.get("source_sha256", {}).pop(k, None)
+    sa, sb = a.get("source_sha256", {}), b.get("source_sha256", {})
+    for k in sorted(k for k in set(sa) | set(sb) if is_provenance_source_key(k)):
+        x, y = sa.pop(k, None), sb.pop(k, None)
         if x != y:
             drift.append(f"source_sha256.{k}: recorded {x}, working tree {y}")
     for k in BUDGET_PROVENANCE_FIELDS:
