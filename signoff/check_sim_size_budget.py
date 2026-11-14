@@ -29,7 +29,6 @@ Exit: 0 ok (warnings allowed), 1 budget violation, 2 usage/git error.
 from __future__ import annotations
 
 import argparse
-import importlib.util
 import json
 import subprocess
 import sys
@@ -41,14 +40,15 @@ FAIL_BYTES = 25 * MIB
 TOP_N = 10
 HERE = Path(__file__).resolve().parent
 DEFAULT_ALLOWLIST = HERE / "sim_size_allowlist.json"
+sys.path.insert(0, str(HERE))
+
+import check_append_only_evidence  # noqa: E402
 
 
 def _load_policy():
-    spec = importlib.util.spec_from_file_location(
-        "_append_only_policy", HERE / "check_append_only_evidence.py")
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod.is_protected, tuple(mod.PROTECTED_PATHSPECS)
+    """The shared append-only path policy (signoff/check_append_only_evidence.py)."""
+    return (check_append_only_evidence.is_protected,
+            tuple(check_append_only_evidence.PROTECTED_PATHSPECS))
 
 
 def tree_sizes(repo: Path, rev: str, pathspecs=("sim",)) -> dict[str, int]:

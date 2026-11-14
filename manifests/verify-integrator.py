@@ -75,13 +75,11 @@ it compares committed files only.
 
 from __future__ import annotations
 
-import importlib.util
 import json
 import math
 import subprocess
 import sys
 from pathlib import Path, PurePosixPath
-from types import ModuleType
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -103,6 +101,10 @@ HARNESS_DUT = REPO_ROOT / "sim" / "harness" / "dut.py"
 
 #: The DUT binding the harness reads (``sim/harness/dut.py`` DUT_CONFIG).
 DUT_BINDING = "sim/dut.json"
+
+sys.path.insert(0, str(REPO_ROOT / "sim"))
+
+from harness import dut as harness_dut  # noqa: E402
 
 #: Manifest fields that hold a repository-relative path, as dotted keys.
 #: ``"#anchor"`` suffixes are stripped. Fields in PATH_PREFIX_FIELDS are
@@ -237,23 +239,11 @@ def check_paths(integrator: dict, tracked) -> list[str]:
     return problems
 
 
-def load_harness_dut() -> ModuleType:
-    """Import ``sim/harness/dut.py`` by path (stdlib-only module)."""
-    name = "_integrator_harness_dut"
-    spec = importlib.util.spec_from_file_location(name, HARNESS_DUT)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"cannot import {HARNESS_DUT}")
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[name] = module  # dataclasses resolve their module by name
-    spec.loader.exec_module(module)
-    return module
-
-
 def check_netlist_and_ports(integrator: dict) -> list[str]:
     problems: list[str] = []
     if not HARNESS_DUT.is_file():
         return [f"missing {HARNESS_DUT.relative_to(REPO_ROOT)} -- the harness DUT loader is the authority for the netlist interface"]
-    harness = load_harness_dut()
+    harness = harness_dut
 
     netlist = integrator.get("netlist")
     if not isinstance(netlist, dict):

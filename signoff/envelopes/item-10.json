@@ -80,7 +80,7 @@
         "role": "hygiene",
         "path": "signoff/verify-report.py",
         "passed": true,
-        "content_hash": "sha256:ab6b704a7cba2be7abfb31530e959445844aa771f4a8931b8b9f95e991aabce0"
+        "content_hash": "sha256:cb3349f83431b22ca6a7d470a1097d5a4de9a2d3bf8f2f1d0246b953a7ecd19d"
       },
       {
         "check": "command",

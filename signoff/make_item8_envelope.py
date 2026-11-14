@@ -77,13 +77,18 @@ unchanged report must reproduce the committed envelope byte-for-byte.
 from __future__ import annotations
 
 import hashlib
-import importlib.util
 import json
 import re
 import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO_ROOT / "sim"))
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+
+from harness import corners  # noqa: E402
+import check_claim_drift as ccd  # noqa: E402
+
 REPORT = REPO_ROOT / "measurements" / "characterization-report.md"
 ENVELOPE = REPO_ROOT / "measurements" / "characterization-report.item8.json"
 
@@ -111,21 +116,11 @@ EXPECTED_POINTS = 45
 _ID_RE = re.compile(r"^(?P<corner>[a-z][a-z_]*)_(?P<temp>-?\d+(?:\.\d+)?)c_(?P<vdd>\d+\.\d\d)v$")
 
 
-def _load_corners():
-    """Import the authoritative PVT definitions (sim/harness/corners.py, stdlib only)."""
-    path = REPO_ROOT / "sim" / "harness" / "corners.py"
-    spec = importlib.util.spec_from_file_location("_item8_corners", path)
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = mod  # dataclasses needs the module registered
-    spec.loader.exec_module(mod)
-    return mod
-
-
 def authoritative_grid() -> dict[str, tuple[str, float, float]]:
     """corner_id -> (corner, temp_c, vdd) of the ratified full grid: the default
     ``mos`` corner set x default temperatures x ``supply_points()``."""
-    c = _load_corners()
-    pts = c.build_grid(c.resolve_corners([c.DEFAULT_CORNER_SET]), c.DEFAULT_TEMPERATURES_C, c.supply_points())
+    pts = corners.build_grid(corners.resolve_corners([corners.DEFAULT_CORNER_SET]),
+                             corners.DEFAULT_TEMPERATURES_C, corners.supply_points())
     return {p.corner_id: (p.corner.name, p.temp_c, p.vdd) for p in pts}
 
 
@@ -386,19 +381,8 @@ class EvidenceChainError(Exception):
         super().__init__("; ".join(problems))
 
 
-def _load_claim_checker():
-    """Import scripts/check_claim_drift.py (stdlib only) next to this script."""
-    path = Path(__file__).resolve().parent.parent / "scripts" / "check_claim_drift.py"
-    spec = importlib.util.spec_from_file_location("_item8_claim_drift", path)
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = mod
-    spec.loader.exec_module(mod)
-    return mod
-
-
 def check_narrative_claims(root: Path, records: dict) -> list[str]:
     """Registered report claims vs the manifest's pinned records (named diagnostics)."""
-    ccd = _load_claim_checker()
     reg = root / ccd.REGISTRY
     try:
         claims = json.loads(reg.read_text())["claims"]
