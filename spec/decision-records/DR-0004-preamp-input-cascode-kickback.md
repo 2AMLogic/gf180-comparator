@@ -96,18 +96,57 @@ tt/ff/ss/fs/sf × −40/27/125 °C per request. Baselines are the DR-0002 number
 | Offset 3σ (≤ 15 / ≤ 8 mV) | 2.796–2.807 mV | 2.684–3.136 mV (min `fs_-40c_2.97v`, max `ss_-40c_2.97v`); nominal 2.769 mV | 45/45 / 45/45 |
 | Decision time @ 50 mV (≤ 1.5 / ≤ 0.8 ns) | 0.464–1.237 ns; stretch missed at 16/45 | 0.469–1.274 ns (max `ss_125c_2.97v`); stretch missed at 17/45 | 45/45 / 28/45 |
 | Static power (≤ 1 mW / ≤ 500 µW) | ≈ 82–108 µW | 98.4–131.7 µW | 45/45 / 45/45 |
-| Input-referred noise (≤ 1.0 / ≤ 0.6 mV rms) | 91.25 µV nominal (66.8–128.8 µV over 45) | **99.5 µV at nominal only** (ngspice 42, see below); A_v 18.01 → 18.49 | nominal only: yes / yes |
+| Input-referred noise (≤ 1.0 / ≤ 0.6 mV rms) | 91.25 µV nominal (66.8–128.8 µV over 45) | **73.04–143.43 µV over 45** (min `ss_-40c_3.30v`, max `ff_125c_2.97v`); nominal 99.46 µV, A_v 18.01 → 18.49 | **45/45 / 45/45** |
 
 Caveats, stated plainly:
 
-- **Noise is nominal-point only.** The fleet runner's klt (0.5.0) has no
-  `noise` analysis, so the 45-corner noise grid could not be sent to the
-  batch fleet, and hand-running a grid on the shared worker is not allowed. The
+- **Noise is now measured over all 45 corners** (issue #355, record
+  `20261114-035145782554-43526e3`). The cascoded front end measures
+  **73.04–143.43 µV** input-referred (min `ss_-40c_3.30v`, max
+  `ff_125c_2.97v`), 45/45 within both the 1.0 mV target and the 0.6 mV
+  stretch — the worst corner sits 7.0× inside the target. The grid ran on the
+  Spot batch fleet through `klt sim` (runner klt 0.9.0, ngspice 47 on the
+  worker versus the pinned floor of 46) with **no** `--allow-engine-drift` and
+  **no** `--allow-pdk-drift`; the record is `citable` with an empty drift list.
+  A_v falls 27.67 (`ss_-40c_3.63v`) → 11.36 (`ff_125c_2.97v`) across the grid,
+  which is what moves the worst corner: `onoise_uv` spans only
+  1629–2031 µV (±11 % about its midpoint) while the gain it is divided by
+  varies by 2.4×.
+
+  *History, kept because this row was previously an extrapolation.* Until this
+  measurement the record carried **99.5 µV at nominal only**: the fleet
+  runner's klt was believed to have no `noise` analysis, so the grid could not
+  be dispatched, and hand-running one on a shared worker is not allowed. That
   nominal point was run locally (one corner, `--allow-toolchain-drift`,
-  ngspice 42 versus the pinned floor of 46). To keep that honest the
-  un-cascoded netlist was run through the *same* local engine: 91.25 → 99.46 µV
-  (+9 %). Extrapolating +9 % to the DR-0002 worst corner (128.8 µV) gives ≈ 140 µV, still
-  7× inside the 1.0 mV target — **an extrapolation, not a measurement**.
+  ngspice 42 versus the pinned floor of 46) at **99.46 µV**, and the
+  un-cascoded netlist was run through the *same* local engine for honesty:
+  91.25 → 99.46 µV (+9 %). Extrapolating that +9 % onto the DR-0002 worst
+  corner (128.8 µV) gave ≈ 140 µV, and the record said plainly that this was
+  **an extrapolation, not a measurement**. The measurement now retires it, and
+  two things are worth recording:
+
+  - The extrapolation was close but **low, and on the wrong corner**. Measured
+    worst is 143.43 µV at `ff_125c_2.97v`, not ≈ 140 µV at the control's worst
+    corner `ff_125c_3.63v` (which measures 141.75 µV). Scaling a single
+    nominal delta onto another netlist's worst corner happened to land within
+    2.4 % here; it was not entitled to.
+  - The +9 % nominal cost is real and roughly uniform: across all 45 matched
+    corners the cascode costs **+7.1 % to +14.6 %** (mean +9.9 %) over the
+    un-cascoded control `20260910-125200-4805118`.
+
+  The nominal point also reproduces exactly. This batch run's
+  `tt_27c_3.30v` is **99.4625 µV / A_v 18.493555**, matching the local
+  ngspice-42 record `20261008-235224548630-7e61c52` (99.462470 / 18.493555) to
+  ten significant digits on the same netlist content (sha `79dcc79f…`) — so
+  the 42 → 47 engine move does not shift this measurement, and the earlier
+  nominal figure needs no re-statement.
+
+  Four of the bench's ten `measure` quantities are recorded (`av_dc`,
+  `onoise_uv`, `vn_in_uv`, `inoise_band_uv`). `vn_in_hf_uv`, `onoise_hf_uv`,
+  `flicker_frac_pct`, `white_nv_rthz`, `enbw_mhz` and `vbias_anchor_mv` need a
+  second `.noise` plot or the `.op` in the same run, which a one-analysis `klt
+  sim` request cannot carry; the record states this itself. `vn_in_uv` is the
+  row-facing quantity and is measured at every corner.
 - **Offset sigma statistics.** n = 200 draws per corner, seed 20260909 (common
   random numbers, as in the original bench), so the sigma has a 1/√(2N) = 5 %
   statistical error. The cascode did not measurably change offset: the spread
@@ -187,8 +226,10 @@ needed even with the cascode. The prediction is falsifiable by the follow-up
     refresh contract.
 
   None of this was done in #102.
-- **Not run**: 44 of 45 noise corners (tool gap, above); the 45-corner
-  post-layout kickback.
+- **Not run**: the 45-corner post-layout kickback (that is #112, after
+  ratification). The 44 missing noise corners that stood here are now
+  measured — see the noise caveat above and record
+  `20261114-035145782554-43526e3`.
 - The experiment netlist was written by hand to match the proposed `.sch`. It
   was not netlisted by `design/netlist.sh`, which only reads `design/`'s
   ratified cells. This host's xschem also wraps long lines differently from
