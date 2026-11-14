@@ -120,7 +120,41 @@ submission once the fleet path exists.
 
 | record | coverage | status |
 |---|---|---|
-| _(minted by the command above; see the table below after the first run)_ | **1 of 45** PVT points (`tt_27c_3.30v`), schematic DUT | bring-up validation probe, unscored |
+| [`20261114-032046866512-d02a882`](records/20261114-032046866512-d02a882.md) | **1 of 45** PVT points (`tt_27c_3.30v`), schematic DUT, ngspice-47 / open_pdks `f6eeac7` | bring-up validation probe, unscored |
+
+> The record's own **Reproduce** line is the harness's generic template
+> (`python3 sim/run_corners.py comparator-avg-power`), which would run the full
+> 45-point grid rather than the one point this record covers. The command that
+> produced it is the single-point one above. (`sim/harness/report.py` does not
+> stamp the corner selection into that line for any bench; filed separately.)
+
+### What the probe measured, and against which DR-0006 item
+
+At `tt_27c_3.30v` only. Each row below says what it does *not* settle, because
+one corner settles no corner question.
+
+| DR-0006 "Feasibility status" item | measured | reading |
+|---|---|---|
+| **1.** reset time unmeasured; "show every cycle decides correctly, including the first post-warm-up cycle" | `dec_cycles_correct` = **16 / 16**; `dout_c08` … `dout_c23` read 1.000 on even cycles and 7.4 × 10⁻¹⁰ on odd, with `doutb` complementary | every window cycle decided the way the alternating ±10 mV stimulus said, the first post-warm-up cycle included. **Not settled:** the worst corner — DR-0006 expects `ss`/125 °C/2.97 V to be slowest and that is its hypothesis, not a result. |
+| | `reset_margin_ns` = **30.48 ns** of the 31.25 ns reset phase | the precharge transient settled to within 10 % of the same run's quiescent current **0.77 ns** after the falling edge. **Not settled:** this is the supply-current proxy described above, not the latch's internal state, and it is one corner. |
+| **2.** no dynamic-power figure exists | `q_win_pc` = **43.905 pC** over 16 cycles → `p_avg_uw` = **144.9 µW**, `e_dec_fj` = **9055 fJ** per decision | the first figure of any kind for this row's dynamic component. Static is 30.28 µA × 3.3 V = **99.9 µW** of it (≈ 69 %), leaving ≈ 45 µW — **2.81 pJ per decision** — dynamic. **Not a compliance statement:** `P_avg` is scored as the *maximum over all 45 corners* and 44 of them are unrun, so nothing here says the ≤ 1 mW target or the ≤ 500 µW stretch is met. |
+| **3.** the proposed 8-cycle warm-up and 16-cycle window are not shown adequate | `q_half_mismatch_pct` = **0.00228 %** against DR-0006's 1 % criterion — a 440× margin | the window is in steady state at this point: the two 8-cycle halves integrate to 21.9524 pC and 21.9529 pC. **Not settled:** at a slow/hot corner the settling time is longer, and that is where the criterion earns its keep. |
+| **4.** output load, overdrive and clock-charge boundary are judgment choices whose sensitivities must be run | `q_clk_pc` = **0.00707 pC**, i.e. the ideal clock source draws **0.016 %** of the DUT's supply charge at this condition | records the boundary line DR-0006 asks for. **Not run:** the sensitivity sweeps themselves (0/100 fF, 1/50 mV, 32 MHz, clock charge inside the row) — how much the figure *moves* — are a follow-up. |
+| — (implementation, not a record item) | `p_avg_form_delta_pct` = **1.9 × 10⁻⁵ %**; `q_split_delta_pct` = **4.1 × 10⁻⁴ %**; `clk_period_ns` = **62.5**, `t_win_start_ns` = **510.05** | the `v·i` form agrees with the charge form, the halves partition the window, and the clock the simulator produced is the one every hard-coded `.meas` boundary was derived from. |
+
+**No number DR-0006 chose came out unworkable at this point**, so this probe
+gives the ratification reviewers no reason to revise the record — and, equally,
+no basis to conclude the condition holds at the corners that matter. The
+45-corner campaign and the extracted run are what would do that.
+
+**`e_dec_fj` here is not comparable with `comparator-regeneration/`'s
+`e_dec_fj`.** The names collide; the quantities do not. That bench reports
+823–1788 fJ for a *single event* with a hard-coded static term subtracted; this
+one reports the *total* periodic energy per decision, static included, with
+20 fF loads attached. The ≈ 2.81 pJ dynamic part here is the quantity of the
+same kind, and it sits just above the "about 1–2 pJ per decision"
+order-of-magnitude hint DR-0006 flags as unvalidated — which is what adding an
+explicit output load would be expected to do.
 
 ### Why one point, and what the repo's own rule says about it
 
