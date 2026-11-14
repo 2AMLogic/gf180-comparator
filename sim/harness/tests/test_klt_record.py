@@ -2664,3 +2664,58 @@ class AvgPowerCrossRun(unittest.TestCase):
         self.assertEqual(cmp["status"], "INCOMPLETE_COMPARISON")
         self.assertIn("no matching corner", cmp["gaps"][0])
         self.assertIn("not compared", "\n".join(kr.cross_run_lines(cmp)))
+
+
+class AvgPowerRestrictedGridIngest(unittest.TestCase):
+    """A request set generated with --corners tt --temps 27 --supply-tolerance 0
+    bundles a narrower grid than the manifest's default rail set, and the
+    supply split lives only in the request-set naming. The ingest takes it
+    from the bundle's recorded `parameters.supply_v` (#152: the expected grid
+    comes from the bundled requests), so the one-point probe ingest COMPLETE
+    over its own grid -- previously SOURCE_BUNDLE_INCONSISTENT."""
+
+    @staticmethod
+    def _avg_power_raw():
+        # Raw .meas values that pass every manifest check (same derivation as
+        # the committed tt_27c_3.30v values; see the derive test above).
+        raw = {"vsup_v": 3.3, "t_elo": 510.05e-9, "t_ehi": 1447.55e-9,
+               "q_win": -43.9052e-12, "q_h1": -21.9524e-12, "q_h2": -21.9529e-12,
+               "e_win": 43.9052e-12 * 3.3 * (1 + 2e-7),
+               "q_clk": -7.07357e-15, "i_q": -30.27536e-6,
+               "db08": 7.42e-10, "db23": 1.0}
+        for i in range(8, 24):
+            raw[f"d{i:02d}"] = 1.0 if i % 2 == 0 else 7.42e-10
+        return raw
+
+    def test_single_point_probe_ingests_complete_and_unscored(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work = _generate(td, "--corners", "tt", "--temps", "27",
+                             "--supply-tolerance", "0", bench=AVG_POWER)
+            b = _bundle(work)
+            self.assertEqual(sorted(b["requests"]), ["main-v3.30"])
+            self.assertEqual(b["parameters"]["supply_v"], [3.3])
+            raw = self._avg_power_raw()
+            req = json.loads((work / b["requests"]["main-v3.30"]["request"]).read_text())
+            meas = [m["name"] for m in req["measurements"]]
+            for n, r in b["requests"].items():
+                corners = [{"corner_id": "tt/novdd/27C", "status": "pass",
+                            "measurements": [{"name": m, "value": raw[m]} for m in meas]}]
+                (work / f"report-{n}.json").write_text(json.dumps(
+                    {"corners": corners, "measurements": [{"name": m} for m in meas],
+                     "environment": _link_env(work, b, r), "provenance": _prov()}))
+            rc, rec, out = _ingest(td, work, bench=AVG_POWER)
+            self.assertEqual(rc, 0, out)
+            self.assertTrue(rec["complete"])
+            self.assertEqual(rec["points"], 1)
+            self.assertNotIn("spec_row", rec)  # unscored: no SPEC row (issue #372)
+            self.assertTrue(rec["scored"] is False)
+            d = rec["derived"]["tt_27c_3.30v"]
+            self.assertNotIn("reset_margin_ns", d)
+            self.assertAlmostEqual(d["p_avg_uw"], 144.887, places=2)
+            self.assertAlmostEqual(d["dec_cycles_correct"], 16.0, places=12)
+            md = next((td / "evidence" / AVG_POWER / "records").glob("*.md")).read_text()
+            self.assertIn("SUPPLEMENTAL AND UNSCORED", md)
+            self.assertNotIn("vs target", md.split("**Result**")[1].splitlines()[2])
+            self.assertIn("Not computed by this executor** (single-analysis `klt sim` requests): "
+                          "`reset_margin_ns`", md)

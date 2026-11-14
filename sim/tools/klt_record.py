@@ -1880,7 +1880,17 @@ def main() -> int:
     check_dut_selection(b, a.dut)
     d, t = b["dut"], b["testbench"]
     tb = htb.load(_staged_path(work, t["staged_dir"]))  # originating manifest + `measure`
-    vdds = hc.supply_points(tb.nominal_supply_v, tb.supply_tolerance)
+    # The supply split is the one grid dimension that lives in the request-SET
+    # naming (one request per supply point, the rail baked into each body), so
+    # unlike process/temperature it cannot be read back from a single request.
+    # Take it from the bundle's own recorded grid (#152: the expected grid
+    # comes from the bundled requests, never a hard-coded count) so a set
+    # generated with --supply-v / --supply-tolerance restricts -- the case
+    # reproduce_line's replay guidance already describes -- instead of
+    # refusing; full-rail bundles (every committed record) are unaffected.
+    bundled_vdds = (b.get("parameters") or {}).get("supply_v")
+    vdds = ([float(v) for v in bundled_vdds] if bundled_vdds
+            else hc.supply_points(tb.nominal_supply_v, tb.supply_tolerance))
     names = {f"{leg}-v{v:.2f}": (leg, v) for leg in LEGS[a.bench] for v in vdds}
     verify_staged(work, b, names)
     if not a.from_report:
