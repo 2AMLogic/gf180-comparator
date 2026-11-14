@@ -957,6 +957,37 @@ def file_sha(path: Path) -> str:
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
+def _stage_source_sha256(text: str, extra: dict | None = None) -> dict:
+    """The hashed inputs every ground-C / combined ladder stage depends on.
+
+    One definition shared by `budget_manifest` and `combo_manifest` (#359):
+    the cited data inputs that are integrity gates, plus the code hashes of
+    BUDGET_PROVENANCE_SOURCE_KEYS that are provenance only. `extra` carries a
+    stage's own additional cited input and is spliced in after the common data
+    inputs; stage.json is written with `sort_keys=True`, so that placement
+    only fixes the order this reads in source, never the committed bytes.
+
+    NOT shared with `design_lever_study.manifest`, deliberately: that stage
+    cites no #229 attribution.json and records its own module hash under
+    `design_lever_study_py` (see #358 for that allowlist).
+    """
+    out = {
+        "extracted_dut": sha(text),
+        "schematic_dut": file_sha(SCHEMATIC_DUT),
+        "cited_report": file_sha(CITED_REPORT),
+        "attribution_json_229": file_sha(
+            HERE / "artifacts" / "parasitic-attribution" / "20261010-120720-230574b"
+            / "attribution.json"),
+    }
+    out.update(extra or {})
+    out.update({
+        "tb_json_consumed_fields": TB_JSON_CONSUMED_SHA256,
+        "pex_measure_py": file_sha(HERE / "pex_measure.py"),
+        "parasitic_attribution_py": file_sha(Path(__file__).resolve()),
+    })
+    return out
+
+
 def budget_manifest(text: str, plan: list[dict], points, nets) -> dict:
     """Everything the stage depends on, hashed, plus the variant manifest."""
     return {
@@ -967,17 +998,7 @@ def budget_manifest(text: str, plan: list[dict], points, nets) -> dict:
                     "own probed trip point; no spec row scored, T1 item 7 unchanged"),
         "nets": list(nets),
         "points": [pid(p) for p in points],
-        "source_sha256": {
-            "extracted_dut": sha(text),
-            "schematic_dut": file_sha(SCHEMATIC_DUT),
-            "cited_report": file_sha(CITED_REPORT),
-            "attribution_json_229": file_sha(
-                HERE / "artifacts" / "parasitic-attribution" / "20261010-120720-230574b"
-                / "attribution.json"),
-            "tb_json_consumed_fields": TB_JSON_CONSUMED_SHA256,
-            "pex_measure_py": file_sha(HERE / "pex_measure.py"),
-            "parasitic_attribution_py": file_sha(Path(__file__).resolve()),
-        },
+        "source_sha256": _stage_source_sha256(text),
         "variants": [{
             "id": x["id"], "side": x["side"], "centre": x["centre"], "fraction": x["fraction"],
             "dut_sha256": sha(x["dut"]), "probe_deck_sha256": sha(probe_deck(x["dut"])),
@@ -1078,6 +1099,62 @@ def _budget_values(vdir: Path, points) -> dict:
     return out
 
 
+#: The overdrive rungs a ladder report resolves a decision time at. How many
+#: of them came back None is what every study records as its unresolved key.
+LADDER_RUNG_KEYS = ("td_od50_ns", "td_od1_ns", "td_od01_ns")
+
+
+def _unresolved_rungs(r: dict) -> int:
+    """How many ladder rungs of `r` failed to resolve a decision time."""
+    return sum(r[k] is None for k in LADDER_RUNG_KEYS)
+
+
+def _corner_cell(r: dict, c: dict | None, extra: dict, *,
+                 dout_od50_end: bool = True) -> dict:
+    """The per-corner decision-time cell of one analyze row.
+
+    THE definition of the 1.5 ns pass/fail rule (`meets_1p5ns`), of the margin
+    taken against the spec, and of the control-referred offset shift, for
+    every study that scores a ladder report against `pm.SPEC_TD_OD50_NS_MAX`
+    (#359). Three byte-near-identical copies of this cell used to derive
+    committed post-layout decision-time evidence independently, so a
+    correction to any one of those rules reached only one of the studies.
+
+    `r` is the `_budget_values` report for this variant at this corner. It is
+    never a miss: an absent or unresolved-at-50 mV report takes a cell shape
+    that differs per study, so each caller keeps its own miss branch. `c` is
+    the control report at the same corner, or None when there is none.
+    `extra` carries the study's own unresolved-rung key(s) -- a bool
+    `unresolved` for the #243 budget stage, an `unresolved_count` (plus a
+    `missing` in the miss branch) for #245 combo and the #246 lever study.
+    Pass `dout_od50_end=False` for a study that does not record it.
+
+    The key SET is load-bearing: each study's `verify` compares its committed
+    artifact to this output by value, so an added or dropped key is a
+    behaviour change, not a cosmetic one. Key order is not load-bearing --
+    every artifact is written with `sort_keys=True` -- but is preserved here
+    anyway so a regenerated artifact diffs clean.
+
+    The #229 `analyze` cell is deliberately NOT built from this: it scores a
+    different question (`share_of_gap`, `delta_vs_ctrl_ns`, no margin and no
+    vos shift) and stays its own shape.
+    """
+    cell = {"td_od50_ns": r["td_od50_ns"], "td_od1_ns": r["td_od1_ns"],
+            "td_od01_ns": r["td_od01_ns"], "tau_ps": r["tau_ps"]}
+    if dout_od50_end:
+        cell["dout_od50_end"] = r["dout_od50_end"]
+    cell.update(extra)
+    cell.update({
+        "dut_vos_v": r["dut_vos_v"],
+        "dut_vos_shift_v": (None if not c or None in (r["dut_vos_v"], c["dut_vos_v"])
+                            else r["dut_vos_v"] - c["dut_vos_v"]),
+        "margin_to_1p5ns_ns": pm.SPEC_TD_OD50_NS_MAX - r["td_od50_ns"],
+        "meets_1p5ns": r["td_od50_ns"] <= pm.SPEC_TD_OD50_NS_MAX,
+        "job_ids": r["job_ids"], "probe_job_ids": r["probe_job_ids"],
+        "ladder_netlist_sha256": r["ladder_netlist_sha256"]})
+    return cell
+
+
 def _plan_from_manifest(man: dict, text: str) -> list[dict]:
     fr = [x["fraction"] for x in man["variants"] if x["id"] not in ("ctrl", "sch")]
     return budget_variants(text, fr, man["nets"])
@@ -1129,18 +1206,8 @@ def budget_analyze(outdir: Path) -> dict:
                 row["corners"][pid(pt)] = {"td_od50_ns": None, "unresolved": True,
                                            "job_ids": (r or {}).get("job_ids")}
                 continue
-            row["corners"][pid(pt)] = {
-                "td_od50_ns": r["td_od50_ns"], "td_od1_ns": r["td_od1_ns"],
-                "td_od01_ns": r["td_od01_ns"], "tau_ps": r["tau_ps"],
-                "dout_od50_end": r["dout_od50_end"],
-                "unresolved": any(r[k] is None for k in ("td_od50_ns", "td_od1_ns", "td_od01_ns")),
-                "dut_vos_v": r["dut_vos_v"],
-                "dut_vos_shift_v": (None if not c or None in (r["dut_vos_v"], c["dut_vos_v"])
-                                    else r["dut_vos_v"] - c["dut_vos_v"]),
-                "margin_to_1p5ns_ns": pm.SPEC_TD_OD50_NS_MAX - r["td_od50_ns"],
-                "meets_1p5ns": r["td_od50_ns"] <= pm.SPEC_TD_OD50_NS_MAX,
-                "job_ids": r["job_ids"], "probe_job_ids": r["probe_job_ids"],
-                "ladder_netlist_sha256": r["ladder_netlist_sha256"]}
+            row["corners"][pid(pt)] = _corner_cell(
+                r, c, {"unresolved": bool(_unresolved_rungs(r))})
         rows.append(row)
     rows.sort(key=lambda r: -r["fraction"])
 
@@ -1474,19 +1541,10 @@ def combo_manifest(text: str, plan: list[dict], points, kind: str,
         "cg_nets": cg_nets, "leg_nets": leg_nets,
         "points": [pid(x) for x in points],
         "requests_planned": count_requests(plan, points),
-        "source_sha256": {
-            "extracted_dut": sha(text),
-            "schematic_dut": file_sha(SCHEMATIC_DUT),
-            "cited_report": file_sha(CITED_REPORT),
-            "attribution_json_229": file_sha(
-                HERE / "artifacts" / "parasitic-attribution" / "20261010-120720-230574b"
-                / "attribution.json"),
+        "source_sha256": _stage_source_sha256(text, {
             "ground_c_budget_243_readme": file_sha(
                 HERE / "artifacts" / "ground-c-budget" / "20261010-154019-b9fff0f" / "README.md"),
-            "tb_json_consumed_fields": TB_JSON_CONSUMED_SHA256,
-            "pex_measure_py": file_sha(HERE / "pex_measure.py"),
-            "parasitic_attribution_py": file_sha(Path(__file__).resolve()),
-        },
+        }),
         "variants": [],
     }
     for x in plan:
@@ -1639,19 +1697,8 @@ def combo_analyze(outdir: Path) -> dict:
                                            "missing": not r,
                                            "job_ids": (r or {}).get("job_ids")}
                 continue
-            row["corners"][pid(pt)] = {
-                "td_od50_ns": r["td_od50_ns"], "td_od1_ns": r["td_od1_ns"],
-                "td_od01_ns": r["td_od01_ns"], "tau_ps": r["tau_ps"],
-                "dout_od50_end": r["dout_od50_end"],
-                "unresolved_count": sum(r[k] is None for k in
-                                        ("td_od50_ns", "td_od1_ns", "td_od01_ns")),
-                "dut_vos_v": r["dut_vos_v"],
-                "dut_vos_shift_v": (None if not c or None in (r["dut_vos_v"], c["dut_vos_v"])
-                                    else r["dut_vos_v"] - c["dut_vos_v"]),
-                "margin_to_1p5ns_ns": pm.SPEC_TD_OD50_NS_MAX - r["td_od50_ns"],
-                "meets_1p5ns": r["td_od50_ns"] <= pm.SPEC_TD_OD50_NS_MAX,
-                "job_ids": r["job_ids"], "probe_job_ids": r["probe_job_ids"],
-                "ladder_netlist_sha256": r["ladder_netlist_sha256"]}
+            row["corners"][pid(pt)] = _corner_cell(
+                r, c, {"unresolved_count": _unresolved_rungs(r)})
         rows.append(row)
     rows.sort(key=lambda r: (-r["fraction_r"], -r["fraction_c"]))
 
