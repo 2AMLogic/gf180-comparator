@@ -4,7 +4,7 @@ A dynamic latched comparator (static differential preamplifier into a StrongARM
 latch) on the open GF180MCU PDK, built to show a fully evidenced analog block
 and to surface klayout-tools gaps along the way.
 
-Status as of 2026-11-15, `main` @ `c64c9676`.
+Status as of 2026-11-15, `main` @ `b4ebb5bd`.
 
 The verdict of record is [`signoff/signoff-report.json`](signoff/signoff-report.json),
 per-row results are in [`spec/evidence-ledger.md`](spec/evidence-ledger.md) and the
@@ -47,9 +47,9 @@ policy for items 1, 9, 10), DR-0004 (input cascode), DR-0005 (metastability
 row), DR-0006 (average-power condition, 16 MHz) and DR-0007 (decision-time
 levers, a negative result) all read `Status: proposed`. Both unmet items need
 a design change that sits in a proposed record, which is why the issues that
-would close them — #112, #125, #323, #364 and #374 — wait on those
-ratifications. That holds most of the open backlog; the rest is tooling,
-hygiene and cleanup work that needs no ratification.
+would close them — #112, #125 and #323 — wait on those ratifications. That
+holds most of the open backlog; the rest is tooling, hygiene and cleanup work
+that needs no ratification.
 
 ## Recently landed
 
@@ -59,27 +59,40 @@ hygiene and cleanup work that needs no ratification.
   (`sim/comparator-avg-power/records/20261114-032046866512-d02a882.md`, at
   `tt_27c_3.30v`) are on `main`, with the README bench count and the item-9 and
   item-10 attestations refreshed. Scoring stays out until DR-0006 is ratified
-  (#125); the corner campaigns the bench unblocks are under **Next**.
+  (#125); the corner campaigns the bench unblocked have since run — next entry.
+- **45-corner DR-0006 validation campaigns, schematic and extracted** — the
+  former Next bullet, on the bench above. #372 (Spot-batch fleet binding,
+  PR #378), #373 (the 45-corner schematic record, PR #390) and #374 (the
+  extracted leg, PR #389) are all closed, under the #364 umbrella. The
+  schematic campaign ran 45/45 and is citable
+  (`sim/comparator-avg-power/records/20261115-075832478887-79abbcc.md`); the
+  extracted-DUT campaign also ran 45 of 45 corners
+  (`sim/comparator-avg-power/records/20261115-064156694329-8a67cff.md`) but is
+  graded `citable: false` — its generation-time netlist source
+  (`layout/lvs/comparator.dut-layout.spice`) is untracked, so it is not yet
+  citable evidence. Re-minting it from a clean commit is tracked in **#398**.
+  Scoring against the ratified bound still waits on DR-0006 ratification
+  (#125), which is itself still proposed.
+- **Signoff README reconciled with the graded report** — #354, PR #376, the
+  former Now item 1. The verdict list and per-item headings now grade items 1,
+  9 and 10 `met`, matching `signoff-report.json`.
+- **45-corner cascode preamp-noise grid** — #355, PR #369, the former Now
+  item 2. A `sim/comparator-preamp-noise/records/` entry for DUT
+  `comparator-dr0004-cascode-exp`
+  (`20261114-035145782554-43526e3.md`, 45/45 corners) replaces DR-0004's noise
+  extrapolation — which existed only because the batch runner then had no
+  noise analysis (klayout-tools#2894) — with a measurement.
+- **Hygiene and cleanup landings** — #359, #360, #367, #368, #370 and #371
+  (shared decision-time cell builder, dead-code and import-path removal,
+  signoff inventory/envelope refresh, and validator/manifest deduplication)
+  all closed completed.
 
 ## Now
 
-Startable today without a ratification. Both are filed.
-
-1. **Bring `signoff/README.md` back in line with the graded report.** Its
-   "Current verdict" list and the "unmet — item 1" and "unmet — item 10"
-   sections still say items 1, 9 and 10 are `no_evidence`, while the report
-   grades them `met` and the same file's attestation section says so too.
-   Done when the verdict list and per-item headings match
-   `signoff-report.json` and `./scripts/run-pdk-free-tests.sh` passes.
-   Issue: **#354**. Blocked by: nothing.
-2. **Complete the 45-corner noise grid for the DR-0004 cascode experiment.**
-   DR-0004 records noise at the nominal point only, because the batch runner
-   then had no noise analysis (klayout-tools#2894); PR #346 has since run a
-   45-point noise campaign on the runner. Done when a
-   `sim/comparator-preamp-noise/records/` entry for DUT
-   `comparator-dr0004-cascode-exp` covers 45/45 corners and DR-0004's "Not run"
-   note and noise row quote it. Issue: **#355**. Blocked by: nothing; this is
-   the evidence gap option 2 of the #112 decision names.
+Nothing qualifies today. Both former Now items have landed (see **Recently
+landed**), and the remaining open work that needs no ratification is follow-up
+maintenance rather than new startable roadmap items. The live per-issue queue
+is [`WORK_PLAN.md`](WORK_PLAN.md).
 
 ## Next
 
@@ -94,14 +107,6 @@ Startable today without a ratification. Both are filed.
   was never run. Done when a proposed record ranks the combination at
   `ss_125c_2.97v` and `tt_125c_2.97v` with source records. Blocked by: #112.
   Needs a new issue; #323 is parked as delivered-with-negative-result.
-- **45-corner DR-0006 validation campaign**, schematic and extracted, on the
-  bench landed in PR #361. Tracked as **#372** (Spot-batch fleet binding,
-  schematic) and **#373** (the 45-corner schematic record), then **#374** (the
-  extracted leg), under the **#364** umbrella that DR-0006's feasibility item 1
-  asks for. Done when both records exist with a recorded reset-completion
-  margin per corner. Blocked by: nothing for the schematic legs (#372, #373);
-  the extracted leg (#374) and the umbrella (#364) wait on DR-0006
-  ratification.
 - **Average-power scoring** (#125 stage 2): transient-power bench wired into
   the item-5 corner-matrix wrapper with regressions. Blocked by: DR-0006
   ratification.
@@ -130,16 +135,13 @@ Startable today without a ratification. Both are filed.
 - **#323** needs a disposition: close as delivered with the DR-0007 negative
   result, or re-scope. Builders claimed and released it three times.
 - **#3** (gap-to-T1 tracker) still quotes 3 of 11 items met; the report grades 9 of 11.
-- **#364** (DR-0006 feasibility item 1) and **#374** (extracted-DUT leg) hold
-  the avg-power corner campaigns; their schematic legs **#372** and **#373**
-  need no ratification.
-- **#123, #95, #94, #83, #1** are tooling and guard work, and **#359**, **#367**,
-  **#371** hygiene and refactor work — none of it design work.
+- **#123, #95, #94, #83, #1** are tooling and guard work — none of it design
+  work.
 
-Agents cannot supply ratification keys. The queue of work that needs none is
-not empty: **#354** and **#355** carry the two Now items, and **#360**, **#368**
-and **#370** are cleanup work. Current per-issue status and claims are in
-[`WORK_PLAN.md`](WORK_PLAN.md).
+Agents cannot supply ratification keys. The former Now items, the cleanup list
+and the hygiene batch have all landed (see **Recently landed**); nothing
+currently open without a gate is roadmap-level design work (see **Now**).
+Current per-issue status and claims are in [`WORK_PLAN.md`](WORK_PLAN.md).
 
 ## Not planned
 
