@@ -12,6 +12,7 @@ ngspice, no PDK, no network, and ``subprocess.Popen`` is mocked.
 from __future__ import annotations
 
 import dataclasses
+import hashlib
 import io
 import json
 import math
@@ -2781,6 +2782,113 @@ class AvgPowerCrossRun(unittest.TestCase):
         self.assertEqual(cmp["status"], "INCOMPLETE_COMPARISON")
         self.assertIn("no matching corner", cmp["gaps"][0])
         self.assertIn("not compared", "\n".join(kr.cross_run_lines(cmp)))
+
+    # Issue #384: the counterparty is pinned by content, not by name.
+
+    COMMITTED_LOCAL = (SIM / "comparator-avg-power" / "records"
+                       / "20261114-032046866512-d02a882.json")
+
+    def _within_band_derived(self):
+        return {"tt_27c_3.30v": {"p_avg_uw": 145.5, "e_dec_fj": 9100.0,
+                                 "i_static_ua": 30.4, "q_half_mismatch_pct": 0.0021}}
+
+    def test_committed_counterparty_is_pinned_by_hash_and_repo_relative_path(self):
+        # The committed local record is a real counterparty under
+        # sim/comparator-avg-power/records/: the recorded hash must equal a
+        # sha256 the test computes itself from the file bytes, and the
+        # recorded path must be repo-relative. Existing fields keep their
+        # shape (self-comparison: every delta is zero).
+        rec = json.loads(self.COMMITTED_LOCAL.read_text())
+        derived = {p["corner_id"]: {k: v for k, v in p["measurements"].items()
+                                    if k in kr.AVG_POWER_CROSS_RUN}
+                   for p in rec["points"]}
+        cmp = kr.compare_local_record(str(self.COMMITTED_LOCAL), derived)
+        self.assertEqual(cmp["schema"], "cross-run-agreement/2")
+        self.assertEqual(cmp["sha256"],
+                         hashlib.sha256(self.COMMITTED_LOCAL.read_bytes()).hexdigest())
+        self.assertEqual(len(cmp["sha256"]), 64)
+        self.assertEqual(cmp["path"],
+                         "sim/comparator-avg-power/records/"
+                         "20261114-032046866512-d02a882.json")
+        self.assertEqual(cmp["local_record"], "20261114-032046866512-d02a882.json")
+        self.assertEqual(cmp["policy_source"],
+                         "sim/tools/klt_record.py AVG_POWER_CROSS_RUN (issue #372)")
+        self.assertEqual(cmp["gaps"], [])
+        self.assertEqual(cmp["status"], "within_band")
+        self.assertIn("per_quantity", cmp)
+
+    def test_counterparty_outside_the_repo_records_the_absolute_path(self):
+        derived = self._within_band_derived()
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "local.json"
+            p.write_text(json.dumps(self._local()))
+            cmp = kr.compare_local_record(str(p), derived)
+            expected_sha = hashlib.sha256(p.read_bytes()).hexdigest()
+            expected_path = str(p.resolve())
+        self.assertEqual(cmp["sha256"], expected_sha)
+        self.assertEqual(cmp["path"], expected_path)
+        self.assertTrue(Path(cmp["path"]).is_absolute())
+
+    def test_counterparty_path_forms_agree(self):
+        # Relative, absolute and via-symlink references to the same bytes
+        # record the same resolved path and the same hash.
+        derived = self._within_band_derived()
+        with tempfile.TemporaryDirectory() as td:
+            real = Path(td) / "real.json"
+            real.write_text(json.dumps(self._local()))
+            link = Path(td) / "link.json"
+            link.symlink_to(real)
+            relative = os.path.relpath(real, Path.cwd())
+            forms = [str(real), str(link), relative]
+            results = [kr.compare_local_record(f, derived) for f in forms]
+            expected_sha = hashlib.sha256(real.read_bytes()).hexdigest()
+            expected_path = str(real.resolve())
+        for cmp in results:
+            self.assertEqual(cmp["sha256"], expected_sha)
+            self.assertEqual(cmp["path"], expected_path)
+
+    def test_cross_run_lines_render_the_counterparty_short_hash(self):
+        derived = self._within_band_derived()
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "local.json"
+            p.write_text(json.dumps(self._local()))
+            cmp = kr.compare_local_record(str(p), derived)
+        md = "\n".join(kr.cross_run_lines(cmp))
+        self.assertIn("sha256", md)
+        self.assertIn(cmp["sha256"][:16], md)
+        self.assertIn(cmp["local_record"], md)  # basename stays the facing label
+        self.assertIn(cmp["path"], md)
+
+    def test_compare_local_outside_records_dir_is_refused_before_minting(self):
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "local.json"
+            p.write_text(json.dumps(self._local()))
+            argv = ["klt_record.py", "comparator-avg-power", "--compare-local", str(p)]
+            with mock.patch.object(sys, "argv", argv), redirect_stdout(io.StringIO()):
+                with self.assertRaises(SystemExit) as ctx:
+                    kr.main()
+        self.assertIn("BAD_ARGUMENT", str(ctx.exception))
+        self.assertIn(str(p.resolve()), str(ctx.exception))
+
+    def test_compare_local_under_another_bench_records_is_refused(self):
+        # The prefix guard fires before existence is probed, so the ghost
+        # path needs no file behind it.
+        ghost = SIM / "comparator-kickback" / "records" / "ghost-counterparty.json"
+        argv = ["klt_record.py", "comparator-avg-power", "--compare-local", str(ghost)]
+        with mock.patch.object(sys, "argv", argv), redirect_stdout(io.StringIO()):
+            with self.assertRaises(SystemExit) as ctx:
+                kr.main()
+        self.assertIn("BAD_ARGUMENT", str(ctx.exception))
+        self.assertIn(str(ghost.resolve()), str(ctx.exception))
+
+    def test_compare_local_missing_counterparty_is_a_named_refusal(self):
+        ghost = SIM / "comparator-avg-power" / "records" / "ghost-counterparty.json"
+        argv = ["klt_record.py", "comparator-avg-power", "--compare-local", str(ghost)]
+        with mock.patch.object(sys, "argv", argv), redirect_stdout(io.StringIO()):
+            with self.assertRaises(SystemExit) as ctx:
+                kr.main()
+        self.assertIn("BAD_ARGUMENT", str(ctx.exception))
+        self.assertIn(str(ghost.resolve()), str(ctx.exception))
 
 
 class AvgPowerRestrictedGridIngest(unittest.TestCase):
