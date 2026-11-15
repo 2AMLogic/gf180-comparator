@@ -115,6 +115,10 @@ python3 sim/run_corners.py comparator-avg-power \
 # the fleet path (requests + ingest; the committed 45-corner campaign record
 # is 20261115-075832478887-79abbcc, issue #373).
 # The batch capacity wait is baked into every request (batch.capacity_wait_s).
+# Against the extracted binding this same command runs the two-phase flow
+# (issue #374): phase 1 dispatches the trip-point probe requests, phase 2
+# bakes each point's probed dut_vos into its own request -- the committed
+# extracted 45-point record was minted this way.
 KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py comparator-avg-power
 ```
 

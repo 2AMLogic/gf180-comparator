@@ -779,15 +779,31 @@ def node_coverage_line(derived: dict) -> str:
             f"negative-node (`kick_1k_nnode_peak_mv`) peaks; the negative node sets it at {n_neg}/{len(derived)} corners.")
 
 
-def compare_local_record(path: str, derived: dict) -> dict:
+def compare_local_record(path: str, derived: dict,
+                         local_provenance: str | None = None) -> dict:
     """Signed deltas of the headline quantities, fleet run vs a committed
     LOCAL harness record (issue #372). Only corners present on both sides
     are compared; a headline quantity absent on either side is a named gap,
     never a silently skipped row. The asserted band lives in
     AVG_POWER_CROSS_RUN; an exceeded band flips `status` to OUT_OF_BAND (a
     finding the record states, not a rounding note) but mints nothing
-    differently -- the record's coverage/identity gates are independent."""
+    differently -- the record's coverage/identity gates are independent.
+
+    The band is a LOCAL-vs-FLEET executor-drift tolerance for the SAME
+    binding: `local_provenance` (this run's DUT provenance) must match the
+    local record's, or the comparison is refused (issue #374) -- an
+    extracted-vs-schematic delta is a real physical difference, and pointing
+    the band at it would manufacture a spurious OUT_OF_BAND finding."""
     local = json.loads(Path(path).read_text())
+    if local_provenance is not None:
+        lp = ((local.get("context") or {}).get("dut_provenance")
+              or (local.get("dut") or {}).get("dut_provenance"))
+        if lp != local_provenance:
+            refuse("CROSS_BINDING_COMPARISON",
+                   f"--compare-local {Path(path).name} is a {lp!r}-provenance record but this "
+                   f"run is {local_provenance!r}: AVG_POWER_CROSS_RUN is a local-vs-fleet "
+                   "executor-drift band for the SAME binding (issue #372), not an "
+                   "extracted-vs-schematic agreement band (issue #374)")
     lpts = {p["corner_id"]: p.get("measurements", {}) for p in local.get("points", [])}
     out = {"schema": CROSS_RUN_SCHEMA, "local_record": Path(path).name,
            "policy_source": "sim/tools/klt_record.py AVG_POWER_CROSS_RUN (issue #372)",
@@ -1367,12 +1383,23 @@ def verify_reports(work: Path, b: dict, names: dict, reports: dict) -> list[str]
         closure = env.get("netlist_closure")
         if isinstance(closure, list):
             shas = {e.get("sha256") for e in closure if isinstance(e, dict)}
-            for what, h in (("DUT netlist", b["dut"]["netlist_sha256"]),
-                            ("testbench fragment", b["testbench"]["netlist_sha256"])):
+            # The probe leg (issue #374) includes the PROBE fragment, not the
+            # bench's main one: its closure must carry the probe deck's own
+            # staged sha instead.
+            if r.get("leg") == "probe" and b.get("probe"):
+                frag = ("probe fragment",
+                        (b.get("staged") or {})
+                        .get(f"{b['testbench']['staged_dir']}/{b['probe']['probe_deck']}"))
+                if frag[1] is None:
+                    refuse("SOURCE_BUNDLE_INCONSISTENT",
+                           f"{b['probe']['probe_deck']} is not in the bundle's staged tree")
+            else:
+                frag = ("testbench fragment", b["testbench"]["netlist_sha256"])
+            for what, h in (("DUT netlist", b["dut"]["netlist_sha256"]), frag):
                 if h not in shas:
                     refuse("REPORT_SOURCE_MISMATCH",
                            f"report-{n}.json include closure has no file with the bundled {what} "
-                           f"sha256 {h[:16]}")
+                           f"sha256 {str(h)[:16]}")
         else:
             notes.append(f"report-{n}.json has no netlist_closure; included sources are bound "
                          "through the body netlist hash, whose source-sha256 lines name every "
@@ -1525,9 +1552,15 @@ def dispatch(work: Path, names: list[str]) -> None:
     procs = {}
     for n in names:
         # The child inherits its own copy of each fd, so the parent closes its handles at once.
+        # `--backend <env>` is passed EXPLICITLY: without it `klt sim` keeps
+        # single-unit requests local on its own policy, and the extracted
+        # flow's per-PVT-point main requests (one unit each, issue #374)
+        # would silently become a 45-way local ngspice grid on a shared
+        # dispatch worker instead of fleet jobs.
         with (work / f"report-{n}.json").open("w") as out, (work / f"stderr-{n}.txt").open("w") as err:
             procs[n] = subprocess.Popen(
-                ["klt", "sim", "-o", str(work / f"out-{n}"), str(work / f"request-{n}.json"), "--format", "json"],
+                ["klt", "sim", "--backend", backend, "-o", str(work / f"out-{n}"),
+                 str(work / f"request-{n}.json"), "--format", "json"],
                 stdout=out,
                 stderr=err,
             )
@@ -1536,6 +1569,183 @@ def dispatch(work: Path, names: list[str]) -> None:
         if not (work / f"report-{n}.json").read_text().strip():
             raise SystemExit(f"klt sim request {n} failed (rc={rc}):\n{(work / f'stderr-{n}.txt').read_text()}")
         print(f"request {n}: klt sim rc={rc}", flush=True)
+
+
+# --- extracted binding: the two-phase dut_vos referral (issue #374) -------- #
+
+def names_from_bundle(b: dict, leg: str | None = None) -> dict:
+    """A bundle's request-SET naming: {name: (leg, vdd)} from its own request
+    entries. Used for the extracted flow, whose naming is per-supply (probe
+    leg) and per-PVT-point (main leg) instead of the schematic path's
+    per-supply-per-LEGS pattern; verify_staged re-hashes the bundle against
+    the staged files before anything trusts it."""
+    out = {}
+    for n, r in (b.get("requests") or {}).items():
+        if leg is not None and r.get("leg") != leg:
+            continue
+        out[n] = (r["leg"], float(r["vdd"]))
+    return out
+
+
+def vos_from_tflip(t_flip: float, vspan: float, tramp: float) -> float:
+    """Invert the probe's linear ramp: vrmp is `pwl(0 -vspan tramp +vspan)`,
+    so the ramp value at the flip is exactly this line -- the same inversion
+    `layout/pex/pex_measure.py` ships (issue #164). A flip beyond the ramp
+    inverts outside +-vspan; the caller refuses such a point rather than
+    trust a crossing the clamped ramp produced."""
+    return -vspan + 2.0 * vspan * t_flip / tramp
+
+
+def derive_probe_results(work: Path, b: dict, probe_names: dict) -> dict:
+    """Phase-1 probe reports -> the workdir's probe-results file (issue #374).
+
+    Every probe unit must come back clean (`collect_checked`, the same
+    coverage codes as the main legs); any gap or missing `t_flip` aborts the
+    campaign HERE, loudly and by name, before a single main-leg unit burns
+    fleet time -- never a silent fall back to `dut_vos = 0`, which would
+    measure a different operating condition than DR-0006 defines. A point
+    whose inverted vos reaches the ramp span has had the ramp clamp before
+    its decision flipped and is refused for the same reason."""
+    sec = b["probe"]
+    deck = _staged_path(work, f"{b['testbench']['staged_dir']}/{sec['probe_deck']}")
+    vspan, tramp, _, _ = mk.probe_deck_spans(deck.read_text())
+    if abs(vspan - sec["vspan_v"]) > 1e-12 or abs(tramp - sec["tramp_s"]) > 1e-12:
+        raise SystemExit(f"PROBE_SPAN_MISMATCH: staged deck vspan/tramp {vspan!r}/{tramp!r} vs "
+                         f"bundle {sec['vspan_v']!r}/{sec['tramp_s']!r}")
+    vos: dict[str, float] = {}
+    for n in sorted(probe_names):
+        leg, v = probe_names[n]
+        req = json.loads((work / b["requests"][n]["request"]).read_text())
+        rep = json.loads((work / f"report-{n}.json").read_text())
+        ok, _bad, issues = collect_checked(rep, req, v, tag=n)
+        if issues:
+            raise SystemExit("PROBE_LEG_INCOMPLETE: the offset probe did not return every unit "
+                             "cleanly; failing the campaign here, before any main-leg fleet "
+                             "time:\n  " + "\n  ".join(issues[:40]))
+        for cid, smp in ok.items():
+            t_flip = smp[""].get("t_flip")
+            if not _finite(t_flip):
+                raise SystemExit(f"PROBE_NO_TRIP_POINT: {cid} has no finite t_flip -- failing the "
+                                 "campaign here, never falling back to dut_vos = 0")
+            value = vos_from_tflip(t_flip, vspan, tramp)
+            if not math.isfinite(value) or abs(value) >= vspan:
+                raise SystemExit(f"PROBE_VOS_OUT_OF_SPAN: {cid} t_flip {t_flip!r} inverts to "
+                                 f"{value!r} (vspan {vspan!r}) -- the ramp had clamped before the "
+                                 "decision flipped; the point fails")
+            vos[cid] = value
+    results = {
+        "schema": mk.PROBE_RESULTS_SCHEMA,
+        "bench": b["bench"],
+        "dut": b["dut"]["dut_id"],
+        "vspan_v": vspan, "tramp_s": tramp,
+        "vos_formula": mk.PROBE_VOS_FORMULA,
+        "vos_by_corner": vos,
+        "probe_reports": {n: mk.sha256_file(work / f"report-{n}.json")
+                          for n in sorted(probe_names)},
+    }
+    (work / mk.PROBE_RESULTS_NAME).write_text(
+        json.dumps(results, indent=1, allow_nan=False) + "\n")
+    return results
+
+
+def run_two_phase(a, work: Path) -> None:
+    """The extracted binding's two-phase driver (issue #374).
+
+    Phase 1: `mk_klt_request.py --emit probe` writes the offset_probe
+    requests (one per supply point, full process x temperature grid); they
+    are verified and dispatched, and their reports are distilled into
+    `<work>/probe-results.json` -- aborting there if any probe unit failed or
+    produced no trip point. Phase 2: `--emit main --from-probe` regenerates
+    the request set with the probed centres baked in. The caller then runs
+    the ordinary verify/dispatch/ingest path over the phase-2 bundle, whose
+    request set carries BOTH phases."""
+    mk_args = [sys.executable, str(HERE / "mk_klt_request.py"), a.bench, str(work),
+               "--mc-n", str(a.mc_n)] + (["--dut", a.dut] if a.dut else [])
+    subprocess.check_call(mk_args + ["--emit", "probe"])
+    b1 = load_bundle(work, a.bench)
+    probe_names = names_from_bundle(b1, leg="probe")
+    if not probe_names:
+        raise SystemExit(f"{work / mk.BUNDLE_NAME}: phase 1 produced no probe-leg requests")
+    verify_staged(work, b1, probe_names)
+    dispatch(work, list(probe_names))
+    results = derive_probe_results(work, b1, probe_names)
+    print(f"probe phase: {len(results['vos_by_corner'])} points referred "
+          f"(vos {min(results['vos_by_corner'].values()):.6g} .. "
+          f"{max(results['vos_by_corner'].values()):.6g} V)", flush=True)
+    subprocess.check_call(mk_args + ["--emit", "main",
+                                     "--from-probe", str(work / mk.PROBE_RESULTS_NAME)])
+
+
+def verify_probe_provenance(work: Path, b: dict, names: dict, requests: dict,
+                            reports: dict) -> tuple[dict, list[str]]:
+    """Re-derive every point's dut_vos from the ARCHIVED probe reports and
+    cross-check it against what the main bodies baked (bundle `probe`).
+
+    This closes the provenance loop at ingest: the record's `dut_vos_v`
+    column is established by the probe evidence the record archives, not by
+    the generator's claim about it. -> (vos_by_corner, problems)."""
+    sec = b["probe"]
+    problems: list[str] = []
+    deck = _staged_path(work, f"{b['testbench']['staged_dir']}/{sec['probe_deck']}")
+    vspan, tramp, _, _ = mk.probe_deck_spans(deck.read_text())
+    if abs(vspan - sec["vspan_v"]) > 1e-12 or abs(tramp - sec["tramp_s"]) > 1e-12:
+        problems.append(f"PROBE_SPAN_MISMATCH: staged deck vspan/tramp {vspan!r}/{tramp!r} vs "
+                        f"bundle {sec['vspan_v']!r}/{sec['tramp_s']!r}")
+    vos: dict[str, float] = {}
+    for n in sorted(names):
+        leg, v = names[n]
+        if leg != "probe":
+            continue
+        ok, _bad, issues = collect_checked(reports[n], requests[n], v, tag=n)
+        problems += [f"probe {i}" for i in issues]
+        for cid, smp in ok.items():
+            t_flip = smp[""].get("t_flip")
+            if _finite(t_flip):
+                vos[cid] = vos_from_tflip(t_flip, vspan, tramp)
+    for cid, want in sorted((sec.get("vos_by_corner") or {}).items()):
+        if cid not in vos:
+            problems.append(f"PROBE_VOS_MISSING: {cid} has no probe-derived dut_vos")
+        elif abs(vos[cid] - float(want)) > 1e-12:
+            problems.append(f"PROBE_VOS_MISMATCH: {cid} probe reports give {vos[cid]!r}, "
+                            f"the bundle's baked vos is {want!r}")
+    for n, want in sorted((sec.get("probe_reports") or {}).items()):
+        f = work / f"report-{n}.json"
+        got = mk.sha256_file(f) if f.is_file() else None
+        if got != want:
+            problems.append(f"PROBE_REPORT_SHA_MISMATCH: report-{n}.json "
+                            f"{str(got)[:16]} != the recorded {str(want)[:16]}")
+    return vos, problems
+
+
+def probe_referral_lines(sec: dict, derived: dict, tb, names: dict) -> list[str]:
+    """The extracted record's dut_vos referral section (issue #374)."""
+    vos = {cid: dd["dut_vos_v"] for cid, dd in derived.items() if "dut_vos_v" in dd}
+    probe_requests = sorted(n for n, (leg, _) in names.items() if leg == "probe")
+    out = [
+        f"- **dut_vos referral** (issue #374): every point's overdrive is referred to the DUT's "
+        f"own probed trip point -- `{sec['vos_formula']}` from the phase-1 probe reports "
+        f"({', '.join(probe_requests)}), ramp vspan {sec['vspan_v']:g} V / tramp "
+        f"{sec['tramp_s']:g} s parsed from the staged `{sec['probe_deck']}`."
+        + (f" Probed at all {len(vos)} points: range {min(vos.values()):.6g} V "
+           f"(`{min(vos, key=vos.get)}`) to {max(vos.values()):.6g} V (`{max(vos, key=vos.get)}`)."
+           if vos else " (no probe-derived dut_vos survived verification -- see problems)")
+    ]
+    t_per = tb.params.get("t_per")
+    if t_per:
+        slope = 2 * sec["vspan_v"] / sec["tramp_s"]
+        out.append(
+            f"  - Probe resolution: the ramp moves {slope:.4g} V/s and the decision updates once "
+            f"per {float(t_per) * 1e9:.4g} ns (tb.json `t_per`), so the trip point is resolved to "
+            f"about {slope * float(t_per) * 1e6:.4g} uV -- against the "
+            f"{float(tb.params.get('v_od', 0.0)) * 1e3:.4g} mV overdrive it refers.")
+    out.append(
+        "- **NOT comparable with the schematic records, and no cross-run band was applied**: "
+        "extracted and schematic are different DUTs whose same-named quantities legitimately "
+        "differ; `AVG_POWER_CROSS_RUN`/`--compare-local` is a local-vs-fleet executor-drift band "
+        "for the SAME binding (issue #372) and is not a bridge across bindings (issue #374). The "
+        "post-layout delta against the schematic campaign waits on that campaign's own 45-point "
+        "schematic record (issue #373); the worst-corner figures below are this record's alone.")
+    return out
 
 
 def fmt(v) -> str:
@@ -1623,8 +1833,14 @@ def _archive_record(bench: str, work: Path, b: dict, tb, vdds, names: dict, unve
         (r["exp"] / sub).mkdir(exist_ok=True)
     cdir = r["exp"] / "corners" / r["rid"]
     cdir.mkdir()  # exclusive: raises if the id exists
-    for f in [mk.BUNDLE_NAME, "design.ngspice"] + [f"body-v{v:.2f}.spice" for v in vdds] \
-            + [f"request-{n}.json" for n in names] + [f"report-{n}.json" for n in names]:
+    # Bodies come from the bundle's own request entries: the schematic path
+    # names one body per supply point, the extracted two-phase flow (issue
+    # #374) additionally carries the probe-phase bodies and one body per
+    # PVT point.
+    bodies = sorted({req["netlist"] for req in (b.get("requests") or {}).values()})
+    for f in [mk.BUNDLE_NAME, "design.ngspice"] + bodies \
+            + [f"request-{n}.json" for n in names] + [f"report-{n}.json" for n in names] \
+            + ([mk.PROBE_RESULTS_NAME] if (work / mk.PROBE_RESULTS_NAME).is_file() else []):
         shutil.copy2(work / f, cdir / f)
     shutil.copytree(work / mk.SOURCES_DIR, cdir / mk.SOURCES_DIR)
     snap = r["exp"] / "netlist-snapshots" / f"{r['rid']}.spice"
@@ -1868,9 +2084,18 @@ def main() -> int:
                mk.cm_window_capability_gap(mk.FLEET_RUNNER_KLT_OBSERVED)
                or f"{a.bench} has no record-minting path yet (full 45-point coverage pending, issue #182)")
     work = Path(a.from_report or a.work or f"/tmp/klt-{a.bench}").resolve()
+    two_phase = False
     if not a.from_report:
         work.mkdir(parents=True, exist_ok=True)
-        subprocess.check_call([sys.executable, str(HERE / "mk_klt_request.py"), a.bench, str(work), "--mc-n", str(a.mc_n)] + (["--dut", a.dut] if a.dut else []))
+        if mk.resolve_dut(a.dut).provenance == "extracted":
+            # Issue #374: phase 1 (probe requests, dispatch, distillation)
+            # then phase 2 (main requests with the probed centres baked).
+            # The dispatches happen inside the driver; the flow below only
+            # ingests the phase-2 bundle.
+            run_two_phase(a, work)
+            two_phase = True
+        else:
+            subprocess.check_call([sys.executable, str(HERE / "mk_klt_request.py"), a.bench, str(work), "--mc-n", str(a.mc_n)] + (["--dut", a.dut] if a.dut else []))
     elif a.legacy_diagnostic and not (work / mk.BUNDLE_NAME).is_file():
         return legacy_diagnostic(a.bench, work)
 
@@ -1891,10 +2116,26 @@ def main() -> int:
     bundled_vdds = (b.get("parameters") or {}).get("supply_v")
     vdds = ([float(v) for v in bundled_vdds] if bundled_vdds
             else hc.supply_points(tb.nominal_supply_v, tb.supply_tolerance))
-    names = {f"{leg}-v{v:.2f}": (leg, v) for leg in LEGS[a.bench] for v in vdds}
+    if b.get("probe"):
+        # Extracted two-phase bundle (issue #374): the request set covers both
+        # phases -- per-supply probe requests plus per-PVT-point main
+        # requests -- so the naming comes from the hash-verified bundle.
+        names = names_from_bundle(b)
+        if not any(leg in LEGS[a.bench] for leg, _ in names.values()):
+            refuse("PHASE1_BUNDLE_ONLY",
+                   f"{work / mk.BUNDLE_NAME} is a phase-1 (probe) bundle: it carries no "
+                   "record-minting main leg. Run the phase 2 generation over this workdir "
+                   "(mk_klt_request.py --emit main --from-probe), then ingest that.")
+    else:
+        names = {f"{leg}-v{v:.2f}": (leg, v) for leg in LEGS[a.bench] for v in vdds}
     verify_staged(work, b, names)
     if not a.from_report:
-        dispatch(work, list(names))
+        if two_phase:
+            # The probe phase dispatched inside run_two_phase (its reports
+            # are already on disk); only the main legs submit here.
+            dispatch(work, [n for n in names if names[n][0] in LEGS[a.bench]])
+        else:
+            dispatch(work, list(names))
 
     reports = {n: json.loads((work / f"report-{n}.json").read_text()) for n in names}
     link_notes = verify_reports(work, b, names, reports)
@@ -1905,9 +2146,25 @@ def main() -> int:
     # The requests are the bundled (hash-verified) ones; the expected grid
     # comes from them, never from a hard-coded count (#152).
     requests = {n: json.loads((work / b["requests"][n]["request"]).read_text()) for n in names}
-    legs_c, coverage, expected = _collect_checked_legs(a.bench, names, reports, requests)
+    # The probe leg (issue #374): re-derive every point's dut_vos from the
+    # archived probe reports and cross-check what the main bodies baked,
+    # BEFORE the derive path runs -- a mismatch here is a provenance problem,
+    # not a measurement.
+    probe_vos, probe_problems = (None, [])
+    if b.get("probe"):
+        probe_vos, probe_problems = verify_probe_provenance(work, b, names, requests, reports)
+    main_names = {n: nv for n, nv in names.items() if nv[0] in LEGS[a.bench]}
+    legs_c, coverage, expected = _collect_checked_legs(a.bench, main_names, reports, requests)
     derived, problems = derive(a.bench, tb, legs_c)
-    problems = coverage + problems
+    problems = coverage + probe_problems + problems
+    if probe_vos:
+        # The probed referral is a per-point provenance column of the record
+        # (like the local harness's dut_vos_v stamp), not a graded row: it is
+        # added after derive's manifest-check guard has run on the measured
+        # quantities alone.
+        for cid, dd in derived.items():
+            if cid in probe_vos:
+                dd["dut_vos_v"] = probe_vos[cid]
     complete = not coverage and not problems and len(derived) == expected
     if not derived:
         print("\n".join(["no scorable corner: nothing derived, no record written"] + problems[:60]), file=sys.stderr)
@@ -1920,7 +2177,11 @@ def main() -> int:
 
     # Cross-run agreement (issue #372): compare against the committed local
     # record BEFORE minting, so the outcome is part of the record itself.
-    comparison = compare_local_record(a.compare_local, derived) if a.compare_local else None
+    # The band is same-binding only: an extracted run may not point it at a
+    # schematic local record (issue #374's CROSS_BINDING_COMPARISON refusal).
+    comparison = (compare_local_record(a.compare_local, derived,
+                                       local_provenance=d["provenance"])
+                  if a.compare_local else None)
 
     spec = SPEC.get(a.bench)
     if spec is not None:
@@ -1963,11 +2224,19 @@ def main() -> int:
                       "stays `proposed -- not ratified`, and nothing here performs the DR-0002 ratification "
                       "ceremony. The manifest's checks are functional decision reads, measurement plumbing and "
                       "DR-0006's own same-run settledness criterion -- none is a spec verdict.")
+    n_probe = sum(1 for leg, _ in names.values() if leg == "probe")
+    exp_line = (
+        f"- **Experiment**: `sim/{a.bench}/` (klt sim requests, two phases -- issue #374: "
+        f"{n_probe} probe requests, one per supply point over the full process x temperature "
+        f"grid, then {len(names) - n_probe} main requests, one per PVT point with that point's "
+        "probed dut_vos baked in)"
+        if n_probe else
+        f"- **Experiment**: `sim/{a.bench}/` (klt sim requests, one per supply point: {', '.join(names)})")
     lines = [
         f"# Record {rid}",
         "",
         f"- **Record ID**: {rid}",
-        f"- **Experiment**: `sim/{a.bench}/` (klt sim requests, one per supply point: {', '.join(names)})",
+        exp_line,
         f"- **Topology label**: {a.label or d['dut_id']}",
         claim_line,
         f"- **DUT**: `{d['dut_id']}` -- **{d['provenance']}** -- `{d['netlist']}` (sha256 `{d['netlist_sha256'][:16]}`), binding `{d['binding_config']}` entry `{d['key']}` (sha256 `{d['binding_entry_sha256'][:16]}`), params {json.dumps(d['params'], sort_keys=True)}",
@@ -2006,6 +2275,17 @@ def main() -> int:
     lines += [""]
     if scored:
         lines.append(f"- **Score vs ratified bounds** (`{key}`): within target {n_t}/{len(vals)}, within stretch {n_s}/{len(vals)}; min {vals[best_cid]:.6g} @ `{best_cid}`, max {vals[worst_cid]:.6g} @ `{worst_cid}` ({unit}).")
+    if b.get("probe"):
+        # Issue #374: the extracted record's referral provenance, then its
+        # own worst corners -- stated separately from the schematic
+        # campaign's numbers, never merged with them.
+        lines += probe_referral_lines(b["probe"], derived, tb, names)
+        pw = {cid: dd["p_avg_uw"] for cid, dd in derived.items()}
+        qm = {cid: dd["q_half_mismatch_pct"] for cid, dd in derived.items()}
+        lines.append(
+            f"- **Worst corners (this record alone)**: max `p_avg_uw` {max(pw.values()):.6g} uW "
+            f"@ `{max(pw, key=pw.get)}`; worst `q_half_mismatch_pct` {max(qm.values()):.6g} % "
+            f"@ `{max(qm, key=qm.get)}`.")
     if comparison is not None:
         lines += cross_run_lines(comparison)
     if a.bench == "comparator-regeneration":
@@ -2040,6 +2320,10 @@ def main() -> int:
         "points": len(derived), "problems": problems,
         **({"supplemental_reverse_polarity": rev} if (rev := reverse_polarity_summary(derived)) else {}),
         "derived": derived,
+        **({"dut_vos_referral": {**b["probe"],
+                                 "probe_requests": sorted(n for n, (leg, _) in names.items()
+                                                          if leg == "probe")}}
+           if b.get("probe") else {}),
         **({"cross_run_agreement": comparison} if comparison is not None else {}),
         **({"input_node_coverage": node_coverage(derived)} if a.bench == "comparator-kickback" else {}),
         **({"decision_correctness": decisions} if decisions is not None else {}),

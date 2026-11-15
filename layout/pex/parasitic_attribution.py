@@ -113,6 +113,11 @@ CITED_REPORT = HERE / "comparator.pex.json"
 CITED_MEASURE = HERE / "artifacts" / "measure"
 SCHEMATIC_DUT = REPO / "design" / "comparator.spice"
 
+#: The #229 attribution artifact whose net selection the budget and combo
+#: studies reuse; hashed into both stage manifests.
+ATTRIBUTION_JSON_229 = (HERE / "artifacts" / "parasitic-attribution"
+                        / "20261010-120720-230574b" / "attribution.json")
+
 #: The two worst failing corners named by issue #229. Both are 125 C / 2.97 V,
 #: so one probe request (process tt + ss) covers both.
 TEMP_C = 125.0
@@ -957,36 +962,21 @@ def file_sha(path: Path) -> str:
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def _stage_source_sha256(text: str, extra: dict | None = None) -> dict:
-    """The hashed inputs every ground-C / combined ladder stage depends on.
+def common_source_sha256(text: str) -> dict:
+    """The six stage hashes every parasitic study records identically (#371).
 
-    One definition shared by `budget_manifest` and `combo_manifest` (#359):
-    the cited data inputs that are integrity gates, plus the code hashes,
-    which `is_provenance_source_key` classifies as provenance only (drift
-    reported, never an error). `extra` carries a
-    stage's own additional cited input and is spliced in after the common data
-    inputs; stage.json is written with `sort_keys=True`, so that placement
-    only fixes the order this reads in source, never the committed bytes.
-
-    NOT shared with `design_lever_study.manifest`, deliberately: that stage
-    cites no #229 attribution.json and records its own module hash under
-    `design_lever_study_py` (provenance drift by the same `_py` rule).
+    One source of truth for the integrity gate `budget_manifest_diff` enforces:
+    each manifest builder spreads this and adds only its own study's extras,
+    so the key set a study gates on cannot silently diverge from the others.
     """
-    out = {
+    return {
         "extracted_dut": sha(text),
         "schematic_dut": file_sha(SCHEMATIC_DUT),
         "cited_report": file_sha(CITED_REPORT),
-        "attribution_json_229": file_sha(
-            HERE / "artifacts" / "parasitic-attribution" / "20261010-120720-230574b"
-            / "attribution.json"),
-    }
-    out.update(extra or {})
-    out.update({
         "tb_json_consumed_fields": TB_JSON_CONSUMED_SHA256,
         "pex_measure_py": file_sha(HERE / "pex_measure.py"),
         "parasitic_attribution_py": file_sha(Path(__file__).resolve()),
-    })
-    return out
+    }
 
 
 def budget_manifest(text: str, plan: list[dict], points, nets) -> dict:
@@ -999,7 +989,10 @@ def budget_manifest(text: str, plan: list[dict], points, nets) -> dict:
                     "own probed trip point; no spec row scored, T1 item 7 unchanged"),
         "nets": list(nets),
         "points": [pid(p) for p in points],
-        "source_sha256": _stage_source_sha256(text),
+        "source_sha256": {
+            **common_source_sha256(text),
+            "attribution_json_229": file_sha(ATTRIBUTION_JSON_229),
+        },
         "variants": [{
             "id": x["id"], "side": x["side"], "centre": x["centre"], "fraction": x["fraction"],
             "dut_sha256": sha(x["dut"]), "probe_deck_sha256": sha(probe_deck(x["dut"])),
@@ -1565,10 +1558,12 @@ def combo_manifest(text: str, plan: list[dict], points, kind: str,
         "cg_nets": cg_nets, "leg_nets": leg_nets,
         "points": [pid(x) for x in points],
         "requests_planned": count_requests(plan, points),
-        "source_sha256": _stage_source_sha256(text, {
+        "source_sha256": {
+            **common_source_sha256(text),
+            "attribution_json_229": file_sha(ATTRIBUTION_JSON_229),
             "ground_c_budget_243_readme": file_sha(
                 HERE / "artifacts" / "ground-c-budget" / "20261010-154019-b9fff0f" / "README.md"),
-        }),
+        },
         "variants": [],
     }
     for x in plan:

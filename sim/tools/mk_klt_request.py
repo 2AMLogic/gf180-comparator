@@ -59,6 +59,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
+import re
 import shutil
 import subprocess
 import sys
@@ -92,6 +94,28 @@ BATCH_CAPACITY_WAIT_S = 1800
 #: Benches whose requests carry a `monte_carlo` block.
 MC_BENCHES = ("comparator-offset-mc", "comparator-offset-tran", "comparator-offset-cm-window",
               "comparator-offset-cm-index")
+
+#: Extracted-binding two-phase flow (issue #374). DR-0006 defines the
+#: overdrive as +-v_od about the DUT's OWN trip point -- 0 V for the offset-free
+#: schematic, the per-corner probed `dut_vos` for an extracted one -- so a
+#: fleet extracted campaign is TWO submissions: phase 1 (`--emit probe`)
+#: requests tb.json's `offset_probe` deck over the grid and measures each
+#: point's trip time `t_flip`; phase 2 (`--emit main --from-probe`) bakes each
+#: point's measured `dut_vos` into its own body netlist. The mechanism is the
+#: two-phase pattern `layout/pex/pex_measure.py` shipped for the regeneration
+#: bench (issue #164); what is new here is that the production request builder
+#: speaks it, so a record can be minted (which pex_measure's klt pex documents
+#: cannot be). The carrier is a per-point `.param dut_vos=<probed>` -- the
+#: same injection `sim/harness/runner.py:compose_deck` performs locally --
+#: not a behavioural `v(vos)` ternary, because the deck's stimulus levels sit
+#: inside a `pulse(...)` source that ngspice evaluates at parse time, and a
+#: per-point body keeps the staged fragment byte-verbatim (issue #151's
+#: invariant at its strongest: the bytes simulated are the bytes hashed).
+PROBE_RESULTS_SCHEMA = "probe-results/1"
+PROBE_RESULTS_NAME = "probe-results.json"
+#: The ramp inversion the probe results carry (vspan/tramp are parsed from the
+#: staged deck itself; see `probe_deck_spans`).
+PROBE_VOS_FORMULA = "-vspan + 2*vspan*t_flip/tramp"
 
 #: Supplemental consumer-window common-mode bench (issue #182). Separately
 #: named: comparator-offset-mc's +-50 mV bench and records are untouched.
@@ -414,6 +438,11 @@ def stage_sources(out: Path, tb, dut, binding: tuple[Path, str | None, dict], se
     if tb.reverse_ladder:
         staged["reverse_ladder_netlist"] = (
             f"{SOURCES_DIR}/testbench/{tb.reverse_ladder['netlist']}")
+    if tb.offset_probe:
+        # The probe fragment is staged with the rest of the directory; this
+        # names its staged path for the extracted-binding probe leg (issue
+        # #374). The file exists: htb.load asserts offset_probe's netlist.
+        staged["probe_netlist"] = f"{SOURCES_DIR}/testbench/{tb.offset_probe['netlist']}"
     return staged
 
 
@@ -469,6 +498,184 @@ def tran_meas_cards(tb, *, drop_let_pairs: bool = False) -> list[dict]:
         out.append({"name": parts[2], "spice": "." + line})
         i += 1
     return out
+
+
+# --- extracted-binding probe leg (issue #374) ------------------------------ #
+
+#: Subcircuits a testbench fragment may instantiate, mapped to the thing that
+#: must supply them. The DUT binding owns all of these (sim/dut/README.md).
+_FRAGMENT_DUT_SUBCKTS = ("comparator_dut", "comparator_dut_analog",
+                         "comparator_dut_latch")
+_FRAGMENT_DUT_RE = {name: re.compile(rf"\b{name}\b") for name in _FRAGMENT_DUT_SUBCKTS}
+
+
+def check_dut_fragment_compatibility(dut, tb) -> None:
+    """Refuse a bench whose fragment instantiates a subckt the bound DUT
+    cannot provide -- before any request is written, let alone simulated.
+
+    This is `sim/harness/cli.py`'s runtime DUT-compatibility check, ported to
+    the fleet path now that this tool accepts extracted bindings: a flat
+    extracted netlist defines only the whole-comparator `comparator_dut`, so
+    the two analog-partition benches (offset-mc, preamp-noise) must be told
+    apart BEFORE a grid burns on an undefined-subckt deck."""
+    fragment = tb.netlist.read_text()
+    for name, pattern in _FRAGMENT_DUT_RE.items():
+        if pattern.search(fragment) and not dut.provides(name):
+            raise SystemExit(
+                f"{tb.name}'s fragment instantiates `{name}`, which the bound DUT "
+                f"`{dut.dut_id}` ({dut.provenance}) does not define -- a flat extracted "
+                "netlist carries no analog/latch partition. Re-run against the "
+                "schematic binding (--dut comparator-dr0001, or no --dut at all).")
+
+
+#: ngspice numeric-literal scale suffixes (a trailing letter after the digits).
+_SI_SCALE = {"t": 1e12, "g": 1e9, "k": 1e3, "m": 1e-3, "u": 1e-6, "n": 1e-9,
+             "p": 1e-12, "f": 1e-15}
+
+
+def parse_si_number(text: str, what: str) -> float:
+    """An ngspice numeric literal -> float (`40m` -> 0.04, `80u` -> 8e-5).
+
+    Refuses anything it cannot parse exactly: the probe's dut_vos inversion is
+    derived from the deck's own vspan/tramp constants, and a silently-wrong
+    parse would mis-refer every point of the campaign."""
+    m = re.fullmatch(r"([+-]?(?:[0-9]+\.?[0-9]*|\.[0-9]+)(?:[eE][+-]?[0-9]+)?)"
+                     r"([a-zA-Z]?)", str(text).strip())
+    if not m:
+        raise SystemExit(f"cannot parse {what} {text!r} as an ngspice number")
+    suffix = m.group(2).lower()
+    if suffix and suffix not in _SI_SCALE:
+        raise SystemExit(f"cannot parse {what} {text!r}: unknown scale suffix {suffix!r}")
+    return float(m.group(1)) * _SI_SCALE.get(suffix, 1.0)
+
+
+def probe_deck_spans(deck_text: str) -> tuple[float, float, str, str]:
+    """(vspan_v, tramp_s, raw-vspan, raw-tramp) from a probe deck's own
+    `.param vspan=` / `.param tramp=` cards (tb_vosprobe.spice).
+
+    The dut_vos inversion is derived from the DECK's constants -- never
+    hard-coded beside it -- so a changed ramp re-derives instead of silently
+    mis-referring; a deck without the two cards is refused."""
+    raw = {}
+    for name in ("vspan", "tramp"):
+        m = re.search(rf"^\s*\.param\s+{name}\s*=\s*(\S+)", deck_text,
+                      re.MULTILINE | re.IGNORECASE)
+        if not m:
+            raise SystemExit(f"the probe deck declares no `.param {name}=...`: "
+                             "the dut_vos inversion cannot be derived from it")
+        raw[name] = m.group(1).rstrip(",;")
+    vspan = parse_si_number(raw["vspan"], "vspan")
+    tramp = parse_si_number(raw["tramp"], "tramp")
+    if not (vspan > 0.0 and tramp > 0.0):
+        raise SystemExit(f"probe deck vspan/tramp must be positive "
+                         f"(got vspan={raw['vspan']!r}, tramp={raw['tramp']!r})")
+    return vspan, tramp, raw["vspan"], raw["tramp"]
+
+
+def probe_meas_cards(tb) -> list[dict]:
+    """tb.json `offset_probe.analyses` `meas` cards -> klt measurement entries.
+
+    A card whose arguments reference ANOTHER card's result is NOT shipped:
+    tb_vosprobe.spice's `vos_v find v(rmp) at=t_flip` reads back a number the
+    consumer derives exactly from t_flip alone (the ramp is linear by
+    construction -- PROBE_VOS_FORMULA), and no committed fleet report has
+    exercised a `.meas ... at=<measured result>` argument on the runner. The
+    first extracted campaign must not gamble 45 fleet units on an unproven
+    card shape; the bundle's probe block records the derivation so the record
+    shows why the card is absent."""
+    cards = list(tb.offset_probe.get("analyses", ()))
+    names = [line.split()[2] for line in cards
+             if line.split() and line.split()[0] == "meas"]
+    out = []
+    for line in cards:
+        parts = line.split()
+        if not parts or parts[0] == "*":
+            raise SystemExit(f"{tb.name}: offset_probe has an empty/comment card {line!r}")
+        if parts[0] == "let":
+            raise SystemExit(f"{tb.name}: offset_probe card {line!r} is a `let` -- the fleet "
+                             "request schema has no position for one (issue #372's precedent)")
+        if parts[0] != "meas":
+            continue  # the analysis card; probe_legs ships it as the leg's analysis
+        deps = [n for n in names
+                if n != parts[2] and re.search(rf"\b{re.escape(n)}\b", line)]
+        if deps:
+            continue  # derived from another card's result; the consumer re-derives it
+        out.append({"name": parts[2], "spice": "." + line})
+    if not out:
+        raise SystemExit(f"{tb.name}: offset_probe declares no shippable `meas` card")
+    return out
+
+
+def probe_legs(tb) -> dict[str, dict]:
+    """The extracted-binding probe leg (issue #374): the `offset_probe` deck's
+    analysis plus its shippable `.meas` cards, ONE leg named `probe`.
+
+    The probe bodies carry the full process x temperature grid per supply
+    point (the probe fragment is offset-free -- a free-running ramp -- so it
+    needs no per-point dut_vos). The consumer derives each point's dut_vos
+    from `t_flip`, then asks this tool for the phase-2 main requests."""
+    cards = list(tb.offset_probe.get("analyses", ()))
+    if not cards or not cards[0].split() or cards[0].split()[0] == "meas":
+        raise SystemExit(f"{tb.name}: offset_probe.analyses[0] must be the analysis card "
+                         "(e.g. `tran 100n 80u 0 100n`), not a measurement")
+    kind, args = cards[0].split(None, 1)
+    return {"probe": {"analysis": {"kind": kind, "args": args},
+                      "measurements": probe_meas_cards(tb)}}
+
+
+def resolve_dut(selector: str | None):
+    """`--dut` resolution shared with klt_record.py: an id into sim/dut.json,
+    or a path to an alternate binding json -- whichever the value names."""
+    if selector and Path(selector).is_file():
+        return hdut.load(path=selector)
+    return hdut.load(select=selector)
+
+
+def load_probe_results(path: Path, bench: str, vspan: float,
+                       wanted: set[str]) -> dict:
+    """A probe-results file -> validated dict, for `--emit main --from-probe`.
+
+    Validates the schema and bench identity, that the spans it was derived
+    under are the STAGED deck's spans, and that every requested grid point has
+    a usable dut_vos. Both trip-point failure modes refuse the campaign here,
+    loudly, naming the corners -- never a silent fall back to `dut_vos = 0`
+    (an un-referred ladder on an offset-carrying DUT measures the wrong
+    operating condition; the local harness runner.py states the same rule)."""
+    try:
+        raw = json.loads(Path(path).read_text())
+    except (OSError, ValueError) as e:
+        raise SystemExit(f"--from-probe {path}: cannot be read as JSON ({e})")
+    if not isinstance(raw, dict) or raw.get("schema") != PROBE_RESULTS_SCHEMA:
+        raise SystemExit(f"--from-probe {path}: schema {raw.get('schema')!r} != "
+                         f"{PROBE_RESULTS_SCHEMA!r}")
+    if raw.get("bench") != bench:
+        raise SystemExit(f"--from-probe {path}: generated for bench {raw.get('bench')!r}, "
+                         f"not {bench!r}")
+    got = raw.get("vspan_v")
+    if not isinstance(got, (int, float)) or not math.isfinite(got) \
+            or abs(float(got) - vspan) > 1e-12:
+        raise SystemExit(f"--from-probe {path}: vspan_v {got!r} does not match the staged "
+                         f"probe deck's vspan ({vspan!r}) -- these results were not derived "
+                         "from the deck bytes this request set stages")
+    vos = raw.get("vos_by_corner")
+    if not isinstance(vos, dict) or not vos:
+        raise SystemExit(f"--from-probe {path}: no vos_by_corner map")
+    missing = sorted(wanted - set(vos))
+    if missing:
+        raise SystemExit(
+            "PROBE_NO_TRIP_POINT: the offset probe produced no usable trip point for "
+            + ", ".join(missing)
+            + " -- failing the campaign here, never falling back to dut_vos = 0. "
+              "See the probe reports named in the results file.")
+    bad = {k: v for k, v in vos.items() if k in wanted
+           and (not isinstance(v, (int, float)) or isinstance(v, bool)
+                or not math.isfinite(v) or abs(v) >= vspan)}
+    if bad:
+        raise SystemExit(
+            f"PROBE_VOS_OUT_OF_SPAN: dut_vos outside the probe ramp (vspan {vspan!r}) "
+            f"for {sorted(bad)}: {bad} -- the ramp had clamped before the decision "
+            "flipped, so the referral is not established and the point must fail")
+    return raw
 
 
 def legs_for(bench: str, tb, mc_n: int) -> dict[str, dict]:
@@ -552,6 +759,14 @@ def main() -> int:
                          "`.options reltol/abstol/vntol` cards into the body and bind them in the bundle")
     ap.add_argument("--supply-v", nargs="*", type=float, default=None,
                     help="restrict to these supply points (must be among the tolerance rails)")
+    ap.add_argument("--emit", default=None, choices=("probe", "main"),
+                    help="extracted DUT binding only (issue #374): `probe` writes the "
+                         "offset_probe requests (phase 1); `main` writes the overdrive requests "
+                         "with each point's PROBED dut_vos baked in (phase 2, needs --from-probe). "
+                         "The schematic binding always emits main and takes no probe.")
+    ap.add_argument("--from-probe", default=None, metavar="PROBE_RESULTS_JSON",
+                    help="phase-2 input: the probe-results file sim/tools/klt_record.py writes "
+                         "after dispatching the phase-1 probe requests")
     a = ap.parse_args()
 
     if a.tolerance_profile and a.bench != CM_INDEX_BENCH:
@@ -565,10 +780,49 @@ def main() -> int:
             raise SystemExit(f"UNSUPPORTED_EXECUTOR_CAPABILITY: {gap}")
     tb = htb.load(SIM / a.bench)
     pdk = hpdk.find_pdk()
-    dut = hdut.load(path=a.dut) if a.dut and Path(a.dut).is_file() else hdut.load(select=a.dut)
-    if dut.provenance != "schematic":
-        raise SystemExit("mk_klt_request.py supports the schematic binding only "
-                         "(dut_vos probe leg is not implemented)")
+    dut = resolve_dut(a.dut)
+    check_dut_fragment_compatibility(dut, tb)
+
+    # Phase resolution (issue #374). The blanket schematic-only refusal this
+    # replaced declared the probe leg "not implemented" -- a declared gap (the
+    # message and sim/README.md's tracking citation both said so), now
+    # implemented for extracted bindings via the two-phase flow.
+    if dut.provenance == "placeholder":
+        raise SystemExit("mk_klt_request.py refuses placeholder bindings: records made "
+                         "against them substantiate the harness, not a design, and the "
+                         "local path mints those")
+    probe_section: dict | None = None
+    if dut.provenance == "schematic":
+        if a.emit == "probe" or a.from_probe:
+            raise SystemExit("--emit probe / --from-probe are the extracted binding's dut_vos "
+                             "referral (issue #374); the schematic DUT is offset-free by "
+                             "construction (dut_vos = 0) and takes no probe")
+        phase = "main"
+    elif dut.provenance == "extracted":
+        if not tb.offset_probe:
+            raise SystemExit(f"{tb.name} declares no offset_probe: an extracted DUT's overdrive "
+                             "cannot be referred to its own trip point, so this binding has no "
+                             "fleet campaign (issue #374)")
+        if a.emit is None:
+            raise SystemExit("an extracted DUT needs the two-phase flow (issue #374): run once "
+                             "with --emit probe, dispatch those requests through `klt sim`, then "
+                             "run again with --emit main --from-probe <workdir>/"
+                             + PROBE_RESULTS_NAME)
+        if a.emit == "probe":
+            if a.from_probe:
+                raise SystemExit("--from-probe is the phase-2 (`--emit main`) input; phase 1 "
+                                 "(--emit probe) must run and be dispatched first")
+            phase = "probe"
+        else:
+            if not a.from_probe:
+                raise SystemExit("--emit main for an extracted DUT needs --from-probe "
+                                 f"<workdir>/{PROBE_RESULTS_NAME} (the phase-1 probe results); "
+                                 "a hard-coded dut_vos = 0 is exactly what this flow exists "
+                                 "to prevent")
+            phase = "main"
+    else:
+        raise SystemExit(f"unknown DUT provenance {dut.provenance!r}")
+
     out = Path(a.outdir).resolve()
     out.mkdir(parents=True, exist_ok=True)
     binding = binding_entry(a.dut)
@@ -588,7 +842,8 @@ def main() -> int:
     tol_lines = tolerance_option_lines(a.tolerance_profile) if a.tolerance_profile else []
     temps = list(a.temps) if a.temps else [float(t) for t in tb.temperatures_c]
 
-    def body_for(vdd: float) -> list[str]:
+    def body_for(vdd: float, *, dut_vos_lines: list[str], include_netlist: str,
+                 main_leg: bool) -> list[str]:
       return [
         f"* {tb.name} -- GENERATED by sim/tools/mk_klt_request.py, do not edit",
         f"* dut={dut.dut_id} ({dut.provenance}) sha256={dut.netlist_sha256[:16]}",
@@ -599,10 +854,12 @@ def main() -> int:
         f".param vdd_val={vdd!r}",
         ".param temp_c=27.0",
         *dut.param_lines(),
-        # The harness injects dut_vos (0 for a schematic DUT, the probed
-        # trip-point offset for an extracted one). Only the schematic
-        # binding is supported here; an extracted DUT needs the probe leg.
-        ".param dut_vos=0.0",
+        # The harness injects dut_vos: 0 for a schematic DUT (offset-free by
+        # construction); the phase-2 body of an extracted point carries that
+        # point's PROBED trip-point offset (issue #374 -- a hard-coded 0.0
+        # would measure a different operating condition than DR-0006 defines
+        # the overdrive against).
+        *dut_vos_lines,
         # differential probe for the dc `.meas` cards (the 0.5.0 runner cannot
         # evaluate v(a)-v(b) inside .meas); a high-Z VCVS, no loading.
         *(["Eddprobe dd 0 aop aon 1"] if a.bench == "comparator-offset-mc" else []),
@@ -616,70 +873,169 @@ def main() -> int:
         # bytes simulated are the bytes the source bundle hashes, not a
         # checkout path that can change before the record is minted.
         f'.include "{staged["dut"]}"',
-        f'.include "{staged["testbench_netlist"]}"',
+        f'.include "{include_netlist}"',
         # The supplemental reverse-polarity ladder (issue #158): a second
         # staged fragment, so the fleet transient matches the local harness
-        # deck and every reverse `.meas` card has its instance.
+        # deck and every reverse `.meas` card has its instance. Main legs
+        # only -- the probe fragment drives no reverse ladder.
         *(reverse_ladder_include(staged)
-          if staged.get("reverse_ladder_netlist") else []),
-        *(SINGLE_THREAD_CONTROL if a.bench in SINGLE_THREAD_BENCHES else []),
+          if main_leg and staged.get("reverse_ladder_netlist") else []),
+        # One OpenMP thread per unit (issue #157); main legs only -- the
+        # probe fragment carries no `.control`-conflicting deck.
+        *(SINGLE_THREAD_CONTROL if main_leg and a.bench in SINGLE_THREAD_BENCHES else []),
         "",
     ]
     (out / "design.ngspice").write_text(Path(pdk.design_include).read_text())
     requests: dict[str, dict] = {}
 
+    def write_leg_requests(leg: str, vdd: float, vtag: str, spec: dict,
+                           proc_entries: list[dict], leg_temps: list[float]) -> None:
+        req = {
+            "netlist": f"body-{vtag}.spice",
+            "engine": "ngspice",
+            "models": {"pdk": PDK_VARIANT, "lib": "libs.tech/ngspice/sm141064.ngspice"},
+            "corners": {"process": proc_entries, "temperature_c": leg_temps},
+            # The fleet image's klt can lag the submitting client; run anyway
+            # and let the record state the runner/client versions it saw.
+            # A Spot capacity refusal is retried with the client's own
+            # backoff for up to BATCH_CAPACITY_WAIT_S instead of being
+            # terminal on the first refusal (issue #157; klt #2721).
+            # A request that depends on `expr` must be refused BEFORE
+            # simulating (`enforce`), never detected after the fact
+            # (issue #182's precedent; issue #355 for the noise legs,
+            # whose 45 corners would otherwise burn fleet time before a
+            # skew surfaced). Benches whose measurements are plain
+            # `.meas` cards stay on `warn`: they run on any runner, and
+            # the record states the runner/client versions it saw.
+            "batch": {"runner_version_check":
+                      "enforce" if a.bench in (CM_WINDOW_BENCH,) + EXPR_MEASUREMENT_BENCHES else "warn",
+                      "capacity_wait_s": BATCH_CAPACITY_WAIT_S},
+            "analysis": spec["analysis"],
+            "measurements": spec["measurements"],
+            "options": {
+                "timeout_s": 3000,
+                "keep_artifacts": True,
+                "ngspice_init": NGSPICE_INIT,
+            },
+        }
+        if "monte_carlo" in spec:
+            req["monte_carlo"] = spec["monte_carlo"]
+        (out / f"request-{leg}-{vtag}.json").write_text(json.dumps(req, indent=2) + "\n")
+        requests[f"{leg}-{vtag}"] = {
+            "leg": leg, "vdd": vdd,
+            "request": f"request-{leg}-{vtag}.json",
+            "request_sha256": sha256_file(out / f"request-{leg}-{vtag}.json"),
+            "netlist": f"body-{vtag}.spice",
+            "netlist_sha256": sha256_file(out / f"body-{vtag}.spice"),
+        }
+        n = len(proc_entries) * len(leg_temps) * (a.mc_n if "monte_carlo" in spec else 1)
+        print(f"wrote {out}/request-{leg}-{vtag}.json ({n} units)")
+
     # One request (and one body netlist with `.param vdd_val=<V>` baked in)
-    # PER SUPPLY POINT. A `corners.supply_v` sweep cannot be used: it works by
-    # ngspice `alter <source>=V`, which (a) is refused for the clock's pulse
-    # source and (b) would leave the testbench's {vdd_val}-scaled clock
-    # amplitude / vdda rail at nominal. An `alter vdd_val=...` on the .param
-    # name is a silent no-op -- an earlier revision of this tool did exactly
-    # that and produced supply-independent "45-corner" records.
+    # PER SUPPLY POINT on the schematic path. A `corners.supply_v` sweep
+    # cannot be used: it works by ngspice `alter <source>=V`, which (a) is
+    # refused for the clock's pulse source and (b) would leave the
+    # testbench's {vdd_val}-scaled clock amplitude / vdda rail at nominal.
+    # An `alter vdd_val=...` on the .param name is a silent no-op -- an
+    # earlier revision of this tool did exactly that and produced
+    # supply-independent "45-corner" records.
     process = [{"name": c.name, "sections": list(c.sections)} for c in corner_list]
-    for vdd in vdds:
-        vtag = f"v{vdd:.2f}"
-        (out / f"body-{vtag}.spice").write_text("\n".join(body_for(vdd)))
-        for leg, spec in legs_for(a.bench, tb, a.mc_n).items():
-            req = {
-                "netlist": f"body-{vtag}.spice",
-                "engine": "ngspice",
-                "models": {"pdk": PDK_VARIANT, "lib": "libs.tech/ngspice/sm141064.ngspice"},
-                "corners": {"process": process, "temperature_c": temps},
-                # The fleet image's klt can lag the submitting client; run anyway
-                # and let the record state the runner/client versions it saw.
-                # A Spot capacity refusal is retried with the client's own
-                # backoff for up to BATCH_CAPACITY_WAIT_S instead of being
-                # terminal on the first refusal (issue #157; klt #2721).
-                # A request that depends on `expr` must be refused BEFORE
-                # simulating (`enforce`), never detected after the fact
-                # (issue #182's precedent; issue #355 for the noise legs,
-                # whose 45 corners would otherwise burn fleet time before a
-                # skew surfaced). Benches whose measurements are plain
-                # `.meas` cards stay on `warn`: they run on any runner, and
-                # the record states the runner/client versions it saw.
-                "batch": {"runner_version_check":
-                          "enforce" if a.bench in (CM_WINDOW_BENCH,) + EXPR_MEASUREMENT_BENCHES else "warn",
-                          "capacity_wait_s": BATCH_CAPACITY_WAIT_S},
-                "analysis": spec["analysis"],
-                "measurements": spec["measurements"],
-                "options": {
-                    "timeout_s": 3000,
-                    "keep_artifacts": True,
-                    "ngspice_init": NGSPICE_INIT,
-                },
-            }
-            if "monte_carlo" in spec:
-                req["monte_carlo"] = spec["monte_carlo"]
-            (out / f"request-{leg}-{vtag}.json").write_text(json.dumps(req, indent=2) + "\n")
-            requests[f"{leg}-{vtag}"] = {
-                "leg": leg, "vdd": vdd,
-                "request": f"request-{leg}-{vtag}.json",
-                "request_sha256": sha256_file(out / f"request-{leg}-{vtag}.json"),
-                "netlist": f"body-{vtag}.spice",
-                "netlist_sha256": sha256_file(out / f"body-{vtag}.spice"),
-            }
-            n = len(corner_list) * len(temps) * (a.mc_n if "monte_carlo" in spec else 1)
-            print(f"wrote {out}/request-{leg}-{vtag}.json ({n} units)")
+    if phase == "probe":
+        # Phase 1 (issue #374): the offset_probe deck over the full grid, one
+        # body per supply point (the probe fragment is offset-free -- a
+        # free-running ramp -- so nothing point-specific is baked).
+        vspan, tramp, _vs_raw, _tr_raw = probe_deck_spans(
+            (out / staged["probe_netlist"]).read_text())
+        probe_section = {
+            "mechanism": "two-phase dut_vos referral (issue #374): these phase-1 requests "
+                         "measure each point's trip time t_flip; the phase-2 main bodies "
+                         "then bake each point's dut_vos = " + PROBE_VOS_FORMULA,
+            "probe_deck": tb.offset_probe["netlist"],
+            "vspan_v": vspan, "tramp_s": tramp,
+            "vos_formula": PROBE_VOS_FORMULA,
+        }
+        for vdd in vdds:
+            vtag = f"v{vdd:.2f}"
+            (out / f"body-{vtag}.spice").write_text("\n".join(body_for(
+                vdd, dut_vos_lines=[], include_netlist=staged["probe_netlist"],
+                main_leg=False)))
+            for leg, spec in probe_legs(tb).items():
+                write_leg_requests(leg, vdd, vtag, spec, process, temps)
+    elif dut.provenance == "extracted":
+        # Phase 2 (issue #374): ONE body -- and one request -- PER PVT POINT,
+        # each baking that point's PROBED dut_vos as a parse-time literal. A
+        # per-supply body cannot carry a per-corner dut_vos: the request
+        # schema has no per-corner param position (the structural difficulty
+        # that makes this a two-phase flow at all), and the deck's stimulus
+        # levels sit inside a `pulse(...)` evaluated at parse time, so the
+        # value must be a literal, not a behavioural expression. The staged
+        # fragment is included byte-verbatim (issue #151), exactly as the
+        # schematic path and the local harness compose_deck both do.
+        vspan, tramp, _vs_raw, _tr_raw = probe_deck_spans(
+            (out / staged["probe_netlist"]).read_text())
+        wanted = {f"{c.name}_{float(t):g}c_{vdd:.2f}v"
+                  for c in corner_list for t in temps for vdd in vdds}
+        # The phase-1 probe requests live on in the phase-2 bundle (same
+        # staged sources, same bytes): the record archives ONE bundle whose
+        # request set covers both phases, so ingestion verifies and archives
+        # the probe evidence beside the main reports. The phase-1 bundle must
+        # be present -- without it the probe reports are not part of this
+        # request set and the record's dut_vos provenance would rest on the
+        # results file's word alone.
+        prev = out / BUNDLE_NAME
+        if not prev.is_file():
+            raise SystemExit(f"--emit main needs the phase-1 bundle {prev} (run --emit probe "
+                             "into this workdir first): without it this request set carries no "
+                             "probe evidence and the dut_vos provenance has no archived source")
+        old = json.loads(prev.read_text())
+        carried = {n: r for n, r in (old.get("requests") or {}).items()
+                   if r.get("leg") == "probe"}
+        if not carried:
+            raise SystemExit(f"{prev} carries no probe-leg requests -- it is not a phase-1 "
+                             "bundle of this flow; re-run --emit probe into a fresh workdir")
+        for n, r in carried.items():
+            for f, k in ((r["request"], "request_sha256"), (r["netlist"], "netlist_sha256")):
+                got = sha256_file(out / f)
+                if got != r[k]:
+                    raise SystemExit(f"{f}: sha256 changed since the phase-1 bundle "
+                                     f"({got[:16]} != {str(r[k])[:16]}) -- the staged sources "
+                                     "moved between phases; re-run --emit probe")
+            requests[n] = r
+        probe_raw = load_probe_results(Path(a.from_probe), a.bench, vspan, wanted)
+        probe_section = {
+            "mechanism": "two-phase dut_vos referral (issue #374): the phase-1 requests "
+                         "request-probe-*.json measured each point's trip time t_flip; "
+                         "these phase-2 bodies bake each point's dut_vos = "
+                         + PROBE_VOS_FORMULA,
+            "probe_deck": tb.offset_probe["netlist"],
+            "vspan_v": vspan, "tramp_s": tramp,
+            "vos_formula": PROBE_VOS_FORMULA,
+            "vos_by_corner": {k: float(probe_raw["vos_by_corner"][k]) for k in sorted(wanted)},
+            "probe_results_sha256": sha256_file(Path(a.from_probe)),
+            **({"probe_reports": probe_raw["probe_reports"]}
+               if isinstance(probe_raw.get("probe_reports"), dict) else {}),
+        }
+        for vdd in vdds:
+            for c in corner_list:
+                for t in temps:
+                    cid = f"{c.name}_{float(t):g}c_{vdd:.2f}v"
+                    (out / f"body-{cid}.spice").write_text("\n".join(body_for(
+                        vdd,
+                        dut_vos_lines=[f".param dut_vos={float(probe_raw['vos_by_corner'][cid])!r}"],
+                        include_netlist=staged["testbench_netlist"], main_leg=True)))
+                    for leg, spec in legs_for(a.bench, tb, a.mc_n).items():
+                        write_leg_requests(leg, vdd, cid, spec,
+                                           [{"name": c.name, "sections": list(c.sections)}],
+                                           [float(t)])
+    else:
+        for vdd in vdds:
+            vtag = f"v{vdd:.2f}"
+            (out / f"body-{vtag}.spice").write_text("\n".join(body_for(
+                vdd,
+                dut_vos_lines=[".param dut_vos=0.0"],
+                include_netlist=staged["testbench_netlist"], main_leg=True)))
+            for leg, spec in legs_for(a.bench, tb, a.mc_n).items():
+                write_leg_requests(leg, vdd, vtag, spec, process, temps)
     write_bundle(out, a.bench, tb, dut, binding, a.dut, staged, commit, dirty_paths, checked, {
         "corners": [c.name for c in corner_list], "temperatures_c": temps,
         "supply_tolerance": tol, "supply_v": vdds,
@@ -687,7 +1043,7 @@ def main() -> int:
         **({"tolerance_profile": {"name": a.tolerance_profile,
                                   "options": [[k, v] for k, v in TOLERANCE_PROFILES[a.tolerance_profile]],
                                   "cards": tol_lines}} if a.tolerance_profile else {}),
-    }, requests)
+    }, requests, phase=phase, probe_section=probe_section)
     print(f"wrote {out}/{BUNDLE_NAME} (commit {commit[:7]}"
           + (f", DIRTY: {', '.join(dirty_paths)})" if dirty_paths else ", clean)"))
     return 0
@@ -712,7 +1068,8 @@ def toolchain_snapshot(commit: str, path: Path | None = None) -> dict:
 
 def write_bundle(out: Path, bench: str, tb, dut, binding, selector, staged: dict,
                  commit: str, dirty_paths: list[str], checked: list[str],
-                 parameters: dict, requests: dict) -> dict:
+                 parameters: dict, requests: dict, *, phase: str = "main",
+                 probe_section: dict | None = None) -> dict:
     """Write OUTDIR/source-bundle.json: the source identity of this request set.
 
     `staged` maps every generated input (requests, bodies, the PDK include
@@ -731,6 +1088,12 @@ def write_bundle(out: Path, bench: str, tb, dut, binding, selector, staged: dict
         "generator": "sim/tools/mk_klt_request.py",
         "generated_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "bench": bench,
+        "phase": phase,
+        # The extracted binding's dut_vos referral (issue #374): spans parsed
+        # from the staged probe deck, the inversion formula, and -- on the
+        # phase-2 bundle -- the vos each point's body carries plus the sha256
+        # of the probe-results file it came from.
+        **({"probe": probe_section} if probe_section else {}),
         "origin": {"commit": commit, "dirty": bool(dirty_paths),
                    "dirty_paths": dirty_paths, "checked_paths": checked},
         "dut": {
