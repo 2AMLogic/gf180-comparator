@@ -390,19 +390,14 @@ OFFSET_TRAN_FIELDS = (
 )
 
 
-def validate_offset_tran(rec) -> list[str]:
-    """Problems that stop ``rec`` backing a full-corner whole-comparator claim.
-
-    Empty list = complete supported coverage AND valid, clean source
-    provenance: the 45 committed PVT points, each with exactly
-    ``OFFSET_TRAN_N`` valid draws, no named problem (saturation, missing trip,
-    non-finite derivation), a citable clean-bundle record whose DUT is the
-    current netlist and whose ratified bounds are untouched. Never raises."""
+def _validate_record_provenance(rec, bench: str) -> list[str]:
+    """The shared source-provenance run (issue #370): the record names its
+    bench, is complete with no named problem, covers exactly the committed
+    matrix, is a citable reference minted from a clean tree, and its DUT is
+    the current netlist. Never raises."""
     errs: list[str] = []
-    if not isinstance(rec, dict):
-        return [f"{OFFSET_TRAN_BENCH}: record is not an object"]
-    if rec.get("bench") != OFFSET_TRAN_BENCH:
-        errs.append(f"bench {rec.get('bench')!r} != {OFFSET_TRAN_BENCH!r}")
+    if rec.get("bench") != bench:
+        errs.append(f"bench {rec.get('bench')!r} != {bench!r}")
     if rec.get("complete") is not True or rec.get("outcome") != "complete":
         errs.append(f"record is not complete (complete={rec.get('complete')!r}, outcome={rec.get('outcome')!r})")
     if rec.get("problems"):
@@ -416,30 +411,68 @@ def validate_offset_tran(rec) -> list[str]:
         )
     if rec.get("dirty") is not False:
         errs.append(f"record was minted from a dirty tree (dirty={rec.get('dirty')!r})")
-    bundle = rec.get("source_bundle")
-    if not (isinstance(bundle, dict) and isinstance(bundle.get("sha256"), str)
-            and isinstance(bundle.get("origin_commit"), str) and bundle.get("origin_dirty_paths") == []):
-        errs.append("source_bundle identity (sha256, origin_commit, clean origin_dirty_paths) missing or dirty")
     dut = rec.get("dut")
     current = _sha(REPO_ROOT / NETLIST).split(":")[1]
     if not (isinstance(dut, dict) and dut.get("dut_netlist_sha256") == current):
         errs.append(f"dut_netlist_sha256 != current {NETLIST} sha256 {current}")
-    row = rec.get("spec_row")
-    if not (isinstance(row, dict) and row.get("measure") == OFFSET_TRAN_SCORED
-            and row.get("target_max") == 15.0 and row.get("stretch_max") == 8.0):
-        errs.append("spec_row does not score the conservative total against the unchanged 15 / 8 mV bounds")
+    return errs
+
+
+def _validate_derived_coverage(rec) -> tuple[dict | None, list[str]]:
+    """The shared corner-coverage run (issue #370): ``derived`` must be an
+    object carrying exactly the committed matrix's corner ids. Returns
+    ``(derived, errs)``; ``derived`` is ``None`` when missing or not an
+    object, so the caller need not re-check. Never raises."""
+    errs: list[str] = []
     derived = rec.get("derived")
     if not isinstance(derived, dict):
-        return errs + ["'derived' missing or not an object"]
+        return None, errs + ["'derived' missing or not an object"]
     missing = [c for c in EXPECTED_CORNER_IDS if c not in derived]
     extra = sorted(str(c) for c in derived if c not in EXPECTED_COORDS)
     if missing:
         errs.append(f"omitted corner(s) vs committed matrix: {missing}")
     if extra:
         errs.append(f"unexpected corner_id(s) outside committed matrix: {extra}")
+    return derived, errs
+
+
+def _non_object_derived_errs(derived: dict, cid: str, d) -> list[str]:
+    """The one shared non-object guard for a ``derived`` entry (issue #370):
+    an entry that is present but not an object is a named error, never a
+    silent skip -- the fail-closed guard ``validate_kickback_both`` already
+    had, now shared with ``validate_offset_tran``."""
+    if isinstance(d, dict) or cid not in derived:
+        return []
+    return [f"{cid}: derived entry is not an object"]
+
+
+def validate_offset_tran(rec) -> list[str]:
+    """Problems that stop ``rec`` backing a full-corner whole-comparator claim.
+
+    Empty list = complete supported coverage AND valid, clean source
+    provenance: the 45 committed PVT points, each with exactly
+    ``OFFSET_TRAN_N`` valid draws, no named problem (saturation, missing trip,
+    non-finite derivation), a citable clean-bundle record whose DUT is the
+    current netlist and whose ratified bounds are untouched. Never raises."""
+    if not isinstance(rec, dict):
+        return [f"{OFFSET_TRAN_BENCH}: record is not an object"]
+    errs = _validate_record_provenance(rec, OFFSET_TRAN_BENCH)
+    bundle = rec.get("source_bundle")
+    if not (isinstance(bundle, dict) and isinstance(bundle.get("sha256"), str)
+            and isinstance(bundle.get("origin_commit"), str) and bundle.get("origin_dirty_paths") == []):
+        errs.append("source_bundle identity (sha256, origin_commit, clean origin_dirty_paths) missing or dirty")
+    row = rec.get("spec_row")
+    if not (isinstance(row, dict) and row.get("measure") == OFFSET_TRAN_SCORED
+            and row.get("target_max") == 15.0 and row.get("stretch_max") == 8.0):
+        errs.append("spec_row does not score the conservative total against the unchanged 15 / 8 mV bounds")
+    derived, cov_errs = _validate_derived_coverage(rec)
+    errs.extend(cov_errs)
+    if derived is None:
+        return errs
     for cid in EXPECTED_CORNER_IDS:
         d = derived.get(cid)
         if not isinstance(d, dict):
+            errs.extend(_non_object_derived_errs(derived, cid, d))
             continue
         if d.get("n_samples") != OFFSET_TRAN_N:
             errs.append(f"{cid}: n_samples {d.get('n_samples')!r} != {OFFSET_TRAN_N} valid draws")
@@ -468,46 +501,21 @@ def validate_kickback_both(rec) -> list[str]:
     ``kick_1k_peak_mv`` at every corner. Never raises."""
     if not isinstance(rec, dict):
         return [f"{KICKBACK_BENCH}: both-node record is not an object ({rec!r})"]
-    errs: list[str] = []
-    if rec.get("bench") != KICKBACK_BENCH:
-        errs.append(f"bench {rec.get('bench')!r} != {KICKBACK_BENCH!r}")
-    if rec.get("complete") is not True or rec.get("outcome") != "complete":
-        errs.append(f"record is not complete (complete={rec.get('complete')!r}, outcome={rec.get('outcome')!r})")
-    if rec.get("problems"):
-        errs.append(f"record lists {len(rec['problems'])} named problem(s): {list(rec['problems'])[:3]}")
-    if rec.get("expected_points") != len(EXPECTED_CORNER_IDS):
-        errs.append(f"expected_points {rec.get('expected_points')!r} != {len(EXPECTED_CORNER_IDS)}")
-    if rec.get("citable") is not True or rec.get("reference") is not True or rec.get("not_citable_reasons"):
-        errs.append(
-            f"source provenance not valid (citable={rec.get('citable')!r}, reference={rec.get('reference')!r}, "
-            f"not_citable_reasons={rec.get('not_citable_reasons')!r})"
-        )
-    if rec.get("dirty") is not False:
-        errs.append(f"record was minted from a dirty tree (dirty={rec.get('dirty')!r})")
-    dut = rec.get("dut")
-    current = _sha(REPO_ROOT / NETLIST).split(":")[1]
-    if not (isinstance(dut, dict) and dut.get("dut_netlist_sha256") == current):
-        errs.append(f"dut_netlist_sha256 != current {NETLIST} sha256 {current}")
+    errs = _validate_record_provenance(rec, KICKBACK_BENCH)
     row = rec.get("spec_row")
     if not (isinstance(row, dict) and row.get("measure") == KICKBACK_FIELD
             and row.get("target_max") == 5.0 and row.get("stretch_max") == 2.0):
         errs.append("spec_row does not score kick_1k_peak_mv against the unchanged 5 / 2 mV bounds")
     if rec.get("input_node_coverage") != KICKBACK_COVERAGE:
         errs.append(f"input_node_coverage {rec.get('input_node_coverage')!r} != {KICKBACK_COVERAGE!r}")
-    derived = rec.get("derived")
-    if not isinstance(derived, dict):
-        return errs + ["'derived' missing or not an object"]
-    missing = [c for c in EXPECTED_CORNER_IDS if c not in derived]
-    extra = sorted(str(c) for c in derived if c not in EXPECTED_COORDS)
-    if missing:
-        errs.append(f"omitted corner(s) vs committed matrix: {missing}")
-    if extra:
-        errs.append(f"unexpected corner_id(s) outside committed matrix: {extra}")
+    derived, cov_errs = _validate_derived_coverage(rec)
+    errs.extend(cov_errs)
+    if derived is None:
+        return errs
     for cid in EXPECTED_CORNER_IDS:
         d = derived.get(cid)
         if not isinstance(d, dict):
-            if cid in derived:
-                errs.append(f"{cid}: derived entry is not an object")
+            errs.extend(_non_object_derived_errs(derived, cid, d))
             continue
         if KICKBACK_FIELD not in d:
             errs.append(f"{cid}: measurement {KICKBACK_FIELD} missing")

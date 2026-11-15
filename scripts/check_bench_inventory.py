@@ -20,10 +20,11 @@ NOT_RUN_BY_CHARACTERIZE = {
     "comparator-avg-power": "supplemental, unscored pre-ratification "
         "validation of DR-0006's proposed average-power operating condition "
         "(issue #356); scores no spec row, so it is deliberately outside the "
-        "characterization campaign. No fleet branch yet in "
-        "sim/tools/mk_klt_request.py / klt_record.py, so the 45-corner run is "
-        "a follow-up; the committed record is a 1-of-45 bring-up probe run "
-        "locally via run_corners.py, see its README",
+        "characterization campaign. Fleet wiring landed (issue #372): PVT "
+        "grids run via sim/tools/klt_record.py, and the 45-corner fleet "
+        "campaign is the follow-up (#373); the committed record is a "
+        "1-of-45 bring-up probe run locally via run_corners.py, see its "
+        "README",
 }
 
 

@@ -13,7 +13,7 @@ _None._
 
 `loom:very-important` (one counts per workspace); every stage takes these first.
 
-_None._
+- **#356**: Add an unscored periodic-clock bench for DR-0006's pre-ratification validation (reset completion, supply charge per cycle)
 
 ## Important
 
@@ -22,6 +22,7 @@ _None._
 - **#3**: Gap-to-T1 tracker: gf180-comparator artifact-presence survey
 - **#112**: layout/PEX/signoff re-run for the DR-0004 input-cascode netlist (follow-up to #102)
 - **#125**: Define and measure the missing average-power operating condition for T1
+- **#355**: Run the 45-corner preamp noise grid on the DR-0004 cascode experiment netlist
 
 ## Ready
 
@@ -39,7 +40,7 @@ _None._
 
 PRs waiting on Judge (`loom:review-requested`).
 
-_None._
+- **#353**: docs: roadmap as of 2026-11-13
 
 ## Approved (Awaiting Merge)
 
@@ -68,11 +69,11 @@ _None._
 | Bucket | Count |
 |------|-------|
 | Operator merge-risk holds | 0 |
-| Very important | 0 |
-| Important | 3 |
+| Very important | 1 |
+| Important | 4 |
 | Ready (`loom:issue`) | 0 |
 | In Progress (`loom:building`) | 0 |
-| PRs awaiting review | 0 |
+| PRs awaiting review | 1 |
 | Approved PRs awaiting merge | 0 |
 | Curated | 3 |
 | Architect / Hermit proposals | 0 |
