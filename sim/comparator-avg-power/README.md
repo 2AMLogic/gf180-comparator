@@ -148,6 +148,8 @@ executor". `2AMLogic/klayout-tools#5651` tracks the underlying tool gap.
 | [`20261114-032046866512-d02a882`](records/20261114-032046866512-d02a882.md) | **1 of 45** PVT points (`tt_27c_3.30v`), schematic DUT, ngspice-47 / open_pdks `f6eeac7` | bring-up validation probe, unscored |
 | [`20261114-222427036313-e00a719`](records/20261114-222427036313-e00a719.md) | **1 of 1** PVT points (`tt_27c_3.30v`), schematic DUT, ngspice-47 / open_pdks `f6eeac7`, fleet path | fleet bring-up (issue #372): proved the `klt sim` dispatch + ingest path and its `cross_run_agreement` against the local probe, unscored |
 | [`20261115-075832478887-79abbcc`](records/20261115-075832478887-79abbcc.md) | **45 of 45** PVT points (tt/ff/ss/fs/sf × −40/27/125 °C × 2.97/3.30/3.63 V), schematic DUT, ngspice-47 / open_pdks `f6eeac7`, fleet path | the 45-corner campaign (issue #373), unscored — evidence for the DR-0006 ratification reviewers, not a verdict |
+| [`20261115-053040016592-a4eca5b`](records/20261115-053040016592-a4eca5b.md) | **5 of 45** PVT points (tt/ff/ss/fs/sf × 27 °C × 3.30 V), **extracted** DUT, ngspice-47 / open_pdks `f6eeac7`, fleet path | the probe leg's bring-up record (issue #374): first-ever `tb_vosprobe.spice` run, unscored |
+| [`20261115-064156694329-8a67cff`](records/20261115-064156694329-8a67cff.md) | **45 of 45** PVT points (tt/ff/ss/fs/sf × −40/27/125 °C × 2.97/3.30/3.63 V), **extracted** DUT, ngspice-47 / open_pdks `f6eeac7`, fleet path | the extracted-DUT campaign (issue #374), unscored — **not citable as a clean-tree result**: `layout/lvs/comparator.dut-layout.spice` was untracked at request generation, so it is a diagnostic until the netlist is tracked and the record re-minted |
 
 > The record's own **Reproduce** line is the harness's generic template
 > (`python3 sim/run_corners.py comparator-avg-power`), which would run the full
@@ -155,7 +157,7 @@ executor". `2AMLogic/klayout-tools#5651` tracks the underlying tool gap.
 > produced it is the single-point one above. (`sim/harness/report.py` does not
 > stamp the corner selection into that line for any bench; filed separately.)
 
-### What the 45-corner campaign measured (record `20261115-075832478887-79abbcc`)
+### What the schematic 45-corner campaign measured (record `20261115-075832478887-79abbcc`)
 
 All 45 points of the 5 × 3 × 3 grid ran on the Spot batch fleet through the
 `klt sim` path (three requests, one per supply point, as
@@ -197,6 +199,47 @@ point — no corner was dropped at ingest.
   `INCOMPLETE_COMPARISON` status states exactly that, and claims no agreement
   it cannot see.
 
+### What the extracted-DUT campaign measured (record `20261115-064156694329-8a67cff`)
+
+DR-0006 feasibility item 1 asks for the 45 points on **both** bindings, and
+the two campaigns are kept **separate on purpose**: the figures below are the
+post-layout `comparator-dr0001-layout` DUT's own and are never merged with the
+schematic grid's. The run went through the two-phase flow (issue #374): three
+probe requests (one per supply point) measured every point's trip time with
+[`tb_vosprobe.spice`](testbench/tb_vosprobe.spice) — that deck's first-ever
+run, committed as the 5-point record
+[`20261115-053040016592-a4eca5b`](records/20261115-053040016592-a4eca5b.md) —
+and phase 2 baked each point's probed `dut_vos` (−21.4 mV … −1.8 mV across the
+grid) into 45 main requests, one per PVT point, ngspice-47 / open_pdks
+`f6eeac7`.
+
+- **Worst `P_avg`, extracted DUT**: **207.376 µW at `ff_125c_3.63v`**
+  (`e_dec_fj` = 12961 fJ) — the same corner that maximises the schematic grid,
+  19 % higher as expected from interconnect parasitics, and still a figure for
+  the ratification reviewers, **not a verdict**: DR-0006 stays `proposed —
+  not ratified` and neither the ≤ 1 mW target nor the ≤ 500 µW stretch is
+  claimed here.
+- **Worst `q_half_mismatch_pct`, extracted DUT**: **0.002306 % at
+  `fs_27c_2.97v`** — about 430× inside DR-0006's 1 % settledness criterion at
+  every point; no lengthening of warm-up/window was needed on this binding
+  either.
+- **`dec_cycles_correct` = 16/16 at all 45 points** — every window cycle
+  decided correctly on alternating ±10 mV about each point's own probed trip
+  point, including the first post-warm-up cycle; this is the checked backstop
+  that reset completed, as on the schematic grid.
+- **`reset_margin_ns` is unavailable on the fleet path here too**, for the
+  same request-schema reason stated above; the omission is stated in the
+  record itself.
+- **The hypothesised slow corner `ss` / 125 °C / 2.97 V** completed cleanly on
+  the extracted DUT as well: 16/16 decisions, `p_avg_uw` = 143.760 µW,
+  `q_half_mismatch_pct` = 0.000605 %.
+- **Citability caveat, stated up front**: this record is **not citable as a
+  clean-tree result** — `layout/lvs/comparator.dut-layout.spice` was untracked
+  at request generation (`not_citable_reasons` in the record), so it is a
+  **diagnostic** for the extracted leg's behaviour, not reference evidence,
+  until the netlist is tracked and the record is re-minted from a clean
+  commit.
+
 ### What the probe measured, and against which DR-0006 item
 
 At `tt_27c_3.30v` only. Each row below says what it does *not* settle, because
@@ -216,7 +259,9 @@ gives the ratification reviewers no reason to revise the record — and, equally
 no basis to conclude the condition holds at the corners that matter. The
 45-corner campaign has since run ([record
 `20261115-075832478887-79abbcc`](records/20261115-075832478887-79abbcc.md),
-section above); the extracted DUT run remains open (#374).
+section above), and so has the extracted-DUT one (record
+[`20261115-064156694329-8a67cff`](records/20261115-064156694329-8a67cff.md),
+its own section above) — with the citability caveat stated there.
 
 **`e_dec_fj` here is not comparable with `comparator-regeneration/`'s
 `e_dec_fj`.** The names collide; the quantities do not. That bench reports
@@ -261,9 +306,12 @@ current coverage state.
 - It does not ratify, revise or edit DR-0006. Ratification is the DR-0002
   two-key ceremony.
 - The 45-corner schematic-DUT campaign **has run** (record
-  `20261115-075832478887-79abbcc`); the extracted
-  (`comparator-dr0001-layout`) DUT run of DR-0006's feasibility item 1 has
-  not — that is #374.
+  `20261115-075832478887-79abbcc`) and so has the extracted
+  (`comparator-dr0001-layout`) one (record `20261115-064156694329-8a67cff`,
+  issue #374) — but the extracted record is **not citable as a clean-tree
+  result**: `layout/lvs/comparator.dut-layout.spice` was untracked at request
+  generation, so DR-0006's extracted leg is diagnostic evidence until the
+  netlist is tracked and the record re-minted.
 - It does not run DR-0006's sensitivity sweeps (0/100 fF load, 1/50 mV
   overdrive, 32 MHz, clock-charge boundary), which its feasibility item 4
   requires before ratification. `q_clk_pc` records the clock charge at the
