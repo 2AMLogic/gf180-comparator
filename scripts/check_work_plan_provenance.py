@@ -21,6 +21,9 @@ Fail-closed (a check that cannot run must never look like one that passed,
   * a number that resolves to nothing -> fail, named
   * a rendered title that does not match the forge title -> fail, named,
     quoting both titles
+  * a bullet line that names an item but does not parse as a strict
+    '- **#N**: title' row (renderer format drift) -> fail, named -- a
+    non-empty region must never parse to zero rows and look like a pass
 
 Run by .github/workflows/signoff.yml as its own step. Deliberately NOT in
 scripts/run-pdk-free-tests.sh, which must stay offline and PDK-free; the
@@ -51,6 +54,13 @@ PLAN = ROOT / "WORK_PLAN.md"
 START = "<!-- guide:plan-body:start -->"
 END = "<!-- guide:plan-body:end -->"
 ROW = re.compile(r"^- \*\*#(\d+)\*\*: (.*)$", re.M)
+# Loose, line-level counterpart: a bullet line that names an item number.
+# Used only to detect rows the strict ROW can no longer parse -- a renderer
+# format change must fail the check, never parse to zero rows. Deliberately
+# NOT "every #N occurrence": a parsed row's own title may legitimately
+# contain #M (e.g. '... matches CI (#129)'), which has no rendered title to
+# compare.
+LOOSE = re.compile(r"^- .*#\d+")
 # The renderer appends these suffixes in the Proposed sections only; a real
 # title may also end in one, so suffix handling is a fallback, never the
 # first comparison (see match()).
@@ -85,6 +95,15 @@ def extract_region(text):
 def parse_rows(region):
     """[(number, rendered_title)] for every bullet row, in file order."""
     return [(int(m.group(1)), m.group(2).strip()) for m in ROW.finditer(region)]
+
+
+def unparsed_rows(region):
+    """Bullet lines that name an item number but do not parse as a strict
+    ROW -- the renderer's row format has drifted, so the rows present
+    cannot be verified. Line-level (not #N occurrences), so a parsed row
+    whose own title contains #M is not a false positive."""
+    return [ln for ln in region.split("\n")
+            if LOOSE.match(ln) and not ROW.match(ln)]
 
 
 def match(rendered, forge_title):
@@ -158,9 +177,15 @@ def check(plan_text, repo, token, fetch=fetch_item):
         return [f"{ERR}no forge token (set GITHUB_TOKEN or GH_TOKEN); "
                 f"cannot verify provenance"]
     try:
-        rows = parse_rows(extract_region(plan_text))
+        region = extract_region(plan_text)
     except Failure as e:
         return [str(e)]
+    for line in unparsed_rows(region):
+        errs.append(f"{ERR}plan-body row does not match the renderer's "
+                    f"'- **#N**: title' format -- renderer drift or a "
+                    f"hand-edited row; cannot verify provenance for: "
+                    f"{line!r}")
+    rows = parse_rows(region)
     seen = {}
     for number, rendered in rows:
         if number not in seen:

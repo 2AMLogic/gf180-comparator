@@ -34,8 +34,7 @@ LOCAL_TITLES = {
     122: "ci: PDK-free netlist source-pin check (#120)",
     161: "Validate integrator paths, ordered ports and area against "
          "committed artifacts",
-    133: "Drop the vendored design-evidence-tiers.md: a second, already-stale "
-         "pin to klayout-tools that the pinned wheel already ships",
+    133: "Unify the PDK-free test entrypoint so npm test matches CI (#129)",
     406: "corners.parse_corner_id is not the strict inverse its docstring "
          "claims: non-canonical temperatures parse",
 }
@@ -196,6 +195,10 @@ class Check(unittest.TestCase):
         self.assertIn("#122", joined)
         self.assertIn("foreign or drifted", joined)
         self.assertIn(LOCAL_TITLES[122], joined)
+        # #133 is the only *(hermit)* row and the only one exercising the
+        # SUFFIX fallback; its forge title is unrelated here, so it must
+        # fail too -- the fixture then bites on every foreign row.
+        self.assertIn("#133", joined)
         self.assertTrue(calls, "the forge fake was never queried")
 
     def test_number_in_neither_repo_fails(self):
@@ -236,6 +239,15 @@ class Check(unittest.TestCase):
         self.assertEqual(len(errs), 1)
         self.assertIn("foreign or drifted", errs[0])
 
+    def test_parsed_row_whose_title_contains_hash_number_is_one_row(self):
+        # A parsed row's own title may legitimately contain #M (#133's
+        # title here ends in '(#129)'): the drifted-format check is
+        # line-level, never 'every #N occurrence in the region'.
+        errs = self.run_check(
+            plan(section("Ready", "blurb", [(133, LOCAL_TITLES[133])])),
+            fetch=make_fake_fetch(LOCAL_TITLES))
+        self.assertEqual(errs, [])
+
     def test_empty_sections_pass(self):
         text = plan(section("Very Important", "blurb", []), TABLE)
         self.assertEqual(self.run_check(text), [])
@@ -265,6 +277,19 @@ class FailClosed(unittest.TestCase):
                           fetch=no_fetch)
         self.assertEqual(len(errs), 1)
         self.assertIn("empty", errs[0])
+
+    def test_drifted_row_format_fails_without_querying(self):
+        # A non-empty region whose bullet rows name items but do not parse
+        # as strict rows (renderer format drift): the guard must fail
+        # closed instead of reporting "0 row(s) checked" -- and it must do
+        # so without consulting the forge.
+        text = plan("- **#999** - a totally foreign title\n"
+                    "- **#998** - another")
+        errs = CWPP.check(text, REPO_NAME, "t", fetch=no_fetch)
+        self.assertTrue(errs)
+        joined = "\n".join(errs)
+        self.assertIn("format", joined)
+        self.assertIn("#999", joined)
 
 
 class Main(unittest.TestCase):
