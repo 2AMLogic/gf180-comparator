@@ -23,8 +23,10 @@ NOT_RUN_BY_CHARACTERIZE = {
         "characterization campaign. Fleet wiring landed (issue #372): PVT "
         "grids run via sim/tools/klt_record.py, and the 45-corner fleet "
         "campaign is committed (issue #373); records include the local "
-        "1-point bring-up probe, the 1-point fleet bring-up and the full "
-        "45-of-45 grid, see its README",
+        "1-point bring-up probe, the 1-point fleet bring-up, the schematic "
+        "45-of-45 grid (issue #373) and the extracted-DUT pair (issue #374: "
+        "the 5-point tb_vosprobe bring-up and the 45-of-45 extracted grid, "
+        "not citable until the extracted netlist is tracked), see its README",
 }
 
 

@@ -50,9 +50,12 @@ ratified`; this bench scores nothing, the README target table's Supply / power
 row keeps its `(TBD)` clock rate, and `signoff/make_item5_envelope.py` keeps
 its `average_power_clock_rate_tbd` skip reason. Its records span the **1-of-45
 bring-up validation probe** (`tt_27c_3.30v`, schematic DUT, run locally), the
-1-of-1 fleet bring-up (issue #372) and the committed **45-of-45 PVT campaign**
-(issue #373); the extracted-DUT run remains a separate landing (#374), and the
-bench is not wired into `characterize.sh`. See its
+1-of-1 fleet bring-up (issue #372), the committed **45-of-45 PVT campaign**
+(issue #373) and the extracted-DUT pair from #374 — the 5-point
+`tb_vosprobe.spice` probe leg, **not citable as a clean-tree result** (taken
+against a dirty working tree), and the **45-of-45 extracted campaign**, also
+not citable as a clean-tree result until the extracted netlist is tracked —
+and the bench is not wired into `characterize.sh`. See its
 [README](comparator-avg-power/README.md) for the
 clause-by-clause implementation and for why the reset-completion margin is a
 proxy.
