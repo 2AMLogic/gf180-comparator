@@ -4,6 +4,22 @@ Chronological record of merged pull requests and closed issues. Newest entries a
 
 ### 2026-11-15
 
+- **PR #397**: test: cover the missing-sim/harness/dut.py diagnostic in the integrator suite
+- **PR #396**: signoff: inventory five omitted harness files for item 9 and refresh the CI-produced envelope
+- **PR #390**: sim: commit 45-corner avg-power PVT fleet campaign record
+- **PR #389**: feat(sim): extracted-binding two-phase dut_vos referral + the 45-point extracted fleet record
+- **PR #388**: fix(pex): derive run_stage resume exemption from generated_by, not a hardcoded key
+- **PR #386**: harness: echo restricting flags in the record Reproduce line
+- **PR #381**: refactor: deduplicate the stage source_sha256 core behind one helper
+- **PR #380**: refactor: replace importlib path-import blocks with the repo's sys.path import idiom
+- **Issue #395** (closed): manifests/test-verify-integrator.py: no case covers the missing-sim/harness/dut.py diagnostic
+- **Issue #374** (closed): sim: extracted-DUT comparator-avg-power coverage — fleet probe leg, first tb_vosprobe run, and the 45-corner extracted record
+- **Issue #373** (closed): sim: run and commit the 45-corner comparator-avg-power campaign on the schematic DUT
+- **Issue #371** (closed): Deduplicate the stage source_sha256 core hand-typed in all three parasitic-study manifest builders
+- **Issue #368** (closed): Remove 7 hand-rolled importlib path-import blocks: the repo's own sys.path idiom already does this
+- **Issue #367** (closed): signoff item 9: add four omitted harness files to the inventory and refresh the envelope from a green selftest run
+- **Issue #366** (closed): run_stage's append-only check hardcodes one code-hash exemption, so resuming a lever stage after a source edit aborts
+- **Issue #362** (closed): Record Reproduce line omits the run's corner-selection flags, so a subset record tells the reader to run the full grid
 - **PR #387**: refactor: share the per-corner decision-time cell across the three ladder studies
 - **PR #382**: Remove dead REQUIRED_POSITIVE constant in preamp_noise_pvt.py
 - **PR #378**: sim: wire comparator-avg-power onto the fleet dispatch path (schematic binding)
