@@ -3155,6 +3155,41 @@ class AvgPowerExtractedProbe(unittest.TestCase):
             rc, rec, out = _ingest(td, work, bench=AVG_POWER)
             self.assertIn("PHASE1_BUNDLE_ONLY", str(rc))
 
+    def test_fresh_flow_dispatches_main_legs_only(self):
+        # Regression: the two-phase driver dispatches the probe requests
+        # itself (phase 1); the main flow below must still dispatch the MAIN
+        # legs. A flow that skipped dispatch entirely read report files that
+        # were never submitted -- the first campaign run's failure mode.
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            rc, out, work = self._two_phase(td)
+            self.assertEqual(rc, 0, out)
+            self._write_probe_reports(work, _bundle(work))
+            self._write_main_reports(work, _bundle(work))
+            dispatched: list = []
+            root = td / "evidence"
+            (root / AVG_POWER).mkdir(parents=True)
+            argv = ["klt_record.py", AVG_POWER, "--work", str(work),
+                    "--dut", self._binding(td)]
+            with mock.patch.object(sys, "argv", argv), \
+                    mock.patch.object(kr, "SIM", root), \
+                    mock.patch.object(kr, "git_state", return_value=("a" * 40, [])), \
+                    mock.patch.object(kr, "klt_version", return_value="klt 0.0"), \
+                    mock.patch.object(kr, "run_two_phase", return_value=None), \
+                    mock.patch.object(kr, "dispatch",
+                                      side_effect=lambda w, ns: dispatched.extend(ns)), \
+                    redirect_stdout(io.StringIO()):
+                # The fixture's reports let the ingest run to completion or
+                # fail somewhere past dispatch; the assertion is what reached
+                # dispatch, which is the regression surface.
+                try:
+                    kr.main()
+                except Exception:
+                    pass
+            self.assertEqual(len(dispatched), 45)  # every main leg, once
+            self.assertTrue(all(n.startswith("main-") for n in dispatched))
+            self.assertNotIn("probe-v3.30", dispatched)  # phase 1 already went out
+
     def test_compare_local_refuses_across_bindings(self):
         derived = {"tt_27c_3.30v": {"p_avg_uw": 144.9}}
         with tempfile.TemporaryDirectory() as td:

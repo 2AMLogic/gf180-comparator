@@ -2112,8 +2112,13 @@ def main() -> int:
     else:
         names = {f"{leg}-v{v:.2f}": (leg, v) for leg in LEGS[a.bench] for v in vdds}
     verify_staged(work, b, names)
-    if not a.from_report and not two_phase:
-        dispatch(work, list(names))
+    if not a.from_report:
+        if two_phase:
+            # The probe phase dispatched inside run_two_phase (its reports
+            # are already on disk); only the main legs submit here.
+            dispatch(work, [n for n in names if names[n][0] in LEGS[a.bench]])
+        else:
+            dispatch(work, list(names))
 
     reports = {n: json.loads((work / f"report-{n}.json").read_text()) for n in names}
     link_notes = verify_reports(work, b, names, reports)
