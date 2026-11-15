@@ -877,11 +877,11 @@ of `scripts/run-pdk-free-tests.sh`, excluding the re-grade (circular).
 
 **Item 9 is attested (issue #322).** `signoff/envelopes/item-9.json` is the
 `klt signoff --attest 9` envelope (klt 0.8.0), produced by `selftest.yml` on the
-toolchain host (ngspice >= 46, pinned open_pdks) in `workflow_dispatch` run 43551680592 on `feature/issue-356`
+toolchain host (ngspice >= 46, pinned open_pdks) in `workflow_dispatch` run 43709157580 on `feature/issue-367` (issue #367)
 and downloaded unmodified. The manifest pins the inventory hash it is bound to,
 and `signoff.yml` re-runs `--check` for items 1, 9 and 10. Caveat: item 9's cold
 start (`./sim/selftest.sh`) is `local_only`, so the PDK-free `--check`
-re-verifies the 73 inventoried checks — the 70 files, plus the committed
+re-verifies the 78 inventoried checks — the 75 files, plus the committed
 cold-start outcome (`pass`) and the two pins — and carries that outcome
 forward; it does not re-run the cold start. `selftest.yml` does. If an
 inventoried file changes, `--check` exits 3 until the envelope is re-produced
