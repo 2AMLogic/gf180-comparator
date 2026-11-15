@@ -48,8 +48,8 @@ row), DR-0006 (average-power condition, 16 MHz) and DR-0007 (decision-time
 levers, a negative result) all read `Status: proposed`. Both unmet items need
 a design change that sits in a proposed record, which is why the issues that
 would close them — #112, #125 and #323 — wait on those ratifications. That
-holds most of the open backlog; the rest is tooling, hygiene and cleanup work
-that needs no ratification.
+is the whole of the ratification-gated backlog; the rest of the open queue is
+tooling, hygiene and cleanup work that needs no ratification.
 
 ## Recently landed
 
