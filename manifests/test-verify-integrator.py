@@ -178,6 +178,11 @@ def reorder_netlist_pins(sandbox: Path):
     )
 
 
+def drop_harness_dut(sandbox: Path):
+    """Remove the harness DUT loader the verifier names as its authority."""
+    (sandbox / "sim" / "harness" / "dut.py").unlink()
+
+
 def git_sandbox(untrack: str | None):
     """Make the sandbox a git work tree with every file staged, then
     optionally unstage ``untrack`` (tracked-ness is checked via the index)."""
@@ -298,6 +303,8 @@ STRUCT_CASES = [
      ("netlist.binding", "DUT_CONFIG")),
     ("committed netlist pin order drifts", no_change, reorder_netlist_pins, 1,
      ("does not load", "pin order", "`.subckt comparator_dut` pin list in design/comparator.spice")),
+    ("harness DUT loader missing", no_change, drop_harness_dut, 1,
+     ("missing sim/harness/dut.py", "the harness DUT loader is the authority")),
     # -- top cell
     ("top_cell disagrees with envelope", set_field("top_cell", "COMPARATOR_V2"), None, 1,
      ("top_cell", "cell_name", "layout/comparator.gen-compose.json")),
