@@ -176,7 +176,11 @@ class Testbench:
 
         The probe reuses this bench's supply/common-mode/clock conventions
         (its fragment does), so only ``netlist``/``analyses``/``measure``
-        are declared; everything else inherits.
+        are declared; everything else inherits -- including ``params``: a
+        probe fragment builds its clock from the bench's own ``params`` map
+        (comparator-avg-power's `t_rise0`/`t_per`/`t_hi`/`t_edge`, issue
+        #374), and compose_deck emits ``tb.params``, so dropping them here
+        leaves those braces undefined and the probe deck fails to parse.
         """
         if not self.offset_probe:
             return None
@@ -206,6 +210,7 @@ class Testbench:
             analyses=tuple(declaration.get("analyses", ("op",))),
             measure=measure,
             options=self.options,
+            params=dict(self.params),
         )
 
     @property

@@ -287,6 +287,12 @@ def extraction_problems(root: Path, ent: dict, rid: str, current_role: bool = Tr
     prov = rep.get("provenance") if isinstance(rep.get("provenance"), dict) else {}
     inp = prov.get("input") if isinstance(prov.get("input"), dict) else {}
     layout_rel, pinned = rep.get("file"), inp.get("content_hash")
+    # klayout-tools >= 0.9 writes the input as an object
+    # {"path": ..., "scope": ...}; older reports wrote a bare repo-relative
+    # string. Accept both -- the identity claim is the path (issue #374:
+    # the regenerated comparator.extract-rc.json uses the object form).
+    if isinstance(layout_rel, dict):
+        layout_rel = layout_rel.get("path")
     if not isinstance(layout_rel, str) or not layout_rel:
         return [f"record {rid}: declared extraction report {rep_rel} names no input "
                 "layout file; committed metadata cannot establish the DUT identity"]

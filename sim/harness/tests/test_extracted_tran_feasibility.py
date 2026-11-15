@@ -560,10 +560,20 @@ class Scope(unittest.TestCase):
         self.assertEqual(set(ef.POINTS), {"tt_27c_3.30v", "ff_125c_3.63v"})
         self.assertLessEqual(ef.MAX_MC_N, 50)
 
-    def test_production_refusal_is_untouched(self):
+    def test_production_path_implements_the_probe_leg(self):
+        # #219 pinned the production refusal ("schematic provenance only") to
+        # keep this feasibility tool's separatness rationale true. Issue #374
+        # narrowed exactly that refusal -- its own message had declared the
+        # probe leg "not implemented", a declared gap, not a prohibition --
+        # so the guard now pins the replacement contract instead: the
+        # production builder carries the two-phase referral, and the one
+        # thing that must never appear is a silent dut_vos = 0 fallback for a
+        # point whose probe found no trip point.
         src = (SIM / "tools/mk_klt_request.py").read_text()
-        self.assertIn('if dut.provenance != "schematic":', src)
-        self.assertIn("supports the schematic binding only", src)
+        self.assertIn('--emit', src)
+        self.assertIn("PROBE_NO_TRIP_POINT", src)
+        self.assertIn("falling back to dut_vos = 0", src)
+        self.assertNotIn('supports the schematic binding only', src)
 
     def test_feasibility_never_mints_records(self):
         src = (SIM / "tools/extracted_tran_feasibility.py").read_text()
