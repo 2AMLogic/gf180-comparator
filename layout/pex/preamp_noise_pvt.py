@@ -129,8 +129,6 @@ MIN_GAIN = 1.0
 #: quantity -> (record.json key suffix, how it is computed from raw values)
 QUANTITIES = ("av_dc", "onoise_uv", "onoise_hf_uv", "vn_in_uv", "vn_in_hf_uv",
               "inoise_band_uv", "white_nv_rthz", "enbw_mhz")
-#: quantities that must be finite AND positive at every corner of both legs
-REQUIRED_POSITIVE = QUANTITIES + ("vbias_anchor_mv",)
 
 EXCLUSION = ("Reset-state `.noise` about the clk-low operating point: the preamp's thermal "
              "and flicker noise with the real latch gate load, referred by the measured DC "
@@ -427,6 +425,8 @@ def quantities(v: dict) -> tuple[dict, list[str]]:
     issues = []
     raw = {k: v.get(k) for k in ("ac.av_dc", "nfull.onoise", "nfull.inoise", "nhf.onoise",
                                  "nwhite.onoise", "op.vbias_mv", "op.dc_p", "op.dc_n")}
+    # finite-AND-positive gate over the raw values; covers av_dc (ac.av_dc)
+    # and vbias_anchor_mv (op.vbias_mv) as well as the noise integrals.
     missing = [k for k, x in raw.items() if not finite_positive(x)]
     if missing:
         return {}, [f"NONFINITE_OR_NONPOSITIVE: raw {', '.join(f'{k}={raw[k]!r}' for k in missing)}"]
@@ -445,6 +445,8 @@ def quantities(v: dict) -> tuple[dict, list[str]]:
     if av < MIN_GAIN:
         issues.append(f"GAIN_BELOW_UNITY: av_dc={av!r} < {MIN_GAIN}; the divide-by-gain "
                       "referral is meaningless")
+    # finite-AND-positive gate over the *reported* derived quantities, each
+    # also cross-checked against the recomputed q[k] below.
     for k in ("vn_in_uv", "vn_in_hf_uv", "onoise_uv", "onoise_hf_uv", "inoise_band_uv",
               "white_nv_rthz", "enbw_mhz"):
         got = v.get(k)
