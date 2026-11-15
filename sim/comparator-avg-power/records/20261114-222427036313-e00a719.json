@@ -1,0 +1,154 @@
+{
+ "record_id": "20261114-222427036313-e00a719",
+ "bench": "comparator-avg-power",
+ "commit": "e00a719",
+ "dirty": false,
+ "citable": true,
+ "not_citable_reasons": [],
+ "dut": {
+  "dut_id": "comparator-dr0001",
+  "dut_provenance": "schematic",
+  "dut_netlist": "design/comparator.spice",
+  "dut_netlist_sha256": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a",
+  "dut_params": {
+   "dut_ib": 1e-05,
+   "dut_vcm": 1.65
+  },
+  "dut_selector": null,
+  "dut_binding_config": "sim/dut.json",
+  "dut_binding_entry_sha256": "77228add0ad0b1b62eda65cfcfd0f79c62b5d289ecd7eb1caa1522de9afb274e"
+ },
+ "testbench": {
+  "dir": "sim/comparator-avg-power/testbench",
+  "netlist": "tb_avg_power.spice",
+  "netlist_sha256": "a2bb5545b89137e1f21332108f28575697b771b05030bc829ee0eea26051986e",
+  "manifest_sha256": "ad9454f781c63108fa9997c293f3477f45e63954928dd872e7d82ff2f5d936a1"
+ },
+ "source_bundle": {
+  "file": "corners/20261114-222427036313-e00a719/source-bundle.json",
+  "sha256": "0519a56791600b7636000154fa12c0bf381f3c0937257b93aeb3b5ff0ad00797",
+  "schema": "gf180-comparator/klt-source-bundle",
+  "version": 2,
+  "origin_commit": "e00a7196246ec0b73080d712ebf843e6d17eae31",
+  "origin_dirty_paths": []
+ },
+ "ingest": {
+  "commit": "e00a719",
+  "commit_full": "e00a7196246ec0b73080d712ebf843e6d17eae31",
+  "tools_dirty": false,
+  "source_drift": [],
+  "linkage_notes": [],
+  "engine_floor": {
+   "ngspice_min_major": 46,
+   "floor_source": "source-bundle",
+   "observed": [
+    "47"
+   ],
+   "violations": [],
+   "override": false
+  },
+  "pdk_qualification": {
+   "required": {
+    "open_pdks": "f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7",
+    "pdk_variant": "gf180mcuD"
+   },
+   "required_source": "source-bundle",
+   "observed": [
+    {
+     "pdk_variant": "gf180mcuD",
+     "open_pdks": "f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7"
+    }
+   ],
+   "model_lib_sha256": [
+    "f6f4a96e18fc5ad11270ad3451aaecc7ac37fc81eb61e15b0d7d94c7bc594a24"
+   ],
+   "violations": [],
+   "override": false
+  }
+ },
+ "scored": false,
+ "complete": true,
+ "outcome": "complete",
+ "expected_points": 1,
+ "reference": true,
+ "points": 1,
+ "problems": [],
+ "derived": {
+  "tt_27c_3.30v": {
+   "vsup_v": 3.3,
+   "clk_period_ns": 62.5,
+   "t_win_start_ns": 510.05,
+   "dout_c08": 0.9999999939085,
+   "dout_c09": 7.417936072881e-10,
+   "dout_c10": 0.9999999939074,
+   "dout_c11": 7.418174968635e-10,
+   "dout_c12": 0.9999999939084,
+   "dout_c13": 7.41805011127e-10,
+   "dout_c14": 0.9999999939078,
+   "dout_c15": 7.418803494162e-10,
+   "dout_c16": 0.999999993908,
+   "dout_c17": 7.418901935191e-10,
+   "dout_c18": 0.9999999939079,
+   "dout_c19": 7.418227877667e-10,
+   "dout_c20": 0.9999999939073,
+   "dout_c21": 7.417291630386e-10,
+   "dout_c22": 0.9999999939078,
+   "dout_c23": 7.418701566427e-10,
+   "doutb_c08": 7.418685216564e-10,
+   "doutb_c23": 0.9999999939081,
+   "dec_cycles_correct": 16.0,
+   "q_win_pc": 43.90515712515,
+   "q_half1_pc": 21.95242186342,
+   "q_half2_pc": 21.95291551696,
+   "q_half_mismatch_pct": 0.0022487176705755963,
+   "q_split_delta_pct": 0.00041055593875517863,
+   "p_avg_uw": 144.88701851299498,
+   "e_dec_fj": 9055.438657062186,
+   "p_avg_vi_uw": 144.887018513,
+   "p_avg_form_delta_pct": 3.461167546320206e-12,
+   "q_clk_pc": 0.0070735699806359995,
+   "i_static_ua": 30.27535571486
+  }
+ },
+ "cross_run_agreement": {
+  "schema": "cross-run-agreement/1",
+  "local_record": "20261114-032046866512-d02a882.json",
+  "policy_source": "sim/tools/klt_record.py AVG_POWER_CROSS_RUN (issue #372)",
+  "per_quantity": {
+   "tt_27c_3.30v/p_avg_uw": {
+    "fleet": 144.88701851299498,
+    "local": 144.887028,
+    "delta": -9.487005002029036e-06,
+    "move": -6.547863623808363e-06,
+    "band_text": "within 1 % relative (fleet vs local)",
+    "status": "within_band"
+   },
+   "tt_27c_3.30v/e_dec_fj": {
+    "fleet": 9055.438657062186,
+    "local": 9055.43925,
+    "delta": -0.0005929378130531404,
+    "move": -6.547863628516313e-06,
+    "band_text": "within 1 % relative (fleet vs local)",
+    "status": "within_band"
+   },
+   "tt_27c_3.30v/i_static_ua": {
+    "fleet": 30.27535571486,
+    "local": 30.27536,
+    "delta": -4.285139997506349e-06,
+    "move": -1.4153886188327236e-05,
+    "band_text": "within 1 % relative (fleet vs local)",
+    "status": "within_band"
+   },
+   "tt_27c_3.30v/q_half_mismatch_pct": {
+    "fleet": 0.0022487176705755963,
+    "local": 0.0022776272772,
+    "delta": -2.8909606624403627e-05,
+    "move": -2.8909606624403627e-05,
+    "band_text": "within 0.05 percentage points absolute (a relative band is meaningless on a near-cancelling ratio)",
+    "status": "within_band"
+   }
+  },
+  "gaps": [],
+  "status": "within_band"
+ }
+}

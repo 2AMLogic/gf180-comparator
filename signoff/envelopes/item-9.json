@@ -17,7 +17,7 @@
         "role": "testbench",
         "path": "sim/README.md",
         "passed": true,
-        "content_hash": "sha256:e1144faecdaa1adbcffa552f77877d010f27e3e1764fd0ab564a9d74aea86a91"
+        "content_hash": "sha256:23cbee884bf35ac78b2e4b4b7ae2b30393137c4feb949650457edd13469f6dcf"
       },
       {
         "check": "present",
@@ -31,14 +31,14 @@
         "role": "testbench",
         "path": "sim/comparator-avg-power/README.md",
         "passed": true,
-        "content_hash": "sha256:7bc915d91b593c167c89dda8e133b3652a7dbecdb16c9d83bd5b8d9a707bed79"
+        "content_hash": "sha256:649d0b8e50626a9059363e4ffc0c40ef295c353c85f2982172fafeba02db666b"
       },
       {
         "check": "present",
         "role": "testbench",
         "path": "sim/comparator-avg-power/testbench/tb.json",
         "passed": true,
-        "content_hash": "sha256:a44581ad7618f23f0fb754b88baeb57c33070a43f36a0b3bdd1db1f31e36552b"
+        "content_hash": "sha256:ad9454f781c63108fa9997c293f3477f45e63954928dd872e7d82ff2f5d936a1"
       },
       {
         "check": "present",
@@ -388,7 +388,7 @@
         "role": "testbench",
         "path": "sim/harness/tests/test_klt_record.py",
         "passed": true,
-        "content_hash": "sha256:01396b22d30100f739bd68eee231b9d6e8d00a2b46e2d9ce547571580d7b2aef"
+        "content_hash": "sha256:a30d6d2e539ea7cc1a9fff75be222ecc7fc598c0ec8255071dc6b1d496748527"
       },
       {
         "check": "present",

@@ -499,6 +499,14 @@ class WholeComparatorOffsetScoring(unittest.TestCase):
         self.mutate(lambda r: r["derived"]["ss_125c_2.97v"].update(vos_3sig_total_cons_mv=float("nan")))
         self.assert_degraded("not a finite number")
 
+    def test_non_object_derived_entry(self) -> None:
+        # A present-but-non-object derived entry is a named error, never a
+        # silent skip: the fail-closed guard validate_kickback_both already
+        # had. Previously the offset validator skipped it and the wrapper
+        # crashed on the string later (issue #370).
+        self.mutate(lambda r: r["derived"].update({"tt_27c_3.30v": "not-an-object"}))
+        self.assert_degraded("tt_27c_3.30v: derived entry is not an object")
+
     def test_dirty_or_uncitable_source(self) -> None:
         def f(r):
             r["citable"], r["dirty"] = False, True

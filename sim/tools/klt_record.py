@@ -77,6 +77,13 @@ and may still be `reference` evidence -- `reference` keeps its coverage +
 provenance meaning -- but it is not functionally verified, whatever its
 `within_target` count. See sim/README.md "Fleet record correctness fields".
 
+Unscored benches (issue #372): a bench absent from SPEC mints a record with
+no target/stretch verdict at all (no `spec_row`, no PASS/FAIL column --
+`"scored": false`). comparator-avg-power additionally gates its corners on
+the manifest `checks` (CHECK_GUARDED_BENCHES) and omits the quantities in
+FLEET_OMITTED_MEASURES; `--compare-local` states its signed deltas against a
+committed local record under `cross_run_agreement` (AVG_POWER_CROSS_RUN).
+
 PDK qualification (issue #283): the exact open_pdks revision (sim/toolchain.json
 `open_pdks`) IS the device models, so every ingested leg's executor-reported
 `provenance.pdk.{name,version}` must equal the revision and variant snapshotted
@@ -129,6 +136,7 @@ LEGS = {
     "comparator-preamp-noise": ["noise", "ac"],
     "comparator-offset-mc": ["main"],
     "comparator-offset-tran": ["main"],
+    "comparator-avg-power": ["main"],
 }
 
 #: Ratified TARGET / STRETCH bounds (README.md table, DR-0002). Read-only.
@@ -148,6 +156,42 @@ SPEC = {
 POWER_TARGET_UW = 1000.0  # <= 1 mW static, README.md supply/power row
 
 MATH = {"abs": abs, "max": max, "min": min, "sqrt": math.sqrt, "ln": math.log, "log": math.log10}
+
+#: tb.measure quantities the fleet path cannot reproduce, per bench (issue
+#: #372): the fleet request schema has no position for an interactive `let`
+#: between the run and the `.meas` cards, so mk_klt_request.py drops the
+#: `let i_rst_thr` / `meas tran t_rst` pair together and `reset_margin_ns`
+#: -- t_rst's only consumer, with no manifest check on it -- is omitted from
+#: fleet records. The derive path skips the expression here (a plain eval
+#: would NameError past ARITH_ERRORS and drop the corner), and every fleet
+#: record names the omission under "Not computed by this executor".
+FLEET_OMITTED_MEASURES = {"comparator-avg-power": ("reset_margin_ns",)}
+
+#: Benches whose manifest `checks` bound the derived outputs at ingest: a
+#: violated floor is a named GUARD_FAILED problem and the corner is dropped
+#: (the derive_offset_tran mismatch-guard pattern), so a fleet record can
+#: only claim `complete` when every manifest check passed on every point.
+CHECK_GUARDED_BENCHES = ("comparator-avg-power",)
+
+#: Cross-run agreement policy for comparator-avg-power (issue #372): the
+#: first local-vs-fleet tolerance stated in this repo, asserted explicitly
+#: rather than inherited. The charge-based headline quantities are window
+#: integrals of hash-identical staged sources run by two ngspice builds:
+#: 1 % relative -- the manifest's own form-agreement plumbing bound
+#: (`p_avg_form_delta_pct`, max 1 %) is the closest in-repo precedent for
+#: "the same number" on an energy figure, and executor numeric drift is a
+#: smaller effect of the same kind. `q_half_mismatch_pct` is a
+#: near-cancelling settledness ratio (~0.002 % locally), so a relative
+#: band is meaningless; its absolute band is 5 % of the manifest's own
+#: 1.0 % settledness bound. A delta outside the band is a FINDING: the
+#: record still mints, marked OUT_OF_BAND, never silently.
+AVG_POWER_CROSS_RUN = {
+    "p_avg_uw": ("rel", 0.01),
+    "e_dec_fj": ("rel", 0.01),
+    "i_static_ua": ("rel", 0.01),
+    "q_half_mismatch_pct": ("abs", 0.05),
+}
+CROSS_RUN_SCHEMA = "cross-run-agreement/1"
 
 
 def corner_id(raw: str, vdd: float) -> tuple[str, str]:
@@ -640,17 +684,25 @@ def derive(bench: str, tb, legs: dict[str, dict]) -> tuple[dict, list]:
         for cid in sorted(every - set(c)):
             problems.append(f"MISSING_LEG_CORNER: leg {leg} has no result for {cid}")
     res: dict = {}
-    if bench in ("comparator-kickback", "comparator-regeneration"):
+    if bench in ("comparator-kickback", "comparator-regeneration", "comparator-avg-power"):
         raw = legs["main"][0]
+        omitted = FLEET_OMITTED_MEASURES.get(bench, ())
+        guarded = bench in CHECK_GUARDED_BENCHES
         for cid in ids:
             env = dict(MATH, **raw[cid][""])
             thunks = {
                 name: (lambda expr=expr: eval(expr.replace("^", "**"), {"__builtins__": {}}, env))
-                for name, expr in tb.measure.items()
+                for name, expr in tb.measure.items() if name not in omitted
             }
             d = _eval_outputs(cid, thunks, problems)
-            if d is not None:
-                res[cid] = d
+            if d is None:
+                continue
+            if guarded:
+                guard = scalar_bound_failures(getattr(tb, "checks", None) or {}, d)
+                if guard:
+                    problems += [f"GUARD_FAILED: {cid} {g}" for g in guard]
+                    continue
+            res[cid] = d
         return res, problems
     if bench == "comparator-preamp-noise":
         for cid in ids:
@@ -725,6 +777,69 @@ def node_coverage_line(derived: dict) -> str:
     n_neg = sum(d["kick_1k_nnode_peak_mv"] > d["kick_1k_pnode_peak_mv"] for d in derived.values())
     return (f"`both` -- `kick_1k_peak_mv` is the maximum of the positive-node (`kick_1k_pnode_peak_mv`) and "
             f"negative-node (`kick_1k_nnode_peak_mv`) peaks; the negative node sets it at {n_neg}/{len(derived)} corners.")
+
+
+def compare_local_record(path: str, derived: dict) -> dict:
+    """Signed deltas of the headline quantities, fleet run vs a committed
+    LOCAL harness record (issue #372). Only corners present on both sides
+    are compared; a headline quantity absent on either side is a named gap,
+    never a silently skipped row. The asserted band lives in
+    AVG_POWER_CROSS_RUN; an exceeded band flips `status` to OUT_OF_BAND (a
+    finding the record states, not a rounding note) but mints nothing
+    differently -- the record's coverage/identity gates are independent."""
+    local = json.loads(Path(path).read_text())
+    lpts = {p["corner_id"]: p.get("measurements", {}) for p in local.get("points", [])}
+    out = {"schema": CROSS_RUN_SCHEMA, "local_record": Path(path).name,
+           "policy_source": "sim/tools/klt_record.py AVG_POWER_CROSS_RUN (issue #372)",
+           "per_quantity": {}, "gaps": [], "status": "within_band"}
+    for cid in sorted(derived):
+        lm = lpts.get(cid)
+        if lm is None:
+            out["gaps"].append(f"{cid}: no matching corner in the local record")
+            continue
+        for name, (kind, tol) in AVG_POWER_CROSS_RUN.items():
+            fv, lv = derived[cid].get(name), lm.get(name)
+            if fv is None or lv is None:
+                out["gaps"].append(f"{cid}/{name}: absent on the "
+                                   + ("fleet side" if fv is None else "local side"))
+                continue
+            delta = fv - lv
+            if kind == "rel":
+                band, move = tol * 100.0, delta / abs(lv) * 100.0
+                band_text = f"within {band:g} % relative (fleet vs local)"
+            else:
+                band, move = tol, delta  # the quantity is already a percentage
+                band_text = f"within {band:g} percentage points absolute (a relative band is meaningless on a near-cancelling ratio)"
+            ok = abs(move) <= band
+            out["per_quantity"][f"{cid}/{name}"] = {
+                "fleet": fv, "local": lv, "delta": delta, "move": move,
+                "band_text": band_text,
+                "status": "within_band" if ok else "OUT_OF_BAND"}
+            if not ok:
+                out["status"] = "OUT_OF_BAND"
+    if out["gaps"] and out["status"] == "within_band":
+        out["status"] = "INCOMPLETE_COMPARISON"
+    return out
+
+
+def cross_run_lines(cmp: dict) -> list[str]:
+    """Markdown for `compare_local_record`, rendered only from that structure."""
+    out = [f"- **Cross-run agreement vs the committed local record** `{cmp['local_record']}` "
+           f"(issue #372; the first local-vs-fleet tolerance stated in this repo; band policy: "
+           f"`{cmp['policy_source']}`): signed deltas, fleet minus local."]
+    for key, e in cmp["per_quantity"].items():
+        out.append(f"  - `{key}`: fleet {fmt(e['fleet'])} vs local {fmt(e['local'])} -> delta "
+                   f"{fmt(e['delta'])} ({'+' if e['move'] >= 0 else ''}{e['move']:.4g}); asserted "
+                   f"{e['band_text']} -- {e['status']}.")
+    if cmp["gaps"]:
+        out += [f"  - not compared: {g}." for g in cmp["gaps"]]
+    if cmp["status"] == "OUT_OF_BAND":
+        out.append("  - OUT OF BAND: a delta outside the asserted band is a finding, not a rounding note -- "
+                   "investigate before trusting fleet records for the 45-corner campaign.")
+    elif cmp["status"] == "INCOMPLETE_COMPARISON":
+        out.append("  - INCOMPLETE COMPARISON: some headline quantity had no counterpart on one side; "
+                   "the comparison does not claim agreement it cannot see.")
+    return out
 
 
 def power_uw(bench: str, cid: str, d: dict) -> float | None:
@@ -1468,7 +1583,7 @@ def legacy_diagnostic(bench: str, work: Path) -> int:
     legs_c, coverage, expected = _collect_checked_legs(bench, names, reports, requests)
     derived, problems = derive(bench, tb, legs_c)
     problems = coverage + problems
-    key = SPEC[bench][1]
+    key = SPEC[bench][1] if bench in SPEC else sorted(tb.measure)[0]  # unscored bench: no SPEC row
     print(f"NON-CITABLE DIAGNOSTIC (LEGACY_WORKDIR_UNBOUND): {work} has no {mk.BUNDLE_NAME}; the DUT, "
           "testbench and commit that produced these reports are UNKNOWN. Derived with TODAY's "
           f"sim/{bench}/testbench/tb.json. Not reference evidence; nothing written under sim/.")
@@ -1735,8 +1850,14 @@ def main() -> int:
                          "qualification as an explicitly NON-CITABLE diagnostic (override recorded); default is to refuse")
     ap.add_argument("--legacy-diagnostic", action="store_true",
                     help="for a --from-report dir with no source bundle: print a NON-CITABLE table, write nothing")
+    ap.add_argument("--compare-local", default=None, metavar="LOCAL_RECORD_JSON",
+                    help="comparator-avg-power only: signed deltas of the headline quantities against a "
+                         "committed local record (cross-run agreement, issue #372); the asserted band "
+                         "policy is stated in the minted record")
     a = ap.parse_args()
 
+    if a.compare_local and a.bench != "comparator-avg-power":
+        refuse("BAD_ARGUMENT", "--compare-local is defined for comparator-avg-power only (issue #372)")
     if a.bench == mk.CM_INDEX_BENCH:
         return mint_cm_index(a)
     if a.bench == mk.CM_WINDOW_BENCH:
@@ -1759,7 +1880,17 @@ def main() -> int:
     check_dut_selection(b, a.dut)
     d, t = b["dut"], b["testbench"]
     tb = htb.load(_staged_path(work, t["staged_dir"]))  # originating manifest + `measure`
-    vdds = hc.supply_points(tb.nominal_supply_v, tb.supply_tolerance)
+    # The supply split is the one grid dimension that lives in the request-SET
+    # naming (one request per supply point, the rail baked into each body), so
+    # unlike process/temperature it cannot be read back from a single request.
+    # Take it from the bundle's own recorded grid (#152: the expected grid
+    # comes from the bundled requests, never a hard-coded count) so a set
+    # generated with --supply-v / --supply-tolerance restricts -- the case
+    # reproduce_line's replay guidance already describes -- instead of
+    # refusing; full-rail bundles (every committed record) are unaffected.
+    bundled_vdds = (b.get("parameters") or {}).get("supply_v")
+    vdds = ([float(v) for v in bundled_vdds] if bundled_vdds
+            else hc.supply_points(tb.nominal_supply_v, tb.supply_tolerance))
     names = {f"{leg}-v{v:.2f}": (leg, v) for leg in LEGS[a.bench] for v in vdds}
     verify_staged(work, b, names)
     if not a.from_report:
@@ -1787,12 +1918,23 @@ def main() -> int:
     # target compliance, and never folded into `complete` / `reference`.
     decisions = decision_correctness(a.bench, tb, derived, expected_corner_ids(a.bench, names, requests))
 
-    label, key, tgt, stretch, unit = SPEC[a.bench]
-    vals = {cid: dd[key] for cid, dd in derived.items()}
-    worst_cid = max(vals, key=vals.get)
-    best_cid = min(vals, key=vals.get)
-    n_t = sum(v <= tgt for v in vals.values())
-    n_s = sum(v <= stretch for v in vals.values())
+    # Cross-run agreement (issue #372): compare against the committed local
+    # record BEFORE minting, so the outcome is part of the record itself.
+    comparison = compare_local_record(a.compare_local, derived) if a.compare_local else None
+
+    spec = SPEC.get(a.bench)
+    if spec is not None:
+        label, key, tgt, stretch, unit = spec
+        vals = {cid: dd[key] for cid, dd in derived.items()}
+        worst_cid = max(vals, key=vals.get)
+        best_cid = min(vals, key=vals.get)
+        n_t = sum(v <= tgt for v in vals.values())
+        n_s = sum(v <= stretch for v in vals.values())
+    else:
+        # UNSCORED (issue #372): comparator-avg-power deliberately has no
+        # SPEC row -- DR-0006 is proposed, not ratified, and nothing here
+        # performs the DR-0002 ratification ceremony.
+        label = key = unit = None
     r = _archive_record(a.bench, work, b, tb, vdds, names, unverified, engine, pdk)
     rid, sha, exp, bundle_sha, ingest_sha, citable, noncite = (
         r[k] for k in ("rid", "sha", "exp", "bundle_sha", "ingest_sha", "citable", "noncite"))
@@ -1811,13 +1953,23 @@ def main() -> int:
     if decisions is not None and decisions["status"] != "pass":
         claim += (" -- FUNCTIONAL DECISION CHECKS " + {"fail": "FAILED", "incomplete": "INCOMPLETE"}[decisions["status"]]
                   + " (`decision_correctness`, see Decision correctness): NOT functionally verified")
+    if spec is not None:
+        claim_line = (f"- **Claim**: {claim} against the ratified {label} row "
+                      f"(README.md#target-specification-ratified-via-dr-0002; target <= {tgt:g} {unit}, "
+                      f"stretch <= {stretch:g} {unit}). Scored, not relaxed.")
+    else:
+        claim_line = (f"- **Claim**: {claim}. SUPPLEMENTAL AND UNSCORED: this bench scores no row of README.md's "
+                      "target specification -- spec/claim-registry.json registers no average-power row, DR-0006 "
+                      "stays `proposed -- not ratified`, and nothing here performs the DR-0002 ratification "
+                      "ceremony. The manifest's checks are functional decision reads, measurement plumbing and "
+                      "DR-0006's own same-run settledness criterion -- none is a spec verdict.")
     lines = [
         f"# Record {rid}",
         "",
         f"- **Record ID**: {rid}",
         f"- **Experiment**: `sim/{a.bench}/` (klt sim requests, one per supply point: {', '.join(names)})",
         f"- **Topology label**: {a.label or d['dut_id']}",
-        f"- **Claim**: {claim} against the ratified {label} row (README.md#target-specification-ratified-via-dr-0002; target <= {tgt:g} {unit}, stretch <= {stretch:g} {unit}). Scored, not relaxed.",
+        claim_line,
         f"- **DUT**: `{d['dut_id']}` -- **{d['provenance']}** -- `{d['netlist']}` (sha256 `{d['netlist_sha256'][:16]}`), binding `{d['binding_config']}` entry `{d['key']}` (sha256 `{d['binding_entry_sha256'][:16]}`), params {json.dumps(d['params'], sort_keys=True)}",
         f"- **Testbench**: `{t['dir']}/{t['netlist']}` (sha256 `{t['netlist_sha256'][:16]}`), manifest sha256 `{t['manifest_sha256'][:16]}`",
         f"- **Commit**: `{sha}` (originating commit, from the source bundle `corners/{rid}/{mk.BUNDLE_NAME}` sha256 `{bundle_sha[:16]}`; sources staged at request generation and verified at ingest)"
@@ -1843,15 +1995,19 @@ def main() -> int:
         lines += ["- **INCOMPLETE / FAILED UNITS**:"] + [f"  - {p}" for p in problems[:60]]
     cols = list(next(iter(derived.values())).keys())
     dcol = decisions is not None
-    lines += ["- **Result**:", "", "  | corner-id | " + " | ".join(f"`{n}`" for n in cols) + " | vs target |"
-              + (" decisions |" if dcol else ""), "  |---|" + "---|" * (len(cols) + 1 + dcol)]
+    scored = spec is not None
+    lines += ["- **Result**:", "", "  | corner-id | " + " | ".join(f"`{n}`" for n in cols)
+              + (" | vs target |" if scored else " |") + (" decisions |" if dcol else ""),
+              "  |---|" + "---|" * (len(cols) + (1 if scored else 0) + (1 if dcol else 0))]
     for cid, dd in derived.items():
-        lines.append(f"  | `{cid}` | " + " | ".join(fmt(dd[n]) for n in cols) + f" | {'PASS' if dd[key] <= tgt else 'FAIL'} |"
+        lines.append(f"  | `{cid}` | " + " | ".join(fmt(dd[n]) for n in cols)
+                     + (f" | {'PASS' if dd[key] <= tgt else 'FAIL'} |" if scored else " |")
                      + (f" {decisions['per_corner'][cid]['status'].upper()} |" if dcol else ""))
-    lines += [
-        "",
-        f"- **Score vs ratified bounds** (`{key}`): within target {n_t}/{len(vals)}, within stretch {n_s}/{len(vals)}; min {vals[best_cid]:.6g} @ `{best_cid}`, max {vals[worst_cid]:.6g} @ `{worst_cid}` ({unit}).",
-    ]
+    lines += [""]
+    if scored:
+        lines.append(f"- **Score vs ratified bounds** (`{key}`): within target {n_t}/{len(vals)}, within stretch {n_s}/{len(vals)}; min {vals[best_cid]:.6g} @ `{best_cid}`, max {vals[worst_cid]:.6g} @ `{worst_cid}` ({unit}).")
+    if comparison is not None:
+        lines += cross_run_lines(comparison)
     if a.bench == "comparator-regeneration":
         pw = {cid: power_uw(a.bench, cid, dd) for cid, dd in derived.items()}
         lines.append(f"- **Static power** (`i_static_ua` x vdd): min {min(pw.values()):.4g} uW, max {max(pw.values()):.4g} uW; within the {POWER_TARGET_UW:g} uW target at {sum(p <= POWER_TARGET_UW for p in pw.values())}/{len(pw)} corners.")
@@ -1869,6 +2025,7 @@ def main() -> int:
             "comparator-offset-tran": "the +-50 mV common-mode dependence (`sig_dvos_*`), the in-run `sig_rpair_uv` null control (it stays in the DC bench's record) and per-draw `vbias_anchor_mv`; the fleet runner's `.meas` cards give the trip time and the end-of-reset preamp samples, and everything else is derived from them.",
             "comparator-kickback": "nothing (all `.meas` ingredients are requested; `.meas` precision is the executor's `measureprec=12`).",
             "comparator-regeneration": "nothing.",
+            "comparator-avg-power": "`reset_margin_ns` (its `t_rst` `.meas` needs the `let i_rst_thr` threshold defined between the run and the measurements, and the fleet request schema has no position for a `let`; the pair is omitted from the request together). The checked backstop for reset completion, `dec_cycles_correct` = 16, IS requested and IS checked.",
         }[a.bench],
         reproduce_line(a.bench, b, r, tb),
         "",
@@ -1876,17 +2033,28 @@ def main() -> int:
     (exp / "records" / f"{rid}.md").write_text("\n".join(lines))
     (exp / "records" / f"{rid}.json").write_text(json.dumps({
         **_provenance(r, a.bench, b, drift, link_notes),
-        "spec_row": {"label": label, "measure": key, "target_max": tgt, "stretch_max": stretch, "unit": unit},
+        **({"spec_row": {"label": label, "measure": key, "target_max": tgt, "stretch_max": stretch, "unit": unit},
+            "within_target": n_t, "within_stretch": n_s} if spec is not None else {"scored": False}),
         "complete": complete, "outcome": "complete" if complete else "incomplete", "expected_points": expected,
         "reference": reference,
-        "within_target": n_t, "within_stretch": n_s, "points": len(vals), "problems": problems,
+        "points": len(derived), "problems": problems,
         **({"supplemental_reverse_polarity": rev} if (rev := reverse_polarity_summary(derived)) else {}),
         "derived": derived,
+        **({"cross_run_agreement": comparison} if comparison is not None else {}),
         **({"input_node_coverage": node_coverage(derived)} if a.bench == "comparator-kickback" else {}),
         **({"decision_correctness": decisions} if decisions is not None else {}),
     }, indent=1, allow_nan=False) + "\n")  # strict JSON: no NaN/Infinity tokens
-    print(f"record {rid}: {len(derived)} points, {key} within target {n_t}/{len(vals)}, stretch {n_s}/{len(vals)}, worst {vals[worst_cid]:.6g} @ {worst_cid}"
-          + ("" if citable else " -- NOT CITABLE: " + "; ".join(noncite)))
+    if spec is not None:
+        print(f"record {rid}: {len(derived)} points, {key} within target {n_t}/{len(vals)}, stretch {n_s}/{len(vals)}, worst {vals[worst_cid]:.6g} @ {worst_cid}"
+              + ("" if citable else " -- NOT CITABLE: " + "; ".join(noncite)))
+    else:
+        print(f"record {rid}: {len(derived)} points (unscored bench)"
+              + ("" if citable else " -- NOT CITABLE: " + "; ".join(noncite)))
+    if comparison is not None:
+        print(f"cross-run agreement vs {comparison['local_record']}: {comparison['status']}")
+        if comparison["status"] == "OUT_OF_BAND":
+            print("CROSS-RUN AGREEMENT OUT OF BAND: a delta outside the asserted band is a finding, "
+                  "not a rounding note -- see the record's Cross-run agreement section", file=sys.stderr)
     if decisions is not None:
         print(f"decision correctness: {decisions['status']} ({decisions['corners_pass']}/{decisions['corners_expected']} corners pass, "
               f"{len(decisions['failures'])} wrong decision(s), {len(decisions['missing'])} missing)")

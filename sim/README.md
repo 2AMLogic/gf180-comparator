@@ -181,7 +181,10 @@ expressed for the fleet runner (its `klt` 0.5.0 has no `noise` analysis), so a
 noise is run locally via `run_corners.py` (a single nominal point on a shared dispatch worker; the full PVT grid only on a workstation with the pinned PDK); fleet requests support the
 schematic DUT binding only, so extracted (`comparator-dr0001-layout`) records
 use the local `postlayout` path, and fleet records omit some secondary
-quantities (each record lists which). `comparator-offset-tran` pins ngspice to one
+quantities (each record lists which) — for `comparator-avg-power` that is
+`reset_margin_ns`, whose `t_rst` `.meas` needs an interactive `let` the fleet
+request schema has no position for (see that bench's README).
+`comparator-offset-tran` pins ngspice to one
 thread per unit (a `.control` block in its generated body) because the
 runner's per-process threads oversubscribed the job instance (see its README).
 
