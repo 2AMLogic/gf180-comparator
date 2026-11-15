@@ -106,6 +106,7 @@ REPO = HERE.parents[1]
 sys.path.insert(0, str(HERE))
 
 import pex_measure as pm  # noqa: E402
+from harness import corners as hc  # noqa: E402
 
 ISSUE = 229
 EXTRACTED_DUT = HERE / "artifacts" / "preamp-noise" / "comparator.dut-layout.cir"
@@ -836,20 +837,10 @@ def budget_variants(text: str, fractions, nets=BUDGET_NETS) -> list[dict]:
     return v
 
 
-_CID_RE = re.compile(r"^(?P<p>[a-z]+)_(?P<t>-?[0-9.]+)c_(?P<v>[0-9.]+)v$")
-
-
-def parse_corner_id(cid: str) -> tuple[str, float, float]:
-    m = _CID_RE.match(cid)
-    if not m:
-        raise ValueError(f"unparseable corner id {cid!r}")
-    return m["p"], float(m["t"]), float(m["v"])
-
-
 def failing_points() -> list[tuple[str, float, float]]:
     """The cited report's td_od50_ns delta rows over 1.5 ns (expected: 7)."""
     rep = json.loads(CITED_REPORT.read_text())
-    pts = [parse_corner_id(r["corner_id"]) for r in rep["delta"]
+    pts = [hc.parse_corner_id(r["corner_id"]) for r in rep["delta"]
            if r["spec_row"] == "td_od50_ns" and r["extracted_value"] > pm.SPEC_TD_OD50_NS_MAX]
     return sorted(pts)
 
@@ -1223,7 +1214,7 @@ def stage_controls(res: dict, points) -> tuple[dict, bool]:
 def budget_analyze(outdir: Path) -> dict:
     man = json.loads((outdir / "stage.json").read_text())
     text = load_extracted()
-    points = [parse_corner_id(c) for c in man["points"]]
+    points = [hc.parse_corner_id(c) for c in man["points"]]
     nets = man["nets"]
     plan = {x["id"]: x for x in _plan_from_manifest(man, text)}
     res = {vid: _budget_values(outdir / vid, points) for vid in plan if (outdir / vid).is_dir()}
@@ -1401,7 +1392,7 @@ def cmd_budget_verify(args) -> int:
     check_bench()
     text = load_extracted()
     man = json.loads((outdir / "stage.json").read_text())
-    points = [parse_corner_id(c) for c in man["points"]]
+    points = [hc.parse_corner_id(c) for c in man["points"]]
     plan = _plan_from_manifest(man, text)
     errors, drift = budget_manifest_diff(
         man, budget_manifest(text, plan, points, man["nets"]))
@@ -1726,7 +1717,7 @@ def _ok(x) -> bool:
 def combo_analyze(outdir: Path) -> dict:
     man = json.loads((outdir / "stage.json").read_text())
     text = load_extracted()
-    points = [parse_corner_id(c) for c in man["points"]]
+    points = [hc.parse_corner_id(c) for c in man["points"]]
     cids = [pid(p) for p in points]
     plan = {x["id"]: x for x in _combo_plan_from_manifest(man, text)}
     mvar = {x["id"]: x for x in man["variants"]}
@@ -1892,7 +1883,7 @@ def cmd_combo_verify(args) -> int:
     check_bench()
     text = load_extracted()
     man = json.loads((outdir / "stage.json").read_text())
-    points = [parse_corner_id(c) for c in man["points"]]
+    points = [hc.parse_corner_id(c) for c in man["points"]]
     plan = _combo_plan_from_manifest(man, text)
     errors, drift = budget_manifest_diff(
         man, combo_manifest(text, plan, points, man["kind"], man.get("controls_from")))

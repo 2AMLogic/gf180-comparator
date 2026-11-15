@@ -212,7 +212,7 @@ def corner_id(raw: str, vdd: float) -> tuple[str, str]:
     if not proc or not math.isfinite(temp):
         raise ValueError(f"corner id {raw!r} has no process or a non-finite temperature")
     sample = next((x for x in parts[1:] if x.startswith("mc")), "")
-    return f"{proc}_{temp:g}c_{vdd:.2f}v", sample
+    return hc.corner_id(proc, temp, vdd), sample
 
 
 def collect(report: dict, vdd: float) -> tuple[dict, list]:
@@ -244,7 +244,7 @@ def expected_units(request: dict, vdd: float) -> dict[str, set[str]]:
     samples = {f"mc{i}" for i in range(n)} if isinstance(n, int) and n > 0 else {""}
     c = request["corners"]
     return {
-        f"{p['name']}_{float(t):g}c_{vdd:.2f}v": set(samples)
+        hc.corner_id(p["name"], float(t), vdd): set(samples)
         for p in c["process"]
         for t in c["temperature_c"]
     }

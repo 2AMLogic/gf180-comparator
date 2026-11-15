@@ -124,7 +124,7 @@ def campaign_points() -> dict:
     for c in hc.resolve_corners(list(tb.corners)):
         for t in tb.temperatures_c:
             for v in hc.supply_points(tb.nominal_supply_v, tb.supply_tolerance):
-                pts[f"{c.name}_{float(t):g}c_{v:.2f}v"] = (c.name, float(t), float(v))
+                pts[hc.corner_id(c.name, float(t), float(v))] = (c.name, float(t), float(v))
     if len(pts) != CAMPAIGN_POINTS_EXPECTED:
         raise Refusal("GRID_SIZE", f"expected {CAMPAIGN_POINTS_EXPECTED} PVT points, grid has {len(pts)}")
     return pts

@@ -67,6 +67,7 @@ sys.path.insert(0, str(SIM))
 
 import klt_record as kr  # noqa: E402
 import mk_klt_request as mk  # noqa: E402
+from harness import corners as hc  # noqa: E402
 
 BENCH = mk.CM_INDEX_BENCH
 EXP = SIM / BENCH
@@ -99,17 +100,6 @@ class ProbeRefused(Exception):
         self.code, self.detail = code, detail
 
 
-def pvt_key(proc: str, temp: float, vdd: float) -> str:
-    return f"{proc}_{float(temp):g}c_{vdd:.2f}v"
-
-
-def parse_pvt_key(key: str) -> tuple[str, float, float]:
-    m = re.fullmatch(r"(\w+?)_(-?[0-9.]+)c_([0-9.]+)v", key)
-    if not m:
-        raise ProbeRefused("PVT_SELECTION_INVALID", f"unparsable PVT key {key!r}")
-    return m.group(1), float(m.group(2)), float(m.group(3))
-
-
 # --------------------------------------------------------------------------- selection
 
 def select_hot_point(record: dict) -> dict:
@@ -117,7 +107,10 @@ def select_hot_point(record: dict) -> dict:
     derived = record.get("derived") or {}
     pts = {}
     for k, v in derived.items():
-        proc, t, vdd = parse_pvt_key(k)
+        try:
+            proc, t, vdd = hc.parse_corner_id(k)
+        except ValueError:
+            raise ProbeRefused("PVT_SELECTION_INVALID", f"unparsable PVT key {k!r}") from None
         try:
             spread = max(float(v["sig_dvos_dn_uv"]), float(v["sig_dvos_up_uv"]))
         except (KeyError, TypeError, ValueError):
@@ -136,7 +129,7 @@ def select_hot_point(record: dict) -> dict:
 
 def probe_points(record: dict) -> list[dict]:
     hot = select_hot_point(record)
-    nom = {"key": pvt_key(*NOMINAL), "process": NOMINAL[0], "temperature_c": NOMINAL[1], "supply_v": NOMINAL[2]}
+    nom = {"key": hc.corner_id(*NOMINAL), "process": NOMINAL[0], "temperature_c": NOMINAL[1], "supply_v": NOMINAL[2]}
     return [nom, hot] if nom["key"] != hot["key"] else [nom]
 
 

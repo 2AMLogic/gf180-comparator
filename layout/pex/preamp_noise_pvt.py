@@ -76,6 +76,8 @@ from harness import corners as hc  # noqa: E402
 # evidence-gating tools must agree on) lives in the sim tooling.
 from mk_klt_request import (  # noqa: E402,F401
     git_state, parse_klt_version, sha256_bytes, sha256_file)
+# klt's raw corner id ('tt/27C[/mcN]') is translated in exactly one place.
+import klt_record as kr  # noqa: E402
 
 ISSUE = 209
 NOMINAL_DIR = REPO / "layout" / "pex" / "artifacts" / "preamp-noise"
@@ -313,12 +315,8 @@ def grid(nominal: bool) -> dict:
 
 
 def expected_corners(g: dict) -> set[str]:
-    return {corner_key(p, t, v) for p in g["process"] for t in g["temperatures_c"]
+    return {hc.corner_id(p, t, v) for p in g["process"] for t in g["temperatures_c"]
             for v in g["supply_v"]}
-
-
-def corner_key(process: str, temp: float, vdd: float) -> str:
-    return f"{process}_{float(temp):g}c_{float(vdd):.2f}v"
 
 
 def pinned_identity(record: dict) -> dict:
@@ -404,12 +402,6 @@ def write_request_set(out: Path, nominal: bool, legs=LEGS) -> dict:
 # --------------------------------------------------------------------------- #
 # Validation (pure: bundle dict + report dicts -> rows + issues)
 # --------------------------------------------------------------------------- #
-
-def raw_corner_id(raw: str) -> tuple[str, float]:
-    parts = raw.split("/")
-    temp = next(float(x[:-1]) for x in parts[1:] if x.endswith("C"))
-    return parts[0], temp
-
 
 def values_from_corner(c: dict) -> dict[str, float]:
     return {m["name"]: m["value"] for m in c.get("measurements", []) if m.get("value") is not None}
@@ -510,7 +502,7 @@ def report_netlist_sha(report: dict) -> str | None:
 
 def collect_leg(bundle: dict, reports: dict[str, dict], leg: str,
                 require_fleet: bool = True) -> tuple[dict, list[str]]:
-    """-> ({corner_key: {quantities..., source}}, issues) for one leg."""
+    """-> ({corner id: {quantities..., source}}, issues) for one leg."""
     issues: list[str] = []
     rows: dict[str, dict] = {}
     want = expected_corners(bundle["grid"])
@@ -538,11 +530,10 @@ def collect_leg(bundle: dict, reports: dict[str, dict], leg: str,
         for c in rep.get("corners") or []:
             raw = c.get("corner_id", "")
             try:
-                proc, temp = raw_corner_id(raw)
-            except StopIteration:
+                key, _ = kr.corner_id(raw, r["vdd"])
+            except ValueError:
                 issues.append(f"UNEXPECTED_CORNER: {tag} {raw!r} is not a process/temperature id")
                 continue
-            key = corner_key(proc, temp, r["vdd"])
             if raw in seen or key in rows:
                 issues.append(f"DUPLICATE_CORNER: {leg} {key} ({tag} {raw}) appears more than once")
                 continue
@@ -712,7 +703,7 @@ def nominal_comparison(bundle: dict, reports: dict) -> dict:
     for leg in LEGS:
         rows, issues = collect_leg(bundle, reports, leg, require_fleet=False)
         ref = record["results"][LEG_SPEC[leg]["record_case"]]["values"]
-        key = corner_key("tt", pnp.TEMP_C, pnp.VDD)
+        key = hc.corner_id("tt", pnp.TEMP_C, pnp.VDD)
         row = rows.get(key)
         cmp = {}
         if row is None:

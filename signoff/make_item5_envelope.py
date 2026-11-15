@@ -284,6 +284,10 @@ MATRIX_PROCESSES = ("tt", "ff", "ss", "fs", "sf")
 MATRIX_TEMPS_C = (-40.0, 27.0, 125.0)
 MATRIX_VDDS = (2.97, 3.30, 3.63)
 EXPECTED_POINTS = [
+    # Hand-inline of sim/harness/corners.py's ratified id format: this script
+    # is deliberately standalone (test_item5_envelope.py copies it alone into
+    # a bare tree and runs it there), so it cannot import the harness. Kept
+    # in sync by the suite's own pinned id expectations.
     (f"{p}_{t:g}c_{v:.2f}v", p, t, v)
     for p in MATRIX_PROCESSES for t in MATRIX_TEMPS_C for v in MATRIX_VDDS
 ]
