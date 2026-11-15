@@ -855,14 +855,26 @@ def render_record(
         for r in incomplete:
             lines.append(f"  - `{r.point.corner_id}`: {r.status} — {r.message}")
 
-    reproduce = [f"  python3 sim/run_corners.py {tb.experiment}"]
+    # Issue #362: echo the restricting flags the run actually passed, so a
+    # subset record does not tell its reader to run the full grid. Values come
+    # from cli.py's restricting_args (None = taken from the manifest, so no
+    # flag is emitted -- AC3: reflect what was passed, not what was inferred).
+    restrict = context.get("restricting_args") or {}
+    flags = ""
+    if restrict.get("corners"):
+        flags += " --corners " + " ".join(str(c) for c in restrict["corners"])
+    if restrict.get("temps"):
+        flags += " --temps " + " ".join(_fmt(t) for t in restrict["temps"])
+    if restrict.get("supply_tolerance") is not None:
+        flags += f" --supply-tolerance {_fmt(restrict['supply_tolerance'])}"
+    reproduce = [f"  python3 sim/run_corners.py {tb.experiment}{flags}"]
     if context.get("dut_provenance") == "extracted":
         # The bound netlist is regenerated scratch (gitignored): the record's
         # reproduce step must build it first, and name the --dut entry that
         # selects it (issue #23).
         reproduce = [
             "  python3 layout/run_extract_sim.py",
-            f"  python3 sim/run_corners.py {tb.experiment} --dut {context['dut_id']}",
+            f"  python3 sim/run_corners.py {tb.experiment} --dut {context['dut_id']}{flags}",
         ]
     lines += [
         "",

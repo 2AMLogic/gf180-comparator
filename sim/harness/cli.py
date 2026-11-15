@@ -381,6 +381,12 @@ def main(argv: list[str] | None = None) -> int:
         return 0 if not passed else 4
 
     if write:
+        # Issue #362: echo the restricting flags the run was actually given so
+        # the record's Reproduce line names the grid that produced it. Each
+        # key mirrors the predicate its own resolution above uses -- truthiness
+        # for the nargs="*" lists (a bare --corners is [] and means "manifest
+        # default"), ``is not None`` for --supply-tolerance (0 is falsy but is
+        # a real restriction to a single rail).
         context = {
             "record_id": rid,
             "commit": report_mod.git_short_sha(),
@@ -388,6 +394,11 @@ def main(argv: list[str] | None = None) -> int:
             "dirty_paths": dirty_at_start[:20],
             "pdk": pdk.provenance(),
             "toolchain": chain.as_dict(),
+            "restricting_args": {
+                "corners": list(args.corners) if args.corners else None,
+                "temps": list(args.temps) if args.temps else None,
+                "supply_tolerance": args.supply_tolerance,
+            },
             **dut.provenance_record(),
         }
         path = report_mod.write_record(tb, results, summaries, context, dut.netlist)

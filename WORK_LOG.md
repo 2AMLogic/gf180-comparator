@@ -2,6 +2,30 @@
 
 Chronological record of merged pull requests and closed issues. Newest entries appear first.
 
+### 2026-11-15
+
+- **PR #387**: refactor: share the per-corner decision-time cell across the three ladder studies
+- **PR #382**: Remove dead REQUIRED_POSITIVE constant in preamp_noise_pvt.py
+- **PR #378**: sim: wire comparator-avg-power onto the fleet dispatch path (schematic binding)
+- **PR #377**: refactor: share the duplicated item-5 source validators; fail closed on non-object derived entries
+- **PR #376**: docs: reconcile signoff README verdicts with the graded report (items 1, 9, 10 are met)
+- **PR #353**: docs: roadmap as of 2026-11-13
+- **Issue #372** (closed): sim: wire comparator-avg-power onto the Spot-batch fleet path (schematic binding)
+- **Issue #370** (closed): Consolidate the duplicated item-5 source validators in make_item5_envelope.py (the copy drifted fail-open)
+- **Issue #360** (closed): Remove dead REQUIRED_POSITIVE constant in preamp_noise_pvt.py: names an invariant nothing reads
+- **Issue #359** (closed): Share the per-corner decision-time cell builder: three copies of the 1.5 ns pass/fail rule derive committed evidence independently
+- **Issue #354** (closed): signoff/README.md: reconcile the "Current verdict" section with the graded report (items 1, 9, 10 are met)
+
+### 2026-11-14
+
+- **PR #369**: evidence(noise): measure the 45-corner cascode preamp noise grid on the batch fleet
+- **PR #365**: refactor(pex): classify stage.json code hashes by rule, not a fixed tuple
+- **PR #361**: sim: add unscored periodic-clock bench for DR-0006's reset, supply-charge and window validation
+- **Issue #363** (closed): item-9 attestation inventory omits four harness files its own scope covers, so they can change unattested
+- **Issue #358** (closed): Derive the stage.json provenance key set by rule: the hardcoded allowlist already misses design_lever_study_py (#249 regression)
+- **Issue #356** (closed): Add an unscored periodic-clock bench for DR-0006's pre-ratification validation (reset completion, supply charge per cycle)
+- **Issue #355** (closed): Run the 45-corner preamp noise grid on the DR-0004 cascode experiment netlist
+
 ### 2026-11-13
 
 - **Issue #88** (closed): Auditor Capability Request: worker ngspice 42 below pinned floor 46, selftest cannot run

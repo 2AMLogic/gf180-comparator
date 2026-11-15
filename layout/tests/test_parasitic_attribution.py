@@ -21,6 +21,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "pex"))
 
+import design_lever_study as dl  # noqa: E402
 import parasitic_attribution as pa  # noqa: E402
 
 SYN = """\
@@ -479,6 +480,39 @@ class ResumeAppendOnly(unittest.TestCase):
             other = json.loads(json.dumps(man))
             other["source_sha256"]["design_lever_study_py"] = "0" * 64
             self.assertTrue(pa.append_only_conflict(man, other), repr(broken))
+
+
+class ManifestKeySets(unittest.TestCase):
+    """#371: the source_sha256 key set each study emits is the invariant the
+    differ turns into integrity gates -- pinned here so a manifest builder
+    cannot silently gain or lose one. The per-study extras are deliberate:
+    the lever study does not consume the #229 attribution artifact, and the
+    ground-c README and the lever module hash belong to their studies alone."""
+
+    def test_core_helper_and_each_builder_emit_the_pinned_key_sets(self):
+        core = {"extracted_dut", "schematic_dut", "cited_report",
+                "tb_json_consumed_fields", "pex_measure_py",
+                "parasitic_attribution_py"}
+        self.assertEqual(set(pa.common_source_sha256("")), core)
+        self.assertEqual(
+            set(pa.budget_manifest("", [], [], ("a",))["source_sha256"]),
+            core | {"attribution_json_229"})
+        self.assertEqual(
+            set(pa.combo_manifest(SYN, [], [], "grid")["source_sha256"]),
+            core | {"attribution_json_229", "ground_c_budget_243_readme"})
+        self.assertEqual(
+            set(dl.manifest(SYN, [], [])["source_sha256"]),
+            core | {"design_lever_study_py"})
+
+    def test_core_helper_values_match_the_hands_typed_expressions(self):
+        common = pa.common_source_sha256(pa.load_extracted())
+        self.assertEqual(common["extracted_dut"], pa.sha(pa.load_extracted()))
+        self.assertEqual(common["schematic_dut"], pa.file_sha(pa.SCHEMATIC_DUT))
+        self.assertEqual(common["cited_report"], pa.file_sha(pa.CITED_REPORT))
+        self.assertEqual(common["tb_json_consumed_fields"], pa.TB_JSON_CONSUMED_SHA256)
+        self.assertEqual(common["pex_measure_py"], pa.file_sha(pa.HERE / "pex_measure.py"))
+        self.assertEqual(common["parasitic_attribution_py"],
+                         pa.file_sha(pa.HERE / "parasitic_attribution.py"))
 
 
 class ComboScaling(unittest.TestCase):

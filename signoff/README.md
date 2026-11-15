@@ -117,21 +117,20 @@ errors.
 Today the machine grades this block (see `signoff-report.json`, regenerated
 by `./signoff/regenerate.sh`):
 
-- **met — item 2 (Layout), item 3 (DRC clean), item 4 (LVS clean), item 11
-  (Power delivery, structural; see the item-11 section), item 6
+- **met — item 1 (Design sources; attested envelope — see the item-1
+  section), item 2 (Layout), item 3 (DRC clean), item 4 (LVS clean), item 6
   (Monte Carlo; offset row only — see the item 5/6 section), item 8
-  (Characterization report; generic envelope — see the item-8 section)**
+  (Characterization report; generic envelope — see the item-8 section), item
+  9 (Testbenches shipped; attested envelope — see the item-9 section), item
+  10 (Repo hygiene; attested envelope — see the item-10 section), item 11
+  (Power delivery, structural; see the item-11 section)**
 - **unmet, reason `check_failed` — items 5, 7** (item 5 cited; the cited corner matrix honestly fails the ratified kickback bound, and also records the average-power row as incomplete coverage (clock rate TBD), so it would grade `partial_coverage`, not `met`, even with kickback closed — see the item-5 section. Item 7 cited; the `klt pex` report honestly fails the ratified decision-time target at 7 of 675 delta rows — see the item-7 section)
-- **unmet, reason `no_evidence` — items 1, 9, 10**
 
-`no_evidence` means exactly what it says mechanically: the manifest names no
-citation for that item. It is **not** an assertion that the underlying work
-is absent — for several items the substance exists but no `klt` envelope
-backs it (the grader's own design: it only reads the evidence shapes named
-in [docs/cli/signoff.md](https://github.com/2AMLogic/klayout-tools/blob/main/docs/cli/signoff.md)).
-What exists, per item, is stated below — the claim side the grader cannot
-grade, stated precisely so nobody has to guess whether an `unmet` row means
-"missing" or "present but ungradeable". The two-tier honesty rule from the
+No item carries `no_evidence` any more: every T1 row now names a citation,
+and where a row is `unmet` it is because a cited check ran and honestly
+missed a ratified bound (`check_failed` — items 5, 7). That is **not** an
+assertion that the underlying work is weak — for both items the substance
+and its limits are disclosed below. The two-tier honesty rule from the
 tiers doc cuts both ways: **`met` rows are weaker than they look** (their
 coverage gaps are disclosed below) and **`unmet` rows may be stronger than
 they look** (the substance noted below) — the machine verdict is the
@@ -178,22 +177,27 @@ quoted from the cited envelope's own `coverage` block, not from memory):**
 it (for instance on a rule-free drawn layer, or in a skipped metal4/via3
 enclosure rule) is not excluded by this verdict.
 
-### unmet — item 1 (Design sources): present, no envelope shows it
+### met — item 1 (Design sources): attested envelope
 
-**Re-audited in [#89](https://github.com/2AMLogic/gf180-comparator/issues/89)
-(policy: DR-0003); still deliberately uncited.** `design/comparator.sch`
-(+ sub-cells and `.sym`s), `design/xschemrc`, `design/netlist.sh`, and the
-generated `design/comparator.spice` are committed, with the netlist bound in
-`sim/dut.json`. The item's claim is "sources plus the netlist derived from
-them, regenerated on change". The only candidate, the item-4 LVS envelope,
-pins `design/comparator.spice` (`environment.reference_sha256`) but shows
-layout-vs-netlist equivalence, not that the netlist derives from the
-schematic. `./design/netlist.sh --check` does check that, but it is a script
-whose result is not an envelope; the PDK-free merge gate does not run it
-(a separate non-gating weekly/manual workflow, `selftest.yml`, does). Citing the LVS report
-would flip the grade on a claim it does not show, so the row stays
-`no_evidence`. Tool gap filed:
-[klayout-tools#2844](https://github.com/2AMLogic/klayout-tools/issues/2844).
+Supersedes the earlier "deliberately uncited" audit
+([#89](https://github.com/2AMLogic/gf180-comparator/issues/89), DR-0003):
+with klayout-tools#2844 in klt 0.8.0 the item is graded from
+`signoff/envelopes/item-1.json`, an artifact-anchored envelope over
+`signoff/inventory/item-1.json` (the schematic hierarchy and generation
+inputs, the generated netlist, and a freshness check over them — 13 checks).
+See "Attestation inventories and envelopes" below for what `--check`
+re-runs and what it does not.
+
+What the attestation does and does not show: item 1's freshness check is
+`design/verify-netlist-pins.py --check`, which proves the committed sources
+and netlist match the pin file from the last `./design/netlist.sh` run — not
+that xschem would regenerate the same netlist (`./design/netlist.sh --check`
+does, but CI's signoff job has no xschem). The superseded audit's finding
+stands as history: the item-4 LVS envelope pins `design/comparator.spice`
+(`environment.reference_sha256`) but shows layout-vs-netlist equivalence,
+not schematic derivation, so citing it would have flipped the grade on a
+claim it does not show — the attestation, not the LVS report, is what the
+row grades from.
 
 **PDK-free source pins (issue
 [#120](https://github.com/2AMLogic/gf180-comparator/issues/120)) — what they
@@ -208,9 +212,11 @@ mismatch or a missing pin file. That proves the sch→spice step was re-run
 after the last edit to either side. It does **not** prove the netlist is the
 correct xschem output (the pin file is plain JSON and the check never runs
 xschem; PDK resolution scripts, installed PDK symbols and the xschem version
-are not pinned). It is not an envelope, and this change does not cite
-it: whether it is enough for item 1 is a separate DR-0003 policy call, so the
-row above is unchanged. Details: `design/README.md`, "Source pins".
+are not pinned). It is not an envelope in itself; the DR-0003 policy call it
+once awaited has been made (issue #322's addenda, enabled by
+klayout-tools#2844 in klt 0.8.0) — item 1's attestation records exactly this
+check as its freshness leg, and the row above grades from that envelope.
+Details: `design/README.md`, "Source pins".
 
 ### met — item 4 (LVS clean): `layout/lvs/comparator.lvs.json`
 
@@ -642,9 +648,16 @@ klayout-tools#2844 in klt 0.8.0 the item is graded from
 cold-start driver, and the pinned PDK and tool versions). See "Item 9 is
 attested" above for what `--check` does and does not re-run.
 
-### unmet — item 10 (Repo hygiene): partially true, no CI-produced evidence
+### met — item 10 (Repo hygiene): attested envelope
 
-**Re-audited in #89 (DR-0003); still deliberately uncited.** `README.md`
+Supersedes the earlier "deliberately uncited" audit (#89, DR-0003): with
+klayout-tools#2844 in klt 0.8.0 the item is graded from
+`signoff/envelopes/item-10.json`, an artifact-anchored envelope over
+`signoff/inventory/item-10.json` (`README.md`, the workflows, the PDK-free
+verifiers — 16 checks). See "Attestation inventories and envelopes" below
+for what `--check` re-runs and what it does not.
+
+`README.md`
 (with the target-spec table and reproduction commands), `CLAUDE.md`, `spec/`
 and a LICENSE exist. The item also demands CI that keeps the harness and
 evidence formats valid. The one workflow, `signoff.yml`, now runs
@@ -661,7 +674,7 @@ pin checks, the re-grade (`verify-report.py`), the integrator manifest
 verifier and the remaining PDK-free unit tests and `--check` verifiers. The
 script's `--list` output is the authoritative step list.
 
-Three limits keep the row uncited:
+What the attested row does not show:
 
 - **Source pinning is not derivation.** The `netlist-pin` step only re-hashes
   the committed schematic inputs, generation inputs and
@@ -676,16 +689,15 @@ Three limits keep the row uncited:
   plus the sabotage negative control) runs only in that scheduled/manual,
   non-required workflow. Full characterization (`sim/characterize.sh`, the PVT
   grids) is not run in CI at all.
-- **No CI-produced evidence envelope exists.** CI (including the scheduled
-  runtime checks, whose output stays in workflow logs) passes or fails a run,
-  but no CI run is committed as an envelope the grader reads (tool gap:
-  klayout-tools#2844). Committing a generic envelope without a supported
-  claim would reverse DR-0003's claim policy.
-
-So the CI execution leg is now largely in place but has no evidence the grader
-can read, and the row deliberately stays `no_evidence`. Adding more CI steps
-would not change that. A citable claim needs a CI-produced envelope that backs
-this item's claim.
+- **The attested checks are the PDK-free steps only.** The envelope's six
+  `command` entries record the `run-pdk-free-tests.sh` steps `discovery`,
+  `harness`, `klt-pin`, `rulebook-pin`, `bench-inventory` and
+  `claim-drift`, each with recorded `exit_status: 0`; the `re-grade` step is
+  excluded (circular). No simulation run (`sim/selftest.sh`,
+  `sim/characterize.sh`) and no xschem derivation check
+  (`./design/netlist.sh --check`) is attested by it — those run only in the
+  scheduled/manual `selftest.yml`, whose output stays in workflow logs, so
+  nothing from them is committed as evidence the grader reads.
 
 ### met — item 11 (Power delivery, structural): ties[] declared (#103)
 
