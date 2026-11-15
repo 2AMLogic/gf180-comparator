@@ -159,13 +159,17 @@ def expected_grid(ent: dict, rid: str) -> tuple[set[str] | None, list[str]]:
 
 
 def _norm_id(cid: object, fields: dict | None, where: str) -> tuple[str | None, str | None]:
-    """Normalize one identity; returns (id, problem)."""
+    """Normalize one identity; returns (id, problem).
+
+    ``parse_corner_id`` is strict (issue #406): it already rejects
+    non-canonical ids by re-formatting through ``corner_id`` itself, so no
+    duplicate canonical re-check here -- its message is surfaced verbatim to
+    keep non-canonical distinguishable from malformed.
+    """
     try:
         corner, temp, vdd = corners.parse_corner_id(cid)
-    except ValueError:
-        return None, f"malformed identity {cid!r} at {where}"
-    if corners.corner_id(corner, temp, vdd) != cid:
-        return None, f"malformed identity {cid!r} at {where} (non-canonical formatting)"
+    except ValueError as e:
+        return None, f"malformed identity {cid!r} at {where} ({e})"
     if fields is not None:
         fc, ft, fv = fields.get("corner"), fields.get("temp_c"), fields.get("vdd")
         num = lambda x: isinstance(x, (int, float)) and not isinstance(x, bool)  # noqa: E731

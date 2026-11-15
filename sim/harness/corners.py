@@ -207,8 +207,10 @@ def corner_id(process: str, temp_c: float, vdd: float) -> str:
 #: ``parse_corner_id``'s process class admits the ratified underscore names
 #: (``res_ff``/``res_ss``, members of the ``full`` set); the supply class is
 #: the formatter's own strict two decimals -- a ``3.3v`` id is never
-#: formatter output and is rejected, exactly as the evidence envelope's
-#: identity gate already rejects it.
+#: formatter output and is rejected. The temperature class stays permissive
+#: (``27.0``/``027`` match); canonicality of the temperature field is
+#: enforced by re-formatting through ``corner_id`` inside ``parse_corner_id``
+#: and comparing, so ``:g``'s rendering is not re-encoded here a second time.
 _CID_RE = re.compile(
     r"^(?P<process>[a-z][a-z_]*)_(?P<temp>-?\d+(?:\.\d+)?)c_(?P<vdd>\d+\.\d\d)v$"
 )
@@ -217,15 +219,28 @@ _CID_RE = re.compile(
 def parse_corner_id(cid: str) -> tuple[str, float, float]:
     """The inverse of ``corner_id``: a ratified corner id -> (process, temp_c, vdd).
 
+    Strict: accepts exactly what ``corner_id`` emits. A well-formed but
+    non-canonical id (``tt_27.0c_3.30v``, ``tt_027c_3.30v``, ``tt_27c_3.3v``)
+    is rejected too -- canonicality is checked by re-formatting through
+    ``corner_id`` and comparing, so callers need no canonical re-check of
+    their own.
+
     Raises:
         ValueError: if ``cid`` is not something ``corner_id`` could have
-            emitted (malformed, non-canonical, or 1-decimal supply).
+            emitted -- malformed (wrong shape) or non-canonical (well-formed
+            but not the formatter's own rendering, e.g. a trailing decimal or
+            a leading zero on the temperature, or a 1-decimal supply).
     """
     m = _CID_RE.match(cid) if isinstance(cid, str) else None
     if not m:
         raise ValueError(f"unparseable corner id {cid!r}: not a "
                          f"<process>_<temp>c_<supply>v id with a two-decimal supply")
-    return m["process"], float(m["temp"]), float(m["vdd"])
+    process, temp, vdd = m["process"], float(m["temp"]), float(m["vdd"])
+    canonical = corner_id(process, temp, vdd)
+    if canonical != cid:
+        raise ValueError(f"non-canonical corner id {cid!r}: the canonical form "
+                         f"is {canonical!r} (corner_id {process!r}, {temp:g}c, {vdd:.2f}v)")
+    return process, temp, vdd
 
 
 @dataclass(frozen=True)
