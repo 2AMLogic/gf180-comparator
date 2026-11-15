@@ -1022,6 +1022,51 @@ def cmd_budget_run(args) -> int:
     return run_stage(outdir, man, plan, points, args.backend, args.jobs, BUDGET_ISSUE)
 
 
+def _module_key(path) -> str:
+    """'layout/pex/design_lever_study.py' -> 'design_lever_study_py'."""
+    return Path(path).name.replace(".", "_")
+
+
+def resume_exempt_source_keys(man: dict) -> set[str]:
+    """The `source_sha256` keys a resume may ignore: the orchestrating code.
+
+    The manifest's own `generated_by` module plus this harness (the module
+    that owns run_stage), so every caller's own-source drift is tolerated on
+    resume (#366) instead of the pre-#366 hardcoded `parasitic_attribution_py`
+    key, which was only right for the budget/combo callers. Deliberately
+    stricter than is_provenance_source_key: verification re-reads committed
+    evidence with a newer tree and must tolerate all code drift (#249), but a
+    resume appends new measurements into a stage that already holds earlier
+    ones, so pex_measure_py (the measure harness -- probe_deck lives in this
+    module, not there) and tb_json_consumed_fields stay gated. A manifest
+    with no usable generated_by fails closed to the harness key alone,
+    exactly the pre-#366 single-key rule -- never a blanket exemption.
+    """
+    keys = {_module_key(__file__)}
+    gen = man.get("generated_by")
+    tokens = gen.split() if isinstance(gen, str) else []
+    if tokens and tokens[0].endswith(".py"):
+        keys.add(_module_key(tokens[0]))
+    return keys
+
+
+def append_only_conflict(committed: dict, regenerated: dict) -> bool:
+    """True if `regenerated` is a different plan than `committed` (#366).
+
+    Pure so the resume comparison is PDK-free testable at all: run_stage
+    submits sim requests, so its guard cannot be exercised end-to-end
+    without a fleet run. Each manifest's own orchestrating-code hashes
+    (resume_exempt_source_keys) are popped before the compare; everything
+    else -- the variants, their dut_sha256 and probe_deck_sha256, the
+    points -- must be byte-identical.
+    """
+    a, b = json.loads(json.dumps(regenerated)), json.loads(json.dumps(committed))
+    for d in (a, b):
+        for k in resume_exempt_source_keys(d):
+            d["source_sha256"].pop(k, None)
+    return a != b
+
+
 def run_stage(outdir: Path, man: dict, plan: list[dict], points, backend: str, jobs: int,
               issue: int) -> int:
     """Write (or check, append-only) stage.json, submit every request of the
@@ -1029,12 +1074,10 @@ def run_stage(outdir: Path, man: dict, plan: list[dict], points, backend: str, j
     mpath = outdir / "stage.json"
     if mpath.exists():
         # append-only: a stage directory is never re-planned; resuming is fine
-        # only for the identical plan (ignoring the script's own hash).
+        # only for the identical plan (ignoring the orchestrating code's own
+        # hashes, per resume_exempt_source_keys).
         old = json.loads(mpath.read_text())
-        a, b = json.loads(json.dumps(man)), old
-        for d in (a, b):
-            d["source_sha256"].pop("parasitic_attribution_py", None)
-        if a != b:
+        if append_only_conflict(old, man):
             sys.exit(f"{mpath} exists with a different plan; stage directories are append-only")
     else:
         mpath.write_text(json.dumps(man, indent=2, sort_keys=True) + "\n")

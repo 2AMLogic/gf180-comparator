@@ -406,6 +406,82 @@ class BudgetCommittedEvidence(unittest.TestCase):
                               "attribution_json_229", "ground_c_budget_243_readme"}, seen)
 
 
+class ResumeAppendOnly(unittest.TestCase):
+    """#366: the write/resume guard's exemption rule -- the orchestrating
+    code (the manifest's generated_by module plus the run_stage harness),
+    not a hardcoded key name. Deliberately stricter than
+    is_provenance_source_key: a resume appends new measurements into a stage
+    that already holds earlier ones, so the measure harness and the tb.json
+    pin stay gated, unlike budget-verify's all-code-drift tolerance (#249)."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.lever = json.loads(next(
+            (pa.HERE / "artifacts" / "design-levers").glob("*/stage.json")).read_text())
+        cls.budget = json.loads(next(
+            (pa.HERE / "artifacts" / "ground-c-budget").glob("*/stage*/stage.json")).read_text())
+        cls.combo = json.loads(next(
+            (pa.HERE / "artifacts" / "combined-budget").glob("*/stage*/stage.json")).read_text())
+
+    @staticmethod
+    def drifted(man: dict, key: str) -> dict:
+        other = json.loads(json.dumps(man))
+        other["source_sha256"][key] = "0" * 64
+        return other
+
+    def test_exempt_keys_derive_from_generated_by(self):
+        harness = {"parasitic_attribution_py"}
+        self.assertEqual(pa.resume_exempt_source_keys(self.budget), harness)
+        self.assertEqual(pa.resume_exempt_source_keys(self.combo), harness)
+        self.assertEqual(pa.resume_exempt_source_keys(self.lever),
+                         harness | {"design_lever_study_py"})
+
+    def test_drifted_own_source_resumes(self):
+        """The reported bug: resuming a lever stage after any edit to
+        design_lever_study.py aborted on a plan-identical manifest. The
+        harness's own hash stays exempt on the lever path too -- the superset
+        property, so no resume that worked before #366 newly aborts. Budget
+        keeps today's behaviour exactly."""
+        for key in ("design_lever_study_py", "parasitic_attribution_py"):
+            self.assertFalse(pa.append_only_conflict(self.lever, self.drifted(self.lever, key)),
+                             key)
+        self.assertFalse(pa.append_only_conflict(
+            self.budget, self.drifted(self.budget, "parasitic_attribution_py")))
+
+    def test_measurement_regime_drift_still_aborts(self):
+        for key in ("pex_measure_py", "tb_json_consumed_fields"):
+            self.assertTrue(pa.append_only_conflict(self.lever, self.drifted(self.lever, key)),
+                            key)
+
+    def test_genuinely_different_plan_still_aborts(self):
+        for mutate in (lambda m: m["variants"][0].__setitem__("dut_sha256", "0" * 64),
+                       lambda m: m["variants"][0].__setitem__("probe_deck_sha256", "0" * 64),
+                       lambda m: m["points"].pop()):
+            other = json.loads(json.dumps(self.lever))
+            mutate(other)
+            self.assertTrue(pa.append_only_conflict(self.lever, other))
+
+    def test_identical_manifest_is_not_a_conflict(self):
+        for man in (self.lever, self.budget, self.combo):
+            self.assertFalse(pa.append_only_conflict(man, json.loads(json.dumps(man))))
+
+    def test_malformed_generated_by_fails_closed(self):
+        """No generated_by, or a first token that is not a module path (or
+        not a string at all): exactly the pre-#366 single-key rule, never a
+        blanket exemption -- the drifted study hash still aborts."""
+        for broken in (None, "", "mystery-tool run", "not a module path", 323):
+            man = json.loads(json.dumps(self.lever))
+            if broken is None:
+                del man["generated_by"]
+            else:
+                man["generated_by"] = broken
+            self.assertEqual(pa.resume_exempt_source_keys(man),
+                             {"parasitic_attribution_py"}, repr(broken))
+            other = json.loads(json.dumps(man))
+            other["source_sha256"]["design_lever_study_py"] = "0" * 64
+            self.assertTrue(pa.append_only_conflict(man, other), repr(broken))
+
+
 class ManifestKeySets(unittest.TestCase):
     """#371: the source_sha256 key set each study emits is the invariant the
     differ turns into integrity gates -- pinned here so a manifest builder
