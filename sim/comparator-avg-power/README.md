@@ -112,7 +112,8 @@ ngspice on a shared worker ([`CLAUDE.md`](../../CLAUDE.md) host rules):
 python3 sim/run_corners.py comparator-avg-power \
   --corners tt --temps 27 --supply-tolerance 0 -j 1
 
-# the fleet path (requests + ingest; the 45-corner campaign is issue #373).
+# the fleet path (requests + ingest; the committed 45-corner campaign record
+# is 20261115-075832478887-79abbcc, issue #373).
 # The batch capacity wait is baked into every request (batch.capacity_wait_s).
 KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py comparator-avg-power
 ```
@@ -141,12 +142,56 @@ executor". `2AMLogic/klayout-tools#5651` tracks the underlying tool gap.
 | record | coverage | status |
 |---|---|---|
 | [`20261114-032046866512-d02a882`](records/20261114-032046866512-d02a882.md) | **1 of 45** PVT points (`tt_27c_3.30v`), schematic DUT, ngspice-47 / open_pdks `f6eeac7` | bring-up validation probe, unscored |
+| [`20261114-222427036313-e00a719`](records/20261114-222427036313-e00a719.md) | **1 of 1** PVT points (`tt_27c_3.30v`), schematic DUT, ngspice-47 / open_pdks `f6eeac7`, fleet path | fleet bring-up (issue #372): proved the `klt sim` dispatch + ingest path and its `cross_run_agreement` against the local probe, unscored |
+| [`20261115-075832478887-79abbcc`](records/20261115-075832478887-79abbcc.md) | **45 of 45** PVT points (tt/ff/ss/fs/sf × −40/27/125 °C × 2.97/3.30/3.63 V), schematic DUT, ngspice-47 / open_pdks `f6eeac7`, fleet path | the 45-corner campaign (issue #373), unscored — evidence for the DR-0006 ratification reviewers, not a verdict |
 
 > The record's own **Reproduce** line is the harness's generic template
 > (`python3 sim/run_corners.py comparator-avg-power`), which would run the full
 > 45-point grid rather than the one point this record covers. The command that
 > produced it is the single-point one above. (`sim/harness/report.py` does not
 > stamp the corner selection into that line for any bench; filed separately.)
+
+### What the 45-corner campaign measured (record `20261115-075832478887-79abbcc`)
+
+All 45 points of the 5 × 3 × 3 grid ran on the Spot batch fleet through the
+`klt sim` path (three requests, one per supply point, as
+`mk_klt_request.py` emits them), ngspice-47 / open_pdks `f6eeac7`, job ids
+`klt-sim-c79b26d8fa2f` / `klt-sim-4e1b9c841920` / `klt-sim-e9410e5a5fb4`
+(`environment.remote` in the record). The bench is check-guarded
+(`CHECK_GUARDED_BENCHES`), so the record's **Corner matrix** line reading
+**45 of 45** is itself the evidence that every manifest check passed at every
+point — no corner was dropped at ingest.
+
+- **`P_avg` is the maximum over all 45 corners**: **174.487 µW at
+  `ff_125c_3.63v`** (the hot fast corner at the high rail, not DR-0006's
+  hypothesised slow corner). Against README.md's ≤ 1 mW target this is
+  **evidence for the ratification reviewers, not a verdict** — this bench
+  scores no spec row, DR-0006 stays `proposed — not ratified`, and the ≤ 500 µW
+  stretch is likewise not claimed here.
+- **Worst `q_half_mismatch_pct`**: **0.00440 % at `fs_125c_3.30v`** — about
+  230× inside DR-0006's 1 % settledness criterion at every point, so the
+  8-cycle warm-up / 16-cycle window held across the grid; no lengthening and
+  re-record was needed.
+- **`reset_margin_ns` is unavailable on the fleet path**, by design of the
+  request schema: its `t_rst` `.meas` needs the interactive `let i_rst_thr`
+  defined between the run and the measurements, and the pair is omitted
+  together (`FLEET_OMITTED_MEASURES`, klayout-tools#5651). The checked
+  backstop for reset completion, `dec_cycles_correct` = 16, **was met at every
+  one of the 45 points** — the answer DR-0006 item 1 asks for, not a gap.
+- **The hypothesised slow corner `ss` / 125 °C / 2.97 V completed cleanly**:
+  16/16 decisions, `i_static_ua` = 30.108 µA, `p_avg_uw` = 124.908 µW,
+  `q_half_mismatch_pct` = 0.0004 %. DR-0006's hypothesis that this is the
+  *power* worst corner is refuted by the grid — the maximum sits at
+  `ff_125c_3.63v` — while as a *decision-speed* corner it shows no anomaly.
+- **Cross-run agreement** at the shared `tt_27c_3.30v` point against the
+  committed local probe (`--compare-local …/20261114-032046866512-d02a882.json`):
+  all four headline quantities **`within_band`** under
+  `AVG_POWER_CROSS_RUN` (1 % relative on `p_avg_uw` / `e_dec_fj` /
+  `i_static_ua`, 0.05 pp absolute on `q_half_mismatch_pct`); largest move
+  −6.5 × 10⁻⁶ relative. The other 44 corners are listed in the record as
+  "not compared" — the local probe covers one point, so the block's
+  `INCOMPLETE_COMPARISON` status states exactly that, and claims no agreement
+  it cannot see.
 
 ### What the probe measured, and against which DR-0006 item
 
@@ -165,7 +210,9 @@ one corner settles no corner question.
 **No number DR-0006 chose came out unworkable at this point**, so this probe
 gives the ratification reviewers no reason to revise the record — and, equally,
 no basis to conclude the condition holds at the corners that matter. The
-45-corner campaign and the extracted run are what would do that.
+45-corner campaign has since run ([record
+`20261115-075832478887-79abbcc`](records/20261115-075832478887-79abbcc.md),
+section above); the extracted DUT run remains open (#374).
 
 **`e_dec_fj` here is not comparable with `comparator-regeneration/`'s
 `e_dec_fj`.** The names collide; the quantities do not. That bench reports
@@ -188,25 +235,31 @@ nothing beyond it.
 
 The probe is less coverage than that precedent, which is a **2-point** record
 (`tt_27c_3.30v` + `ss_125c_2.97v` by its hot-point rule). The reason one point
-is nonetheless the right scope here is mechanical rather than a judgement
-about sufficiency: a second corner of this bench needs the fleet path, the
-fleet path needs new per-bench branches in `sim/tools/mk_klt_request.py` and
-`sim/tools/klt_record.py`, and that wiring is explicitly out of scope for the
-issue that created this bench (#356). **It establishes that the stimulus, the
-integral and the settledness criterion work, and what they read at the nominal
-point. It establishes nothing about the worst corner** — which is exactly
-where DR-0006 expects reset to be slowest (`ss`, 125 °C, 2.97 V is its stated
-*hypothesis*, not a result).
+was nonetheless the right scope here is mechanical rather than a judgement
+about sufficiency: at the time, a second corner of this bench needed the fleet
+path, the fleet path needed new per-bench branches in `sim/tools/mk_klt_request.py`
+and `sim/tools/klt_record.py`, and that wiring was explicitly out of scope for
+the issue that created this bench (#356). **It established that the stimulus,
+the integral and the settledness criterion work, and what they read at the
+nominal point. It established nothing about the worst corner** — which is
+exactly where DR-0006 expected reset to be slowest (`ss`, 125 °C, 2.97 V is its
+stated *hypothesis*, not a result). The fleet wiring has since landed (#372)
+and the full-grid campaign has run (record `20261115-075832478887-79abbcc`,
+above); this section records why the probe was scoped as it was, not the
+current coverage state.
 
 ## What this bench does **not** do
 
 - It does not score average power, edit the Supply / power row, or touch its
-  clock-rate TBD.
+  clock-rate TBD. The campaign's worst-corner `P_avg` (174.487 µW at
+  `ff_125c_3.63v`) is reported as evidence for the ratification reviewers,
+  not as a verdict.
 - It does not ratify, revise or edit DR-0006. Ratification is the DR-0002
   two-key ceremony.
-- It does not run the 45-corner campaign or the extracted
-  (`comparator-dr0001-layout`) DUT — DR-0006's feasibility item 1 asks for
-  both, and this landing is the bench plus one nominal point.
+- The 45-corner schematic-DUT campaign **has run** (record
+  `20261115-075832478887-79abbcc`); the extracted
+  (`comparator-dr0001-layout`) DUT run of DR-0006's feasibility item 1 has
+  not — that is #374.
 - It does not run DR-0006's sensitivity sweeps (0/100 fF load, 1/50 mV
   overdrive, 32 MHz, clock-charge boundary), which its feasibility item 4
   requires before ratification. `q_clk_pc` records the clock charge at the

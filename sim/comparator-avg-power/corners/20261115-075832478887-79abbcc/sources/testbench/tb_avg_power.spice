@@ -1,0 +1,136 @@
+* tb_avg_power -- DR-0006's proposed average-power operating condition:
+* a 16 MHz periodic clock, one decision per cycle with alternating input
+* polarity, and the DUT's supply charge integrated over a whole number of
+* clock cycles.
+*
+* Netlist FRAGMENT. The harness supplies the models, the corner .lib
+* sections, .temp, the DUT netlist, the .control block and .end
+* (sim/harness/README.md). Parameters from the harness: vdd_val, vdd_nom,
+* temp_c, dut_vos, plus dut_ib / dut_vcm from sim/dut.json and this bench's
+* own params from tb.json (f_clk, t_per, t_hi, t_edge, t_rise0, n_warm,
+* n_win, v_od, c_load, t_setup).
+*
+* SUPPLEMENTAL AND UNSCORED. This bench scores nothing. It exists to
+* validate the operating condition proposed by
+* spec/decision-records/DR-0006-average-power-operating-condition.md, whose
+* status is `proposed -- not ratified`, against that record's own
+* "Feasibility status" list: reset time is unmeasured, no dynamic-power
+* figure exists, and the proposed warm-up and integration window are not
+* shown adequate. No ratified row reads anything measured here, no
+* spec/claim-registry.json row is created, and the README target table's
+* Supply / power row keeps its "(TBD)" clock rate. See this bench's
+* README.md for what is and is not established.
+*
+* STRUCTURE PORTED FROM sim/comparator-regeneration/ -- the only committed
+* bench that already clocks the DUT and integrates supply charge. What is
+* deliberately DIFFERENT, and why:
+*
+*  1. PERIODIC, NOT TWO STROBES. The regeneration deck's clock is
+*     `pulse(0 VDD 10n 100p 100p 10n 30n)`: a 30 ns, 33 %-duty timing rig
+*     built to time ONE decision (DR-0006 "Alternatives considered" rejects
+*     it as a throughput condition). Here the clock is 62.5 ns / 50 % and
+*     runs for 24 cycles, because an average-power figure is a periodic
+*     steady-state quantity.
+*
+*  2. SIGN DISCIPLINE. The regeneration deck reports
+*     `e_dec_fj = abs(q_dec - i_stat*8.1e-9)*vsup_v*1e15`. DR-0006 forbids
+*     that shape: it defines `i_DD(t) = -i(v_supply)(t)` (positive when the
+*     source delivers) and states that a negative window integral is
+*     INVALID, not clamped with abs(). The manifest therefore negates
+*     `q_win` instead of taking its magnitude, and uses abs() only on the
+*     half-window |difference| of the settledness check. No hard-coded
+*     static-current subtraction is applied either: the window integral is
+*     the total delivered charge, static part included, which is what
+*     DR-0006's `P_avg` is defined as.
+*
+*  3. OUTPUT LOADS. The regeneration deck has no explicit output load.
+*     DR-0006 loads `dout` and `doutb` with 20 fF each to vss (engineering
+*     judgment for an adjacent SR-logic gate plus routing). Their recharge
+*     current flows out of the DUT's supply, so it is counted exactly once,
+*     in the supply charge, and never added again as a C*V^2 term.
+*
+* ONE DUT INSTANCE ON ITS OWN SUPPLY SOURCE. DR-0006's accounting boundary
+* is "all charge delivered from the DUT's vdd source", including the bias
+* reference current -- so `iba` is drawn from `vdda`, the same rail the
+* integral is taken at, and no separate ibias supply exists (DR-0006: "No
+* separate ibias supply is permitted"). The ideal clock, input and
+* common-mode sources are referenced to ground and are OUTSIDE the
+* boundary; the clock source's own charge is reported separately as an
+* informational line, never inside the row.
+*
+* THRESHOLDS ARE SUPPLY-NORMALIZED. Every decision read triggers on an
+* output divided by its own supply and compared with 0.5, as in the
+* regeneration deck: a fixed absolute threshold would turn the +/-10 %
+* supply axis into a measurement artefact. The reset-activity probe is
+* normalized by the DUT's own bias current for the same reason.
+*
+* MISMATCH IS OFF (PDK default sw_stat_mismatch = 0) and the run is
+* noiseless, per DR-0006: this is a PVT-corner condition, not a
+* distribution row.
+*
+* dut_vos is NOT defined here -- the harness owns it (compose_deck's
+* per-point params). It is 0 for a schematic DUT (offset-free by
+* construction) and the probed trip point for an extracted one
+* (tb_vosprobe.spice, issue #23), so the alternating stimulus below is
+* exactly +/- v_od about the comparator's own trip point for either
+* provenance, which is how DR-0006 defines the overdrive.
+
+* ---- supplies --------------------------------------------------------
+* The DUT's own supply source: every charge the integral attributes to the
+* DUT passes through it, and nothing else does.
+vsupa vdda 0 dc {vdd_val}
+
+* ---- clock: 16 MHz, 50 % duty, first rising edge at t = t_rise0 --------
+* The pulse flat top is t_hi - t_edge, so the 50 %-crossing high and low
+* phases are each exactly t_hi (31.25 ns) and the duty is exactly 50 %.
+* Cycle k's rising edge starts at t_rise0 + k*t_per; the integration
+* window below is anchored edge-start-to-edge-start, so it spans a whole
+* number of periods however the edge is anchored.
+vclk clk 0 pulse(0 {vdd_val} {t_rise0} {t_edge} {t_edge} {t_hi-t_edge} {t_per})
+
+* ---- input common mode ------------------------------------------------
+vcm cm 0 dc {dut_vcm}
+
+* ---- alternating differential stimulus --------------------------------
+* +v_od on even cycles, -v_od on odd cycles, about the DUT's own trip
+* point (dut_vos). The polarity period is 2*t_per, so the 16-cycle window
+* holds a whole number (8) of input-polarity periods.
+*
+* Every transition COMPLETES exactly t_setup (20 ns) before the next
+* rising edge and begins after the preceding falling edge, which is
+* DR-0006's input-timing clause: "the sign change is applied inside the
+* reset (clk-low) phase, >= 20 ns before the next rising edge", so every
+* decision is taken on a settled overdrive. With t_per = 62.5 ns,
+* t_hi = 31.25 ns and t_edge = 100 ps the transitions run
+* 52.4 -> 52.5 ns, 114.9 -> 115.0 ns, ... i.e. they start 11.15 ns after
+* the falling edge and land on t_rise0 + k*t_per - t_setup.
+vs s 0 pulse({dut_vos+v_od} {dut_vos-v_od} {t_rise0+t_per-t_setup-t_edge}
++ {t_edge} {t_edge} {t_per-t_edge} {2*t_per})
+Eap ap cm s 0 0.5
+Ean an cm s 0 -0.5
+
+* ---- DUT, biased from the rail the integral is taken at ----------------
+iba vdda ibn dc {dut_ib}
+Xa  ap an clk ibn dout doutb vdda 0 comparator_dut
+
+* ---- output loads (DR-0006: 20 fF each, equal, to vss) -----------------
+cld  dout  0 {c_load}
+cldb doutb 0 {c_load}
+
+* ---- supply-normalized and diagnostic probes --------------------------
+* dn is the decision read at the end of each evaluate phase.
+Bdn   dn   0 v = 'v(dout)/v(vdda)'
+Bdbn  dbn  0 v = 'v(doutb)/v(vdda)'
+Bclkn clkn 0 v = 'v(clk)/v(vdda)'
+* Reset-activity probe: the magnitude of the supply current, in uA. The
+* reset-completion search in the manifest thresholds it against the SAME
+* run's measured quiescent current rather than against any absolute
+* number, so no corner-dependent constant enters the measurement. abs()
+* here is a DIAGNOSTIC magnitude of an instantaneous current; it is not
+* the window integral DR-0006 forbids clamping.
+Birst irst 0 v = 'abs(i(vsupa))*1e6'
+* Instantaneous delivered DUT supply power, i_DD = -i(vsupa) times the
+* rail voltage. Integrating this is DR-0006's "an implementation that
+* integrates v(vdd)*i_DD directly must agree with it (a check, not a
+* second definition)".
+Bpwr  pwr  0 v = '-v(vdda)*i(vsupa)'

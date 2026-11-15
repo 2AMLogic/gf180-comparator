@@ -48,11 +48,12 @@ the adequacy of the proposed warm-up/window as **not established**, and no
 other committed bench can measure them. DR-0006 stays `proposed — not
 ratified`; this bench scores nothing, the README target table's Supply / power
 row keeps its `(TBD)` clock rate, and `signoff/make_item5_envelope.py` keeps
-its `average_power_clock_rate_tbd` skip reason. Its first record is a **1-of-45
-bring-up validation probe** (`tt_27c_3.30v`, schematic DUT, run locally), not a
-corner result — the 45-point campaign and the extracted run are separate
-landings, and the bench is not wired into `characterize.sh` or the fleet
-dispatch tables. See its [README](comparator-avg-power/README.md) for the
+its `average_power_clock_rate_tbd` skip reason. Its records span the **1-of-45
+bring-up validation probe** (`tt_27c_3.30v`, schematic DUT, run locally), the
+1-of-1 fleet bring-up (issue #372) and the committed **45-of-45 PVT campaign**
+(issue #373); the extracted-DUT run remains a separate landing (#374), and the
+bench is not wired into `characterize.sh`. See its
+[README](comparator-avg-power/README.md) for the
 clause-by-clause implementation and for why the reset-completion margin is a
 proxy.
 
