@@ -34,7 +34,6 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-import importlib.util
 import json
 import math
 import os
@@ -51,6 +50,7 @@ sys.path.insert(0, os.path.join(REPO_ROOT, "sim"))
 sys.path.insert(0, os.path.join(REPO_ROOT, "layout"))
 
 import preamp_nodes  # noqa: E402
+import run_extract_sim  # noqa: E402
 
 TB_SPICE = os.path.join(REPO_ROOT, "sim", "comparator-preamp-noise", "testbench",
                         "tb_preamp_noise.spice")
@@ -69,14 +69,6 @@ C_ROUTE_BENCH = "10f"  # the committed bench's stated routing allowance
 
 def sha256(path: str) -> str:
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
-
-
-def _load_extract_sim():
-    spec = importlib.util.spec_from_file_location(
-        "run_extract_sim", os.path.join(REPO_ROOT, "layout", "run_extract_sim.py"))
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
 
 
 def _cmd(*argv: str) -> str:
@@ -201,14 +193,13 @@ def main() -> int:
         sys.exit("sim/dut.json: schematic and layout entries no longer share params")
 
     # --- extraction (scratch; committed report untouched) ---------------------
-    res = _load_extract_sim()
     scratch = tempfile.mkdtemp(prefix="preamp-noise-")
     raw = os.path.join(scratch, "comparator.extracted-rc.spice")
     rep_path = os.path.join(scratch, "comparator.extract-rc.json")
-    report = res.run_extract(raw, rep_path, parasitics=True)
+    report = run_extract_sim.run_extract(raw, rep_path, parasitics=True)
     dut_layout = os.path.join(out, "comparator.dut-layout.cir")
-    res._adapt_netlist(raw, dut_layout)
-    res._check_interface_contract(dut_layout)
+    run_extract_sim._adapt_netlist(raw, dut_layout)
+    run_extract_sim._check_interface_contract(dut_layout)
 
     # --- observation mapping (fail closed) -----------------------------------
     text = Path(dut_layout).read_text()

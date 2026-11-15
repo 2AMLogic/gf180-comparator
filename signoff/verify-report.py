@@ -78,7 +78,6 @@ this verifier by name rather than passing unverified.
 from __future__ import annotations
 
 import hashlib
-import importlib.util
 import json
 import shutil
 import subprocess
@@ -89,14 +88,11 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parent.parent
 MANIFEST = REPO_ROOT / "signoff" / "block-manifest.json"
 COMMITTED_REPORT = REPO_ROOT / "signoff" / "signoff-report.json"
+sys.path.insert(0, str(REPO_ROOT / "signoff"))
 
 # The single shared rulebook identity check (check 0, issue #168); the
 # expected hash lives only in its pin file, never here.
-_pin_spec = importlib.util.spec_from_file_location(
-    "check_rulebook_pin", Path(__file__).resolve().parent / "check_rulebook_pin.py"
-)
-RULEBOOK_PIN = importlib.util.module_from_spec(_pin_spec)
-_pin_spec.loader.exec_module(RULEBOOK_PIN)
+import check_rulebook_pin as RULEBOOK_PIN  # noqa: E402
 
 # Per-citation pin re-verification (check 3). Keyed by T1 item id:
 #   (evidence envelope the manifest entry cites,
