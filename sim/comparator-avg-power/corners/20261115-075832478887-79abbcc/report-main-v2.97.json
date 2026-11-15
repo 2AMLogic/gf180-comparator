@@ -1,0 +1,5924 @@
+{
+  "schema_version": 3,
+  "netlist": {
+    "path": null,
+    "scope": "external"
+  },
+  "status": "pass",
+  "corner_count": 15,
+  "passed": 15,
+  "failed": 0,
+  "errored": 0,
+  "inconclusive": 0,
+  "diagnostic_counts": {
+    "by_code": {},
+    "by_severity": {},
+    "corners_with_diagnostics": 0
+  },
+  "metrics": {
+    "sim__corner__count": 15,
+    "sim__corner__passed_count": 15,
+    "sim__corner__failed_count": 0,
+    "sim__corner__errored_count": 0,
+    "sim__corner__inconclusive_count": 0
+  },
+  "environment": {
+    "engine": "ngspice",
+    "engine_version": "47",
+    "ngspice_binary": "/usr/local/bin/ngspice",
+    "engine_build": {
+      "version_banner": "******\n** ngspice-47 : Circuit level simulation program\n** Compiled with KLU Direct Linear Solver\n** The U. C. Berkeley CAD Group\n** Copyright 1985-1994, Regents of the University of California.\n** Copyright 2001-2026, The ngspice team.\n** Please get your ngspice manual from https://ngspice.sourceforge.io/docs.html\n** Please file your bug-reports at http://ngspice.sourceforge.net/bugrep.html\n** Creation Date: Fri Nov 13 23:19:32 UTC 2026\n******",
+      "binary_sha256": "39ca1adb826660324c3626f72bd946ec40704f0f3fc8e243c623f76e24b3eee2",
+      "probe": "ok",
+      "reason": null
+    },
+    "models_lib": {
+      "path": null,
+      "scope": "external"
+    },
+    "models_lib_sha256": "f6f4a96e18fc5ad11270ad3451aaecc7ac37fc81eb61e15b0d7d94c7bc594a24",
+    "models_lib_sha256_scope": "client",
+    "netlist_sha256": "31c1f20b3783b1dabeb93a727b45bc3fbbcbdbfd5b2ab136777840c7b0eed4a1",
+    "corner_coverage": {
+      "pdk": "gf180mcuD",
+      "sections": [
+        {
+          "process": "ff",
+          "unmoved_devices": [
+            "06v0",
+            "06v0_nvt",
+            "fets_mm",
+            "noise_corner"
+          ]
+        },
+        {
+          "process": "ss",
+          "unmoved_devices": [
+            "06v0",
+            "06v0_nvt",
+            "fets_mm",
+            "noise_corner"
+          ]
+        },
+        {
+          "process": "fs",
+          "unmoved_devices": [
+            "06v0",
+            "06v0_nvt",
+            "fets_mm",
+            "noise_corner"
+          ]
+        },
+        {
+          "process": "sf",
+          "unmoved_devices": [
+            "06v0",
+            "06v0_nvt",
+            "fets_mm",
+            "noise_corner"
+          ]
+        }
+      ]
+    },
+    "netlist_closure": [
+      {
+        "path": null,
+        "scope": "external",
+        "sha256": "31c1f20b3783b1dabeb93a727b45bc3fbbcbdbfd5b2ab136777840c7b0eed4a1"
+      },
+      {
+        "path": null,
+        "scope": "external",
+        "sha256": "7e222f050318388f37543a64fbd0be55cc15e4b93f57501a09f7c159c4c9e561"
+      },
+      {
+        "path": null,
+        "scope": "external",
+        "sha256": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a"
+      },
+      {
+        "path": null,
+        "scope": "external",
+        "sha256": "a2bb5545b89137e1f21332108f28575697b771b05030bc829ee0eea26051986e"
+      }
+    ],
+    "netlist_identity": "sha256:0a253e208ed27d54224ddb03b37bc709cb6042b5ce7a0830e58447505bcfb11d",
+    "remote": {
+      "provider": "aws-batch-fleet",
+      "job_id": "klt-sim-c79b26d8fa2f",
+      "region": "us-east-1",
+      "instance_id": "i-0a61a1ddcad83712e",
+      "instance_type": "m7i.4xlarge",
+      "availability_zone": "us-east-1a",
+      "ami_id": "ami-09c14f55df4958cbd",
+      "lifecycle": "spot",
+      "spot": true,
+      "state": "done",
+      "exit_code": "0",
+      "concurrency": "1",
+      "physical_cores": "8",
+      "elapsed_seconds": 30,
+      "client_submitted_at": "2026-11-15T07:57:05.036659Z",
+      "client_launched_at": "2026-11-15T07:57:28.829120Z",
+      "client_status_terminal_at": "2026-11-15T07:58:31.058660Z",
+      "client_collected_at": "2026-11-15T07:58:31.949185Z",
+      "runner_klt_version": "0.9.0",
+      "client_klt_version": "0.9.3.dev3+gd5d57daf9a14",
+      "runner_compatibility": "match",
+      "runner_request_features": {
+        "required": [
+          "options.ngspice_init"
+        ],
+        "missing": [],
+        "status": "supported"
+      },
+      "worker_environment": {
+        "capture": "ok",
+        "simulator": {
+          "requested_binary": "ngspice",
+          "binary_source": "PATH",
+          "selected_path": "/usr/local/bin/ngspice",
+          "version_banner": "******\n** ngspice-47 : Circuit level simulation program\n** Compiled with KLU Direct Linear Solver\n** The U. C. Berkeley CAD Group\n** Copyright 1985-1994, Regents of the University of California.\n** Copyright 2001-2026, The ngspice team.\n** Please get your ngspice manual from https://ngspice.sourceforge.io/docs.html\n** Please file your bug-reports at http://ngspice.sourceforge.net/bugrep.html\n** Creation Date: Fri Nov 13 23:19:32 UTC 2026\n******\n",
+          "version_probe": "ok"
+        },
+        "pdk": {
+          "variant": "gf180mcuD",
+          "root": "/opt/pdk",
+          "stamp_scheme": "sources-sha256",
+          "stamp_sha256": "4ca10280ae9f293aa1ff69f0060a52e0026929111bda881503717469b429ce67",
+          "stamp_text": "open_pdks f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7",
+          "models_staged": false,
+          "stamp_scope": "executed"
+        },
+        "cpu_model": "Intel(R) Xeon(R) Platinum 8488C",
+        "omp_num_threads": null,
+        "image_manifest": null,
+        "model_inputs": null,
+        "diagnostics": [],
+        "pdk_stamp_comparison": {
+          "status": "match"
+        },
+        "engine_build_comparison": {
+          "status": "match"
+        }
+      },
+      "runner_model_inputs": null,
+      "runner_models_lib_sha256": "f6f4a96e18fc5ad11270ad3451aaecc7ac37fc81eb61e15b0d7d94c7bc594a24",
+      "job_ceiling": {
+        "basis": "conservative_serial_bound",
+        "unit_count": 15,
+        "per_unit_timeout_s": 3000,
+        "overhead_s": 120.0,
+        "job_bound_s": 45120.0,
+        "max_job_seconds": 3600.0,
+        "max_job_seconds_source": "fleet_config",
+        "exceeds_ceiling": true,
+        "check": "warn",
+        "max_units_per_job": 1,
+        "recommended_hosts": 15,
+        "warning": "batch job bound 45120s (options.timeout_s 3000s x 15 units + 120s; a conservative fully-serial upper bound, not a runtime estimate) exceeds the fleet's whole-job ceiling of 3600s (max_job_seconds from fleet_config); a job still running at the ceiling is killed and every unit is reported batch_job_timeout. Set request.remote.hosts to at least 15 to run one job per shard of at most 1 units, each within the ceiling"
+      },
+      "models_lib_comparison": {
+        "status": "match"
+      }
+    },
+    "engine_host": "worker",
+    "client_ngspice_binary": "/home/ubuntu/.local/bin/ngspice",
+    "backend": {
+      "resolved": "batch",
+      "source": "env",
+      "requested": "batch"
+    },
+    "timeout_preflight_warning": "options.timeout_s (3000s) looks implausible for a tran analysis with ~1.51e+05 timepoints (10p step, 1510n window) -- even 50 timepoints/s (a generous floor, not a real engine-rate estimate) would need 3.02e+03s per corner. This is only a coarse, advisory pre-grid heuristic -- it does not block the sweep, and a plausible-looking budget can still turn out to be too short in practice."
+  },
+  "coverage": {
+    "corners_simulated": 15,
+    "measurements_declared": 27,
+    "measurements_with_limits": 0,
+    "unrecognized_limit_keys": [],
+    "schema_version": 1,
+    "known": true,
+    "checked": [
+      "measurement:[0,\"tt/novdd/-40C\",\"d08\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"d09\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"d10\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"d11\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"d12\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"d13\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"d14\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"d15\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"d16\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"d17\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"d18\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"d19\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"d20\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"d21\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"d22\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"d23\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"db08\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"db23\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"e_win\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"i_q\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"q_clk\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"q_h1\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"q_h2\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"q_win\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"t_ehi\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"t_elo\"]/observation",
+      "measurement:[0,\"tt/novdd/-40C\",\"vsup_v\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"d08\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"d09\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"d10\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"d11\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"d12\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"d13\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"d14\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"d15\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"d16\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"d17\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"d18\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"d19\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"d20\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"d21\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"d22\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"d23\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"db08\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"db23\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"e_win\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"i_q\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"q_clk\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"q_h1\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"q_h2\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"q_win\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"t_ehi\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"t_elo\"]/observation",
+      "measurement:[1,\"tt/novdd/27C\",\"vsup_v\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"d08\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"d09\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"d10\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"d11\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"d12\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"d13\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"d14\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"d15\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"d16\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"d17\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"d18\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"d19\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"d20\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"d21\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"d22\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"d23\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"db08\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"db23\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"e_win\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"i_q\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"q_clk\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"q_h1\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"q_h2\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"q_win\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"t_ehi\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"t_elo\"]/observation",
+      "measurement:[10,\"fs/novdd/27C\",\"vsup_v\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"d08\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"d09\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"d10\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"d11\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"d12\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"d13\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"d14\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"d15\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"d16\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"d17\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"d18\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"d19\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"d20\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"d21\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"d22\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"d23\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"db08\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"db23\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"e_win\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"i_q\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"q_clk\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"q_h1\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"q_h2\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"q_win\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"t_ehi\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"t_elo\"]/observation",
+      "measurement:[11,\"fs/novdd/125C\",\"vsup_v\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"d08\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"d09\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"d10\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"d11\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"d12\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"d13\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"d14\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"d15\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"d16\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"d17\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"d18\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"d19\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"d20\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"d21\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"d22\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"d23\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"db08\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"db23\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"e_win\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"i_q\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"q_clk\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"q_h1\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"q_h2\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"q_win\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"t_ehi\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"t_elo\"]/observation",
+      "measurement:[12,\"sf/novdd/-40C\",\"vsup_v\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"d08\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"d09\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"d10\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"d11\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"d12\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"d13\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"d14\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"d15\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"d16\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"d17\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"d18\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"d19\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"d20\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"d21\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"d22\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"d23\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"db08\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"db23\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"e_win\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"i_q\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"q_clk\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"q_h1\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"q_h2\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"q_win\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"t_ehi\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"t_elo\"]/observation",
+      "measurement:[13,\"sf/novdd/27C\",\"vsup_v\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"d08\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"d09\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"d10\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"d11\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"d12\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"d13\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"d14\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"d15\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"d16\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"d17\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"d18\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"d19\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"d20\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"d21\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"d22\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"d23\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"db08\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"db23\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"e_win\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"i_q\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"q_clk\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"q_h1\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"q_h2\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"q_win\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"t_ehi\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"t_elo\"]/observation",
+      "measurement:[14,\"sf/novdd/125C\",\"vsup_v\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"d08\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"d09\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"d10\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"d11\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"d12\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"d13\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"d14\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"d15\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"d16\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"d17\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"d18\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"d19\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"d20\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"d21\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"d22\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"d23\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"db08\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"db23\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"e_win\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"i_q\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"q_clk\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"q_h1\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"q_h2\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"q_win\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"t_ehi\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"t_elo\"]/observation",
+      "measurement:[2,\"tt/novdd/125C\",\"vsup_v\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"d08\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"d09\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"d10\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"d11\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"d12\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"d13\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"d14\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"d15\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"d16\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"d17\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"d18\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"d19\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"d20\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"d21\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"d22\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"d23\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"db08\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"db23\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"e_win\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"i_q\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"q_clk\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"q_h1\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"q_h2\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"q_win\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"t_ehi\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"t_elo\"]/observation",
+      "measurement:[3,\"ff/novdd/-40C\",\"vsup_v\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"d08\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"d09\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"d10\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"d11\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"d12\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"d13\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"d14\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"d15\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"d16\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"d17\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"d18\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"d19\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"d20\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"d21\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"d22\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"d23\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"db08\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"db23\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"e_win\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"i_q\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"q_clk\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"q_h1\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"q_h2\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"q_win\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"t_ehi\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"t_elo\"]/observation",
+      "measurement:[4,\"ff/novdd/27C\",\"vsup_v\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"d08\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"d09\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"d10\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"d11\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"d12\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"d13\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"d14\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"d15\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"d16\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"d17\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"d18\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"d19\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"d20\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"d21\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"d22\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"d23\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"db08\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"db23\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"e_win\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"i_q\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"q_clk\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"q_h1\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"q_h2\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"q_win\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"t_ehi\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"t_elo\"]/observation",
+      "measurement:[5,\"ff/novdd/125C\",\"vsup_v\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"d08\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"d09\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"d10\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"d11\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"d12\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"d13\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"d14\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"d15\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"d16\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"d17\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"d18\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"d19\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"d20\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"d21\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"d22\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"d23\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"db08\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"db23\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"e_win\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"i_q\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"q_clk\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"q_h1\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"q_h2\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"q_win\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"t_ehi\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"t_elo\"]/observation",
+      "measurement:[6,\"ss/novdd/-40C\",\"vsup_v\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"d08\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"d09\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"d10\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"d11\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"d12\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"d13\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"d14\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"d15\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"d16\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"d17\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"d18\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"d19\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"d20\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"d21\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"d22\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"d23\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"db08\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"db23\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"e_win\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"i_q\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"q_clk\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"q_h1\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"q_h2\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"q_win\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"t_ehi\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"t_elo\"]/observation",
+      "measurement:[7,\"ss/novdd/27C\",\"vsup_v\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"d08\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"d09\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"d10\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"d11\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"d12\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"d13\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"d14\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"d15\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"d16\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"d17\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"d18\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"d19\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"d20\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"d21\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"d22\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"d23\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"db08\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"db23\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"e_win\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"i_q\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"q_clk\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"q_h1\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"q_h2\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"q_win\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"t_ehi\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"t_elo\"]/observation",
+      "measurement:[8,\"ss/novdd/125C\",\"vsup_v\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"d08\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"d09\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"d10\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"d11\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"d12\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"d13\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"d14\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"d15\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"d16\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"d17\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"d18\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"d19\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"d20\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"d21\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"d22\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"d23\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"db08\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"db23\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"e_win\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"i_q\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"q_clk\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"q_h1\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"q_h2\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"q_win\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"t_ehi\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"t_elo\"]/observation",
+      "measurement:[9,\"fs/novdd/-40C\",\"vsup_v\"]/observation"
+    ],
+    "skipped": [],
+    "inapplicable": [
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"d08\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"d09\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"d10\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"d11\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"d12\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"d13\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"d14\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"d15\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"d16\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"d17\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"d18\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"d19\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"d20\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"d21\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"d22\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"d23\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"db08\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"db23\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"e_win\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"i_q\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"q_clk\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"q_h1\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"q_h2\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"q_win\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"t_ehi\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"t_elo\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/-40C\",\"vsup_v\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"d08\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"d09\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"d10\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"d11\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"d12\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"d13\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"d14\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"d15\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"d16\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"d17\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"d18\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"d19\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"d20\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"d21\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"d22\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"d23\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"db08\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"db23\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"e_win\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"i_q\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"q_clk\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"q_h1\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"q_h2\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"q_win\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"t_ehi\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"t_elo\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"tt/novdd/27C\",\"vsup_v\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"d08\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"d09\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"d10\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"d11\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"d12\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"d13\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"d14\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"d15\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"d16\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"d17\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"d18\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"d19\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"d20\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"d21\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"d22\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"d23\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"db08\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"db23\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"e_win\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"i_q\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"q_clk\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"q_h1\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"q_h2\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"q_win\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"t_ehi\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"t_elo\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[10,\"fs/novdd/27C\",\"vsup_v\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"d08\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"d09\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"d10\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"d11\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"d12\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"d13\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"d14\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"d15\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"d16\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"d17\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"d18\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"d19\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"d20\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"d21\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"d22\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"d23\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"db08\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"db23\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"e_win\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"i_q\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"q_clk\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"q_h1\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"q_h2\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"q_win\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"t_ehi\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"t_elo\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[11,\"fs/novdd/125C\",\"vsup_v\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"d08\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"d09\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"d10\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"d11\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"d12\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"d13\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"d14\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"d15\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"d16\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"d17\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"d18\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"d19\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"d20\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"d21\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"d22\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"d23\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"db08\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"db23\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"e_win\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"i_q\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"q_clk\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"q_h1\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"q_h2\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"q_win\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"t_ehi\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"t_elo\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[12,\"sf/novdd/-40C\",\"vsup_v\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"d08\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"d09\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"d10\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"d11\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"d12\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"d13\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"d14\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"d15\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"d16\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"d17\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"d18\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"d19\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"d20\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"d21\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"d22\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"d23\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"db08\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"db23\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"e_win\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"i_q\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"q_clk\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"q_h1\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"q_h2\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"q_win\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"t_ehi\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"t_elo\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[13,\"sf/novdd/27C\",\"vsup_v\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"d08\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"d09\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"d10\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"d11\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"d12\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"d13\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"d14\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"d15\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"d16\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"d17\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"d18\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"d19\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"d20\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"d21\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"d22\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"d23\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"db08\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"db23\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"e_win\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"i_q\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"q_clk\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"q_h1\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"q_h2\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"q_win\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"t_ehi\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"t_elo\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[14,\"sf/novdd/125C\",\"vsup_v\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"d08\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"d09\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"d10\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"d11\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"d12\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"d13\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"d14\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"d15\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"d16\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"d17\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"d18\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"d19\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"d20\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"d21\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"d22\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"d23\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"db08\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"db23\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"e_win\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"i_q\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"q_clk\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"q_h1\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"q_h2\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"q_win\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"t_ehi\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"t_elo\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[2,\"tt/novdd/125C\",\"vsup_v\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"d08\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"d09\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"d10\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"d11\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"d12\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"d13\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"d14\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"d15\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"d16\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"d17\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"d18\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"d19\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"d20\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"d21\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"d22\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"d23\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"db08\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"db23\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"e_win\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"i_q\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"q_clk\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"q_h1\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"q_h2\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"q_win\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"t_ehi\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"t_elo\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[3,\"ff/novdd/-40C\",\"vsup_v\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"d08\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"d09\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"d10\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"d11\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"d12\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"d13\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"d14\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"d15\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"d16\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"d17\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"d18\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"d19\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"d20\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"d21\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"d22\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"d23\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"db08\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"db23\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"e_win\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"i_q\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"q_clk\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"q_h1\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"q_h2\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"q_win\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"t_ehi\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"t_elo\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[4,\"ff/novdd/27C\",\"vsup_v\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"d08\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"d09\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"d10\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"d11\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"d12\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"d13\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"d14\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"d15\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"d16\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"d17\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"d18\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"d19\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"d20\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"d21\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"d22\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"d23\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"db08\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"db23\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"e_win\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"i_q\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"q_clk\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"q_h1\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"q_h2\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"q_win\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"t_ehi\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"t_elo\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[5,\"ff/novdd/125C\",\"vsup_v\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"d08\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"d09\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"d10\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"d11\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"d12\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"d13\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"d14\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"d15\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"d16\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"d17\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"d18\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"d19\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"d20\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"d21\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"d22\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"d23\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"db08\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"db23\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"e_win\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"i_q\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"q_clk\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"q_h1\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"q_h2\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"q_win\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"t_ehi\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"t_elo\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[6,\"ss/novdd/-40C\",\"vsup_v\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"d08\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"d09\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"d10\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"d11\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"d12\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"d13\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"d14\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"d15\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"d16\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"d17\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"d18\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"d19\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"d20\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"d21\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"d22\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"d23\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"db08\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"db23\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"e_win\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"i_q\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"q_clk\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"q_h1\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"q_h2\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"q_win\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"t_ehi\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"t_elo\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[7,\"ss/novdd/27C\",\"vsup_v\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"d08\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"d09\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"d10\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"d11\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"d12\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"d13\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"d14\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"d15\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"d16\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"d17\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"d18\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"d19\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"d20\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"d21\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"d22\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"d23\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"db08\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"db23\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"e_win\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"i_q\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"q_clk\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"q_h1\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"q_h2\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"q_win\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"t_ehi\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"t_elo\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[8,\"ss/novdd/125C\",\"vsup_v\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"d08\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"d09\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"d10\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"d11\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"d12\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"d13\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"d14\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"d15\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"d16\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"d17\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"d18\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"d19\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"d20\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"d21\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"d22\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"d23\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"db08\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"db23\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"e_win\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"i_q\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"q_clk\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"q_h1\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"q_h2\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"q_win\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"t_ehi\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"t_elo\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[9,\"fs/novdd/-40C\",\"vsup_v\"]/limits",
+        "reason": "characterization_without_limits"
+      }
+    ],
+    "unknown": [],
+    "nothing_checked": false,
+    "nothing_checked_reasons": []
+  },
+  "provenance": {
+    "klt_version": "0.9.3.dev3+gd5d57daf9a14",
+    "klt_git_commit": "d5d57daf9a145961ea01f5f891e4d87c0d435807",
+    "klt_reinstall_spec": "klayout-tools @ git+https://github.com/2AMLogic/klayout-tools@d5d57daf9a145961ea01f5f891e4d87c0d435807",
+    "klayout_version": "0.30.13",
+    "pdk": {
+      "name": "gf180mcuD",
+      "source": "search root: ~/.ciel",
+      "version": "open_pdks f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7",
+      "ambiguous_sources": [
+        "search root: ~/.volare"
+      ]
+    },
+    "deck": {
+      "name": "sm141064.ngspice",
+      "content_hash": "sha256:f6f4a96e18fc5ad11270ad3451aaecc7ac37fc81eb61e15b0d7d94c7bc594a24",
+      "released": false
+    },
+    "input": {
+      "content_hash": "sha256:31c1f20b3783b1dabeb93a727b45bc3fbbcbdbfd5b2ab136777840c7b0eed4a1",
+      "role": "netlist"
+    }
+  },
+  "measurements": [
+    {
+      "name": "vsup_v",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 2.97,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 2.97
+      },
+      "max": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 2.97
+      }
+    },
+    {
+      "name": "t_elo",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 5.1005e-07,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 5.1005e-07
+      },
+      "max": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 5.1005e-07
+      }
+    },
+    {
+      "name": "t_ehi",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 1.44755e-06,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 1.44755e-06
+      },
+      "max": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 1.44755e-06
+      }
+    },
+    {
+      "name": "d08",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 0.9999999981536,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "ff/novdd/125C",
+        "value": 0.999999863918
+      },
+      "max": {
+        "corner_id": "fs/novdd/-40C",
+        "value": 0.9999999984198
+      }
+    },
+    {
+      "name": "d09",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 9.338368867458e-10,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "ff/novdd/-40C",
+        "value": -9.37397579587e-11
+      },
+      "max": {
+        "corner_id": "ss/novdd/125C",
+        "value": 1.848456959084e-09
+      }
+    },
+    {
+      "name": "d10",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 0.9999999981537,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "ff/novdd/125C",
+        "value": 0.999999863918
+      },
+      "max": {
+        "corner_id": "fs/novdd/-40C",
+        "value": 0.9999999984196
+      }
+    },
+    {
+      "name": "d11",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 9.338990603616e-10,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "ff/novdd/-40C",
+        "value": -9.370516756642e-11
+      },
+      "max": {
+        "corner_id": "ss/novdd/125C",
+        "value": 1.848605943601e-09
+      }
+    },
+    {
+      "name": "d12",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 0.9999999981538,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "ff/novdd/125C",
+        "value": 0.9999998639184
+      },
+      "max": {
+        "corner_id": "fs/novdd/-40C",
+        "value": 0.9999999984187
+      }
+    },
+    {
+      "name": "d13",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 9.338042003324e-10,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "ff/novdd/-40C",
+        "value": -9.373179689824e-11
+      },
+      "max": {
+        "corner_id": "ss/novdd/125C",
+        "value": 1.84863610225e-09
+      }
+    },
+    {
+      "name": "d14",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 0.9999999981539,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "ff/novdd/125C",
+        "value": 0.9999998639183
+      },
+      "max": {
+        "corner_id": "fs/novdd/-40C",
+        "value": 0.999999998419
+      }
+    },
+    {
+      "name": "d15",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 9.338121409127e-10,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "ff/novdd/-40C",
+        "value": -9.380592268211e-11
+      },
+      "max": {
+        "corner_id": "ss/novdd/125C",
+        "value": 1.848622803461e-09
+      }
+    },
+    {
+      "name": "d16",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 0.9999999981538,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "ff/novdd/125C",
+        "value": 0.9999998639181
+      },
+      "max": {
+        "corner_id": "fs/novdd/-40C",
+        "value": 0.9999999984184
+      }
+    },
+    {
+      "name": "d17",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 9.337775711603e-10,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "ff/novdd/-40C",
+        "value": -9.368925866788e-11
+      },
+      "max": {
+        "corner_id": "ss/novdd/125C",
+        "value": 1.848648622768e-09
+      }
+    },
+    {
+      "name": "d18",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 0.9999999981539,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "ff/novdd/125C",
+        "value": 0.9999998639183
+      },
+      "max": {
+        "corner_id": "fs/novdd/-40C",
+        "value": 0.9999999984189
+      }
+    },
+    {
+      "name": "d19",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 9.338082670951e-10,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "ff/novdd/-40C",
+        "value": -9.386007458321e-11
+      },
+      "max": {
+        "corner_id": "ss/novdd/125C",
+        "value": 1.848732646248e-09
+      }
+    },
+    {
+      "name": "d20",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 0.9999999981542,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "ff/novdd/125C",
+        "value": 0.9999998639184
+      },
+      "max": {
+        "corner_id": "fs/novdd/-40C",
+        "value": 0.9999999984191
+      }
+    },
+    {
+      "name": "d21",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 9.338969801578e-10,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "ff/novdd/-40C",
+        "value": -9.377758777065e-11
+      },
+      "max": {
+        "corner_id": "ss/novdd/125C",
+        "value": 1.848578429891e-09
+      }
+    },
+    {
+      "name": "d22",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 0.9999999981536,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "ff/novdd/125C",
+        "value": 0.9999998639185
+      },
+      "max": {
+        "corner_id": "fs/novdd/-40C",
+        "value": 0.999999998419
+      }
+    },
+    {
+      "name": "d23",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 9.338703175239e-10,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "ff/novdd/-40C",
+        "value": -9.372808522222e-11
+      },
+      "max": {
+        "corner_id": "ss/novdd/125C",
+        "value": 1.848724774965e-09
+      }
+    },
+    {
+      "name": "db08",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 9.339158726405e-10,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "ff/novdd/-40C",
+        "value": -9.372530955506e-11
+      },
+      "max": {
+        "corner_id": "ss/novdd/125C",
+        "value": 1.848915038063e-09
+      }
+    },
+    {
+      "name": "db23",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 0.9999999981541,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "ff/novdd/125C",
+        "value": 0.9999998639181
+      },
+      "max": {
+        "corner_id": "fs/novdd/-40C",
+        "value": 0.9999999984185
+      }
+    },
+    {
+      "name": "q_win",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": -4.152420823244e-11,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "ff/novdd/125C",
+        "value": -4.383363118455e-11
+      },
+      "max": {
+        "corner_id": "ss/novdd/-40C",
+        "value": -4.072994775568e-11
+      }
+    },
+    {
+      "name": "q_h1",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": -2.076200831859e-11,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "ff/novdd/125C",
+        "value": -2.19169154623e-11
+      },
+      "max": {
+        "corner_id": "ss/novdd/-40C",
+        "value": -2.036461401136e-11
+      }
+    },
+    {
+      "name": "q_h2",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": -2.076237917551e-11,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "ff/novdd/125C",
+        "value": -2.191695499129e-11
+      },
+      "max": {
+        "corner_id": "ss/novdd/-40C",
+        "value": -2.0365494176e-11
+      }
+    },
+    {
+      "name": "e_win",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": 1.233268984503e-10,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "ss/novdd/-40C",
+        "value": 1.209679448344e-10
+      },
+      "max": {
+        "corner_id": "ff/novdd/125C",
+        "value": 1.301858846181e-10
+      }
+    },
+    {
+      "name": "q_clk",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": -9.821804044049e-15,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "sf/novdd/-40C",
+        "value": -1.443511696412e-14
+      },
+      "max": {
+        "corner_id": "ss/novdd/-40C",
+        "value": -5.201402081396e-16
+      }
+    },
+    {
+      "name": "i_q",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/-40C",
+        "value": -3.040464863149e-05,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "ff/novdd/-40C",
+        "value": -3.045635058951e-05
+      },
+      "max": {
+        "corner_id": "ss/novdd/125C",
+        "value": -3.010768446493e-05
+      }
+    }
+  ],
+  "corners": [
+    {
+      "corner_id": "tt/novdd/-40C",
+      "process": "tt",
+      "supply_v": {},
+      "temperature_c": -40.0,
+      "status": "pass",
+      "runtime_s": 10.934,
+      "peak_rss_bytes": 71565312,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "vsup_v",
+          "value": 2.97,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "t_elo",
+          "value": 5.1005e-07,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "t_ehi",
+          "value": 1.44755e-06,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d08",
+          "value": 0.9999999981536,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d09",
+          "value": 9.338368867458e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d10",
+          "value": 0.9999999981537,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d11",
+          "value": 9.338990603616e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d12",
+          "value": 0.9999999981538,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d13",
+          "value": 9.338042003324e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d14",
+          "value": 0.9999999981539,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d15",
+          "value": 9.338121409127e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d16",
+          "value": 0.9999999981538,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d17",
+          "value": 9.337775711603e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d18",
+          "value": 0.9999999981539,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d19",
+          "value": 9.338082670951e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d20",
+          "value": 0.9999999981542,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d21",
+          "value": 9.338969801578e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d22",
+          "value": 0.9999999981536,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d23",
+          "value": 9.338703175239e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "db08",
+          "value": 9.339158726405e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "db23",
+          "value": 0.9999999981541,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_win",
+          "value": -4.152420823244e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_h1",
+          "value": -2.076200831859e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_h2",
+          "value": -2.076237917551e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "e_win",
+          "value": 1.233268984503e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_clk",
+          "value": -9.821804044049e-15,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "i_q",
+          "value": -3.040464863149e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/tmp/klt-avg373-run/out-main-v2.97/tt_novdd_n40C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/tmp/klt-avg373-run/out-main-v2.97/tt_novdd_n40C/corner.cir"
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "tt/novdd/27C",
+      "process": "tt",
+      "supply_v": {},
+      "temperature_c": 27.0,
+      "status": "pass",
+      "runtime_s": 10.103,
+      "peak_rss_bytes": 71475200,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "vsup_v",
+          "value": 2.97,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "t_elo",
+          "value": 5.1005e-07,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "t_ehi",
+          "value": 1.44755e-06,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d08",
+          "value": 0.999999994955,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d09",
+          "value": 9.386652888269e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d10",
+          "value": 0.9999999949544,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d11",
+          "value": 9.387134419061e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d12",
+          "value": 0.9999999949553,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d13",
+          "value": 9.386125741649e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d14",
+          "value": 0.9999999949555,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d15",
+          "value": 9.385049227604e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d16",
+          "value": 0.9999999949552,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d17",
+          "value": 9.385862848336e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d18",
+          "value": 0.9999999949548,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d19",
+          "value": 9.385411919254e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d20",
+          "value": 0.9999999949551,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d21",
+          "value": 9.386105442872e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d22",
+          "value": 0.9999999949555,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d23",
+          "value": 9.386496101993e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "db08",
+          "value": 9.385329964471e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "db23",
+          "value": 0.9999999949551,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_win",
+          "value": -4.206156206834e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_h1",
+          "value": -2.103078175144e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_h2",
+          "value": -2.103097102965e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "e_win",
+          "value": 1.24922839343e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_clk",
+          "value": -1.147669358433e-14,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "i_q",
+          "value": -3.027482040774e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/tmp/klt-avg373-run/out-main-v2.97/tt_novdd_27C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/tmp/klt-avg373-run/out-main-v2.97/tt_novdd_27C/corner.cir"
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "tt/novdd/125C",
+      "process": "tt",
+      "supply_v": {},
+      "temperature_c": 125.0,
+      "status": "pass",
+      "runtime_s": 9.609,
+      "peak_rss_bytes": 71475200,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "vsup_v",
+          "value": 2.97,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "t_elo",
+          "value": 5.1005e-07,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "t_ehi",
+          "value": 1.44755e-06,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d08",
+          "value": 0.9999999803171,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d09",
+          "value": 8.229651139469e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d10",
+          "value": 0.9999999803169,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d11",
+          "value": 8.228984928309e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d12",
+          "value": 0.9999999803169,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d13",
+          "value": 8.229872861216e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d14",
+          "value": 0.999999980317,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d15",
+          "value": 8.124355874004e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d16",
+          "value": 0.9999999803168,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d17",
+          "value": 8.230058768371e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d18",
+          "value": 0.9999999803172,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d19",
+          "value": 8.229314606771e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d20",
+          "value": 0.9999999803172,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d21",
+          "value": 8.229055441572e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d22",
+          "value": 0.9999999803168,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d23",
+          "value": 8.230303557358e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "db08",
+          "value": 8.230437057763e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "db23",
+          "value": 0.9999999803174,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_win",
+          "value": -4.282213962608e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_h1",
+          "value": -2.141101912083e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_h2",
+          "value": -2.141132916993e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "e_win",
+          "value": 1.271817546895e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_clk",
+          "value": -6.657826040608e-15,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "i_q",
+          "value": -3.015073433448e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/tmp/klt-avg373-run/out-main-v2.97/tt_novdd_125C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/tmp/klt-avg373-run/out-main-v2.97/tt_novdd_125C/corner.cir"
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "ff/novdd/-40C",
+      "process": "ff",
+      "supply_v": {},
+      "temperature_c": -40.0,
+      "status": "pass",
+      "runtime_s": 11.28,
+      "peak_rss_bytes": 71565312,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "vsup_v",
+          "value": 2.97,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "t_elo",
+          "value": 5.1005e-07,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "t_ehi",
+          "value": 1.44755e-06,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d08",
+          "value": 0.9999999952919,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d09",
+          "value": -9.37397579587e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d10",
+          "value": 0.9999999952923,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d11",
+          "value": -9.370516756642e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d12",
+          "value": 0.9999999952918,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d13",
+          "value": -9.373179689824e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d14",
+          "value": 0.9999999952926,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d15",
+          "value": -9.380592268211e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d16",
+          "value": 0.9999999952929,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d17",
+          "value": -9.368925866788e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d18",
+          "value": 0.9999999952929,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d19",
+          "value": -9.386007458321e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d20",
+          "value": 0.9999999952929,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d21",
+          "value": -9.377758777065e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d22",
+          "value": 0.999999995292,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d23",
+          "value": -9.372808522222e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "db08",
+          "value": -9.372530955506e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "db23",
+          "value": 0.9999999952919,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_win",
+          "value": -4.236557237656e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_h1",
+          "value": -2.118288942171e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_h2",
+          "value": -2.11828880057e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "e_win",
+          "value": 1.258257499584e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_clk",
+          "value": -1.220342466737e-14,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "i_q",
+          "value": -3.045635058951e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/tmp/klt-avg373-run/out-main-v2.97/ff_novdd_n40C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/tmp/klt-avg373-run/out-main-v2.97/ff_novdd_n40C/corner.cir"
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "ff/novdd/27C",
+      "process": "ff",
+      "supply_v": {},
+      "temperature_c": 27.0,
+      "status": "pass",
+      "runtime_s": 11.036,
+      "peak_rss_bytes": 71565312,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "vsup_v",
+          "value": 2.97,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "t_elo",
+          "value": 5.1005e-07,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "t_ehi",
+          "value": 1.44755e-06,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d08",
+          "value": 0.9999999980023,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d09",
+          "value": 1.442474987818e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d10",
+          "value": 0.9999999980022,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d11",
+          "value": 1.433437314969e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d12",
+          "value": 0.9999999980019,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d13",
+          "value": 1.4385919101e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d14",
+          "value": 0.9999999980022,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d15",
+          "value": 1.442702434799e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d16",
+          "value": 0.9999999980019,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d17",
+          "value": 1.427439137707e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d18",
+          "value": 0.999999998002,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d19",
+          "value": 1.434895636997e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d20",
+          "value": 0.9999999980019,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d21",
+          "value": 1.447302544016e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d22",
+          "value": 0.9999999980018,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d23",
+          "value": 1.43972440617e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "db08",
+          "value": 1.438877712608e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "db23",
+          "value": 0.9999999980022,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_win",
+          "value": -4.294151112428e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_h1",
+          "value": -2.147077962074e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_h2",
+          "value": -2.147095025714e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "e_win",
+          "value": 1.275362880391e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_clk",
+          "value": -5.628989809341e-15,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "i_q",
+          "value": -3.031610495799e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/tmp/klt-avg373-run/out-main-v2.97/ff_novdd_27C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/tmp/klt-avg373-run/out-main-v2.97/ff_novdd_27C/corner.cir"
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "ff/novdd/125C",
+      "process": "ff",
+      "supply_v": {},
+      "temperature_c": 125.0,
+      "status": "pass",
+      "runtime_s": 11.285,
+      "peak_rss_bytes": 71565312,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "vsup_v",
+          "value": 2.97,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "t_elo",
+          "value": 5.1005e-07,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "t_ehi",
+          "value": 1.44755e-06,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d08",
+          "value": 0.999999863918,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d09",
+          "value": 1.151169014263e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d10",
+          "value": 0.999999863918,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d11",
+          "value": 1.151184903356e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d12",
+          "value": 0.9999998639184,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d13",
+          "value": 1.151192317346e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d14",
+          "value": 0.9999998639183,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d15",
+          "value": 1.15128709397e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d16",
+          "value": 0.9999998639181,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d17",
+          "value": 1.151166725468e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d18",
+          "value": 0.9999998639183,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d19",
+          "value": 1.151236579014e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d20",
+          "value": 0.9999998639184,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d21",
+          "value": 1.151097951774e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d22",
+          "value": 0.9999998639185,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d23",
+          "value": 1.15123544024e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "db08",
+          "value": 1.151094177988e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "db23",
+          "value": 0.9999998639181,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_win",
+          "value": -4.383363118455e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_h1",
+          "value": -2.19169154623e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_h2",
+          "value": -2.191695499129e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "e_win",
+          "value": 1.301858846181e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_clk",
+          "value": -9.207203770275e-16,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "i_q",
+          "value": -3.018348375637e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/tmp/klt-avg373-run/out-main-v2.97/ff_novdd_125C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/tmp/klt-avg373-run/out-main-v2.97/ff_novdd_125C/corner.cir"
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "ss/novdd/-40C",
+      "process": "ss",
+      "supply_v": {},
+      "temperature_c": -40.0,
+      "status": "pass",
+      "runtime_s": 9.979,
+      "peak_rss_bytes": 71475200,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "vsup_v",
+          "value": 2.97,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "t_elo",
+          "value": 5.1005e-07,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "t_ehi",
+          "value": 1.44755e-06,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d08",
+          "value": 0.9999999961612,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d09",
+          "value": 4.892328190692e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d10",
+          "value": 0.9999999961607,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d11",
+          "value": 4.892745489868e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d12",
+          "value": 0.999999996161,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d13",
+          "value": 4.89284590674e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d14",
+          "value": 0.9999999961604,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d15",
+          "value": 4.892265501462e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d16",
+          "value": 0.9999999961607,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d17",
+          "value": 4.893050448648e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d18",
+          "value": 0.9999999961604,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d19",
+          "value": 4.892305262257e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d20",
+          "value": 0.9999999961608,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d21",
+          "value": 4.891954590896e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d22",
+          "value": 0.9999999961603,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d23",
+          "value": 4.892793337249e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "db08",
+          "value": 4.892753550768e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "db23",
+          "value": 0.9999999961609,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_win",
+          "value": -4.072994775568e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_h1",
+          "value": -2.036461401136e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_h2",
+          "value": -2.0365494176e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "e_win",
+          "value": 1.209679448344e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_clk",
+          "value": -5.201402081396e-16,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "i_q",
+          "value": -3.034915289343e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/tmp/klt-avg373-run/out-main-v2.97/ss_novdd_n40C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/tmp/klt-avg373-run/out-main-v2.97/ss_novdd_n40C/corner.cir"
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "ss/novdd/27C",
+      "process": "ss",
+      "supply_v": {},
+      "temperature_c": 27.0,
+      "status": "pass",
+      "runtime_s": 9.431,
+      "peak_rss_bytes": 71213056,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "vsup_v",
+          "value": 2.97,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "t_elo",
+          "value": 5.1005e-07,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "t_ehi",
+          "value": 1.44755e-06,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d08",
+          "value": 0.9999999968541,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d09",
+          "value": 1.325174293985e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d10",
+          "value": 0.999999996855,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d11",
+          "value": 1.325192511372e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d12",
+          "value": 0.9999999968538,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d13",
+          "value": 1.325135498146e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d14",
+          "value": 0.999999996854,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d15",
+          "value": 1.325255322153e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d16",
+          "value": 0.9999999968545,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d17",
+          "value": 1.325192236908e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d18",
+          "value": 0.9999999968549,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d19",
+          "value": 1.325254568809e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d20",
+          "value": 0.9999999968538,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d21",
+          "value": 1.32519946748e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d22",
+          "value": 0.9999999968553,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d23",
+          "value": 1.325176638878e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "db08",
+          "value": 1.325116016946e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "db23",
+          "value": 0.9999999968533,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_win",
+          "value": -4.130183847075e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_h1",
+          "value": -2.06509849803e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_h2",
+          "value": -2.065102355492e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "e_win",
+          "value": 1.226664602581e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_clk",
+          "value": -1.908697177221e-15,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "i_q",
+          "value": -3.022579933502e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/tmp/klt-avg373-run/out-main-v2.97/ss_novdd_27C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/tmp/klt-avg373-run/out-main-v2.97/ss_novdd_27C/corner.cir"
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "ss/novdd/125C",
+      "process": "ss",
+      "supply_v": {},
+      "temperature_c": 125.0,
+      "status": "pass",
+      "runtime_s": 9.077,
+      "peak_rss_bytes": 71565312,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "vsup_v",
+          "value": 2.97,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "t_elo",
+          "value": 5.1005e-07,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "t_ehi",
+          "value": 1.44755e-06,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d08",
+          "value": 0.9999999933891,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d09",
+          "value": 1.848456959084e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d10",
+          "value": 0.9999999933895,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d11",
+          "value": 1.848605943601e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d12",
+          "value": 0.9999999933893,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d13",
+          "value": 1.84863610225e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d14",
+          "value": 0.9999999933897,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d15",
+          "value": 1.848622803461e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d16",
+          "value": 0.9999999933892,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d17",
+          "value": 1.848648622768e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d18",
+          "value": 0.9999999933892,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d19",
+          "value": 1.848732646248e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d20",
+          "value": 0.9999999933891,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d21",
+          "value": 1.848578429891e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d22",
+          "value": 0.9999999933895,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d23",
+          "value": 1.848724774965e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "db08",
+          "value": 1.848915038063e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "db23",
+          "value": 0.9999999933894,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_win",
+          "value": -4.205657068871e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_h1",
+          "value": -2.102833545468e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_h2",
+          "value": -2.102842092279e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "e_win",
+          "value": 1.249080149455e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_clk",
+          "value": -7.866782731056e-15,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "i_q",
+          "value": -3.010768446493e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/tmp/klt-avg373-run/out-main-v2.97/ss_novdd_125C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/tmp/klt-avg373-run/out-main-v2.97/ss_novdd_125C/corner.cir"
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "fs/novdd/-40C",
+      "process": "fs",
+      "supply_v": {},
+      "temperature_c": -40.0,
+      "status": "pass",
+      "runtime_s": 10.982,
+      "peak_rss_bytes": 71565312,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "vsup_v",
+          "value": 2.97,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "t_elo",
+          "value": 5.1005e-07,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "t_ehi",
+          "value": 1.44755e-06,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d08",
+          "value": 0.9999999984198,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d09",
+          "value": 8.006831551777e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d10",
+          "value": 0.9999999984196,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d11",
+          "value": 8.006837769005e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d12",
+          "value": 0.9999999984187,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d13",
+          "value": 8.006704451142e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d14",
+          "value": 0.999999998419,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d15",
+          "value": 8.007773540244e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d16",
+          "value": 0.9999999984184,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d17",
+          "value": 8.007117333665e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d18",
+          "value": 0.9999999984189,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d19",
+          "value": 8.007737026854e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d20",
+          "value": 0.9999999984191,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d21",
+          "value": 8.007261817014e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d22",
+          "value": 0.999999998419,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d23",
+          "value": 8.006484057457e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "db08",
+          "value": 8.00883184028e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "db23",
+          "value": 0.9999999984185,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_win",
+          "value": -4.156517743279e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_h1",
+          "value": -2.07825462793e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_h2",
+          "value": -2.078283057371e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "e_win",
+          "value": 1.234485769754e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_clk",
+          "value": -1.698470481045e-15,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "i_q",
+          "value": -3.043748905476e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/tmp/klt-avg373-run/out-main-v2.97/fs_novdd_n40C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/tmp/klt-avg373-run/out-main-v2.97/fs_novdd_n40C/corner.cir"
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "fs/novdd/27C",
+      "process": "fs",
+      "supply_v": {},
+      "temperature_c": 27.0,
+      "status": "pass",
+      "runtime_s": 10.98,
+      "peak_rss_bytes": 71565312,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "vsup_v",
+          "value": 2.97,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "t_elo",
+          "value": 5.1005e-07,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "t_ehi",
+          "value": 1.44755e-06,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d08",
+          "value": 0.9999999966157,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d09",
+          "value": 6.924867441756e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d10",
+          "value": 0.9999999966163,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d11",
+          "value": 6.924366765248e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d12",
+          "value": 0.999999996617,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d13",
+          "value": 6.924620409258e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d14",
+          "value": 0.9999999966163,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d15",
+          "value": 6.923996617391e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d16",
+          "value": 0.9999999966161,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d17",
+          "value": 6.924590061545e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d18",
+          "value": 0.9999999966174,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d19",
+          "value": 6.924879914945e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d20",
+          "value": 0.999999996616,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d21",
+          "value": 6.925412830997e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d22",
+          "value": 0.9999999966161,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d23",
+          "value": 6.924664410232e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "db08",
+          "value": 6.923190770277e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "db23",
+          "value": 0.9999999966169,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_win",
+          "value": -4.208220267684e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_h1",
+          "value": -2.104142399168e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_h2",
+          "value": -2.104099017431e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "e_win",
+          "value": 1.249841419502e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_clk",
+          "value": -1.025746528681e-14,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "i_q",
+          "value": -3.030265291996e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/tmp/klt-avg373-run/out-main-v2.97/fs_novdd_27C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/tmp/klt-avg373-run/out-main-v2.97/fs_novdd_27C/corner.cir"
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "fs/novdd/125C",
+      "process": "fs",
+      "supply_v": {},
+      "temperature_c": 125.0,
+      "status": "pass",
+      "runtime_s": 10.329,
+      "peak_rss_bytes": 71565312,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "vsup_v",
+          "value": 2.97,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "t_elo",
+          "value": 5.1005e-07,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "t_ehi",
+          "value": 1.44755e-06,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d08",
+          "value": 0.9999999034615,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d09",
+          "value": 1.015365136276e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d10",
+          "value": 0.9999999034617,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d11",
+          "value": 1.015177992921e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d12",
+          "value": 0.999999903462,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d13",
+          "value": 1.015329641664e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d14",
+          "value": 0.9999999034615,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d15",
+          "value": 1.015246136869e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d16",
+          "value": 0.9999999034615,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d17",
+          "value": 1.015288540879e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d18",
+          "value": 0.9999999034617,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d19",
+          "value": 1.015275262122e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d20",
+          "value": 0.9999999034626,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d21",
+          "value": 1.015237384967e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d22",
+          "value": 0.9999999034616,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d23",
+          "value": 1.015326771985e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "db08",
+          "value": 1.015080472856e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "db23",
+          "value": 0.9999999034627,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_win",
+          "value": -4.283665739591e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_h1",
+          "value": -2.141846037868e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_h2",
+          "value": -2.141842695972e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "e_win",
+          "value": 1.272248724659e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_clk",
+          "value": -9.318336979357e-15,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "i_q",
+          "value": -3.017464633121e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/tmp/klt-avg373-run/out-main-v2.97/fs_novdd_125C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/tmp/klt-avg373-run/out-main-v2.97/fs_novdd_125C/corner.cir"
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "sf/novdd/-40C",
+      "process": "sf",
+      "supply_v": {},
+      "temperature_c": -40.0,
+      "status": "pass",
+      "runtime_s": 11.634,
+      "peak_rss_bytes": 71671808,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "vsup_v",
+          "value": 2.97,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "t_elo",
+          "value": 5.1005e-07,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "t_ehi",
+          "value": 1.44755e-06,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d08",
+          "value": 0.9999999895961,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d09",
+          "value": 1.277332344325e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d10",
+          "value": 0.9999999895963,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d11",
+          "value": 1.277249146095e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d12",
+          "value": 0.9999999895952,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d13",
+          "value": 1.277279513665e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d14",
+          "value": 0.9999999895959,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d15",
+          "value": 1.277147283089e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d16",
+          "value": 0.9999999895955,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d17",
+          "value": 1.277301049592e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d18",
+          "value": 0.999999989596,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d19",
+          "value": 1.277209169286e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d20",
+          "value": 0.999999989596,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d21",
+          "value": 1.277203182974e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d22",
+          "value": 0.999999989596,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d23",
+          "value": 1.277356782014e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "db08",
+          "value": 1.277235697299e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "db23",
+          "value": 0.9999999895974,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_win",
+          "value": -4.149606459316e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_h1",
+          "value": -2.074829610487e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_h2",
+          "value": -2.074792936506e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "e_win",
+          "value": 1.232433118417e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_clk",
+          "value": -1.443511696412e-14,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "i_q",
+          "value": -3.037135267999e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/tmp/klt-avg373-run/out-main-v2.97/sf_novdd_n40C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/tmp/klt-avg373-run/out-main-v2.97/sf_novdd_n40C/corner.cir"
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "sf/novdd/27C",
+      "process": "sf",
+      "supply_v": {},
+      "temperature_c": 27.0,
+      "status": "pass",
+      "runtime_s": 10.63,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "vsup_v",
+          "value": 2.97,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "t_elo",
+          "value": 5.1005e-07,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "t_ehi",
+          "value": 1.44755e-06,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d08",
+          "value": 0.9999999886982,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d09",
+          "value": 1.712054345404e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d10",
+          "value": 0.9999999886603,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d11",
+          "value": 1.71195607685e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d12",
+          "value": 0.9999999886598,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d13",
+          "value": 1.65589545888e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d14",
+          "value": 0.9999999886772,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d15",
+          "value": 1.71207899356e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d16",
+          "value": 0.9999999886599,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d17",
+          "value": 1.712137667551e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d18",
+          "value": 0.9999999886978,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d19",
+          "value": 1.712024594597e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d20",
+          "value": 0.9999999886599,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d21",
+          "value": 1.712008744348e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d22",
+          "value": 0.9999999886579,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d23",
+          "value": 1.712003995518e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "db08",
+          "value": 1.712161326143e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "db23",
+          "value": 0.9999999886982,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_win",
+          "value": -4.205646673865e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_h1",
+          "value": -2.102826041059e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_h2",
+          "value": -2.102837812328e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "e_win",
+          "value": 1.249077062138e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_clk",
+          "value": -8.365765969355e-15,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "i_q",
+          "value": -3.024634132138e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/tmp/klt-avg373-run/out-main-v2.97/sf_novdd_27C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/tmp/klt-avg373-run/out-main-v2.97/sf_novdd_27C/corner.cir"
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "sf/novdd/125C",
+      "process": "sf",
+      "supply_v": {},
+      "temperature_c": 125.0,
+      "status": "pass",
+      "runtime_s": 10.78,
+      "peak_rss_bytes": 71671808,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "vsup_v",
+          "value": 2.97,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "t_elo",
+          "value": 5.1005e-07,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "t_ehi",
+          "value": 1.44755e-06,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d08",
+          "value": 0.9999999933685,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d09",
+          "value": 1.349359570235e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d10",
+          "value": 0.9999999933681,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d11",
+          "value": 1.349356418369e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d12",
+          "value": 0.9999999933683,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d13",
+          "value": 1.349287890295e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d14",
+          "value": 0.9999999933683,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d15",
+          "value": 1.349225247098e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d16",
+          "value": 0.999999993368,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d17",
+          "value": 1.349382264113e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d18",
+          "value": 0.9999999933678,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d19",
+          "value": 1.349296809811e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d20",
+          "value": 0.9999999933684,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d21",
+          "value": 1.349465785086e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d22",
+          "value": 0.9999999933684,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "d23",
+          "value": 1.349334363019e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "db08",
+          "value": 1.349461261819e-09,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "db23",
+          "value": 0.9999999933657,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_win",
+          "value": -4.282316083175e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_h1",
+          "value": -2.141162309684e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_h2",
+          "value": -2.141172692106e-11,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "e_win",
+          "value": 1.271847876703e-10,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "q_clk",
+          "value": -8.519339126639e-15,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "i_q",
+          "value": -3.012605977362e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/tmp/klt-avg373-run/out-main-v2.97/sf_novdd_125C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/tmp/klt-avg373-run/out-main-v2.97/sf_novdd_125C/corner.cir"
+      },
+      "monte_carlo": null
+    }
+  ]
+}

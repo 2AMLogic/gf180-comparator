@@ -22,9 +22,9 @@ NOT_RUN_BY_CHARACTERIZE = {
         "(issue #356); scores no spec row, so it is deliberately outside the "
         "characterization campaign. Fleet wiring landed (issue #372): PVT "
         "grids run via sim/tools/klt_record.py, and the 45-corner fleet "
-        "campaign is the follow-up (#373); the committed record is a "
-        "1-of-45 bring-up probe run locally via run_corners.py, see its "
-        "README",
+        "campaign is committed (issue #373); records include the local "
+        "1-point bring-up probe, the 1-point fleet bring-up and the full "
+        "45-of-45 grid, see its README",
 }
 
 
