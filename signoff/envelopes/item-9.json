@@ -283,7 +283,7 @@
         "role": "testbench",
         "path": "sim/harness/cli.py",
         "passed": true,
-        "content_hash": "sha256:9c780ad0482ff085e31565eb4261c44d4d088a0f8fab4793006cb54af85ce2e4"
+        "content_hash": "sha256:c8f5504c49c2c58bb22fd1c9bca758a7dce5c72a4ab9be4a419a1d9451340ff8"
       },
       {
         "check": "present",
@@ -311,7 +311,7 @@
         "role": "testbench",
         "path": "sim/harness/report.py",
         "passed": true,
-        "content_hash": "sha256:1894ccef106d1ec400f468d2a4ca3601d7bfffea02f393db0fad040c0900e559"
+        "content_hash": "sha256:0f6144ddadb720e1d41325587b2f891127d392f111071c0033da9643279662ea"
       },
       {
         "check": "present",
