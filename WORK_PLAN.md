@@ -7,72 +7,75 @@ This roadmap is generated from the repository's current GitHub label state.
 
 Judge-approved PRs under a hold (`loom:blocked` or `loom:operator`) — only a human merge decision is missing.
 
-- **#145**: fix: correct drifted decision-record enumeration and item-9 klt pin in attested evidence
+_None._
 
 ## Very Important
 
 `loom:very-important` (one counts per workspace); every stage takes these first.
 
-- **#122**: Library: several signal pins have no routable access point, so OpenROAD detailed routing cannot complete (DRT-0073)
+_None._
 
 ## Important
 
 `loom:important`; taken before unlabelled work.
 
-- **#110**: Re-take the full DRC/LVS regression record under the CI-pinned klt 0.9.0
+- **#3**: Gap-to-T1 tracker: gf180-comparator artifact-presence survey
+- **#112**: layout/PEX/signoff re-run for the DR-0004 input-cascode netlist (follow-up to #102)
+- **#125**: Define and measure the missing average-power operating condition for T1
 
 ## Ready
 
 Human-approved issues ready for implementation (`loom:issue`).
 
-- **#137**: a7s_common: gate_contact's v1= parameter now shadows the module-level v1() helper
-- **#139**: Docs: ROADMAP.md is on main but nothing links it
-- **#154**: normalize_paths CLI: the relative-prefix test is vacuous, and a trailing flag crashes instead of printing usage
-- **#156**: `--verify` cannot re-check any committed record: 541 of 581 envelopes drift on nondeterministic and uncommitted derived inputs
+_None._
 
 ## In Progress
 
 Issues currently being built (`loom:building`).
 
-- **#120**: Docs: stale decision-record enumeration in spec/stdcells.md, and the declared 0.8.0 pin in t1-item9-inventory.json
-- **#122**: Library: several signal pins have no routable access point, so OpenROAD detailed routing cannot complete (DRT-0073)
-- **#129**: Collapse the package.json test/check alias chain onto one gate that runs all six self-test files
-- **#142**: Item 9 inventory does not content-hash klt_helper.py (nor check_lef.py / write_lef.py)
-- **#144**: Four harness/evidence scripts outside item 9 are unpinned, incl. item 2's own check command
+- **#362**: Record Reproduce line omits the run's corner-selection flags, so a subset record tells the reader to run the full grid
+- **#366**: run_stage's append-only check hardcodes one code-hash exemption, so resuming a lever stage after a source edit aborts
+- **#368**: Remove 7 hand-rolled importlib path-import blocks: the repo's own sys.path idiom already does this
+- **#371**: Deduplicate the stage source_sha256 core hand-typed in all three parasitic-study manifest builders
+- **#373**: sim: run and commit the 45-corner comparator-avg-power campaign on the schematic DUT
+- **#374**: sim: extracted-DUT comparator-avg-power coverage — fleet probe leg, first tb_vosprobe run, and the 45-corner extracted record
+- **#384**: sim: cross_run_agreement cites its local record by basename, with no content hash
 
 ## PRs Awaiting Review
 
 PRs waiting on Judge (`loom:review-requested`).
 
-- **#143**: build: run all six self-tests as one package.json gate
-- **#161**: fix(lef): emit a pin's own net M2 as port geometry, not obstruction
+- **#380**: refactor: replace importlib path-import blocks with the repo's sys.path import idiom
+- **#386**: harness: echo restricting flags in the record Reproduce line
+- **#389**: feat(sim): extracted-binding two-phase dut_vos referral + the 45-point extracted fleet record
+- **#390**: sim: commit 45-corner avg-power PVT fleet campaign record
 
 ## Approved (Awaiting Merge)
 
 PRs that passed review and are queued for Champion auto-merge (`loom:pr`).
 
-- **#145**: fix: correct drifted decision-record enumeration and item-9 klt pin in attested evidence
-- **#153**: evidence: pin six unpinned harness/design scripts into T1 item 1 and 10
-- **#159**: manifests: content-hash harness helpers in T1 item 9 attestation
+- **#381**: refactor: deduplicate the stage source_sha256 core behind one helper
+- **#388**: fix(pex): derive run_stage resume exemption from generated_by, not a hardcoded key
 
 ## Proposed
 
 Issues carrying `loom:curated`.
 
-- **#120**: Docs: stale decision-record enumeration in spec/stdcells.md, and the declared 0.8.0 pin in t1-item9-inventory.json *(curated)*
-- **#122**: Library: several signal pins have no routable access point, so OpenROAD detailed routing cannot complete (DRT-0073) *(curated)*
-- **#137**: a7s_common: gate_contact's v1= parameter now shadows the module-level v1() helper *(curated)*
-- **#139**: Docs: ROADMAP.md is on main but nothing links it *(curated)*
-- **#142**: Item 9 inventory does not content-hash klt_helper.py (nor check_lef.py / write_lef.py) *(curated)*
-- **#144**: Four harness/evidence scripts outside item 9 are unpinned, incl. item 2's own check command *(curated)*
-- **#149**: integration/run_par.sh records an early-stage OpenROAD refusal as invalid-input (exit 1), not as a recorded refusal (exit 3) *(curated)*
-- **#151**: klt_helper.py is not importable: module-level sys.argv indexing blocks unit-testing its pure parts *(curated)*
-- **#154**: normalize_paths CLI: the relative-prefix test is vacuous, and a trailing flag crashes instead of printing usage *(curated)*
-- **#156**: `--verify` cannot re-check any committed record: 541 of 581 envelopes drift on nondeterministic and uncommitted derived inputs *(curated)*
+- **#3**: Gap-to-T1 tracker: gf180-comparator artifact-presence survey *(curated)*
+- **#125**: Define and measure the missing average-power operating condition for T1 *(curated)*
+- **#323**: Propose a design change that closes the 7 post-layout decision-time misses (T1 item 7) *(curated)*
+- **#362**: Record Reproduce line omits the run's corner-selection flags, so a subset record tells the reader to run the full grid *(curated)*
+- **#366**: run_stage's append-only check hardcodes one code-hash exemption, so resuming a lever stage after a source edit aborts *(curated)*
+- **#367**: signoff item 9: add four omitted harness files to the inventory and refresh the envelope from a green selftest run *(curated)*
+- **#373**: sim: run and commit the 45-corner comparator-avg-power campaign on the schematic DUT *(curated)*
+- **#374**: sim: extracted-DUT comparator-avg-power coverage — fleet probe leg, first tb_vosprobe run, and the 45-corner extracted record *(curated)*
+- **#379**: ROADMAP.md's per-issue queue-label claims go stale within hours and nothing re-verifies them *(curated)*
+- **#384**: sim: cross_run_agreement cites its local record by basename, with no content hash *(curated)*
+- **#385**: docs: comparator-avg-power README attributes the fleet `let` gap to klt 0.5.0, but the runner is 0.9.0 *(curated)*
 
 ## Proposed (Architect / Hermit)
 
-- **#133**: Drop the vendored design-evidence-tiers.md: a second, already-stale pin to klayout-tools that the pinned wheel already ships *(hermit)*
+- **#375**: Consolidate the five hand-copied corner-id formatters and three divergent parsers onto sim/harness/corners.py *(hermit)*
 
 ## Epics
 
@@ -82,14 +85,14 @@ _None._
 
 | Bucket | Count |
 |------|-------|
-| Operator merge-risk holds | 1 |
-| Very important | 1 |
-| Important | 1 |
-| Ready (`loom:issue`) | 4 |
-| In Progress (`loom:building`) | 5 |
-| PRs awaiting review | 2 |
-| Approved PRs awaiting merge | 3 |
-| Curated | 10 |
+| Operator merge-risk holds | 0 |
+| Very important | 0 |
+| Important | 3 |
+| Ready (`loom:issue`) | 0 |
+| In Progress (`loom:building`) | 7 |
+| PRs awaiting review | 4 |
+| Approved PRs awaiting merge | 2 |
+| Curated | 11 |
 | Architect / Hermit proposals | 1 |
 | Active epics | 0 |
 <!-- guide:plan-body:end -->
