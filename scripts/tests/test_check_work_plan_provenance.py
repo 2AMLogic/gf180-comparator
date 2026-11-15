@@ -279,17 +279,28 @@ class FailClosed(unittest.TestCase):
         self.assertIn("empty", errs[0])
 
     def test_drifted_row_format_fails_without_querying(self):
-        # A non-empty region whose bullet rows name items but do not parse
-        # as strict rows (renderer format drift): the guard must fail
-        # closed instead of reporting "0 row(s) checked" -- and it must do
-        # so without consulting the forge.
-        text = plan("- **#999** - a totally foreign title\n"
-                    "- **#998** - another")
-        errs = CWPP.check(text, REPO_NAME, "t", fetch=no_fetch)
-        self.assertTrue(errs)
-        joined = "\n".join(errs)
-        self.assertIn("format", joined)
-        self.assertIn("#999", joined)
+        # A non-empty region whose rows name items but do not parse as
+        # strict rows (renderer format drift): the guard must fail
+        # closed instead of reporting "0 row(s) checked" -- and it must
+        # do so without consulting the forge. Covers every shape that
+        # changes the bullet marker, the indentation or the row's
+        # container, not just the ': ' separator.
+        shapes = [
+            "- **#999** - a totally foreign title\n- **#998** - another",
+            "* **#999**: a totally foreign title",
+            "  - **#999**: a totally foreign title",
+            "1. **#999**: a totally foreign title",
+            "| #999 | a totally foreign title |",
+            "### #999 a totally foreign title",
+            "Ready: #999 a totally foreign title",
+        ]
+        for shape in shapes:
+            with self.subTest(shape=shape.splitlines()[0]):
+                errs = CWPP.check(plan(shape), REPO_NAME, "t", fetch=no_fetch)
+                self.assertTrue(errs)
+                joined = "\n".join(errs)
+                self.assertIn("format", joined)
+                self.assertIn("#999", joined)
 
 
 class Main(unittest.TestCase):

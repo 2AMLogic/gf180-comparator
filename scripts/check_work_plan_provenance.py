@@ -21,9 +21,10 @@ Fail-closed (a check that cannot run must never look like one that passed,
   * a number that resolves to nothing -> fail, named
   * a rendered title that does not match the forge title -> fail, named,
     quoting both titles
-  * a bullet line that names an item but does not parse as a strict
-    '- **#N**: title' row (renderer format drift) -> fail, named -- a
-    non-empty region must never parse to zero rows and look like a pass
+  * a line that names an item number but is not a strict '- **#N**:
+    title' row (renderer format drift: bullet marker, indentation,
+    container) -> fail, named -- a non-empty region must never parse
+    to zero rows and look like a pass
 
 Run by .github/workflows/signoff.yml as its own step. Deliberately NOT in
 scripts/run-pdk-free-tests.sh, which must stay offline and PDK-free; the
@@ -54,13 +55,15 @@ PLAN = ROOT / "WORK_PLAN.md"
 START = "<!-- guide:plan-body:start -->"
 END = "<!-- guide:plan-body:end -->"
 ROW = re.compile(r"^- \*\*#(\d+)\*\*: (.*)$", re.M)
-# Loose, line-level counterpart: a bullet line that names an item number.
-# Used only to detect rows the strict ROW can no longer parse -- a renderer
-# format change must fail the check, never parse to zero rows. Deliberately
-# NOT "every #N occurrence": a parsed row's own title may legitimately
-# contain #M (e.g. '... matches CI (#129)'), which has no rendered title to
-# compare.
-LOOSE = re.compile(r"^- .*#\d+")
+# Loose, line-level counterpart: ANY line in the region that names an
+# item number. Used only to detect rows the strict ROW can no longer
+# parse -- a renderer format change (bullet marker, indentation,
+# numbered list, table row, heading) must fail the check, never parse to
+# zero rows. A strict-ROW line is exempt, so a parsed row whose own
+# title legitimately contains #M (e.g. '... matches CI (#129)') is not a
+# false positive; a #N in a section blurb would be flagged (the
+# fail-closed direction), and the renderer's blurbs contain none.
+LOOSE = re.compile(r"#\d+")
 # The renderer appends these suffixes in the Proposed sections only; a real
 # title may also end in one, so suffix handling is a fallback, never the
 # first comparison (see match()).
@@ -98,12 +101,13 @@ def parse_rows(region):
 
 
 def unparsed_rows(region):
-    """Bullet lines that name an item number but do not parse as a strict
-    ROW -- the renderer's row format has drifted, so the rows present
-    cannot be verified. Line-level (not #N occurrences), so a parsed row
-    whose own title contains #M is not a false positive."""
+    """Lines that name an item number but are not a strict ROW -- the
+    renderer's row format has drifted (bullet marker, indentation,
+    container), so the rows present cannot be verified. Line-level over
+    unparsed lines (a strict-ROW line is exempt), so a parsed row whose
+    own title contains #M is not a false positive."""
     return [ln for ln in region.split("\n")
-            if LOOSE.match(ln) and not ROW.match(ln)]
+            if LOOSE.search(ln) and not ROW.match(ln)]
 
 
 def match(rendered, forge_title):
