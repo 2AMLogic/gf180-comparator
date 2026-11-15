@@ -4,6 +4,11 @@ Chronological record of merged pull requests and closed issues. Newest entries a
 
 ### 2026-11-15
 
+- **PR #399**: docs(sim): reconcile comparator-avg-power coverage prose with the committed extracted-DUT records
+- **PR #393**: docs: drop volatile queue-label claims from ROADMAP.md
+- **Issue #394** (closed): docs(sim): comparator-avg-power coverage prose still says the extracted-DUT campaign has not run (#374 landed)
+- **Issue #379** (closed): ROADMAP.md's per-issue queue-label claims go stale within hours and nothing re-verifies them
+- **Issue #364** (closed): Run the 45-corner comparator-avg-power campaign (plus the extracted DUT) that DR-0006's feasibility item 1 actually asks for
 - **PR #397**: test: cover the missing-sim/harness/dut.py diagnostic in the integrator suite
 - **PR #396**: signoff: inventory five omitted harness files for item 9 and refresh the CI-produced envelope
 - **PR #390**: sim: commit 45-corner avg-power PVT fleet campaign record
