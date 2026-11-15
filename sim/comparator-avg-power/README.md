@@ -148,7 +148,7 @@ executor". `2AMLogic/klayout-tools#5651` tracks the underlying tool gap.
 | [`20261114-032046866512-d02a882`](records/20261114-032046866512-d02a882.md) | **1 of 45** PVT points (`tt_27c_3.30v`), schematic DUT, ngspice-47 / open_pdks `f6eeac7` | bring-up validation probe, unscored |
 | [`20261114-222427036313-e00a719`](records/20261114-222427036313-e00a719.md) | **1 of 1** PVT points (`tt_27c_3.30v`), schematic DUT, ngspice-47 / open_pdks `f6eeac7`, fleet path | fleet bring-up (issue #372): proved the `klt sim` dispatch + ingest path and its `cross_run_agreement` against the local probe, unscored |
 | [`20261115-075832478887-79abbcc`](records/20261115-075832478887-79abbcc.md) | **45 of 45** PVT points (tt/ff/ss/fs/sf × −40/27/125 °C × 2.97/3.30/3.63 V), schematic DUT, ngspice-47 / open_pdks `f6eeac7`, fleet path | the 45-corner campaign (issue #373), unscored — evidence for the DR-0006 ratification reviewers, not a verdict |
-| [`20261115-053040016592-a4eca5b`](records/20261115-053040016592-a4eca5b.md) | **5 of 45** PVT points (tt/ff/ss/fs/sf × 27 °C × 3.30 V), **extracted** DUT, ngspice-47 / open_pdks `f6eeac7`, fleet path | the probe leg's bring-up record (issue #374): first-ever `tb_vosprobe.spice` run, unscored |
+| [`20261115-053040016592-a4eca5b`](records/20261115-053040016592-a4eca5b.md) | **5 of 45** PVT points (tt/ff/ss/fs/sf × 27 °C × 3.30 V), **extracted** DUT, ngspice-47 / open_pdks `f6eeac7` | the probe leg's bring-up record (issue #374): first-ever `tb_vosprobe.spice` run (local, via `sim/run_corners.py`), unscored — **not citable as a clean-tree result**: taken against a dirty working tree (`sim/harness/testbench.py` and its test modified), so it is a diagnostic |
 | [`20261115-064156694329-8a67cff`](records/20261115-064156694329-8a67cff.md) | **45 of 45** PVT points (tt/ff/ss/fs/sf × −40/27/125 °C × 2.97/3.30/3.63 V), **extracted** DUT, ngspice-47 / open_pdks `f6eeac7`, fleet path | the extracted-DUT campaign (issue #374), unscored — **not citable as a clean-tree result**: `layout/lvs/comparator.dut-layout.spice` was untracked at request generation, so it is a diagnostic until the netlist is tracked and the record re-minted |
 
 > The record's own **Reproduce** line is the harness's generic template
@@ -204,18 +204,24 @@ point — no corner was dropped at ingest.
 DR-0006 feasibility item 1 asks for the 45 points on **both** bindings, and
 the two campaigns are kept **separate on purpose**: the figures below are the
 post-layout `comparator-dr0001-layout` DUT's own and are never merged with the
-schematic grid's. The run went through the two-phase flow (issue #374): three
-probe requests (one per supply point) measured every point's trip time with
-[`tb_vosprobe.spice`](testbench/tb_vosprobe.spice) — that deck's first-ever
-run, committed as the 5-point record
-[`20261115-053040016592-a4eca5b`](records/20261115-053040016592-a4eca5b.md) —
-and phase 2 baked each point's probed `dut_vos` (−21.4 mV … −1.8 mV across the
+schematic grid's. The run went through the two-phase flow (issue #374). The
+deck's first-ever run was the local bring-up committed as the 5-point record
+[`20261115-053040016592-a4eca5b`](records/20261115-053040016592-a4eca5b.md)
+(five process corners at 27 °C / 3.30 V, via `sim/run_corners.py`). Phase 1
+itself then ran as three fleet probe requests (`probe-v2.97` / `probe-v3.30` /
+`probe-v3.63`, one per supply point), measuring **all 45 points'** trip times
+with [`tb_vosprobe.spice`](testbench/tb_vosprobe.spice) — that probe output is
+not committed as a record; it survives as the three `probe_reports` sha256s in
+the campaign record's `dut_vos_referral`. Phase 2 baked each point's probed
+`dut_vos` (−21.4 mV … −1.8 mV across the
 grid) into 45 main requests, one per PVT point, ngspice-47 / open_pdks
 `f6eeac7`.
 
 - **Worst `P_avg`, extracted DUT**: **207.376 µW at `ff_125c_3.63v`**
   (`e_dec_fj` = 12961 fJ) — the same corner that maximises the schematic grid,
-  19 % higher as expected from interconnect parasitics, and still a figure for
+  19 % higher (attributed to interconnect parasitics — an inference, not a
+  cross-measured delta; the record applies no cross-binding comparison), and
+  still a figure for
   the ratification reviewers, **not a verdict**: DR-0006 stays `proposed —
   not ratified` and neither the ≤ 1 mW target nor the ≤ 500 µW stretch is
   claimed here.
