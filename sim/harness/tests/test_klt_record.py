@@ -357,6 +357,12 @@ class DispatchGuard(unittest.TestCase):
                     kr.dispatch(work, ["main-v3.30"])
                 popen.assert_called_once()
                 self.assertEqual(popen.call_args.args[0][:2], ["klt", "sim"])
+                # The backend is passed EXPLICITLY (issue #374): `klt sim`
+                # keeps single-unit requests local on its own policy unless
+                # the flag overrides it, and the extracted flow's main
+                # requests are single-unit by design.
+                argv = popen.call_args.args[0]
+                self.assertEqual(argv[argv.index("--backend") + 1], backend)
 
 
 class MkKltRequest(unittest.TestCase):

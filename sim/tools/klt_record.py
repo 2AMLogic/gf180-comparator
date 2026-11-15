@@ -1541,9 +1541,15 @@ def dispatch(work: Path, names: list[str]) -> None:
     procs = {}
     for n in names:
         # The child inherits its own copy of each fd, so the parent closes its handles at once.
+        # `--backend <env>` is passed EXPLICITLY: without it `klt sim` keeps
+        # single-unit requests local on its own policy, and the extracted
+        # flow's per-PVT-point main requests (one unit each, issue #374)
+        # would silently become a 45-way local ngspice grid on a shared
+        # dispatch worker instead of fleet jobs.
         with (work / f"report-{n}.json").open("w") as out, (work / f"stderr-{n}.txt").open("w") as err:
             procs[n] = subprocess.Popen(
-                ["klt", "sim", "-o", str(work / f"out-{n}"), str(work / f"request-{n}.json"), "--format", "json"],
+                ["klt", "sim", "--backend", backend, "-o", str(work / f"out-{n}"),
+                 str(work / f"request-{n}.json"), "--format", "json"],
                 stdout=out,
                 stderr=err,
             )
