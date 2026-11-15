@@ -356,6 +356,23 @@ class OffsetProbeTests(_Base):
         probe = tb.offset_probe_testbench()
         self.assertTrue(probe.name.endswith("-vosprobe"))
 
+    def test_probe_inherits_the_bench_params(self):
+        # comparator-avg-power's probe fragment builds its clock from the
+        # bench's own params map (t_rise0/t_per/t_hi/t_edge): a probe
+        # Testbench that drops them leaves those braces undefined and the
+        # deck fails at ngspice parse time ("Undefined parameter
+        # [t_rise0]", found by the probe's first-ever run, issue #374).
+        (self.dir / "probe.spice").write_text(CLEAN)
+        tb = self.load_manifest(
+            params={"t_per": 6.25e-08, "v_od": 0.01},
+            offset_probe={"netlist": "probe.spice", "measure": {"dut_vos": "x"}},
+        )
+        probe = tb.offset_probe_testbench()
+        self.assertEqual(probe.params, {"t_per": 6.25e-08, "v_od": 0.01})
+        # And the params stay on the parent: the probe gets its own copy.
+        tb.params["t_per"] = 0
+        self.assertEqual(probe.params["t_per"], 6.25e-08)
+
 
 if __name__ == "__main__":
     unittest.main()
