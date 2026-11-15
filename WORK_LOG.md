@@ -4,6 +4,10 @@ Chronological record of merged pull requests and closed issues. Newest entries a
 
 ### 2026-11-15
 
+- **PR #407**: docs: refresh ROADMAP.md forward-looking sections against landed work
+- **PR #402**: refactor: single-source the corner id format and parser in harness.corners
+- **Issue #400** (closed): ROADMAP.md's Now/Next/Blocked sections present six closed issues as pending work at their own as-of commit
+- **Issue #375** (closed): Consolidate the five hand-copied corner-id formatters and three divergent parsers onto sim/harness/corners.py
 - **PR #399**: docs(sim): reconcile comparator-avg-power coverage prose with the committed extracted-DUT records
 - **PR #393**: docs: drop volatile queue-label claims from ROADMAP.md
 - **Issue #394** (closed): docs(sim): comparator-avg-power coverage prose still says the extracted-DUT campaign has not run (#374 landed)
