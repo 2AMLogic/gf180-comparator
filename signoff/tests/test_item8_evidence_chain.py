@@ -267,6 +267,15 @@ class CoverageRejected(Base):
         self.repin("offset", m)
         self.assertRejected("malformed identity 'tt_27c_3.3v'")
 
+    def test_non_canonical_identity_rejected(self) -> None:
+        """A well-formed but non-canonical id (issue #406) is still a gate
+        problem carrying the parser's own reason -- not an escaping exception."""
+        def m(rec):
+            rec["derived"]["tt_27.0c_3.30v"] = rec["derived"].pop("tt_27c_3.30v")
+        self.repin("offset", m)
+        self.assertRejected("malformed identity 'tt_27.0c_3.30v'")
+        self.assertRejected("non-canonical corner id")
+
     def test_identity_field_disagreement_rejected(self) -> None:
         def m(rec):
             rec["points"][3]["vdd"] = 3.3 if rec["points"][3]["vdd"] != 3.3 else 2.97

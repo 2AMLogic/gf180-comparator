@@ -127,11 +127,50 @@ class CornerIdFormatTest(unittest.TestCase):
         self.assertEqual(parse_corner_id("ff_125c_3.63v"), ("ff", 125.0, 3.63))
 
     def test_parse_is_the_formatters_strict_inverse(self):
-        """A 1-decimal supply (``3.3v``) is never formatter output and is
-        rejected -- the reading make_item8_envelope.py's evidence gate already
+        """``parse_corner_id`` accepts exactly what ``corner_id`` emits, on
+        both numeric fields: a 1-decimal supply (``3.3v``) and a temperature
+        ``:g`` would not render (trailing decimals ``27.0``/``27.00``/
+        ``-40.0``, leading zeros ``027``/``0125``) are never formatter output
+        and are rejected -- the reading make_item8_envelope.py's evidence gate
         enforces on committed records."""
-        with self.assertRaises(ValueError):
+        for bad in ("tt_27c_3.3v",
+                    "tt_27.0c_3.30v", "tt_027c_3.30v", "tt_27.00c_3.30v",
+                    "tt_-40.0c_2.97v", "ss_0125c_3.63v"):
+            with self.assertRaises(ValueError):
+                parse_corner_id(bad)
+
+    def test_parse_non_canonical_message_is_distinguishable(self):
+        """A well-formed but non-canonical id reports itself as such, so the
+        rejection stays distinguishable from a malformed (wrong-shape) one."""
+        with self.assertRaises(ValueError) as cm:
+            parse_corner_id("tt_27.0c_3.30v")
+        self.assertIn("non-canonical", str(cm.exception))
+        with self.assertRaises(ValueError) as cm:
             parse_corner_id("tt_27c_3.3v")
+        self.assertNotIn("non-canonical", str(cm.exception))
+
+    def test_parse_accepts_every_formatter_emission(self):
+        """Strictness false-rejects nothing: every id the ratified ``full``
+        grid renders round-trips through ``parse_corner_id``."""
+        corner_list = resolve_corners(["full"])
+        supplies = supply_points(DEFAULT_NOMINAL_SUPPLY_V, DEFAULT_SUPPLY_TOLERANCE)
+        grid = build_grid(corner_list, list(DEFAULT_TEMPERATURES_C), supplies)
+        self.assertGreater(len(grid), 0)
+        for p in grid:
+            self.assertEqual(parse_corner_id(p.corner_id),
+                             (p.corner.name, p.temp_c, p.vdd))
+
+    def test_parse_edge_cases(self):
+        """``corner_id(..., -0.0, ...)`` really emits ``-0c``, so it
+        round-trips; a ``+``-signed temperature is never ``:g`` output; a
+        non-str input raises ``ValueError``, not ``TypeError``."""
+        self.assertEqual(parse_corner_id("tt_-0c_3.30v"), ("tt", -0.0, 3.3))
+        self.assertEqual(corner_id("tt", parse_corner_id("tt_-0c_3.30v")[1], 3.3),
+                         "tt_-0c_3.30v")
+        with self.assertRaises(ValueError):
+            parse_corner_id("tt_+27c_3.30v")
+        with self.assertRaises(ValueError):
+            parse_corner_id(None)
 
     def test_parse_rejects_malformed(self):
         for bad in ("garbage", "tt_27c_3.30", "27c_3.30v", "tt/27C",
