@@ -2557,3 +2557,271 @@ class DecisionCorrectnessIngest(unittest.TestCase):
         self.assertEqual(dc["status"], "incomplete")
         self.assertEqual(dc["per_corner"]["tt_27c_3.30v"]["status"], "missing")
         self.assertIn("FUNCTIONAL DECISION CHECKS INCOMPLETE", md)
+
+
+# ---------------------------------------------------------------------------
+# comparator-avg-power on the fleet path (issue #372). The bench's `analyses`
+# end with the adjacent pair `let i_rst_thr = ...` / `meas tran t_rst ...`:
+# the fleet request schema has no `let` position, so the pair is dropped
+# TOGETHER (a t_rst card without its let is the klayout-tools#5651 shape:
+# passes --dry-run, then errors every corner) and fleet records omit
+# `reset_margin_ns` -- t_rst's only consumer, unchecked in the manifest.
+# The bench is UNSCORED: no SPEC row, no target verdict.
+# ---------------------------------------------------------------------------
+
+AVG_POWER = "comparator-avg-power"
+
+
+class AvgPowerFleetPath(unittest.TestCase):
+    def _mk(self, *extra):
+        with tempfile.TemporaryDirectory() as td:
+            design = Path(td) / "design.ngspice"
+            design.write_text("* fake PDK design include\n")
+            fake_pdk = types.SimpleNamespace(design_include=design)
+            argv = ["mk_klt_request.py", AVG_POWER, str(Path(td) / "out"), *extra]
+            with mock.patch.object(sys, "argv", argv), \
+                    mock.patch.object(mk.hpdk, "find_pdk", return_value=fake_pdk), \
+                    redirect_stdout(io.StringIO()):
+                rc = mk.main()
+            out = Path(td) / "out"
+            reqs = {p.name: json.loads(p.read_text()) for p in out.glob("request-*.json")}
+            return rc, reqs, {p.name: p.read_text() for p in out.glob("body-*.spice")}
+
+    def test_dispatch_pinned_unscored(self):
+        self.assertEqual(kr.LEGS[AVG_POWER], ["main"])
+        self.assertNotIn(AVG_POWER, kr.SPEC)  # deliberate: DR-0006 is not ratified
+
+    def test_help_accepts_the_bench(self):
+        argv = ["klt_record.py", "--help"]
+        with mock.patch.object(sys, "argv", argv), redirect_stdout(io.StringIO()) as out:
+            try:
+                kr.main()
+            except SystemExit as e:
+                self.assertEqual(e.code, 0)
+        self.assertIn(AVG_POWER, out.getvalue())
+
+    def test_compare_local_refused_for_other_benches(self):
+        argv = ["klt_record.py", "comparator-kickback", "--compare-local", "x.json"]
+        with mock.patch.object(sys, "argv", argv), redirect_stdout(io.StringIO()):
+            with self.assertRaises(SystemExit):
+                kr.main()
+
+    def test_request_drops_the_let_pair_together(self):
+        tb = htb.load(SIM / AVG_POWER)
+        rc, reqs, _ = self._mk()
+        self.assertEqual(rc, 0)
+        self.assertEqual(sorted(reqs), [f"request-main-v{v}.json" for v in ("2.97", "3.30", "3.63")])
+        for req in reqs.values():
+            self.assertNotIn("monte_carlo", req)
+            self.assertEqual(req["analysis"], {"kind": "tran", "args": "10p 1510n"})
+            names = [m["name"] for m in req["measurements"]]
+            # Every meas card except the omitted pair, in manifest order.
+            self.assertEqual(names, [c.split()[2] for c in tb.analyses[1:-2]])
+            self.assertTrue(all(m["spice"].startswith(".meas tran ") for m in req["measurements"]))
+            # The regression: NEITHER name of the adjacent pair may appear --
+            # a t_rst card without its let passes --dry-run and then errors
+            # every corner (klayout-tools#5651).
+            self.assertNotIn("i_rst_thr", json.dumps(req))
+            self.assertNotIn("t_rst", json.dumps(req))
+        self.assertEqual(req["batch"]["capacity_wait_s"], mk.BATCH_CAPACITY_WAIT_S)
+
+    def test_let_card_raises_without_the_flag(self):
+        # The measured origin/main failure mode, kept explicit: the plain
+        # tran card conversion refuses the non-meas card.
+        tb = htb.load(SIM / AVG_POWER)
+        with self.assertRaises(SystemExit) as ctx:
+            mk.tran_meas_cards(tb)
+        self.assertIn("unexpected analysis card 'let i_rst_thr", str(ctx.exception))
+
+    def test_let_without_consuming_meas_is_refused(self):
+        tb = types.SimpleNamespace(
+            name="comparator-avg-power", reverse_ladder={},
+            analyses=["tran 10p 1510n", "meas tran a_v find v(a) at=1n",
+                      "let thr = -1.1*i_q*1e6",
+                      "meas tran other when v(x)=0.5 rise=1"])
+        with self.assertRaises(SystemExit) as ctx:
+            mk.tran_meas_cards(tb, drop_let_pairs=True)
+        self.assertIn("refusing to drop it alone", str(ctx.exception))
+        tb2 = types.SimpleNamespace(
+            name="comparator-avg-power", reverse_ladder={},
+            analyses=["tran 10p 1510n", "let thr = -1.1*i_q*1e6"])
+        with self.assertRaises(SystemExit):
+            mk.tran_meas_cards(tb2, drop_let_pairs=True)
+
+    def test_let_pair_dropped_wherever_it_appears(self):
+        tb = types.SimpleNamespace(
+            name="comparator-avg-power", reverse_ladder={},
+            analyses=["tran 10p 1510n", "meas tran a_v find v(a) at=1n",
+                      "let thr = -1.1*i_q*1e6",
+                      "meas tran t_rst when v(irst)=thr fall=LAST"])
+        cards = mk.tran_meas_cards(tb, drop_let_pairs=True)
+        self.assertEqual([c["name"] for c in cards], ["a_v"])
+
+    def test_committed_manifest_derives_complete_and_passes_checks(self):
+        # Synthetic ingredients reproducing the committed local record's
+        # tt_27c_3.30v values (same deck math), so every manifest check
+        # passes and the derive is clean -- and reset_margin_ns is absent.
+        tb = htb.load(SIM / AVG_POWER)
+        raw = {"vsup_v": 3.3, "t_elo": 510.05e-9, "t_ehi": 1447.55e-9,
+               "q_win": -43.9052e-12, "q_h1": -21.9524e-12, "q_h2": -21.9529e-12,
+               "e_win": 43.9052e-12 * 3.3 * (1 + 2e-7),  # v(pwr) integ: opposite sign of i(vsupa)
+               "q_clk": -7.07357e-15, "i_q": -30.27536e-6,
+               "db08": 7.42e-10, "db23": 1.0}
+        for i in range(8, 24):
+            raw[f"d{i:02d}"] = 1.0 if i % 2 == 0 else 7.42e-10
+        res, problems = kr.derive(AVG_POWER, tb, {"main": ({"tt_27c_3.30v": {"": raw}}, [])})
+        self.assertEqual(problems, [])
+        d = res["tt_27c_3.30v"]
+        self.assertNotIn("reset_margin_ns", d)  # the fleet omission (issue #372)
+        self.assertEqual(set(d), set(tb.measure) - {"reset_margin_ns"})
+        self.assertAlmostEqual(d["dec_cycles_correct"], 16.0, places=12)
+        self.assertAlmostEqual(d["p_avg_uw"], 144.887, places=2)
+        self.assertAlmostEqual(d["e_dec_fj"], 9055.44, places=1)
+        self.assertAlmostEqual(d["i_static_ua"], 30.27536, places=5)
+        self.assertAlmostEqual(d["q_half_mismatch_pct"], 0.0022776, places=6)
+        self.assertLessEqual(d["q_split_delta_pct"], 0.01)
+        self.assertLessEqual(d["p_avg_form_delta_pct"], 1.0)
+        self.assertGreaterEqual(d["q_win_pc"], 0.0)
+
+    def test_manifest_check_violation_drops_the_corner(self):
+        tb = htb.load(SIM / AVG_POWER)
+        raw = {"vsup_v": 3.3, "t_elo": 510.05e-9, "t_ehi": 1447.55e-9,
+               "q_win": -43.9052e-12, "q_h1": -21.9524e-12, "q_h2": -22.139e-12,
+               "e_win": 43.9052e-12 * 3.3, "q_clk": -7.07357e-15,
+               "i_q": -30.27536e-6, "db08": 7.42e-10, "db23": 1.0}
+        for i in range(8, 24):
+            raw[f"d{i:02d}"] = 1.0 if i % 2 == 0 else 7.42e-10
+        res, problems = kr.derive(AVG_POWER, tb, {"main": ({"tt_27c_3.30v": {"": raw}}, [])})
+        self.assertEqual(res, {})  # a guard-failed corner cannot count
+        self.assertTrue(any("GUARD_FAILED: tt_27c_3.30v q_split_delta_pct" in p for p in problems),
+                        problems)
+
+    def test_reset_margin_ns_omission_is_explicit(self):
+        # Pins WHY FLEET_OMITTED_MEASURES exists: reset_margin_ns references
+        # t_rst, which the fleet request never measures; without the omission
+        # the generic evaluator would NameError past ARITH_ERRORS and crash
+        # the derive (not merely drop the corner).
+        self.assertEqual(kr.FLEET_OMITTED_MEASURES[AVG_POWER], ("reset_margin_ns",))
+        tb = types.SimpleNamespace(measure={"reset_margin_ns": "(1.51e-06-t_rst)*1e9"})
+        with self.assertRaises(NameError):
+            kr.derive("comparator-kickback", tb, {"main": ({"c": {"": {}}}, [])})
+
+
+class AvgPowerCrossRun(unittest.TestCase):
+    """--compare-local: signed deltas against the committed local record."""
+
+    @staticmethod
+    def _local(**over):
+        base = {"p_avg_uw": 144.887, "e_dec_fj": 9055.44, "i_static_ua": 30.2754,
+                "q_half_mismatch_pct": 0.0022776}
+        base.update(over)
+        return {"points": [{"corner_id": "tt_27c_3.30v", "measurements": base}]}
+
+    def test_within_band(self):
+        derived = {"tt_27c_3.30v": {"p_avg_uw": 145.5, "e_dec_fj": 9100.0,
+                                    "i_static_ua": 30.4, "q_half_mismatch_pct": 0.0021}}
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "local.json"
+            p.write_text(json.dumps(self._local()))
+            cmp = kr.compare_local_record(str(p), derived)
+        self.assertEqual(cmp["status"], "within_band")
+        self.assertEqual(cmp["gaps"], [])
+        e = cmp["per_quantity"]["tt_27c_3.30v/p_avg_uw"]
+        self.assertAlmostEqual(e["delta"], 0.613, places=9)
+        self.assertLess(abs(e["move"]), 1.0)
+        self.assertEqual(e["status"], "within_band")
+
+    def test_out_of_band_is_a_finding_not_a_rounding_note(self):
+        derived = {"tt_27c_3.30v": {"p_avg_uw": 150.0, "e_dec_fj": 9055.44,
+                                    "i_static_ua": 30.2754, "q_half_mismatch_pct": 0.0023}}
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "local.json"
+            p.write_text(json.dumps(self._local()))
+            cmp = kr.compare_local_record(str(p), derived)
+        self.assertEqual(cmp["status"], "OUT_OF_BAND")
+        self.assertEqual(cmp["per_quantity"]["tt_27c_3.30v/p_avg_uw"]["status"], "OUT_OF_BAND")
+        md = "\n".join(kr.cross_run_lines(cmp))
+        self.assertIn("OUT OF BAND", md)
+        self.assertIn("finding, not a rounding note", md)
+
+    def test_mismatch_ratio_band_is_absolute(self):
+        # A relative band is meaningless on a ~0.002 % near-cancelling ratio:
+        # the policy is absolute percentage points.
+        derived = {"tt_27c_3.30v": {"p_avg_uw": 144.887, "e_dec_fj": 9055.44,
+                                    "i_static_ua": 30.2754, "q_half_mismatch_pct": 0.06}}
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "local.json"
+            p.write_text(json.dumps(self._local()))
+            cmp = kr.compare_local_record(str(p), derived)
+        self.assertEqual(cmp["status"], "OUT_OF_BAND")  # +0.058 pp > 0.05 pp band
+        derived["tt_27c_3.30v"]["q_half_mismatch_pct"] = 0.03
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "local.json"
+            p.write_text(json.dumps(self._local()))
+            cmp = kr.compare_local_record(str(p), derived)
+        self.assertEqual(cmp["status"], "within_band")
+
+    def test_absent_counterparts_are_named_gaps(self):
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "local.json"
+            p.write_text(json.dumps({"points": [{"corner_id": "ss_125c_2.97v",
+                                                 "measurements": {"p_avg_uw": 1.0}}]}))
+            cmp = kr.compare_local_record(str(p), {"tt_27c_3.30v": {"p_avg_uw": 144.9}})
+        self.assertEqual(cmp["status"], "INCOMPLETE_COMPARISON")
+        self.assertIn("no matching corner", cmp["gaps"][0])
+        self.assertIn("not compared", "\n".join(kr.cross_run_lines(cmp)))
+
+
+class AvgPowerRestrictedGridIngest(unittest.TestCase):
+    """A request set generated with --corners tt --temps 27 --supply-tolerance 0
+    bundles a narrower grid than the manifest's default rail set, and the
+    supply split lives only in the request-set naming. The ingest takes it
+    from the bundle's recorded `parameters.supply_v` (#152: the expected grid
+    comes from the bundled requests), so the one-point probe ingest COMPLETE
+    over its own grid -- previously SOURCE_BUNDLE_INCONSISTENT."""
+
+    @staticmethod
+    def _avg_power_raw():
+        # Raw .meas values that pass every manifest check (same derivation as
+        # the committed tt_27c_3.30v values; see the derive test above).
+        raw = {"vsup_v": 3.3, "t_elo": 510.05e-9, "t_ehi": 1447.55e-9,
+               "q_win": -43.9052e-12, "q_h1": -21.9524e-12, "q_h2": -21.9529e-12,
+               "e_win": 43.9052e-12 * 3.3 * (1 + 2e-7),
+               "q_clk": -7.07357e-15, "i_q": -30.27536e-6,
+               "db08": 7.42e-10, "db23": 1.0}
+        for i in range(8, 24):
+            raw[f"d{i:02d}"] = 1.0 if i % 2 == 0 else 7.42e-10
+        return raw
+
+    def test_single_point_probe_ingests_complete_and_unscored(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work = _generate(td, "--corners", "tt", "--temps", "27",
+                             "--supply-tolerance", "0", bench=AVG_POWER)
+            b = _bundle(work)
+            self.assertEqual(sorted(b["requests"]), ["main-v3.30"])
+            self.assertEqual(b["parameters"]["supply_v"], [3.3])
+            raw = self._avg_power_raw()
+            req = json.loads((work / b["requests"]["main-v3.30"]["request"]).read_text())
+            meas = [m["name"] for m in req["measurements"]]
+            for n, r in b["requests"].items():
+                corners = [{"corner_id": "tt/novdd/27C", "status": "pass",
+                            "measurements": [{"name": m, "value": raw[m]} for m in meas]}]
+                (work / f"report-{n}.json").write_text(json.dumps(
+                    {"corners": corners, "measurements": [{"name": m} for m in meas],
+                     "environment": _link_env(work, b, r), "provenance": _prov()}))
+            rc, rec, out = _ingest(td, work, bench=AVG_POWER)
+            self.assertEqual(rc, 0, out)
+            self.assertTrue(rec["complete"])
+            self.assertEqual(rec["points"], 1)
+            self.assertNotIn("spec_row", rec)  # unscored: no SPEC row (issue #372)
+            self.assertTrue(rec["scored"] is False)
+            d = rec["derived"]["tt_27c_3.30v"]
+            self.assertNotIn("reset_margin_ns", d)
+            self.assertAlmostEqual(d["p_avg_uw"], 144.887, places=2)
+            self.assertAlmostEqual(d["dec_cycles_correct"], 16.0, places=12)
+            md = next((td / "evidence" / AVG_POWER / "records").glob("*.md")).read_text()
+            self.assertIn("SUPPLEMENTAL AND UNSCORED", md)
+            self.assertNotIn("vs target", md.split("**Result**")[1].splitlines()[2])
+            self.assertIn("Not computed by this executor** (single-analysis `klt sim` requests): "
+                          "`reset_margin_ns`", md)

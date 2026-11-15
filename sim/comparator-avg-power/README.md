@@ -97,24 +97,44 @@ directly establishes that reset completed is a different quantity:
 correctly on an *alternating* input, which they cannot do unless the latch
 reset between them.
 
-## Not run by `characterize.sh`, and not on the fleet path
+## Not run by `characterize.sh`; fleet path wired (issue #372)
 
-`sim/characterize.sh`'s `CAMPAIGNS` list is unchanged; this bench is listed in
-`scripts/check_bench_inventory.py`'s `NOT_RUN_BY_CHARACTERIZE` with its
-reason. `sim/tools/mk_klt_request.py` and `sim/tools/klt_record.py` are
-per-bench dispatch tables and carry no branch for it, so the Spot-batch fleet
-path does not reach it yet — wiring that up is the 45-corner follow-up's work.
-The local runner is generic over `tb.json` and needs no tool change:
+`sim/characterize.sh`'s `CAMPAIGNS` list is unchanged; this bench stays in
+`scripts/check_bench_inventory.py`'s `NOT_RUN_BY_CHARACTERIZE` (it scores no
+spec row, so it is deliberately outside the characterization campaign). The
+Spot-batch fleet path DOES reach it now: `sim/tools/mk_klt_request.py` and
+`sim/tools/klt_record.py` carry the per-bench dispatch branches, so PVT
+grids go through `klt sim` corner submission and never by hand-launching
+ngspice on a shared worker ([`CLAUDE.md`](../../CLAUDE.md) host rules):
 
 ```bash
 # the committed record's command: ONE PVT point, run locally
 python3 sim/run_corners.py comparator-avg-power \
   --corners tt --temps 27 --supply-tolerance 0 -j 1
+
+# the fleet path (requests + ingest; the 45-corner campaign is issue #373).
+# The batch capacity wait is baked into every request (batch.capacity_wait_s).
+KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py comparator-avg-power
 ```
 
-A 45-point grid must **not** be hand-launched on a shared worker
-([`CLAUDE.md`](../../CLAUDE.md) host rules); it goes through `klt sim` corner
-submission once the fleet path exists.
+### The one quantity fleet records omit: `reset_margin_ns`
+
+`tb.json`'s `analyses` end with the adjacent pair
+`let i_rst_thr = -1.1*i_q*1e6` / `meas tran t_rst when v(irst)=i_rst_thr ...`:
+the 110 % threshold is relative to the SAME run's quiescent current, so it
+must be defined interactively between the run and the measurement. The fleet
+request schema (`klt` 0.5.0: one analysis + `{name, spice}` measurement
+entries, no `expr` algebra) has no position for that `let`, and shipping the
+`t_rst` card without it would be the
+[2AMLogic/klayout-tools#5651](https://github.com/2AMLogic/klayout-tools/issues/5651)
+failure shape (passes `--dry-run`, then errors every corner). The pair is
+therefore omitted from the fleet request together, and fleet records omit
+`reset_margin_ns` — its only consumer. The quantity carries **no check** in
+`tb.json` (DR-0006 states no bound on it), so a fleet record still answers
+every bound quantity DR-0006 asks for; the checked backstop for reset
+completion is `dec_cycles_correct` = 16, which IS requested and IS checked.
+Every fleet record states the omission under "Not computed by this
+executor". `2AMLogic/klayout-tools#5651` tracks the underlying tool gap.
 
 ## Records
 
