@@ -1383,12 +1383,23 @@ def verify_reports(work: Path, b: dict, names: dict, reports: dict) -> list[str]
         closure = env.get("netlist_closure")
         if isinstance(closure, list):
             shas = {e.get("sha256") for e in closure if isinstance(e, dict)}
-            for what, h in (("DUT netlist", b["dut"]["netlist_sha256"]),
-                            ("testbench fragment", b["testbench"]["netlist_sha256"])):
+            # The probe leg (issue #374) includes the PROBE fragment, not the
+            # bench's main one: its closure must carry the probe deck's own
+            # staged sha instead.
+            if r.get("leg") == "probe" and b.get("probe"):
+                frag = ("probe fragment",
+                        (b.get("staged") or {})
+                        .get(f"{b['testbench']['staged_dir']}/{b['probe']['probe_deck']}"))
+                if frag[1] is None:
+                    refuse("SOURCE_BUNDLE_INCONSISTENT",
+                           f"{b['probe']['probe_deck']} is not in the bundle's staged tree")
+            else:
+                frag = ("testbench fragment", b["testbench"]["netlist_sha256"])
+            for what, h in (("DUT netlist", b["dut"]["netlist_sha256"]), frag):
                 if h not in shas:
                     refuse("REPORT_SOURCE_MISMATCH",
                            f"report-{n}.json include closure has no file with the bundled {what} "
-                           f"sha256 {h[:16]}")
+                           f"sha256 {str(h)[:16]}")
         else:
             notes.append(f"report-{n}.json has no netlist_closure; included sources are bound "
                          "through the body netlist hash, whose source-sha256 lines name every "

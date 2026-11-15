@@ -622,9 +622,14 @@ def _link_env(work: Path, b: dict, r: dict, closure=True, netlist_sha=True) -> d
     if netlist_sha:
         env["netlist_sha256"] = r["netlist_sha256"]
     if closure:
+        # The probe leg's closure names the PROBE fragment, the way a real
+        # executor's include closure of a probe body does (issue #374).
+        frag = b["testbench"]["netlist_sha256"]
+        if r.get("leg") == "probe" and b.get("probe"):
+            frag = b["staged"][f"{b['testbench']['staged_dir']}/{b['probe']['probe_deck']}"]
         env["netlist_closure"] = [{"sha256": h} for h in (
             r["netlist_sha256"], _sha(work / "design.ngspice"),
-            b["dut"]["netlist_sha256"], b["testbench"]["netlist_sha256"])]
+            b["dut"]["netlist_sha256"], frag)]
     return env
 
 
@@ -3195,6 +3200,36 @@ class AvgPowerExtractedProbe(unittest.TestCase):
             self.assertEqual(len(dispatched), 45)  # every main leg, once
             self.assertTrue(all(n.startswith("main-") for n in dispatched))
             self.assertNotIn("probe-v3.30", dispatched)  # phase 1 already went out
+
+    def test_probe_report_closure_names_the_probe_fragment(self):
+        # The probe body includes tb_vosprobe.spice, not the main fragment:
+        # its report closure must carry the probe deck's own staged sha, and
+        # a closure naming only the main fragment is refused (issue #374).
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            rc, out, work = self._two_phase(td)
+            self.assertEqual(rc, 0, out)
+            b = _bundle(work)
+            self._write_probe_reports(work, b)
+            self._write_main_reports(work, b)
+            rc, rec, out = _ingest(td, work, bench=AVG_POWER)
+            self.assertEqual(rc, 0, out)
+            # Now the wrong-fragment shape: a probe report whose closure
+            # names the MAIN fragment (the pre-fix refusal).
+            probe_sha = b["staged"][f"{b['testbench']['staged_dir']}/{b['probe']['probe_deck']}"]
+            for n, r in b["requests"].items():
+                if r["leg"] != "probe":
+                    continue
+                rep = json.loads((work / f"report-{n}.json").read_text())
+                rep["environment"]["netlist_closure"] = [
+                    {"sha256": h} for h in (r["netlist_sha256"], _sha(work / "design.ngspice"),
+                                            b["dut"]["netlist_sha256"],
+                                            b["testbench"]["netlist_sha256"])]
+                (work / f"report-{n}.json").write_text(json.dumps(rep))
+            rc, rec, out = _ingest(td, work, bench=AVG_POWER)
+            self.assertIn("REPORT_SOURCE_MISMATCH", str(rc))
+            self.assertIn("probe fragment", str(rc))
+            self.assertNotEqual(probe_sha, b["testbench"]["netlist_sha256"])
 
     def test_compare_local_refuses_across_bindings(self):
         derived = {"tt_27c_3.30v": {"p_avg_uw": 144.9}}
