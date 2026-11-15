@@ -52,7 +52,6 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
 import parasitic_attribution as pa  # noqa: E402
-import pex_measure as pm  # noqa: E402
 
 LEVER_ISSUE = 323
 LEVER_REQUEST_CAP = 23
@@ -254,18 +253,9 @@ def analyze(outdir: Path) -> dict:
                 row["corners"][pa.pid(pt)] = {"td_od50_ns": None, "missing": not r,
                                               "unresolved_count": None}
                 continue
-            row["corners"][pa.pid(pt)] = {
-                "td_od50_ns": r["td_od50_ns"], "td_od1_ns": r["td_od1_ns"],
-                "td_od01_ns": r["td_od01_ns"], "tau_ps": r["tau_ps"],
-                "unresolved_count": sum(r[k] is None for k in
-                                        ("td_od50_ns", "td_od1_ns", "td_od01_ns")),
-                "dut_vos_v": r["dut_vos_v"],
-                "dut_vos_shift_v": (None if not c or None in (r["dut_vos_v"], c["dut_vos_v"])
-                                    else r["dut_vos_v"] - c["dut_vos_v"]),
-                "margin_to_1p5ns_ns": pm.SPEC_TD_OD50_NS_MAX - r["td_od50_ns"],
-                "meets_1p5ns": r["td_od50_ns"] <= pm.SPEC_TD_OD50_NS_MAX,
-                "job_ids": r["job_ids"], "probe_job_ids": r["probe_job_ids"],
-                "ladder_netlist_sha256": r["ladder_netlist_sha256"]}
+            row["corners"][pa.pid(pt)] = pa._corner_cell(
+                r, c, {"unresolved_count": pa._unresolved_rungs(r)},
+                dout_od50_end=False)
         rows.append(row)
     levers = [r for r in rows if r["id"] != "ctrl"]
     cands = [r for r in levers if all(pa._ok(r["corners"].get(c)) for c in cids)]
