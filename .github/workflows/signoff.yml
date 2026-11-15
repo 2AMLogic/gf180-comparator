@@ -69,6 +69,11 @@ on:
 
 permissions:
   contents: read
+  # Issue #411: the work-plan provenance step resolves issue/PR titles via
+  # the forge API. Read-only widening; a missing or scope-less token makes
+  # the step FAIL (never skip).
+  issues: read
+  pull-requests: read
 
 # Policy: a started verification on main must finish (a cancelled run leaves
 # the commit without a verdict); superseded PR runs may be cancelled.
@@ -117,6 +122,23 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
+
+      # Issue #411: WORK_PLAN.md's generated region claims to be "generated
+      # from the repository's current GitHub label state" -- this step makes
+      # the claim checkable. Every `- **#N**: title` row in the
+      # `<!-- guide:plan-body -->` region must resolve in THIS repo to an
+      # item whose title matches the render (PR #410 / commit 2af9216c
+      # rendered a foreign repo's label state here; the guard fails on
+      # exactly that input -- see
+      # docs/forensics/2026-11-15-work-plan-provenance-incident.md).
+      # Fail-closed: a missing token, a scope-less token, or any query error
+      # fails the step, it never skips (.loom/docs/ci-principles.md).
+      # Deliberately NOT part of scripts/run-pdk-free-tests.sh, which must
+      # stay offline and PDK-free.
+      - name: Verify WORK_PLAN.md provenance against the forge (issue #411)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 scripts/check_work_plan_provenance.py
 
       # Keep this pin in sync with signoff/regenerate.sh's KLT_VERSION. The
       # released registry wheel carries the git-tag identity regenerate.sh
