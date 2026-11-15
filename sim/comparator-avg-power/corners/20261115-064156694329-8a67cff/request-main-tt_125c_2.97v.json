@@ -1,0 +1,152 @@
+{
+  "netlist": "body-tt_125c_2.97v.spice",
+  "engine": "ngspice",
+  "models": {
+    "pdk": "gf180mcuD",
+    "lib": "libs.tech/ngspice/sm141064.ngspice"
+  },
+  "corners": {
+    "process": [
+      {
+        "name": "tt",
+        "sections": [
+          "typical",
+          "res_typical",
+          "bjt_typical",
+          "diode_typical",
+          "moscap_typical",
+          "mimcap_typical"
+        ]
+      }
+    ],
+    "temperature_c": [
+      125.0
+    ]
+  },
+  "batch": {
+    "runner_version_check": "warn",
+    "capacity_wait_s": 1800
+  },
+  "analysis": {
+    "kind": "tran",
+    "args": "10p 1510n"
+  },
+  "measurements": [
+    {
+      "name": "vsup_v",
+      "spice": ".meas tran vsup_v find v(vdda) at=510n"
+    },
+    {
+      "name": "t_elo",
+      "spice": ".meas tran t_elo when v(clkn)=0.5 rise=9"
+    },
+    {
+      "name": "t_ehi",
+      "spice": ".meas tran t_ehi when v(clkn)=0.5 rise=24"
+    },
+    {
+      "name": "d08",
+      "spice": ".meas tran d08 find v(dn) at=541n"
+    },
+    {
+      "name": "d09",
+      "spice": ".meas tran d09 find v(dn) at=603.5n"
+    },
+    {
+      "name": "d10",
+      "spice": ".meas tran d10 find v(dn) at=666n"
+    },
+    {
+      "name": "d11",
+      "spice": ".meas tran d11 find v(dn) at=728.5n"
+    },
+    {
+      "name": "d12",
+      "spice": ".meas tran d12 find v(dn) at=791n"
+    },
+    {
+      "name": "d13",
+      "spice": ".meas tran d13 find v(dn) at=853.5n"
+    },
+    {
+      "name": "d14",
+      "spice": ".meas tran d14 find v(dn) at=916n"
+    },
+    {
+      "name": "d15",
+      "spice": ".meas tran d15 find v(dn) at=978.5n"
+    },
+    {
+      "name": "d16",
+      "spice": ".meas tran d16 find v(dn) at=1041n"
+    },
+    {
+      "name": "d17",
+      "spice": ".meas tran d17 find v(dn) at=1103.5n"
+    },
+    {
+      "name": "d18",
+      "spice": ".meas tran d18 find v(dn) at=1166n"
+    },
+    {
+      "name": "d19",
+      "spice": ".meas tran d19 find v(dn) at=1228.5n"
+    },
+    {
+      "name": "d20",
+      "spice": ".meas tran d20 find v(dn) at=1291n"
+    },
+    {
+      "name": "d21",
+      "spice": ".meas tran d21 find v(dn) at=1353.5n"
+    },
+    {
+      "name": "d22",
+      "spice": ".meas tran d22 find v(dn) at=1416n"
+    },
+    {
+      "name": "d23",
+      "spice": ".meas tran d23 find v(dn) at=1478.5n"
+    },
+    {
+      "name": "db08",
+      "spice": ".meas tran db08 find v(dbn) at=541n"
+    },
+    {
+      "name": "db23",
+      "spice": ".meas tran db23 find v(dbn) at=1478.5n"
+    },
+    {
+      "name": "q_win",
+      "spice": ".meas tran q_win integ i(vsupa) from=510n to=1510n"
+    },
+    {
+      "name": "q_h1",
+      "spice": ".meas tran q_h1 integ i(vsupa) from=510n to=1010n"
+    },
+    {
+      "name": "q_h2",
+      "spice": ".meas tran q_h2 integ i(vsupa) from=1010n to=1510n"
+    },
+    {
+      "name": "e_win",
+      "spice": ".meas tran e_win integ v(pwr) from=510n to=1510n"
+    },
+    {
+      "name": "q_clk",
+      "spice": ".meas tran q_clk integ i(vclk) from=510n to=1510n"
+    },
+    {
+      "name": "i_q",
+      "spice": ".meas tran i_q avg i(vsupa) from=1507n to=1509.9n"
+    }
+  ],
+  "options": {
+    "timeout_s": 3000,
+    "keep_artifacts": true,
+    "ngspice_init": [
+      "set measureprec=12",
+      "set numdgt=12"
+    ]
+  }
+}

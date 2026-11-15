@@ -3,8 +3,9 @@
 against the EXTRACTED binding (issue #219).
 
 This is deliberately a separate tool from `mk_klt_request.py` /
-`klt_record.py`. Those keep their production refusals (schematic provenance
-only; every record minted under a bench's `records/`). Nothing here can mint a
+`klt_record.py`. Those own every record minted under a bench's `records/`
+(and, since issue #374, the extracted binding's two-phase `dut_vos`
+referral); nothing here can mint a
 reference record: the only outputs are `contract.json` and
 `feasibility-<point>.json` under a feasibility directory, each stamped
 `feasibility_only: true`. Unsupported paths REFUSE (`Refusal`), they never

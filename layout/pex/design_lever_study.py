@@ -199,12 +199,7 @@ def manifest(text: str, plan: list[dict], points) -> dict:
         "requests_planned": check_budget(plan, points),
         "request_cap": LEVER_REQUEST_CAP,
         "source_sha256": {
-            "extracted_dut": pa.sha(text),
-            "schematic_dut": pa.file_sha(pa.SCHEMATIC_DUT),
-            "cited_report": pa.file_sha(pa.CITED_REPORT),
-            "tb_json_consumed_fields": pa.TB_JSON_CONSUMED_SHA256,
-            "pex_measure_py": pa.file_sha(HERE / "pex_measure.py"),
-            "parasitic_attribution_py": pa.file_sha(HERE / "parasitic_attribution.py"),
+            **pa.common_source_sha256(text),
             "design_lever_study_py": pa.file_sha(Path(__file__).resolve()),
         },
         "variants": [],

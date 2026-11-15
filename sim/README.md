@@ -48,11 +48,12 @@ the adequacy of the proposed warm-up/window as **not established**, and no
 other committed bench can measure them. DR-0006 stays `proposed — not
 ratified`; this bench scores nothing, the README target table's Supply / power
 row keeps its `(TBD)` clock rate, and `signoff/make_item5_envelope.py` keeps
-its `average_power_clock_rate_tbd` skip reason. Its first record is a **1-of-45
-bring-up validation probe** (`tt_27c_3.30v`, schematic DUT, run locally), not a
-corner result — the 45-point campaign and the extracted run are separate
-landings, and the bench is not wired into `characterize.sh` or the fleet
-dispatch tables. See its [README](comparator-avg-power/README.md) for the
+its `average_power_clock_rate_tbd` skip reason. Its records span the **1-of-45
+bring-up validation probe** (`tt_27c_3.30v`, schematic DUT, run locally), the
+1-of-1 fleet bring-up (issue #372) and the committed **45-of-45 PVT campaign**
+(issue #373); the extracted-DUT run remains a separate landing (#374), and the
+bench is not wired into `characterize.sh`. See its
+[README](comparator-avg-power/README.md) for the
 clause-by-clause implementation and for why the reset-completion margin is a
 proxy.
 
@@ -106,9 +107,13 @@ Metastability and kickback are first-class rows here, not appendices, per
 > The two analog-partition benches (offset-MC, preamp-noise) are refused
 > against the flat extraction: a flat netlist has no analog/latch
 > partition, so those two support the schematic binding only (and
-> `mk_klt_request.py` likewise supports only schematic DUTs for fleet
-> requests -- an extracted DUT needs the vosprobe leg, which the fleet path
-> does not have; see #164).
+> `mk_klt_request.py` refuses them against an extracted DUT with the same
+> message). The fleet path now reaches extracted bindings too (issue
+> #374): `mk_klt_request.py --emit probe` / `--emit main --from-probe`
+> implement the two-phase `dut_vos` referral -- the pattern issue #164
+> shipped in `layout/pex/pex_measure.py`, which this production tool had
+> not adopted until now -- so an extracted DUT's overdrive is referred to
+> its own probed trip point on the fleet path as well.
 > `./sim/characterize.sh postlayout` runs the whole campaign in one command
 > (local ngspice, so on a workstation, not a shared dispatch worker).
 >
@@ -178,9 +183,12 @@ KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py <bench> --label "<text>"
 `mk_klt_request.py` (called by `klt_record.py`) builds the requests. Current
 limits, stated as they are in the tools: `comparator-preamp-noise` cannot be
 expressed for the fleet runner (its `klt` 0.5.0 has no `noise` analysis), so a
-noise is run locally via `run_corners.py` (a single nominal point on a shared dispatch worker; the full PVT grid only on a workstation with the pinned PDK); fleet requests support the
-schematic DUT binding only, so extracted (`comparator-dr0001-layout`) records
-use the local `postlayout` path, and fleet records omit some secondary
+noise is run locally via `run_corners.py` (a single nominal point on a shared dispatch worker; the full PVT grid only on a workstation with the pinned PDK); extracted DUT
+bindings go through the two-phase fleet flow (issue #374): `klt_record.py`
+drives `--emit probe`, dispatches the trip-point probe, then `--emit main
+--from-probe` with each point's probed `dut_vos` baked in — so an extracted
+(`comparator-dr0001-layout`) record can be minted on the fleet path as well
+as the local `postlayout` path, and fleet records omit some secondary
 quantities (each record lists which) — for `comparator-avg-power` that is
 `reset_margin_ns`, whose `t_rst` `.meas` needs an interactive `let` the fleet
 request schema has no position for (see that bench's README).

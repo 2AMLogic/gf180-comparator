@@ -358,6 +358,12 @@ class DispatchGuard(unittest.TestCase):
                     kr.dispatch(work, ["main-v3.30"])
                 popen.assert_called_once()
                 self.assertEqual(popen.call_args.args[0][:2], ["klt", "sim"])
+                # The backend is passed EXPLICITLY (issue #374): `klt sim`
+                # keeps single-unit requests local on its own policy unless
+                # the flag overrides it, and the extracted flow's main
+                # requests are single-unit by design.
+                argv = popen.call_args.args[0]
+                self.assertEqual(argv[argv.index("--backend") + 1], backend)
 
 
 class MkKltRequest(unittest.TestCase):
@@ -617,9 +623,14 @@ def _link_env(work: Path, b: dict, r: dict, closure=True, netlist_sha=True) -> d
     if netlist_sha:
         env["netlist_sha256"] = r["netlist_sha256"]
     if closure:
+        # The probe leg's closure names the PROBE fragment, the way a real
+        # executor's include closure of a probe body does (issue #374).
+        frag = b["testbench"]["netlist_sha256"]
+        if r.get("leg") == "probe" and b.get("probe"):
+            frag = b["staged"][f"{b['testbench']['staged_dir']}/{b['probe']['probe_deck']}"]
         env["netlist_closure"] = [{"sha256": h} for h in (
             r["netlist_sha256"], _sha(work / "design.ngspice"),
-            b["dut"]["netlist_sha256"], b["testbench"]["netlist_sha256"])]
+            b["dut"]["netlist_sha256"], frag)]
     return env
 
 
@@ -2933,3 +2944,409 @@ class AvgPowerRestrictedGridIngest(unittest.TestCase):
             self.assertNotIn("vs target", md.split("**Result**")[1].splitlines()[2])
             self.assertIn("Not computed by this executor** (single-analysis `klt sim` requests): "
                           "`reset_margin_ns`", md)
+
+
+class AvgPowerExtractedProbe(unittest.TestCase):
+    """The extracted binding's two-phase dut_vos referral (issue #374).
+
+    The repo's real extracted binding (``comparator-dr0001-layout``) is
+    gitignored scratch, regenerated per host by ``layout/run_extract_sim.py``,
+    so every case here binds a self-contained synthetic flat netlist instead:
+    the manifest, probe deck and ramp constants are the committed ones, only
+    the DUT is synthetic. The regression this class exists to pin: a probed
+    value reaches the main leg's deck -- never the hard-coded 0.0."""
+
+    VOS = None  # set from the phase-1 t_flip below: -0.004 V
+
+    # -- fixtures -----------------------------------------------------------
+
+    @staticmethod
+    def _binding(td: Path) -> str:
+        dut = td / "dut.spice"
+        dut.write_text(
+            ".subckt comparator_dut vinp vinn clk ibias dout doutb vdd vss\n"
+            "xflat vinp vinn clk ibias dout doutb vdd vss comparator_flat\n"
+            ".ends\n")
+        binding = td / "binding.json"
+        binding.write_text(json.dumps({
+            "active": "test-extracted",
+            "duts": {"test-extracted": {
+                "netlist": str(dut), "id": "test-extracted",
+                "provenance": "extracted",
+                "params": {"dut_ib": 1e-05, "dut_vcm": 1.65}}}}))
+        return str(binding)
+
+    def _mk(self, td, work, *extra, schematic=False):
+        """Run mk_klt_request for the bench; -> (rc or SystemExit code, stdout)."""
+        td, work = Path(td), Path(work)
+        design = td / "design.ngspice"
+        design.write_text("* fake PDK design include\n")
+        argv = ["mk_klt_request.py", AVG_POWER, str(work)]
+        if not schematic:
+            argv += ["--dut", self._binding(td)]
+        argv += list(extra)
+        out = io.StringIO()
+        with mock.patch.object(sys, "argv", argv), \
+                mock.patch.object(mk.hpdk, "find_pdk",
+                                  return_value=types.SimpleNamespace(design_include=design)), \
+                mock.patch.object(mk, "git_state", return_value=(ORIGIN, [])), \
+                redirect_stdout(out):
+            try:
+                rc = mk.main()
+            except SystemExit as e:
+                rc = e.code
+        return rc, out.getvalue()
+
+    def _two_phase(self, td, *, t_flip=3.6e-5, vos_override=None, results_span=None,
+                   drop_corner=None):
+        """Phase 1 -> probe reports -> results file -> phase 2. -> (rc, out, work)."""
+        td = Path(td)
+        work = td / "work"
+        rc, out = self._mk(td, work, "--emit", "probe")
+        assert rc == 0, out
+        b = _bundle(work)
+        self._write_probe_reports(work, b, t_flip=t_flip, drop_corner=drop_corner)
+        spans = b["probe"]
+        vos = {}
+        for n, r in b["requests"].items():
+            if r["leg"] != "probe":
+                continue
+            req = json.loads((work / r["request"]).read_text())
+            for p in req["corners"]["process"]:
+                for t in req["corners"]["temperature_c"]:
+                    vos[f"{p['name']}_{float(t):g}c_{r['vdd']:.2f}v"] = kr.vos_from_tflip(
+                        t_flip, spans["vspan_v"], spans["tramp_s"])
+        if drop_corner:
+            proc, temp = drop_corner.split("/")
+            vos = {k: v for k, v in vos.items()
+                   if not k.startswith(f"{proc}_{float(temp[:-1]):g}c_")}
+        if vos_override:
+            vos.update(vos_override)
+        results = {"schema": mk.PROBE_RESULTS_SCHEMA, "bench": AVG_POWER,
+                   "dut": b["dut"]["dut_id"],
+                   "vspan_v": spans["vspan_v"] if results_span is None else results_span,
+                   "tramp_s": spans["tramp_s"],
+                   "vos_formula": mk.PROBE_VOS_FORMULA, "vos_by_corner": vos,
+                   "probe_reports": {n: _sha(work / f"report-{n}.json")
+                                     for n, r in b["requests"].items() if r["leg"] == "probe"}}
+        (work / mk.PROBE_RESULTS_NAME).write_text(json.dumps(results, indent=1) + "\n")
+        rc, out = self._mk(td, work, "--emit", "main",
+                           "--from-probe", str(work / mk.PROBE_RESULTS_NAME))
+        return rc, out, work
+
+    def _write_probe_reports(self, work: Path, b: dict, *, t_flip=3.6e-5, drop_corner=None):
+        for n, r in b["requests"].items():
+            if r["leg"] != "probe":
+                continue
+            req = json.loads((work / r["request"]).read_text())
+            corners = []
+            for p in req["corners"]["process"]:
+                for t in req["corners"]["temperature_c"]:
+                    cid = f"{p['name']}/{t:g}C"
+                    if drop_corner and cid == drop_corner:
+                        continue
+                    corners.append({"corner_id": cid, "status": "pass",
+                                    "measurements": [{"name": "t_flip", "value": t_flip}]})
+            (work / f"report-{n}.json").write_text(json.dumps(
+                {"corners": corners, "measurements": [{"name": "t_flip"}],
+                 "environment": _link_env(work, b, r), "provenance": _prov()}))
+
+    @staticmethod
+    def _avg_power_raw():
+        return AvgPowerRestrictedGridIngest._avg_power_raw()
+
+    def _write_main_reports(self, work: Path, b: dict):
+        raw = self._avg_power_raw()
+        for n, r in b["requests"].items():
+            if r["leg"] != "main":
+                continue
+            req = json.loads((work / r["request"]).read_text())
+            meas = [m["name"] for m in req["measurements"]]
+            p = req["corners"]["process"][0]["name"]
+            t = req["corners"]["temperature_c"][0]
+            corners = [{"corner_id": f"{p}/{t:g}C", "status": "pass",
+                        "measurements": [{"name": m, "value": raw[m]} for m in meas]}]
+            (work / f"report-{n}.json").write_text(json.dumps(
+                {"corners": corners, "measurements": [{"name": m} for m in meas],
+                 "environment": _link_env(work, b, r), "provenance": _prov()}))
+
+    # -- the schematic path is untouched ------------------------------------
+
+    def test_schematic_binding_pins_dut_vos_zero(self):
+        with tempfile.TemporaryDirectory() as td:
+            rc, out = self._mk(td, Path(td) / "out", schematic=True)
+            self.assertEqual(rc, 0, out)
+            b = _bundle(Path(td) / "out")
+            self.assertNotIn("probe", b)
+            self.assertEqual(b["phase"], "main")
+            self.assertIn(".param dut_vos=0.0", (Path(td) / "out/body-v3.30.spice").read_text())
+
+    def test_schematic_takes_no_probe_flags(self):
+        with tempfile.TemporaryDirectory() as td:
+            for extra in (["--emit", "probe"],
+                          ["--emit", "main", "--from-probe", "x.json"]):
+                rc, out = self._mk(td, Path(td) / "out", schematic=True, *extra)
+                self.assertIn("takes no probe", str(rc))
+
+    # -- flag contract -------------------------------------------------------
+
+    def test_extracted_needs_the_two_phase_flags(self):
+        with tempfile.TemporaryDirectory() as td:
+            work = Path(td) / "work"
+            rc, out = self._mk(td, work)
+            self.assertIn("two-phase flow", str(rc))
+            rc, out = self._mk(td, work, "--emit", "main")
+            self.assertIn("needs --from-probe", str(rc))
+            rc, out = self._mk(td, work, "--emit", "probe", "--from-probe", "x.json")
+            self.assertIn("phase-2", str(rc))
+
+    # -- phase 1: the probe requests -----------------------------------------
+
+    def test_probe_phase_requests_cover_the_grid_without_dut_vos(self):
+        tb = htb.load(SIM / AVG_POWER)
+        with tempfile.TemporaryDirectory() as td:
+            rc, out = self._mk(td, Path(td) / "work", "--emit", "probe")
+            self.assertEqual(rc, 0, out)
+            work, b = Path(td) / "work", _bundle(Path(td) / "work")
+            self.assertEqual(b["phase"], "probe")
+            self.assertEqual(b["probe"]["vspan_v"], 0.04)
+            self.assertAlmostEqual(b["probe"]["tramp_s"], 8e-5)
+            self.assertEqual(sorted(b["requests"]),
+                             [f"probe-v{v:.2f}" for v in (2.97, 3.30, 3.63)])
+            for name, r in b["requests"].items():
+                req = json.loads((work / r["request"]).read_text())
+                self.assertEqual(req["analysis"], {"kind": "tran", "args": "100n 80u 0 100n"})
+                # Only the trip-time card ships; the vos_v card (whose `at=`
+                # names another card's result) is derived from t_flip exactly.
+                self.assertEqual([m["name"] for m in req["measurements"]], ["t_flip"])
+                self.assertEqual(len(req["corners"]["process"]), 5)
+                self.assertEqual(req["corners"]["temperature_c"], [-40.0, 27.0, 125.0])
+                body = (work / r["netlist"]).read_text()
+                self.assertNotIn(".param dut_vos", body)
+                self.assertIn(f'.include "{mk.SOURCES_DIR}/testbench/{tb.offset_probe["netlist"]}"',
+                              body)
+
+    def test_probe_meas_cards_drop_cards_that_read_other_results(self):
+        tb = types.SimpleNamespace(
+            name="b", offset_probe={"analyses": [
+                "tran 100n 80u 0 100n",
+                "meas tran t_flip when v(dn)=0.5 rise=1 td=8u",
+                "meas tran vos_v find v(rmp) at=t_flip"]},
+            netlist=Path("/dev/null"), directory=Path("."))
+        cards = mk.probe_meas_cards(tb)
+        self.assertEqual([c["name"] for c in cards], ["t_flip"])
+        tb2 = types.SimpleNamespace(
+            name="b", offset_probe={"analyses": [
+                "tran 100n 80u 0 100n",
+                "let thr = 1", "meas tran x when v(y)=thr"]}, netlist=Path("/dev/null"),
+            directory=Path("."))
+        with self.assertRaises(SystemExit):
+            mk.probe_meas_cards(tb2)
+
+    # -- phase 2: the probed value reaches the main bodies -------------------
+
+    def test_main_phase_bakes_probed_vos_not_zero(self):
+        with tempfile.TemporaryDirectory() as td:
+            rc, out, work = self._two_phase(td)
+            self.assertEqual(rc, 0, out)
+            b = _bundle(work)
+            self.assertEqual(b["phase"], "main")
+            self.assertEqual(len(b["requests"]), 48)  # 3 probe + 45 main
+            self.assertEqual(sorted({r["leg"] for r in b["requests"].values()}),
+                             ["main", "probe"])
+            body = (work / "body-tt_27c_3.30v.spice").read_text()
+            spans = _bundle(work)["probe"]
+            expected_vos = kr.vos_from_tflip(3.6e-5, spans["vspan_v"], spans["tramp_s"])
+            self.assertIn(f".param dut_vos={expected_vos!r}", body)  # the probed value...
+            self.assertNotIn("dut_vos=0.0", body)  # ...never the hard-coded 0.0
+            # ...and in EVERY main body, each with its own probed value.
+            vos = b["probe"]["vos_by_corner"]
+            self.assertEqual(len(vos), 45)
+            for cid, v in vos.items():
+                self.assertIn(f".param dut_vos={v!r}", (work / f"body-{cid}.spice").read_text())
+            req = json.loads((work / b["requests"]["main-tt_27c_3.30v"]["request"]).read_text())
+            self.assertEqual([p["name"] for p in req["corners"]["process"]], ["tt"])
+            self.assertEqual(req["corners"]["temperature_c"], [27.0])
+            self.assertEqual(req["batch"]["capacity_wait_s"], mk.BATCH_CAPACITY_WAIT_S)
+
+    def test_main_phase_requires_the_phase1_bundle(self):
+        with tempfile.TemporaryDirectory() as td:
+            rc, out = self._mk(td, Path(td) / "fresh", "--emit", "main", "--from-probe", "x.json")
+            self.assertIn("phase-1 bundle", str(rc))
+
+    def test_main_phase_refuses_missing_trip_point(self):
+        with tempfile.TemporaryDirectory() as td:
+            rc, out, _ = self._two_phase(td, drop_corner="ff/125C")
+            self.assertIn("PROBE_NO_TRIP_POINT", str(rc))
+            self.assertIn("ff_125c", str(rc))
+
+    def test_main_phase_refuses_vos_out_of_span(self):
+        with tempfile.TemporaryDirectory() as td:
+            rc, out, _ = self._two_phase(td, vos_override={"tt_27c_3.30v": 0.05})
+            self.assertIn("PROBE_VOS_OUT_OF_SPAN", str(rc))
+            self.assertIn("tt_27c_3.30v", str(rc))
+
+    def test_main_phase_refuses_results_from_a_different_deck_span(self):
+        with tempfile.TemporaryDirectory() as td:
+            rc, out, _ = self._two_phase(td, results_span=0.08)
+            self.assertIn("does not match the staged probe deck", str(rc))
+
+    # -- the klt_record side -------------------------------------------------
+
+    def test_vos_from_tflip_inverts_the_ramp(self):
+        self.assertEqual(kr.vos_from_tflip(0.0, 0.04, 8e-5), -0.04)
+        self.assertAlmostEqual(kr.vos_from_tflip(8e-5, 0.04, 8e-5), 0.04)
+        self.assertAlmostEqual(kr.vos_from_tflip(4e-5, 0.04, 8e-5), 0.0)
+
+    def test_derive_probe_results_aborts_on_a_failed_probe_unit(self):
+        with tempfile.TemporaryDirectory() as td:
+            work = Path(td) / "work"
+            rc, out = self._mk(td, work, "--emit", "probe")
+            self.assertEqual(rc, 0, out)
+            b = _bundle(work)
+            names = kr.names_from_bundle(b, leg="probe")
+            self._write_probe_reports(work, b)
+            # A failed unit is a coverage issue, not silently-usable data.
+            rep = json.loads((work / "report-probe-v3.30.json").read_text())
+            rep["corners"][0]["status"] = "fail"
+            (work / "report-probe-v3.30.json").write_text(json.dumps(rep))
+            with self.assertRaises(SystemExit) as ctx:
+                kr.derive_probe_results(work, b, names)
+            self.assertIn("PROBE_LEG_INCOMPLETE", str(ctx.exception))
+            # A t_flip beyond the ramp inverts outside +-vspan: refused.
+            rep["corners"][0]["status"] = "pass"
+            rep["corners"][0]["measurements"][0]["value"] = 9e-5  # > tramp
+            (work / "report-probe-v3.30.json").write_text(json.dumps(rep))
+            with self.assertRaises(SystemExit) as ctx:
+                kr.derive_probe_results(work, b, names)
+            self.assertIn("PROBE_VOS_OUT_OF_SPAN", str(ctx.exception))
+
+    def test_ingest_verifies_and_stamps_probe_provenance(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            rc, out, work = self._two_phase(td)
+            self.assertEqual(rc, 0, out)
+            b = _bundle(work)
+            self._write_probe_reports(work, b)
+            self._write_main_reports(work, b)
+            rc, rec, out = _ingest(td, work, bench=AVG_POWER)
+            self.assertEqual(rc, 0, out)
+            self.assertTrue(rec["complete"])
+            self.assertEqual(rec["points"], 45)
+            d = rec["derived"]["tt_27c_3.30v"]
+            self.assertAlmostEqual(d["dut_vos_v"], -0.004, places=12)
+            self.assertAlmostEqual(d["p_avg_uw"], 144.887, places=2)
+            ref = rec["dut_vos_referral"]
+            self.assertEqual(ref["vos_formula"], mk.PROBE_VOS_FORMULA)
+            self.assertEqual(len(ref["probe_requests"]), 3)
+            md = next((td / "evidence" / AVG_POWER / "records").glob("*.md")).read_text()
+            self.assertIn("dut_vos referral** (issue #374)", md)
+            self.assertIn("about 62.5 uV", md)  # the manifest's stated resolution, recomputed
+            self.assertIn("Worst corners (this record alone)", md)
+            self.assertIn("NOT comparable with the schematic records", md)
+            # The probe evidence is archived beside the main reports.
+            cdir = next((td / "evidence" / AVG_POWER / "corners").iterdir())
+            self.assertTrue((cdir / mk.PROBE_RESULTS_NAME).is_file())
+            self.assertTrue((cdir / "report-probe-v3.30.json").is_file())
+            self.assertTrue((cdir / "body-tt_27c_3.30v.spice").is_file())
+
+    def test_ingest_flags_a_tampered_vos_map(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            rc, out, work = self._two_phase(td)
+            b = _bundle(work)
+            self._write_probe_reports(work, b)
+            self._write_main_reports(work, b)
+            b["probe"]["vos_by_corner"]["tt_27c_3.30v"] = 0.0  # the 0.0 fallback, by hand
+            (work / mk.BUNDLE_NAME).write_text(json.dumps(b, indent=1) + "\n")
+            rc, rec, out = _ingest(td, work, bench=AVG_POWER)
+            self.assertEqual(rc, 1)
+            self.assertFalse(rec["complete"])
+            self.assertTrue(any("PROBE_VOS_MISMATCH" in p for p in rec["problems"]), rec["problems"])
+
+    def test_ingest_refuses_a_phase1_bundle(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work = Path(td) / "work"
+            rc, out = self._mk(td, work, "--emit", "probe")
+            self.assertEqual(rc, 0, out)
+            self._write_probe_reports(work, _bundle(work))
+            rc, rec, out = _ingest(td, work, bench=AVG_POWER)
+            self.assertIn("PHASE1_BUNDLE_ONLY", str(rc))
+
+    def test_fresh_flow_dispatches_main_legs_only(self):
+        # Regression: the two-phase driver dispatches the probe requests
+        # itself (phase 1); the main flow below must still dispatch the MAIN
+        # legs. A flow that skipped dispatch entirely read report files that
+        # were never submitted -- the first campaign run's failure mode.
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            rc, out, work = self._two_phase(td)
+            self.assertEqual(rc, 0, out)
+            self._write_probe_reports(work, _bundle(work))
+            self._write_main_reports(work, _bundle(work))
+            dispatched: list = []
+            root = td / "evidence"
+            (root / AVG_POWER).mkdir(parents=True)
+            argv = ["klt_record.py", AVG_POWER, "--work", str(work),
+                    "--dut", self._binding(td)]
+            with mock.patch.object(sys, "argv", argv), \
+                    mock.patch.object(kr, "SIM", root), \
+                    mock.patch.object(kr, "git_state", return_value=("a" * 40, [])), \
+                    mock.patch.object(kr, "klt_version", return_value="klt 0.0"), \
+                    mock.patch.object(kr, "run_two_phase", return_value=None), \
+                    mock.patch.object(kr, "dispatch",
+                                      side_effect=lambda w, ns: dispatched.extend(ns)), \
+                    redirect_stdout(io.StringIO()):
+                # The fixture's reports let the ingest run to completion or
+                # fail somewhere past dispatch; the assertion is what reached
+                # dispatch, which is the regression surface.
+                try:
+                    kr.main()
+                except Exception:
+                    pass
+            self.assertEqual(len(dispatched), 45)  # every main leg, once
+            self.assertTrue(all(n.startswith("main-") for n in dispatched))
+            self.assertNotIn("probe-v3.30", dispatched)  # phase 1 already went out
+
+    def test_probe_report_closure_names_the_probe_fragment(self):
+        # The probe body includes tb_vosprobe.spice, not the main fragment:
+        # its report closure must carry the probe deck's own staged sha, and
+        # a closure naming only the main fragment is refused (issue #374).
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            rc, out, work = self._two_phase(td)
+            self.assertEqual(rc, 0, out)
+            b = _bundle(work)
+            self._write_probe_reports(work, b)
+            self._write_main_reports(work, b)
+            rc, rec, out = _ingest(td, work, bench=AVG_POWER)
+            self.assertEqual(rc, 0, out)
+            # Now the wrong-fragment shape: a probe report whose closure
+            # names the MAIN fragment (the pre-fix refusal).
+            probe_sha = b["staged"][f"{b['testbench']['staged_dir']}/{b['probe']['probe_deck']}"]
+            for n, r in b["requests"].items():
+                if r["leg"] != "probe":
+                    continue
+                rep = json.loads((work / f"report-{n}.json").read_text())
+                rep["environment"]["netlist_closure"] = [
+                    {"sha256": h} for h in (r["netlist_sha256"], _sha(work / "design.ngspice"),
+                                            b["dut"]["netlist_sha256"],
+                                            b["testbench"]["netlist_sha256"])]
+                (work / f"report-{n}.json").write_text(json.dumps(rep))
+            rc, rec, out = _ingest(td, work, bench=AVG_POWER)
+            self.assertIn("REPORT_SOURCE_MISMATCH", str(rc))
+            self.assertIn("probe fragment", str(rc))
+            self.assertNotEqual(probe_sha, b["testbench"]["netlist_sha256"])
+
+    def test_compare_local_refuses_across_bindings(self):
+        derived = {"tt_27c_3.30v": {"p_avg_uw": 144.9}}
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "local.json"
+            p.write_text(json.dumps({"context": {"dut_provenance": "schematic"}, "points": []}))
+            with self.assertRaises(SystemExit) as ctx:
+                kr.compare_local_record(str(p), derived, local_provenance="extracted")
+            self.assertIn("CROSS_BINDING_COMPARISON", str(ctx.exception))
+            # Same binding: no refusal (the comparison runs, naming its gaps).
+            cmp = kr.compare_local_record(str(p), derived, local_provenance="schematic")
+            self.assertEqual(cmp["status"], "INCOMPLETE_COMPARISON")

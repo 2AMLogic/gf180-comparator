@@ -113,6 +113,11 @@ CITED_REPORT = HERE / "comparator.pex.json"
 CITED_MEASURE = HERE / "artifacts" / "measure"
 SCHEMATIC_DUT = REPO / "design" / "comparator.spice"
 
+#: The #229 attribution artifact whose net selection the budget and combo
+#: studies reuse; hashed into both stage manifests.
+ATTRIBUTION_JSON_229 = (HERE / "artifacts" / "parasitic-attribution"
+                        / "20261010-120720-230574b" / "attribution.json")
+
 #: The two worst failing corners named by issue #229. Both are 125 C / 2.97 V,
 #: so one probe request (process tt + ss) covers both.
 TEMP_C = 125.0
@@ -957,36 +962,21 @@ def file_sha(path: Path) -> str:
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def _stage_source_sha256(text: str, extra: dict | None = None) -> dict:
-    """The hashed inputs every ground-C / combined ladder stage depends on.
+def common_source_sha256(text: str) -> dict:
+    """The six stage hashes every parasitic study records identically (#371).
 
-    One definition shared by `budget_manifest` and `combo_manifest` (#359):
-    the cited data inputs that are integrity gates, plus the code hashes,
-    which `is_provenance_source_key` classifies as provenance only (drift
-    reported, never an error). `extra` carries a
-    stage's own additional cited input and is spliced in after the common data
-    inputs; stage.json is written with `sort_keys=True`, so that placement
-    only fixes the order this reads in source, never the committed bytes.
-
-    NOT shared with `design_lever_study.manifest`, deliberately: that stage
-    cites no #229 attribution.json and records its own module hash under
-    `design_lever_study_py` (provenance drift by the same `_py` rule).
+    One source of truth for the integrity gate `budget_manifest_diff` enforces:
+    each manifest builder spreads this and adds only its own study's extras,
+    so the key set a study gates on cannot silently diverge from the others.
     """
-    out = {
+    return {
         "extracted_dut": sha(text),
         "schematic_dut": file_sha(SCHEMATIC_DUT),
         "cited_report": file_sha(CITED_REPORT),
-        "attribution_json_229": file_sha(
-            HERE / "artifacts" / "parasitic-attribution" / "20261010-120720-230574b"
-            / "attribution.json"),
-    }
-    out.update(extra or {})
-    out.update({
         "tb_json_consumed_fields": TB_JSON_CONSUMED_SHA256,
         "pex_measure_py": file_sha(HERE / "pex_measure.py"),
         "parasitic_attribution_py": file_sha(Path(__file__).resolve()),
-    })
-    return out
+    }
 
 
 def budget_manifest(text: str, plan: list[dict], points, nets) -> dict:
@@ -999,7 +989,10 @@ def budget_manifest(text: str, plan: list[dict], points, nets) -> dict:
                     "own probed trip point; no spec row scored, T1 item 7 unchanged"),
         "nets": list(nets),
         "points": [pid(p) for p in points],
-        "source_sha256": _stage_source_sha256(text),
+        "source_sha256": {
+            **common_source_sha256(text),
+            "attribution_json_229": file_sha(ATTRIBUTION_JSON_229),
+        },
         "variants": [{
             "id": x["id"], "side": x["side"], "centre": x["centre"], "fraction": x["fraction"],
             "dut_sha256": sha(x["dut"]), "probe_deck_sha256": sha(probe_deck(x["dut"])),
@@ -1029,6 +1022,51 @@ def cmd_budget_run(args) -> int:
     return run_stage(outdir, man, plan, points, args.backend, args.jobs, BUDGET_ISSUE)
 
 
+def _module_key(path) -> str:
+    """'layout/pex/design_lever_study.py' -> 'design_lever_study_py'."""
+    return Path(path).name.replace(".", "_")
+
+
+def resume_exempt_source_keys(man: dict) -> set[str]:
+    """The `source_sha256` keys a resume may ignore: the orchestrating code.
+
+    The manifest's own `generated_by` module plus this harness (the module
+    that owns run_stage), so every caller's own-source drift is tolerated on
+    resume (#366) instead of the pre-#366 hardcoded `parasitic_attribution_py`
+    key, which was only right for the budget/combo callers. Deliberately
+    stricter than is_provenance_source_key: verification re-reads committed
+    evidence with a newer tree and must tolerate all code drift (#249), but a
+    resume appends new measurements into a stage that already holds earlier
+    ones, so pex_measure_py (the measure harness -- probe_deck lives in this
+    module, not there) and tb_json_consumed_fields stay gated. A manifest
+    with no usable generated_by fails closed to the harness key alone,
+    exactly the pre-#366 single-key rule -- never a blanket exemption.
+    """
+    keys = {_module_key(__file__)}
+    gen = man.get("generated_by")
+    tokens = gen.split() if isinstance(gen, str) else []
+    if tokens and tokens[0].endswith(".py"):
+        keys.add(_module_key(tokens[0]))
+    return keys
+
+
+def append_only_conflict(committed: dict, regenerated: dict) -> bool:
+    """True if `regenerated` is a different plan than `committed` (#366).
+
+    Pure so the resume comparison is PDK-free testable at all: run_stage
+    submits sim requests, so its guard cannot be exercised end-to-end
+    without a fleet run. Each manifest's own orchestrating-code hashes
+    (resume_exempt_source_keys) are popped before the compare; everything
+    else -- the variants, their dut_sha256 and probe_deck_sha256, the
+    points -- must be byte-identical.
+    """
+    a, b = json.loads(json.dumps(regenerated)), json.loads(json.dumps(committed))
+    for d in (a, b):
+        for k in resume_exempt_source_keys(d):
+            d["source_sha256"].pop(k, None)
+    return a != b
+
+
 def run_stage(outdir: Path, man: dict, plan: list[dict], points, backend: str, jobs: int,
               issue: int) -> int:
     """Write (or check, append-only) stage.json, submit every request of the
@@ -1036,12 +1074,10 @@ def run_stage(outdir: Path, man: dict, plan: list[dict], points, backend: str, j
     mpath = outdir / "stage.json"
     if mpath.exists():
         # append-only: a stage directory is never re-planned; resuming is fine
-        # only for the identical plan (ignoring the script's own hash).
+        # only for the identical plan (ignoring the orchestrating code's own
+        # hashes, per resume_exempt_source_keys).
         old = json.loads(mpath.read_text())
-        a, b = json.loads(json.dumps(man)), old
-        for d in (a, b):
-            d["source_sha256"].pop("parasitic_attribution_py", None)
-        if a != b:
+        if append_only_conflict(old, man):
             sys.exit(f"{mpath} exists with a different plan; stage directories are append-only")
     else:
         mpath.write_text(json.dumps(man, indent=2, sort_keys=True) + "\n")
@@ -1565,10 +1601,12 @@ def combo_manifest(text: str, plan: list[dict], points, kind: str,
         "cg_nets": cg_nets, "leg_nets": leg_nets,
         "points": [pid(x) for x in points],
         "requests_planned": count_requests(plan, points),
-        "source_sha256": _stage_source_sha256(text, {
+        "source_sha256": {
+            **common_source_sha256(text),
+            "attribution_json_229": file_sha(ATTRIBUTION_JSON_229),
             "ground_c_budget_243_readme": file_sha(
                 HERE / "artifacts" / "ground-c-budget" / "20261010-154019-b9fff0f" / "README.md"),
-        }),
+        },
         "variants": [],
     }
     for x in plan:

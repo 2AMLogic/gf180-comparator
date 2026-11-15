@@ -3,21 +3,21 @@
   "kind": "generic",
   "status": "pass",
   "t1_item": 9,
-  "summary": "T1 item 9 (Testbenches shipped): 73/73 attestation checks passed (klt signoff --attest)",
+  "summary": "T1 item 9 (Testbenches shipped): 78/78 attestation checks passed (klt signoff --attest)",
   "source": "signoff/inventory/item-9.json",
   "attestation": {
     "producer": "klt signoff --attest",
     "inventory_schema_version": 1,
     "hash_algorithm": "sha256-raw-bytes",
-    "check_count": 73,
-    "passed_count": 73,
+    "check_count": 78,
+    "passed_count": 78,
     "checks": [
       {
         "check": "present",
         "role": "testbench",
         "path": "sim/README.md",
         "passed": true,
-        "content_hash": "sha256:23cbee884bf35ac78b2e4b4b7ae2b30393137c4feb949650457edd13469f6dcf"
+        "content_hash": "sha256:33287d6ef45abdce274bf1a27dc2f8d644807aec6fb10ab39e0b1dfb41d8104c"
       },
       {
         "check": "present",
@@ -31,7 +31,7 @@
         "role": "testbench",
         "path": "sim/comparator-avg-power/README.md",
         "passed": true,
-        "content_hash": "sha256:649d0b8e50626a9059363e4ffc0c40ef295c353c85f2982172fafeba02db666b"
+        "content_hash": "sha256:1995c972a341b5bf5ab3c973c20f332af05e9908c01827aa31c817ad9b4a43f9"
       },
       {
         "check": "present",
@@ -283,7 +283,7 @@
         "role": "testbench",
         "path": "sim/harness/cli.py",
         "passed": true,
-        "content_hash": "sha256:9c780ad0482ff085e31565eb4261c44d4d088a0f8fab4793006cb54af85ce2e4"
+        "content_hash": "sha256:c8f5504c49c2c58bb22fd1c9bca758a7dce5c72a4ab9be4a419a1d9451340ff8"
       },
       {
         "check": "present",
@@ -302,6 +302,13 @@
       {
         "check": "present",
         "role": "testbench",
+        "path": "sim/harness/evidence_store.py",
+        "passed": true,
+        "content_hash": "sha256:9db917ab595d53ecf9b6059da7f604cff9958d6297688cad453310645b82ca39"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
         "path": "sim/harness/pdk.py",
         "passed": true,
         "content_hash": "sha256:0b99b454d3bfd50f53eb690b37ef861e763a9db64bfa28615653ff12e64c731c"
@@ -311,7 +318,7 @@
         "role": "testbench",
         "path": "sim/harness/report.py",
         "passed": true,
-        "content_hash": "sha256:1894ccef106d1ec400f468d2a4ca3601d7bfffea02f393db0fad040c0900e559"
+        "content_hash": "sha256:0f6144ddadb720e1d41325587b2f891127d392f111071c0033da9643279662ea"
       },
       {
         "check": "present",
@@ -325,7 +332,7 @@
         "role": "testbench",
         "path": "sim/harness/testbench.py",
         "passed": true,
-        "content_hash": "sha256:ed8949beb95797b49af4c7383e14b1ece9ac5caafab56172e2ec2c27863d428f"
+        "content_hash": "sha256:1ae780e0a687f1a01abb50936a648d4865a97ee15626fd31429372de4a9f2d36"
       },
       {
         "check": "present",
@@ -347,6 +354,13 @@
         "path": "sim/harness/tests/test_avg_power_semantics.py",
         "passed": true,
         "content_hash": "sha256:2959a786adfdf3de0844bcea747378833b4fa6fd71a9b793c010d956733f875c"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/tests/test_cli_failed_logs.py",
+        "passed": true,
+        "content_hash": "sha256:d621b33629b8a7e0e3be3cb31d128d6543d7bff531beeea3ccf2df7931649d33"
       },
       {
         "check": "present",
@@ -379,16 +393,23 @@
       {
         "check": "present",
         "role": "testbench",
+        "path": "sim/harness/tests/test_evidence_store.py",
+        "passed": true,
+        "content_hash": "sha256:1d6f535f9642245a0d940b1440b915047a9c3e64a44069ce02e546c1fe318209"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
         "path": "sim/harness/tests/test_extracted_tran_feasibility.py",
         "passed": true,
-        "content_hash": "sha256:2b865935371b0209aa8bc8fcf28fc49e05f6d4fd6ca967e2b6f72183948da78c"
+        "content_hash": "sha256:d55ec15529d59a6a5f9d5b89bf3c167fdf6f4b1cb7ce5fc9f056443af67a5257"
       },
       {
         "check": "present",
         "role": "testbench",
         "path": "sim/harness/tests/test_klt_record.py",
         "passed": true,
-        "content_hash": "sha256:a30d6d2e539ea7cc1a9fff75be222ecc7fc598c0ec8255071dc6b1d496748527"
+        "content_hash": "sha256:367f981be17c61a0bdf23ba33b53604ca1a3bc38d949a16e44afe5a9d0e0957a"
       },
       {
         "check": "present",
@@ -435,6 +456,13 @@
       {
         "check": "present",
         "role": "testbench",
+        "path": "sim/harness/tests/test_report_reproduce.py",
+        "passed": true,
+        "content_hash": "sha256:f1732b12d370d831d8285104da5c7dee09fe9c3174310784c5dec5fc38076afc"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
         "path": "sim/harness/tests/test_report_summarize.py",
         "passed": true,
         "content_hash": "sha256:43c1d27cef99f00e90a7ebfa277037bae13bf30d6b8ae8cfc35c3426193c06d7"
@@ -458,7 +486,7 @@
         "role": "testbench",
         "path": "sim/harness/tests/test_testbench_load.py",
         "passed": true,
-        "content_hash": "sha256:4edfbe688a260df5db078d811308d6600216759c0d5d81d19c7cf6badfab94af"
+        "content_hash": "sha256:6c32ccadc29e09e937b45c6a4609ed09b17a40a4f7d10530e405ac36ce207a03"
       },
       {
         "check": "present",
@@ -487,6 +515,13 @@
         "path": "sim/run_corners.py",
         "passed": true,
         "content_hash": "sha256:2a90d98323d874d9888e0eec55414249ae025e84b41cf14200e61b7a63144be7"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/run_store_evidence.py",
+        "passed": true,
+        "content_hash": "sha256:fbd2365337c0ae57ba8669116812e58a1bc7ef35a810e04693be128da5fbba44"
       },
       {
         "check": "present",
@@ -544,7 +579,7 @@
         "path": "signoff/inventory/item-9.json",
         "scope": "repo"
       },
-      "content_hash": "sha256:0515a7c8b08426894bf50e39b397320fca60cff1bef040544a79633c91ee34b1"
+      "content_hash": "sha256:a5a98970545b29083ace6b8dd5fa6831c436f5663bb609a8b205416a885ab4c0"
     }
   }
 }

@@ -105,7 +105,6 @@ from __future__ import annotations
 import argparse
 import concurrent.futures
 import hashlib
-import importlib.util
 import json
 import math
 import os
@@ -118,6 +117,11 @@ from pathlib import Path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(os.path.dirname(HERE))
+# run_extract_sim imports its sibling `layout_common` by bare name.
+sys.path.insert(0, os.path.join(REPO_ROOT, "layout"))
+
+import run_extract_sim  # noqa: E402
+
 BENCH_DIR = os.path.join(REPO_ROOT, "sim", "comparator-regeneration", "testbench")
 TB_JSON = os.path.join(BENCH_DIR, "tb.json")
 TB_MAIN = os.path.join(BENCH_DIR, "tb_regeneration.spice")
@@ -729,15 +733,9 @@ def _dut_text(side: str, netlist: str, workdir: str) -> tuple[str, str]:
             sys.exit(f"schematic side got {netlist}, expected design/comparator.spice")
         text = Path(netlist).read_text()
         return text, _sha256(netlist)
-    # run_extract_sim imports its sibling `layout_common` by bare name.
-    sys.path.insert(0, os.path.join(REPO_ROOT, "layout"))
-    spec = importlib.util.spec_from_file_location(
-        "run_extract_sim", os.path.join(REPO_ROOT, "layout", "run_extract_sim.py"))
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
     dut_path = os.path.join(workdir, "comparator.dut-layout.spice")
-    mod._adapt_netlist(netlist, dut_path)
-    mod._check_interface_contract(dut_path)
+    run_extract_sim._adapt_netlist(netlist, dut_path)
+    run_extract_sim._check_interface_contract(dut_path)
     return Path(dut_path).read_text(), _sha256(dut_path)
 
 

@@ -1,0 +1,113 @@
+{
+ "schema": "gf180-comparator/klt-source-bundle",
+ "version": 2,
+ "generator": "sim/tools/mk_klt_request.py",
+ "generated_utc": "2026-11-15T07:57:04Z",
+ "bench": "comparator-avg-power",
+ "origin": {
+  "commit": "79abbcca232ef637033b7544e09306d5fec0caed",
+  "dirty": false,
+  "dirty_paths": [],
+  "checked_paths": [
+   "design",
+   "sim/tools",
+   "sim/harness",
+   "sim/comparator-avg-power/testbench",
+   "sim/dut.json",
+   "design/comparator.spice"
+  ]
+ },
+ "dut": {
+  "selector": null,
+  "key": "comparator-dr0001",
+  "dut_id": "comparator-dr0001",
+  "provenance": "schematic",
+  "netlist": "design/comparator.spice",
+  "netlist_sha256": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a",
+  "params": {
+   "dut_ib": 1e-05,
+   "dut_vcm": 1.65
+  },
+  "binding_config": "sim/dut.json",
+  "binding_entry_sha256": "77228add0ad0b1b62eda65cfcfd0f79c62b5d289ecd7eb1caa1522de9afb274e",
+  "staged_netlist": "sources/dut/comparator.spice",
+  "staged_binding": "sources/dut-binding.json"
+ },
+ "testbench": {
+  "experiment": "comparator-avg-power",
+  "dir": "sim/comparator-avg-power/testbench",
+  "netlist": "tb_avg_power.spice",
+  "netlist_sha256": "a2bb5545b89137e1f21332108f28575697b771b05030bc829ee0eea26051986e",
+  "manifest_sha256": "ad9454f781c63108fa9997c293f3477f45e63954928dd872e7d82ff2f5d936a1",
+  "staged_dir": "sources/testbench"
+ },
+ "toolchain": {
+  "file": "sim/toolchain.json",
+  "sha256": "9f31fd9f7b46d10913524529b7d39070594913954a753e1d608639525f68f60b",
+  "commit": "79abbcca232ef637033b7544e09306d5fec0caed",
+  "ngspice_min_major": 46,
+  "open_pdks": "f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7",
+  "pdk_variant": "gf180mcuD"
+ },
+ "parameters": {
+  "corners": [
+   "tt",
+   "ff",
+   "ss",
+   "fs",
+   "sf"
+  ],
+  "temperatures_c": [
+   -40.0,
+   27.0,
+   125.0
+  ],
+  "supply_tolerance": 0.1,
+  "supply_v": [
+   2.97,
+   3.3,
+   3.63
+  ],
+  "mc_n": null
+ },
+ "requests": {
+  "main-v2.97": {
+   "leg": "main",
+   "vdd": 2.97,
+   "request": "request-main-v2.97.json",
+   "request_sha256": "6f8d101799d3b4eea1ed9039cdff222d517e9e855060b385d0bda3f6d5cb1914",
+   "netlist": "body-v2.97.spice",
+   "netlist_sha256": "31c1f20b3783b1dabeb93a727b45bc3fbbcbdbfd5b2ab136777840c7b0eed4a1"
+  },
+  "main-v3.30": {
+   "leg": "main",
+   "vdd": 3.3,
+   "request": "request-main-v3.30.json",
+   "request_sha256": "5914e77b58f0aef4525240b135592e2fbcabaf7ac7f292c1661157eab865e92b",
+   "netlist": "body-v3.30.spice",
+   "netlist_sha256": "b87020ab9e4b0005d720525cfe8f4e345a2525ae432f6192de23959e6e1b57c4"
+  },
+  "main-v3.63": {
+   "leg": "main",
+   "vdd": 3.63,
+   "request": "request-main-v3.63.json",
+   "request_sha256": "904e12ab75ce9639f04c0984f4a46fd9e8561c4b69202df9971d7311b14e4ebc",
+   "netlist": "body-v3.63.spice",
+   "netlist_sha256": "6cfc6d0bae79bf98f5d498d1b8e23502db2afdde582ee788666fcf155dfeffa2"
+  }
+ },
+ "staged": {
+  "body-v2.97.spice": "31c1f20b3783b1dabeb93a727b45bc3fbbcbdbfd5b2ab136777840c7b0eed4a1",
+  "body-v3.30.spice": "b87020ab9e4b0005d720525cfe8f4e345a2525ae432f6192de23959e6e1b57c4",
+  "body-v3.63.spice": "6cfc6d0bae79bf98f5d498d1b8e23502db2afdde582ee788666fcf155dfeffa2",
+  "design.ngspice": "7e222f050318388f37543a64fbd0be55cc15e4b93f57501a09f7c159c4c9e561",
+  "request-main-v2.97.json": "6f8d101799d3b4eea1ed9039cdff222d517e9e855060b385d0bda3f6d5cb1914",
+  "request-main-v3.30.json": "5914e77b58f0aef4525240b135592e2fbcabaf7ac7f292c1661157eab865e92b",
+  "request-main-v3.63.json": "904e12ab75ce9639f04c0984f4a46fd9e8561c4b69202df9971d7311b14e4ebc",
+  "sources/dut/comparator.spice": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a",
+  "sources/dut-binding.json": "9ed024b2e635e241570e47b0e48c2fbe8719c0c4dbd38c92b7e97c1b06e49701",
+  "sources/testbench/tb.json": "ad9454f781c63108fa9997c293f3477f45e63954928dd872e7d82ff2f5d936a1",
+  "sources/testbench/tb_avg_power.spice": "a2bb5545b89137e1f21332108f28575697b771b05030bc829ee0eea26051986e",
+  "sources/testbench/tb_vosprobe.spice": "35c7012038e6ffadf3db48e3b34982d93157f36e493d2e526a710c4fe5bc144f"
+ }
+}

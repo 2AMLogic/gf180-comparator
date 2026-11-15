@@ -75,13 +75,11 @@ it compares committed files only.
 
 from __future__ import annotations
 
-import importlib.util
 import json
 import math
 import subprocess
 import sys
 from pathlib import Path, PurePosixPath
-from types import ModuleType
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -103,6 +101,23 @@ HARNESS_DUT = REPO_ROOT / "sim" / "harness" / "dut.py"
 
 #: The DUT binding the harness reads (``sim/harness/dut.py`` DUT_CONFIG).
 DUT_BINDING = "sim/dut.json"
+
+#: ``sim/`` goes first on ``sys.path`` so the lazy ``from harness import
+#: dut`` below resolves the repo's own copy of the harness package rather
+#: than any installed namesake.
+sys.path.insert(0, str(REPO_ROOT / "sim"))
+
+
+def load_harness_dut():
+    """Return the harness DUT module, importing it lazily.
+
+    Deliberately not a module-scope import: the missing-``HARNESS_DUT``
+    check in :func:`check_netlist_and_ports` must be able to fire (with
+    its named diagnostic) before this import could raise.
+    """
+    from harness import dut
+
+    return dut
 
 #: Manifest fields that hold a repository-relative path, as dotted keys.
 #: ``"#anchor"`` suffixes are stripped. Fields in PATH_PREFIX_FIELDS are
@@ -235,18 +250,6 @@ def check_paths(integrator: dict, tracked) -> list[str]:
         if problem:
             problems.append(problem)
     return problems
-
-
-def load_harness_dut() -> ModuleType:
-    """Import ``sim/harness/dut.py`` by path (stdlib-only module)."""
-    name = "_integrator_harness_dut"
-    spec = importlib.util.spec_from_file_location(name, HARNESS_DUT)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"cannot import {HARNESS_DUT}")
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[name] = module  # dataclasses resolve their module by name
-    spec.loader.exec_module(module)
-    return module
 
 
 def check_netlist_and_ports(integrator: dict) -> list[str]:
