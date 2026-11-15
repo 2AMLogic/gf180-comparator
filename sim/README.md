@@ -180,10 +180,14 @@ Monte Carlo grids by hand: use the fleet path.
 KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py <bench> --label "<text>"
 ```
 
-`mk_klt_request.py` (called by `klt_record.py`) builds the requests. Current
-limits, stated as they are in the tools: `comparator-preamp-noise` cannot be
-expressed for the fleet runner (its `klt` 0.5.0 has no `noise` analysis), so a
-noise is run locally via `run_corners.py` (a single nominal point on a shared dispatch worker; the full PVT grid only on a workstation with the pinned PDK); extracted DUT
+`mk_klt_request.py` (called by `klt_record.py`) builds the requests.
+`comparator-preamp-noise` IS expressible for the fleet runner: issue #355
+removed the earlier refusal, `mk_klt_request.py` routes the bench to
+`noise_legs` (`expr` measurements — ngspice has no `.MEASURE NOISE` card to
+write them as), and its newest record
+([`20261114-035145782554-43526e3`](comparator-preamp-noise/records/20261114-035145782554-43526e3.md))
+ran on the batch fleet. Current limits, stated as they are in the tools:
+extracted DUT
 bindings go through the two-phase fleet flow (issue #374): `klt_record.py`
 drives `--emit probe`, dispatches the trip-point probe, then `--emit main
 --from-probe` with each point's probed `dut_vos` baked in — so an extracted

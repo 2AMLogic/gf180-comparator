@@ -128,8 +128,9 @@ KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py comparator-avg-power
 `let i_rst_thr = -1.1*i_q*1e6` / `meas tran t_rst when v(irst)=i_rst_thr ...`:
 the 110 % threshold is relative to the SAME run's quiescent current, so it
 must be defined interactively between the run and the measurement. The fleet
-request schema (`klt` 0.5.0: one analysis + `{name, spice}` measurement
-entries, no `expr` algebra) has no position for that `let`, and shipping the
+request schema (one analysis plus `{name, spice}` measurement entries, no
+position for an interactive command between the run and the measurements) has
+no position for that `let` at any runner version, and shipping the
 `t_rst` card without it would be the
 [2AMLogic/klayout-tools#5651](https://github.com/2AMLogic/klayout-tools/issues/5651)
 failure shape (passes `--dry-run`, then errors every corner). The pair is
