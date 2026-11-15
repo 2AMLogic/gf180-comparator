@@ -82,7 +82,10 @@ no target/stretch verdict at all (no `spec_row`, no PASS/FAIL column --
 `"scored": false`). comparator-avg-power additionally gates its corners on
 the manifest `checks` (CHECK_GUARDED_BENCHES) and omits the quantities in
 FLEET_OMITTED_MEASURES; `--compare-local` states its signed deltas against a
-committed local record under `cross_run_agreement` (AVG_POWER_CROSS_RUN).
+committed local record under `cross_run_agreement` (AVG_POWER_CROSS_RUN),
+pinning that counterparty by its sha256 and repo-relative path (issue #384,
+schema `cross-run-agreement/2`; the single committed /1 record keeps its
+name-only counterparty -- `sim/` evidence is append-only).
 
 PDK qualification (issue #283): the exact open_pdks revision (sim/toolchain.json
 `open_pdks`) IS the device models, so every ingested leg's executor-reported
@@ -191,7 +194,13 @@ AVG_POWER_CROSS_RUN = {
     "i_static_ua": ("rel", 0.01),
     "q_half_mismatch_pct": ("abs", 0.05),
 }
-CROSS_RUN_SCHEMA = "cross-run-agreement/1"
+#: Counterparty identity in `cross_run_agreement` (issue #384): /2 adds the
+#: local record's sha256 (full 64 hex) and its repo-relative `path` next to
+#: the `local_record` basename, so an asserted cross-run agreement is
+#: auditable against the exact bytes it compared. The one committed /1
+#: record cites its counterparty by name only and stays as minted
+#: (append-only); nothing reads this string, so the bump is free.
+CROSS_RUN_SCHEMA = "cross-run-agreement/2"
 
 
 def corner_id(raw: str, vdd: float) -> tuple[str, str]:
@@ -786,10 +795,16 @@ def compare_local_record(path: str, derived: dict) -> dict:
     never a silently skipped row. The asserted band lives in
     AVG_POWER_CROSS_RUN; an exceeded band flips `status` to OUT_OF_BAND (a
     finding the record states, not a rounding note) but mints nothing
-    differently -- the record's coverage/identity gates are independent."""
+    differently -- the record's coverage/identity gates are independent.
+    The counterparty is pinned by content (issue #384): its sha256 and
+    repo-relative `path` are recorded alongside the human-facing
+    `local_record` basename, so the asserted agreement stays auditable
+    against the exact bytes it compared."""
     local = json.loads(Path(path).read_text())
     lpts = {p["corner_id"]: p.get("measurements", {}) for p in local.get("points", [])}
     out = {"schema": CROSS_RUN_SCHEMA, "local_record": Path(path).name,
+           "sha256": mk.sha256_file(Path(path)),
+           "path": mk.repo_rel(Path(path)) or str(Path(path).resolve()),
            "policy_source": "sim/tools/klt_record.py AVG_POWER_CROSS_RUN (issue #372)",
            "per_quantity": {}, "gaps": [], "status": "within_band"}
     for cid in sorted(derived):
@@ -825,7 +840,8 @@ def compare_local_record(path: str, derived: dict) -> dict:
 def cross_run_lines(cmp: dict) -> list[str]:
     """Markdown for `compare_local_record`, rendered only from that structure."""
     out = [f"- **Cross-run agreement vs the committed local record** `{cmp['local_record']}` "
-           f"(issue #372; the first local-vs-fleet tolerance stated in this repo; band policy: "
+           f"(sha256 `{cmp['sha256'][:16]}`, at `{cmp['path']}`; issue #372; the first "
+           f"local-vs-fleet tolerance stated in this repo; band policy: "
            f"`{cmp['policy_source']}`): signed deltas, fleet minus local."]
     for key, e in cmp["per_quantity"].items():
         out.append(f"  - `{key}`: fleet {fmt(e['fleet'])} vs local {fmt(e['local'])} -> delta "
@@ -1858,6 +1874,22 @@ def main() -> int:
 
     if a.compare_local and a.bench != "comparator-avg-power":
         refuse("BAD_ARGUMENT", "--compare-local is defined for comparator-avg-power only (issue #372)")
+    if a.compare_local:
+        # Issue #384: the minted record pins its counterparty by sha256, so
+        # the target must be a readable record under this bench's records/
+        # -- refused here, before any dispatch or ingest, not inside
+        # compare_local_record (whose unit tests pass tempdir paths).
+        target = Path(a.compare_local).resolve()
+        records = (SIM / a.bench / "records").resolve()
+        if not target.is_relative_to(records):
+            refuse("BAD_ARGUMENT",
+                   f"--compare-local must name a committed record under {records} "
+                   f"(issue #384: the record pins its counterparty by sha256); "
+                   f"resolved target {target} is outside it")
+        try:
+            target.read_text()
+        except OSError as e:
+            refuse("BAD_ARGUMENT", f"--compare-local: counterparty record {target} is not readable: {e}")
     if a.bench == mk.CM_INDEX_BENCH:
         return mint_cm_index(a)
     if a.bench == mk.CM_WINDOW_BENCH:
