@@ -102,9 +102,22 @@ HARNESS_DUT = REPO_ROOT / "sim" / "harness" / "dut.py"
 #: The DUT binding the harness reads (``sim/harness/dut.py`` DUT_CONFIG).
 DUT_BINDING = "sim/dut.json"
 
+#: ``sim/`` goes first on ``sys.path`` so the lazy ``from harness import
+#: dut`` below resolves the repo's own copy of the harness package rather
+#: than any installed namesake.
 sys.path.insert(0, str(REPO_ROOT / "sim"))
 
-from harness import dut as harness_dut  # noqa: E402
+
+def load_harness_dut():
+    """Return the harness DUT module, importing it lazily.
+
+    Deliberately not a module-scope import: the missing-``HARNESS_DUT``
+    check in :func:`check_netlist_and_ports` must be able to fire (with
+    its named diagnostic) before this import could raise.
+    """
+    from harness import dut
+
+    return dut
 
 #: Manifest fields that hold a repository-relative path, as dotted keys.
 #: ``"#anchor"`` suffixes are stripped. Fields in PATH_PREFIX_FIELDS are
@@ -243,7 +256,7 @@ def check_netlist_and_ports(integrator: dict) -> list[str]:
     problems: list[str] = []
     if not HARNESS_DUT.is_file():
         return [f"missing {HARNESS_DUT.relative_to(REPO_ROOT)} -- the harness DUT loader is the authority for the netlist interface"]
-    harness = harness_dut
+    harness = load_harness_dut()
 
     netlist = integrator.get("netlist")
     if not isinstance(netlist, dict):
