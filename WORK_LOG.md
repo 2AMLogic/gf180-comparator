@@ -2,6 +2,16 @@
 
 Chronological record of merged pull requests and closed issues. Newest entries appear first.
 
+### 2026-11-14
+
+- **PR #369**: evidence(noise): measure the 45-corner cascode preamp noise grid on the batch fleet
+- **PR #365**: refactor(pex): classify stage.json code hashes by rule, not a fixed tuple
+- **PR #361**: sim: add unscored periodic-clock bench for DR-0006's reset, supply-charge and window validation
+- **Issue #363** (closed): item-9 attestation inventory omits four harness files its own scope covers, so they can change unattested
+- **Issue #358** (closed): Derive the stage.json provenance key set by rule: the hardcoded allowlist already misses design_lever_study_py (#249 regression)
+- **Issue #356** (closed): Add an unscored periodic-clock bench for DR-0006's pre-ratification validation (reset completion, supply charge per cycle)
+- **Issue #355** (closed): Run the 45-corner preamp noise grid on the DR-0004 cascode experiment netlist
+
 ### 2026-11-13
 
 - **Issue #88** (closed): Auditor Capability Request: worker ngspice 42 below pinned floor 46, selftest cannot run
