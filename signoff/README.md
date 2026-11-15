@@ -653,7 +653,7 @@ attested" above for what `--check` does and does not re-run.
 Supersedes the earlier "deliberately uncited" audit (#89, DR-0003): with
 klayout-tools#2844 in klt 0.8.0 the item is graded from
 `signoff/envelopes/item-10.json`, an artifact-anchored envelope over
-`signoff/inventory/item-10.json` (`README.md`, the workflow, the PDK-free
+`signoff/inventory/item-10.json` (`README.md`, the workflows, the PDK-free
 verifiers — 16 checks). See "Attestation inventories and envelopes" below
 for what `--check` re-runs and what it does not.
 
@@ -691,7 +691,7 @@ What the attested row does not show:
   grids) is not run in CI at all.
 - **The attested checks are the PDK-free steps only.** The envelope's six
   `command` entries record the `run-pdk-free-tests.sh` steps `discovery`,
-  `harness-tests`, `klt-pin`, `rulebook-pin`, `bench-inventory` and
+  `harness`, `klt-pin`, `rulebook-pin`, `bench-inventory` and
   `claim-drift`, each with recorded `exit_status: 0`; the `re-grade` step is
   excluded (circular). No simulation run (`sim/selftest.sh`,
   `sim/characterize.sh`) and no xschem derivation check
