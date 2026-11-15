@@ -45,7 +45,7 @@
         "role": "hygiene",
         "path": "scripts/check_bench_inventory.py",
         "passed": true,
-        "content_hash": "sha256:7f16643f7f79656a0a69e8b01fcaf36c9099a75e1f00f942664c854ca2043867"
+        "content_hash": "sha256:490e9779db45b0c1ff6027be2d62384ae254db85b96bca177097f84e5ebe55a7"
       },
       {
         "check": "present",
