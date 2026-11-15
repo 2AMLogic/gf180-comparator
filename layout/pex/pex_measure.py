@@ -119,8 +119,13 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(os.path.dirname(HERE))
 # run_extract_sim imports its sibling `layout_common` by bare name.
 sys.path.insert(0, os.path.join(REPO_ROOT, "layout"))
+# The ratified corner id lives in the harness (single source of the format
+# string); nothing from it is uploaded -- only the netlist-embedded corner
+# .lib sections are, which stay inlined here by design.
+sys.path.insert(0, os.path.join(REPO_ROOT, "sim"))
 
 import run_extract_sim  # noqa: E402
+from harness import corners as hc  # noqa: E402
 
 BENCH_DIR = os.path.join(REPO_ROOT, "sim", "comparator-regeneration", "testbench")
 TB_JSON = os.path.join(BENCH_DIR, "tb.json")
@@ -222,10 +227,9 @@ PROBE_VSPAN = 40e-3
 PROBE_TRAMP = 80e-6
 
 
-def corner_id(process: str, temp_c: float, vdd: float) -> str:
-    """sim/harness/corners.py's PvtPoint.corner_id, so rows line up with the
-    committed records' own corner ids."""
-    return f"{process}_{temp_c:g}c_{vdd:.2f}v"
+#: The ratified corner id: sim/harness/corners.py's single definition, so
+#: rows line up with the committed records' own corner ids.
+corner_id = hc.corner_id
 
 
 def _sha256(path: str) -> str:

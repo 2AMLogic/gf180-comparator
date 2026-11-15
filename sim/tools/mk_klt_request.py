@@ -973,7 +973,7 @@ def main() -> int:
         # schematic path and the local harness compose_deck both do.
         vspan, tramp, _vs_raw, _tr_raw = probe_deck_spans(
             (out / staged["probe_netlist"]).read_text())
-        wanted = {f"{c.name}_{float(t):g}c_{vdd:.2f}v"
+        wanted = {hc.corner_id(c.name, float(t), vdd)
                   for c in corner_list for t in temps for vdd in vdds}
         # The phase-1 probe requests live on in the phase-2 bundle (same
         # staged sources, same bytes): the record archives ONE bundle whose
@@ -1018,7 +1018,7 @@ def main() -> int:
         for vdd in vdds:
             for c in corner_list:
                 for t in temps:
-                    cid = f"{c.name}_{float(t):g}c_{vdd:.2f}v"
+                    cid = hc.corner_id(c.name, float(t), vdd)
                     (out / f"body-{cid}.spice").write_text("\n".join(body_for(
                         vdd,
                         dut_vos_lines=[f".param dut_vos={float(probe_raw['vos_by_corner'][cid])!r}"],

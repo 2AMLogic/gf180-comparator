@@ -49,9 +49,12 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[1]
 sys.path.insert(0, str(HERE))
+sys.path.insert(0, str(REPO / "sim"))
 
 import parasitic_attribution as pa  # noqa: E402
+from harness import corners as hc  # noqa: E402
 
 LEVER_ISSUE = 323
 LEVER_REQUEST_CAP = 23
@@ -226,7 +229,7 @@ def _plan_from_manifest(man: dict, text: str) -> list[dict]:
 def analyze(outdir: Path) -> dict:
     man = json.loads((outdir / "stage.json").read_text())
     text = pa.load_extracted()
-    points = [pa.parse_corner_id(c) for c in man["points"]]
+    points = [hc.parse_corner_id(c) for c in man["points"]]
     cids = [pa.pid(p) for p in points]
     plan = {x["id"]: x for x in _plan_from_manifest(man, text)}
     res = {vid: pa._budget_values(outdir / vid, points) for vid in plan
@@ -339,7 +342,7 @@ def cmd_verify(args) -> int:
     pa.check_bench()
     text = pa.load_extracted()
     man = json.loads((outdir / "stage.json").read_text())
-    points = [pa.parse_corner_id(c) for c in man["points"]]
+    points = [hc.parse_corner_id(c) for c in man["points"]]
     plan = _plan_from_manifest(man, text)
     errors, drift = pa.budget_manifest_diff(man, manifest(text, plan, points))
     for d in drift:

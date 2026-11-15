@@ -42,6 +42,7 @@ dropping them would make ``ff``/``ss`` here mean something different from
 from __future__ import annotations
 
 import itertools
+import re
 from dataclasses import dataclass, field
 
 # Default PVT axes. CLAUDE.md mandates PVT corners on every recorded result.
@@ -191,6 +192,42 @@ def supply_points(
     ]
 
 
+def corner_id(process: str, temp_c: float, vdd: float) -> str:
+    """The ratified ``<process>_<temp>c_<supply>v`` corner id (``sim/README.md``).
+
+    The single source of the format string: ``PvtPoint.corner_id`` and every
+    Python-side consumer of the id delegate here, so emitted ids always line
+    up with the committed records' own corner ids. ``temp_c`` renders with
+    ``:g`` (so ``27`` prints ``27c``, ``-40`` ``-40c``) and ``vdd`` with
+    ``:.2f`` (so 3.3 V prints ``3.30v``).
+    """
+    return f"{process}_{temp_c:g}c_{vdd:.2f}v"
+
+
+#: ``parse_corner_id``'s process class admits the ratified underscore names
+#: (``res_ff``/``res_ss``, members of the ``full`` set); the supply class is
+#: the formatter's own strict two decimals -- a ``3.3v`` id is never
+#: formatter output and is rejected, exactly as the evidence envelope's
+#: identity gate already rejects it.
+_CID_RE = re.compile(
+    r"^(?P<process>[a-z][a-z_]*)_(?P<temp>-?\d+(?:\.\d+)?)c_(?P<vdd>\d+\.\d\d)v$"
+)
+
+
+def parse_corner_id(cid: str) -> tuple[str, float, float]:
+    """The inverse of ``corner_id``: a ratified corner id -> (process, temp_c, vdd).
+
+    Raises:
+        ValueError: if ``cid`` is not something ``corner_id`` could have
+            emitted (malformed, non-canonical, or 1-decimal supply).
+    """
+    m = _CID_RE.match(cid) if isinstance(cid, str) else None
+    if not m:
+        raise ValueError(f"unparseable corner id {cid!r}: not a "
+                         f"<process>_<temp>c_<supply>v id with a two-decimal supply")
+    return m["process"], float(m["temp"]), float(m["vdd"])
+
+
 @dataclass(frozen=True)
 class PvtPoint:
     """One point in the PVT grid -- exactly one ngspice invocation."""
@@ -208,7 +245,7 @@ class PvtPoint:
         for this point is ``corners/<record-id>/<corner-id>.log`` (e.g.
         ``ss_-40c_2.97v.log``, ``tt_27c_3.30v.log``).
         """
-        return f"{self.corner.name}_{self.temp_c:g}c_{self.vdd:.2f}v"
+        return corner_id(self.corner.name, self.temp_c, self.vdd)
 
     def as_dict(self) -> dict:
         return {

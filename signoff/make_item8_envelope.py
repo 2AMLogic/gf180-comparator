@@ -78,7 +78,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import re
 import sys
 from pathlib import Path
 
@@ -113,9 +112,6 @@ SCORED = {
 }
 EXPECTED_POINTS = 45
 
-_ID_RE = re.compile(r"^(?P<corner>[a-z][a-z_]*)_(?P<temp>-?\d+(?:\.\d+)?)c_(?P<vdd>\d+\.\d\d)v$")
-
-
 def authoritative_grid() -> dict[str, tuple[str, float, float]]:
     """corner_id -> (corner, temp_c, vdd) of the ratified full grid: the default
     ``mos`` corner set x default temperatures x ``supply_points()``."""
@@ -148,7 +144,7 @@ def expected_grid(ent: dict, rid: str) -> tuple[set[str] | None, list[str]]:
     else:
         try:
             cn, tc, sv = decl["corners"], decl["temps_c"], decl["supplies_v"]
-            want = {f"{c}_{float(t):g}c_{float(v):.2f}v" for c in cn for t in tc for v in sv}
+            want = {corners.corner_id(c, float(t), float(v)) for c in cn for t in tc for v in sv}
             n = len(cn) * len(tc) * len(sv)
         except (KeyError, TypeError, ValueError):
             return None, [f"record {rid}: expected_grid malformed"]
@@ -164,10 +160,11 @@ def expected_grid(ent: dict, rid: str) -> tuple[set[str] | None, list[str]]:
 
 def _norm_id(cid: object, fields: dict | None, where: str) -> tuple[str | None, str | None]:
     """Normalize one identity; returns (id, problem)."""
-    if not isinstance(cid, str) or not (m := _ID_RE.match(cid)):
+    try:
+        corner, temp, vdd = corners.parse_corner_id(cid)
+    except ValueError:
         return None, f"malformed identity {cid!r} at {where}"
-    corner, temp, vdd = m["corner"], float(m["temp"]), float(m["vdd"])
-    if f"{corner}_{temp:g}c_{vdd:.2f}v" != cid:
+    if corners.corner_id(corner, temp, vdd) != cid:
         return None, f"malformed identity {cid!r} at {where} (non-canonical formatting)"
     if fields is not None:
         fc, ft, fv = fields.get("corner"), fields.get("temp_c"), fields.get("vdd")
