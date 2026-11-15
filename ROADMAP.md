@@ -4,11 +4,12 @@ A dynamic latched comparator (static differential preamplifier into a StrongARM
 latch) on the open GF180MCU PDK, built to show a fully evidenced analog block
 and to surface klayout-tools gaps along the way.
 
-Status as of 2026-11-14, `main` @ `bff5530`.
+Status as of 2026-11-15, `main` @ `c64c9676`.
 
 The verdict of record is [`signoff/signoff-report.json`](signoff/signoff-report.json),
 per-row results are in [`spec/evidence-ledger.md`](spec/evidence-ledger.md) and the
-label queue is [`WORK_PLAN.md`](WORK_PLAN.md); where they disagree with this file, they win.
+label queue — the authoritative record of per-issue status and claims — is
+[`WORK_PLAN.md`](WORK_PLAN.md); where they disagree with this file, they win.
 
 ## Where it stands
 
@@ -46,23 +47,23 @@ policy for items 1, 9, 10), DR-0004 (input cascode), DR-0005 (metastability
 row), DR-0006 (average-power condition, 16 MHz) and DR-0007 (decision-time
 levers, a negative result) all read `Status: proposed`. Both unmet items need
 a design change that sits in a proposed record, which is why the issues that
-would close them — #112, #125, #323, #364 and #374 — carry `loom:blocked`. That
-hold covers 14 of the 25 open issues; the rest is tooling, hygiene and cleanup
-work that needs no ratification.
+would close them — #112, #125, #323, #364 and #374 — wait on those
+ratifications. That holds most of the open backlog; the rest is tooling,
+hygiene and cleanup work that needs no ratification.
 
 ## Recently landed
 
 - **Unscored periodic-clock bench for DR-0006's validation items** — #356, PR
   #361, the former Now item 3. The bench deck, its `tb.json`, the PDK-free
-  semantics tests and one unscored nominal-point schematic record
-  (`sim/comparator-avg-power/records/20261114-032046866512-d02a882`, at
+  semantics tests and an unscored nominal-point schematic record
+  (`sim/comparator-avg-power/records/20261114-032046866512-d02a882.md`, at
   `tt_27c_3.30v`) are on `main`, with the README bench count and the item-9 and
   item-10 attestations refreshed. Scoring stays out until DR-0006 is ratified
   (#125); the corner campaigns the bench unblocks are under **Next**.
 
 ## Now
 
-Startable today without a ratification. Both are filed; #355 is already claimed.
+Startable today without a ratification. Both are filed.
 
 1. **Bring `signoff/README.md` back in line with the graded report.** Its
    "Current verdict" list and the "unmet — item 1" and "unmet — item 10"
@@ -70,16 +71,15 @@ Startable today without a ratification. Both are filed; #355 is already claimed.
    grades them `met` and the same file's attestation section says so too.
    Done when the verdict list and per-item headings match
    `signoff-report.json` and `./scripts/run-pdk-free-tests.sh` passes.
-   Issue: **#354** (`loom:issue`, unclaimed). Blocked by: nothing.
+   Issue: **#354**. Blocked by: nothing.
 2. **Complete the 45-corner noise grid for the DR-0004 cascode experiment.**
    DR-0004 records noise at the nominal point only, because the batch runner
    then had no noise analysis (klayout-tools#2894); PR #346 has since run a
    45-point noise campaign on the runner. Done when a
    `sim/comparator-preamp-noise/records/` entry for DUT
    `comparator-dr0004-cascode-exp` covers 45/45 corners and DR-0004's "Not run"
-   note and noise row quote it. Issue: **#355** (`loom:building`, claimed
-   2026-11-14). Blocked by: nothing; this is the evidence gap option 2 of the
-   #112 decision names.
+   note and noise row quote it. Issue: **#355**. Blocked by: nothing; this is
+   the evidence gap option 2 of the #112 decision names.
 
 ## Next
 
@@ -99,8 +99,9 @@ Startable today without a ratification. Both are filed; #355 is already claimed.
   schematic) and **#373** (the 45-corner schematic record), then **#374** (the
   extracted leg), under the **#364** umbrella that DR-0006's feasibility item 1
   asks for. Done when both records exist with a recorded reset-completion
-  margin per corner. Blocked by: nothing for #372 and #373; #364 and #374
-  carry `loom:blocked`.
+  margin per corner. Blocked by: nothing for the schematic legs (#372, #373);
+  the extracted leg (#374) and the umbrella (#364) wait on DR-0006
+  ratification.
 - **Average-power scoring** (#125 stage 2): transient-power bench wired into
   the item-5 corner-matrix wrapper with regressions. Blocked by: DR-0006
   ratification.
@@ -130,13 +131,15 @@ Startable today without a ratification. Both are filed; #355 is already claimed.
   result, or re-scope. Builders claimed and released it three times.
 - **#3** (gap-to-T1 tracker) still quotes 3 of 11 items met; the report grades 9 of 11.
 - **#364** (DR-0006 feasibility item 1) and **#374** (extracted-DUT leg) hold
-  the avg-power corner campaigns; their schematic legs #372 and #373 are not blocked.
-- **#123, #95, #94, #83, #1** are tooling and guard holds, and **#359**, **#367**,
-  **#371** are hygiene and refactor holds — not design work.
+  the avg-power corner campaigns; their schematic legs **#372** and **#373**
+  need no ratification.
+- **#123, #95, #94, #83, #1** are tooling and guard work, and **#359**, **#367**,
+  **#371** hygiene and refactor work — none of it design work.
 
-Agents cannot supply ratification keys. The ready queue is not empty: **#354**
-(`loom:issue`) and **#355** (`loom:building`) carry the two Now items, and
-**#360**, **#368** and **#370** are ready cleanup work.
+Agents cannot supply ratification keys. The queue of work that needs none is
+not empty: **#354** and **#355** carry the two Now items, and **#360**, **#368**
+and **#370** are cleanup work. Current per-issue status and claims are in
+[`WORK_PLAN.md`](WORK_PLAN.md).
 
 ## Not planned
 
