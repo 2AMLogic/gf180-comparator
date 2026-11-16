@@ -4,6 +4,8 @@ Chronological record of merged pull requests and closed issues. Newest entries a
 
 ### 2026-11-16
 
+- **PR #434**: sim: re-mint the extracted comparator-avg-power 45-corner record citable under DR-0008
+- **Issue #398** (closed): signoff(sim): re-mint the extracted comparator-avg-power 45-corner record as citable under the corrected staged-source provenance check
 - **PR #423**: fix: provenance guard checks the region's own shape, not just row titles
 - **Issue #419** (closed): Provenance guard checks row titles but not section membership: an uncurated issue renders under 'Proposed' and CI stays green
 - **PR #430**: fix: DR-0008 pinned guard compares a pinned binding config's selected entry, not the derived staged doc

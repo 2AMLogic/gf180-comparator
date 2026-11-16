@@ -27,7 +27,7 @@ _None._
 
 Human-approved issues ready for implementation (`loom:issue`).
 
-- **#398**: signoff(sim): re-mint the extracted comparator-avg-power 45-corner record as citable under the corrected staged-source provenance check
+_None._
 
 ## In Progress
 
@@ -54,7 +54,7 @@ Issues carrying `loom:curated`.
 - **#3**: Gap-to-T1 tracker: gf180-comparator artifact-presence survey *(curated)*
 - **#125**: Define and measure the missing average-power operating condition for T1 *(curated)*
 - **#323**: Propose a design change that closes the 7 post-layout decision-time misses (T1 item 7) *(curated)*
-- **#398**: signoff(sim): re-mint the extracted comparator-avg-power 45-corner record as citable under the corrected staged-source provenance check *(curated)*
+- **#435**: signoff: selftest.yml attests only item 9 — item 10 has no CI attestation path, so every inventoried-file edit forces a local re-produce *(curated)*
 
 ## Proposed (Architect / Hermit)
 
@@ -71,7 +71,7 @@ _None._
 | Operator merge-risk holds | 1 |
 | Very important | 0 |
 | Important | 3 |
-| Ready (`loom:issue`) | 1 |
+| Ready (`loom:issue`) | 0 |
 | In Progress (`loom:building`) | 0 |
 | PRs awaiting review | 0 |
 | Approved PRs awaiting merge | 1 |
