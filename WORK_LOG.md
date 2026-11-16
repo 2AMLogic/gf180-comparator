@@ -4,6 +4,8 @@ Chronological record of merged pull requests and closed issues. Newest entries a
 
 ### 2026-11-16
 
+- **PR #430**: fix: DR-0008 pinned guard compares a pinned binding config's selected entry, not the derived staged doc
+- **Issue #429** (closed): klt_record: DR-0008 contradiction guard compares a derived staged doc for a pinned binding config
 - **PR #427**: fix: classify gitignored staged sources as pinned provenance (DR-0008)
 - **PR #424**: fix: name stale-pin and foreign causes in provenance row mismatch
 - **Issue #421** (closed): sim/tools: accept a staged-and-committed sha256-matched source as pinned provenance (#398 ruling, option a)
