@@ -127,12 +127,15 @@ class CornerIdFormatTest(unittest.TestCase):
         self.assertEqual(parse_corner_id("ff_125c_3.63v"), ("ff", 125.0, 3.63))
 
     def test_parse_is_the_formatters_strict_inverse(self):
-        """``parse_corner_id`` accepts exactly what ``corner_id`` emits, on
-        both numeric fields: a 1-decimal supply (``3.3v``) and a temperature
-        ``:g`` would not render (trailing decimals ``27.0``/``27.00``/
-        ``-40.0``, leading zeros ``027``/``0125``) are never formatter output
-        and are rejected -- the reading make_item8_envelope.py's evidence gate
-        enforces on committed records."""
+        """``parse_corner_id`` accepts what ``corner_id`` emits over the
+        ratified temperature range, on both numeric fields: a 1-decimal
+        supply (``3.3v``) and a temperature ``:g`` would not render
+        (trailing decimals ``27.0``/``27.00``/``-40.0``, leading zeros
+        ``027``/``0125``) are never formatter output and are rejected --
+        the reading make_item8_envelope.py's evidence gate enforces on
+        committed records. Outside that range ``:g``'s exponent notation
+        emits ids the parser rejects -- see
+        ``test_parse_rejects_g_exponent_emissions``."""
         for bad in ("tt_27c_3.3v",
                     "tt_27.0c_3.30v", "tt_027c_3.30v", "tt_27.00c_3.30v",
                     "tt_-40.0c_2.97v", "ss_0125c_3.63v"):
@@ -171,6 +174,24 @@ class CornerIdFormatTest(unittest.TestCase):
             parse_corner_id("tt_+27c_3.30v")
         with self.assertRaises(ValueError):
             parse_corner_id(None)
+
+    def test_parse_rejects_g_exponent_emissions(self):
+        """``:g``'s exponent notation (``|T| >= 1e6``, or ``0 < |T| < 1e-4``)
+        renders temperatures ``_CID_RE``'s temperature class cannot match, so
+        ``parse_corner_id`` raises even on ids ``corner_id`` emits there.
+        Pinned at both edges -- the last fixed-notation temperature parses on
+        each side, the first exponent-notation one does not. This documents
+        current behavior (rejection); it is not a requirement that exponent
+        ids become parseable."""
+        for bad in ("tt_1e+06c_3.30v", "tt_1.23457e+06c_3.30v",
+                    "tt_1e-07c_3.30v", "tt_-1e+06c_3.30v",
+                    "tt_9e-05c_3.30v"):
+            with self.assertRaises(ValueError):
+                parse_corner_id(bad)
+        self.assertEqual(parse_corner_id("tt_0.0001c_3.30v"),
+                         ("tt", 0.0001, 3.3))
+        self.assertEqual(parse_corner_id("tt_999999c_3.30v"),
+                         ("tt", 999999.0, 3.3))
 
     def test_parse_rejects_malformed(self):
         for bad in ("garbage", "tt_27c_3.30", "27c_3.30v", "tt/27C",
