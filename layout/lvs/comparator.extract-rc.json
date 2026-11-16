@@ -3,6 +3,13 @@
   "black_box_regions": [],
   "dbu_um": 0.0005,
   "dead_metal": [],
+  "dead_metal_omitted": false,
+  "dead_metal_summary": {
+    "area_um2": 0.0,
+    "by_layer": [],
+    "clusters": 0,
+    "shapes": 0
+  },
   "deck": "gf180mcu",
   "declared_pins": [
     "clk",
@@ -4662,9 +4669,9 @@
       "role": "layout"
     },
     "klayout_version": "0.30.13",
-    "klt_git_commit": "76f47afa48f144640d67a7337e5c01b95bc88c7b",
-    "klt_reinstall_spec": "klayout-tools @ git+https://github.com/2AMLogic/klayout-tools@76f47afa48f144640d67a7337e5c01b95bc88c7b",
-    "klt_version": "0.9.2.dev1029+g76f47afa48f1",
+    "klt_git_commit": "2f281f0d605cabc94311e8363a1ddb57bfad8c4d",
+    "klt_reinstall_spec": "klayout-tools @ git+https://github.com/2AMLogic/klayout-tools@2f281f0d605cabc94311e8363a1ddb57bfad8c4d",
+    "klt_version": "0.9.3.dev181+g2f281f0d605c",
     "pdk": null
   },
   "rename_declared_pins": false,
@@ -4676,15 +4683,15 @@
   "subcircuit": null,
   "timing": {
     "stages": {
-      "device_extraction": 0.083,
+      "device_extraction": 0.154,
       "diagnostics": 0.0,
       "netlist_hash": 0.0,
-      "netlist_normalized_hash": 0.001,
-      "netlist_write": 0.002,
-      "read_layout": 0.004
+      "netlist_normalized_hash": 0.0,
+      "netlist_write": 0.003,
+      "read_layout": 0.02
     },
-    "total_seconds": 0.125,
-    "unattributed_seconds": 0.035
+    "total_seconds": 0.217,
+    "unattributed_seconds": 0.04
   },
   "top": "COMPARATOR",
   "unbiased_pmos_body_nets": [],

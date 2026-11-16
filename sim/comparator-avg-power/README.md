@@ -150,7 +150,8 @@ executor". `2AMLogic/klayout-tools#5651` tracks the underlying tool gap.
 | [`20261114-222427036313-e00a719`](records/20261114-222427036313-e00a719.md) | **1 of 1** PVT points (`tt_27c_3.30v`), schematic DUT, ngspice-47 / open_pdks `f6eeac7`, fleet path | fleet bring-up (issue #372): proved the `klt sim` dispatch + ingest path and its `cross_run_agreement` against the local probe, unscored |
 | [`20261115-075832478887-79abbcc`](records/20261115-075832478887-79abbcc.md) | **45 of 45** PVT points (tt/ff/ss/fs/sf × −40/27/125 °C × 2.97/3.30/3.63 V), schematic DUT, ngspice-47 / open_pdks `f6eeac7`, fleet path | the 45-corner campaign (issue #373), unscored — evidence for the DR-0006 ratification reviewers, not a verdict |
 | [`20261115-053040016592-a4eca5b`](records/20261115-053040016592-a4eca5b.md) | **5 of 45** PVT points (tt/ff/ss/fs/sf × 27 °C × 3.30 V), **extracted** DUT, ngspice-47 / open_pdks `f6eeac7` | the probe leg's bring-up record (issue #374): first-ever `tb_vosprobe.spice` run (local, via `sim/run_corners.py`), unscored — **not citable as a clean-tree result**: taken against a dirty working tree (`sim/harness/testbench.py` and its test modified), so it is a diagnostic |
-| [`20261115-064156694329-8a67cff`](records/20261115-064156694329-8a67cff.md) | **45 of 45** PVT points (tt/ff/ss/fs/sf × −40/27/125 °C × 2.97/3.30/3.63 V), **extracted** DUT, ngspice-47 / open_pdks `f6eeac7`, fleet path | the extracted-DUT campaign (issue #374), unscored — **not citable as a clean-tree result**: `layout/lvs/comparator.dut-layout.spice` was untracked at request generation, so it is a diagnostic until the netlist is tracked and the record re-minted |
+| [`20261115-064156694329-8a67cff`](records/20261115-064156694329-8a67cff.md) | **45 of 45** PVT points (tt/ff/ss/fs/sf × −40/27/125 °C × 2.97/3.30/3.63 V), **extracted** DUT, ngspice-47 / open_pdks `f6eeac7`, fleet path | the extracted-DUT campaign (issue #374), unscored — **not citable as a clean-tree result**: minted before the staged-source provenance correction (DR-0008), so it grades as a diagnostic; superseded by [`20261116-203811672880-81544ac`](records/20261116-203811672880-81544ac.md), which re-mints the same campaign citable (issue #398) |
+| [`20261116-203811672880-81544ac`](records/20261116-203811672880-81544ac.md) | **45 of 45** PVT points (tt/ff/ss/fs/sf × −40/27/125 °C × 2.97/3.30/3.63 V), **extracted** DUT, ngspice-47 / open_pdks `f6eeac7`, fleet path | the extracted-DUT campaign re-minted under DR-0008's staged-source provenance class (issue #398), unscored — `citable` / `reference` hold: the gitignored generation netlist's staged bytes are sha256-pinned by every deck and committed in the record's own corner tree (`origin.pinned_sources`) |
 
 > The record's own **Reproduce** line is the harness's generic template
 > (`python3 sim/run_corners.py comparator-avg-power`), which would run the full
@@ -200,13 +201,18 @@ point — no corner was dropped at ingest.
   `INCOMPLETE_COMPARISON` status states exactly that, and claims no agreement
   it cannot see.
 
-### What the extracted-DUT campaign measured (record `20261115-064156694329-8a67cff`)
+### What the extracted-DUT campaign measured (record `20261116-203811672880-81544ac`)
 
 DR-0006 feasibility item 1 asks for the 45 points on **both** bindings, and
 the two campaigns are kept **separate on purpose**: the figures below are the
 post-layout `comparator-dr0001-layout` DUT's own and are never merged with the
-schematic grid's. The run went through the two-phase flow (issue #374). The
-deck's first-ever run was the local bring-up committed as the 5-point record
+schematic grid's. This is the campaign's **citable** mint (issue #398), re-run
+under DR-0008's staged-source provenance class from the diagnostic first mint
+[`20261115-064156694329-8a67cff`](records/20261115-064156694329-8a67cff.md);
+every figure below is bit-identical between the two (same netlist bytes, same
+pinned executor toolchain). The run went through the two-phase flow (issue
+#374). The deck's first-ever run was the local bring-up committed as the
+5-point record
 [`20261115-053040016592-a4eca5b`](records/20261115-053040016592-a4eca5b.md)
 (five process corners at 27 °C / 3.30 V, via `sim/run_corners.py`). Phase 1
 itself then ran as three fleet probe requests (`probe-v2.97` / `probe-v3.30` /
@@ -240,12 +246,16 @@ grid) into 45 main requests, one per PVT point, ngspice-47 / open_pdks
 - **The hypothesised slow corner `ss` / 125 °C / 2.97 V** completed cleanly on
   the extracted DUT as well: 16/16 decisions, `p_avg_uw` = 143.760 µW,
   `q_half_mismatch_pct` = 0.000605 %.
-- **Citability caveat, stated up front**: this record is **not citable as a
-  clean-tree result** — `layout/lvs/comparator.dut-layout.spice` was untracked
-  at request generation (`not_citable_reasons` in the record), so it is a
-  **diagnostic** for the extracted leg's behaviour, not reference evidence,
-  until the netlist is tracked and the record is re-minted from a clean
-  commit.
+- **Citability (DR-0008), stated up front**: the DUT netlist is gitignored
+  generation scratch, but its staged bytes are sha256-pinned by every request
+  deck and committed in this record's own corner tree
+  (`origin.pinned_sources`), which DR-0008's staged-source provenance class
+  treats as pinned provenance — the record reads `citable: true`,
+  `reference: true`, `dirty: false`. The earlier mint
+  [`20261115-064156694329-8a67cff`](records/20261115-064156694329-8a67cff.md)
+  of the same campaign predates the correction and grades `citable: false`;
+  it stays on file as the diagnostic, and this re-mint reproduces its figures
+  bit-for-bit.
 
 ### What the probe measured, and against which DR-0006 item
 
@@ -314,11 +324,11 @@ current coverage state.
   two-key ceremony.
 - The 45-corner schematic-DUT campaign **has run** (record
   `20261115-075832478887-79abbcc`) and so has the extracted
-  (`comparator-dr0001-layout`) one (record `20261115-064156694329-8a67cff`,
-  issue #374) — but the extracted record is **not citable as a clean-tree
-  result**: `layout/lvs/comparator.dut-layout.spice` was untracked at request
-  generation, so DR-0006's extracted leg is diagnostic evidence until the
-  netlist is tracked and the record re-minted.
+  (`comparator-dr0001-layout`) one — record `20261116-203811672880-81544ac`
+  (issue #398), re-minted **citable** under DR-0008's staged-source
+  provenance class from the diagnostic first mint
+  `20261115-064156694329-8a67cff` (issue #374). The extracted leg's evidence
+  is citable reference-grade (unscored); the figures did not move.
 - It does not run DR-0006's sensitivity sweeps (0/100 fF load, 1/50 mV
   overdrive, 32 MHz, clock-charge boundary), which its feasibility item 4
   requires before ratification. `q_clk_pc` records the clock charge at the

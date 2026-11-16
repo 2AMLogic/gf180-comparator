@@ -877,7 +877,7 @@ of `scripts/run-pdk-free-tests.sh`, excluding the re-grade (circular).
 
 **Item 9 is attested (issue #322).** `signoff/envelopes/item-9.json` is the
 `klt signoff --attest 9` envelope (klt 0.8.0), produced by `selftest.yml` on the
-toolchain host (ngspice >= 46, pinned open_pdks) in `workflow_dispatch` run 43784019501 on `feature/issue-405` (issue #405)
+toolchain host (ngspice >= 46, pinned open_pdks) in `workflow_dispatch` run 43953014100 on `feature/issue-398` (issue #398)
 and downloaded unmodified. The manifest pins the inventory hash it is bound to,
 and `signoff.yml` re-runs `--check` for items 1, 9 and 10. Caveat: item 9's cold
 start (`./sim/selftest.sh`) is `local_only`, so the PDK-free `--check`
@@ -888,3 +888,13 @@ inventoried file changes, `--check` exits 3 until the envelope is re-produced
 from a green `selftest.yml` run (download the `item-9-envelope` artifact, commit
 it, re-pin, re-grade). See the addenda in
 `spec/decision-records/DR-0003-t1-items-1-9-10-claim-policy.md` (issue #322).
+
+**Item 10's envelope is re-produced locally** (its checks are the PDK-free
+steps of `scripts/run-pdk-free-tests.sh`, so no toolchain host is needed): the
+current `signoff/envelopes/item-10.json` was regenerated with the pinned
+`klayout-tools==0.8.0` registry wheel on `feature/issue-398` (issue #398),
+whose edit of the inventoried `scripts/check_bench_inventory.py` (the
+comparator-avg-power description now reflects the re-minted citable extracted
+record) drifted the committed envelope by design; 16/16 checks pass, the
+inventory is unchanged so the manifest pin is untouched, and the report was
+re-graded.
