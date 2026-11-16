@@ -131,10 +131,6 @@ jobs:
       # rendered a foreign repo's label state here; the guard fails on
       # exactly that input -- see
       # docs/forensics/2026-11-15-work-plan-provenance-incident.md).
-      # Issue #419: the region's own self-consistency -- the renderer's
-      # section suffixes and the Backlog Balance counts against the rows
-      # their sections render -- is checked offline, ahead of the token
-      # gate, with no API call.
       # Fail-closed: a missing token, a scope-less token, or any query error
       # fails the step, it never skips (.loom/docs/ci-principles.md).
       # Deliberately NOT part of scripts/run-pdk-free-tests.sh, which must
