@@ -1257,6 +1257,84 @@ class PinnedStagedSource(unittest.TestCase):
             self.assertTrue(str(rc).startswith("SOURCE_COMMIT_MISMATCH"), rc)
             self.assertIsNone(rec)
 
+    def test_pinned_binding_config_committed_at_origin_matching_entry_accepted(self):
+        """A pinned binding config that IS a blob at the origin commit is
+        compared by its selected entry, not by bytes: when the committed
+        entry matches the staged binding, the guard must not refuse (#429 --
+        the staged copy is a derived document, so a byte comparison would
+        mismatch unconditionally)."""
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            dut_rel, b_rel = "design/comparator.spice", "sim/dut.json"
+            work, b, _ = self._pinned_bundle(td, dut_rel, b_rel)
+
+            def blob(c, p):
+                return None if p == dut_rel else _committed_blob(c, p)
+            rc, rec, _ = _ingest(td, work, blob=blob)
+            self.assertEqual(rc, 0, rc)
+            self.assertTrue(rec["citable"], rec["not_citable_reasons"])
+            self.assertEqual(rec["source_bundle"]["origin_pinned_sources"],
+                             [dut_rel, b_rel])
+
+    def test_pinned_binding_config_committed_at_origin_differing_entry_refused(self):
+        """And when the committed entry differs from the staged binding, the
+        guard refuses -- with a message about the entry, not a false claim
+        that the staged copy differs."""
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            dut_rel, b_rel = "design/comparator.spice", "sim/dut.json"
+            work, b, _ = self._pinned_bundle(td, dut_rel, b_rel)
+            key = b["dut"]["key"]
+
+            def blob(c, p):
+                if p == b_rel:
+                    doc = json.loads(_committed_blob(c, p))
+                    doc["duts"][key]["mutated_at_origin"] = True
+                    return json.dumps(doc, indent=2, sort_keys=True).encode()
+                return None if p == dut_rel else _committed_blob(c, p)
+            rc, rec, out = _ingest(td, work, blob=blob)
+            self.assertTrue(str(rc).startswith("SOURCE_COMMIT_MISMATCH"), rc)
+            self.assertIn("entry", str(rc))
+            self.assertNotIn("staged copy differs", str(rc))
+            self.assertIsNone(rec)
+
+    def test_pinned_flat_binding_config_committed_at_origin_entry_is_whole_doc(self):
+        """Edge: a flat binding config (no `duts` key) is its own entry --
+        the committed whole doc is compared with binding_entry_sha256."""
+        entry = None
+
+        def flat_entry(c, p):
+            return json.dumps(entry, indent=2, sort_keys=True).encode()
+
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            dut_rel, b_rel = "design/comparator.spice", "sim/dut.json"
+            work, b, _ = self._pinned_bundle(td, dut_rel, b_rel)
+            entry = json.loads(_committed_blob(None, b_rel))["duts"][b["dut"]["key"]]
+
+            def matching(c, p):
+                if p == b_rel:
+                    return flat_entry(c, p)
+                return None if p == dut_rel else _committed_blob(c, p)
+            rc, rec, _ = _ingest(td, work, blob=matching)
+            self.assertEqual(rc, 0, rc)
+            self.assertTrue(rec["citable"], rec["not_citable_reasons"])
+
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            dut_rel, b_rel = "design/comparator.spice", "sim/dut.json"
+            work, b, _ = self._pinned_bundle(td, dut_rel, b_rel)
+            entry = dict(json.loads(_committed_blob(None, b_rel))["duts"][b["dut"]["key"]])
+            entry["mutated_at_origin"] = True
+
+            def differing(c, p):
+                if p == b_rel:
+                    return flat_entry(c, p)
+                return None if p == dut_rel else _committed_blob(c, p)
+            rc, rec, _ = _ingest(td, work, blob=differing)
+            self.assertTrue(str(rc).startswith("SOURCE_COMMIT_MISMATCH"), rc)
+            self.assertIsNone(rec)
+
     def test_pinned_source_without_a_staged_counterpart_refused(self):
         """Edge: a gitignored source that was never staged cannot be pinned
         -- the class covers the staged sources only."""

@@ -409,7 +409,7 @@
         "role": "testbench",
         "path": "sim/harness/tests/test_klt_record.py",
         "passed": true,
-        "content_hash": "sha256:1590320b24adae936c35ab138a3f1dec1468fb6dc32c245e615f72747f792aff"
+        "content_hash": "sha256:c42b7d1bf07bfab01069e161e32e7869a4cb458d8af59b1513dc1c6e691a8e6a"
       },
       {
         "check": "present",
