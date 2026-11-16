@@ -1508,8 +1508,19 @@ def verify_origin_commit(b: dict) -> list[str]:
         blob = git_blob(o["commit"], rel)
         if blob is None:
             continue  # absent at the origin commit: exactly the DR-0008 shape
-        staged_rel = d["staged_netlist"] if rel == d["netlist"] else d["staged_binding"]
-        if mk.sha256_bytes(blob) != (b.get("staged") or {}).get(staged_rel):
+        if rel == d["binding_config"]:
+            # The staged binding copy is a derived document, not a copy of
+            # the config's bytes: compare the committed config's selected
+            # entry with the staged binding, like the non-pinned leg below.
+            doc = json.loads(blob)
+            entry = doc["duts"].get(d["key"]) if "duts" in doc else doc
+            if mk.canonical_sha256(entry) != d["binding_entry_sha256"]:
+                refuse("SOURCE_COMMIT_MISMATCH",
+                       f"{rel} is committed at {o['commit'][:7]} (a tracked file git vouches "
+                       f"for), but its {d['key']!r} entry differs from the staged binding: "
+                       "the DR-0008 pinned-source class does not apply")
+            continue
+        if mk.sha256_bytes(blob) != (b.get("staged") or {}).get(d["staged_netlist"]):
             refuse("SOURCE_COMMIT_MISMATCH",
                    f"{rel} is committed at {o['commit'][:7]} (a tracked file git vouches "
                    f"for), but its staged copy differs: the DR-0008 pinned-source class "
@@ -1525,8 +1536,8 @@ def verify_origin_commit(b: dict) -> list[str]:
                 refuse("SOURCE_COMMIT_MISMATCH",
                        f"bundle claims clean commit {o['commit'][:7]}, but its {d['binding_config']} "
                        f"entry {d['key']!r} differs from the staged binding")
-    # else: the staged binding copy is verified against binding_entry_sha256
-    # by verify_staged; the pinned leg here has nothing to add.
+    # else: the pinned loop above compares the committed config's selected
+    # entry with the staged binding; nothing to add here.
     unverified += _verify_toolchain_snapshot(o["commit"], b.get("toolchain"))
     return unverified
 
