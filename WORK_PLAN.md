@@ -33,22 +33,23 @@ _None._
 
 Issues currently being built (`loom:building`).
 
-- **#405**: docs: sim/README.md:30 still calls klt 0.5.0 'the fleet runner' (cm-window refusal floor)
-- **#414**: corners: parse_corner_id's "accepts exactly what corner_id emits" docstring is still an overstatement at :g's exponent boundary
-- **#415**: Replace importlib path-loading in 16 test files with #368's sys.path + plain import idiom
+- **#416**: Provenance guard: one title edit on any WORK_PLAN-referenced item reddens signoff CI on every open PR, and only a Guide tick can clear it
+- **#419**: Provenance guard checks row titles but not section membership: an uncurated issue renders under 'Proposed' and CI stays green
+- **#421**: sim/tools: accept a staged-and-committed sha256-matched source as pinned provenance (#398 ruling, option a)
 
 ## PRs Awaiting Review
 
 PRs waiting on Judge (`loom:review-requested`).
 
-- **#417**: docs: narrow parse_corner_id's strictness claim to the ratified temp range
-- **#420**: docs: identify klt 0.5.0 as the pinned pre-launch floor, not the fleet runner
+- **#423**: fix: provenance guard checks the region's own shape, not just row titles
+- **#426**: chore(loom): resync installed Loom to v0.19.1302
+- **#427**: fix: classify gitignored staged sources as pinned provenance (DR-0008)
 
 ## Approved (Awaiting Merge)
 
 PRs that passed review and are queued for Champion auto-merge (`loom:pr`).
 
-_None._
+- **#424**: fix: name stale-pin and foreign causes in provenance row mismatch
 
 ## Proposed
 
@@ -57,9 +58,9 @@ Issues carrying `loom:curated`.
 - **#3**: Gap-to-T1 tracker: gf180-comparator artifact-presence survey *(curated)*
 - **#125**: Define and measure the missing average-power operating condition for T1 *(curated)*
 - **#323**: Propose a design change that closes the 7 post-layout decision-time misses (T1 item 7) *(curated)*
-- **#405**: docs: sim/README.md:30 still calls klt 0.5.0 'the fleet runner' (cm-window refusal floor) *(curated)*
-- **#414**: corners: parse_corner_id's "accepts exactly what corner_id emits" docstring is still an overstatement at :g's exponent boundary *(curated)*
-- **#415**: Replace importlib path-loading in 16 test files with #368's sys.path + plain import idiom *(curated)*
+- **#416**: Provenance guard: one title edit on any WORK_PLAN-referenced item reddens signoff CI on every open PR, and only a Guide tick can clear it *(curated)*
+- **#419**: Provenance guard checks row titles but not section membership: an uncurated issue renders under 'Proposed' and CI stays green *(curated)*
+- **#421**: sim/tools: accept a staged-and-committed sha256-matched source as pinned provenance (#398 ruling, option a) *(curated)*
 
 ## Proposed (Architect / Hermit)
 
@@ -78,8 +79,8 @@ _None._
 | Important | 3 |
 | Ready (`loom:issue`) | 0 |
 | In Progress (`loom:building`) | 3 |
-| PRs awaiting review | 2 |
-| Approved PRs awaiting merge | 0 |
+| PRs awaiting review | 3 |
+| Approved PRs awaiting merge | 1 |
 | Curated | 6 |
 | Architect / Hermit proposals | 0 |
 | Active epics | 0 |
