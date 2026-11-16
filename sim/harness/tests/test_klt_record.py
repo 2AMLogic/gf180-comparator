@@ -1062,6 +1062,268 @@ class ReplayIngest(unittest.TestCase):
             self.assertFalse((td / "evidence" / BENCH / "corners").exists())
 
 
+class PinnedStagedSource(unittest.TestCase):
+    """DR-0008 (operator ruling on #398, option (a)): a gitignored FILE source
+    staged into the request set -- the extracted-DUT-netlist shape -- is
+    accepted only under the class's CONJUNCTIVE legs: staged into the record,
+    committed (the record's own tree archives and pins the bytes),
+    sha256-matched, and referenced by every deck. Each test below negates one
+    leg; only the all-legs-true case is accepted, and the accepted record
+    leaves the item-5/item-8 envelope gates true (citable, dirty is False,
+    origin_dirty_paths == []) while naming its class members in
+    source_bundle.origin_pinned_sources. Generation-time classification is
+    exercised against a real temp git repo; the ingest matrix reuses the
+    ReplayIngest fixtures with the bundle's pinned_sources set the way
+    git_ignored_sources + write_bundle set it."""
+
+    def _git_env(self, repo: Path) -> dict:
+        return dict(os.environ, GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@t",
+                    GIT_COMMITTER_NAME="t", GIT_COMMITTER_EMAIL="t@t",
+                    GIT_CONFIG_GLOBAL="/dev/null")
+
+    def test_generation_classifies_gitignored_file_source_not_dirty(self):
+        """git_state stops listing a gitignored file source as dirty;
+        git_ignored_sources names it. A modified tracked source, an
+        untracked-but-not-ignored source, and an index-staged (uncommitted)
+        source all stay dirty."""
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            env = self._git_env(repo)
+
+            def git(*a):
+                kr.subprocess.check_call(["git", "-C", str(repo), *a], env=env,
+                                         stdout=kr.subprocess.DEVNULL, stderr=kr.subprocess.DEVNULL)
+            git("init", "-q")
+            (repo / ".gitignore").write_text("layout/\n")
+            tbd = repo / "sim" / BENCH / "testbench"
+            tbd.mkdir(parents=True)
+            (tbd / "tb.json").write_text("{}")
+            (repo / "sim" / "dut.json").write_text("{}")
+            git("add", "-A")
+            git("commit", "-qm", "x")
+            ignored = "layout/lvs/dut-layout.spice"
+            (repo / ignored).parent.mkdir(parents=True)
+            (repo / ignored).write_text("* extracted netlist scratch\n")
+            paths = [f"sim/{BENCH}/testbench", "sim/dut.json", ignored]
+            with mock.patch.dict(os.environ, env):
+                self.assertEqual(mk.git_state(paths, repo=repo)[1], [])
+                self.assertEqual(mk.git_ignored_sources(paths, repo=repo), [ignored])
+                # Untracked but NOT gitignored: dirty, never classified.
+                (tbd / "tb_new.spice").write_text("* untracked fragment")
+                self.assertIn(f"sim/{BENCH}/testbench/tb_new.spice", mk.git_state(paths, repo=repo)[1])
+                self.assertEqual(mk.git_ignored_sources(paths, repo=repo), [ignored])
+                # Modified tracked: dirty.
+                (tbd / "tb.json").write_text('{"measure": {}}')
+                self.assertIn(f"sim/{BENCH}/testbench/tb.json", mk.git_state(paths, repo=repo)[1])
+                # Gitignored but index-staged without a commit: dirty
+                # (porcelain sees it) -- the class covers committed records,
+                # not a pending index entry.
+                git("add", "-f", ignored)
+                self.assertIn(ignored, mk.git_state(paths, repo=repo)[1])
+
+    def _pinned_bundle(self, td: Path, *pinned: str) -> tuple[Path, dict, str]:
+        """A generated + report-linked kickback work dir whose bundle claims
+        `pinned` the way write_bundle would for gitignored sources."""
+        work = _generate(td)
+        _write_reports(work)
+        b = _bundle(work)
+        b["origin"]["pinned_sources"] = list(pinned)
+        (work / mk.BUNDLE_NAME).write_text(json.dumps(b))
+        return work, b, b["dut"]["netlist"]
+
+    def test_staged_committed_matched_referenced_is_citable_and_gates_true(self):
+        """The one accepted shape. The blob mock returns None for the DUT
+        generation path (not a blob at the origin commit: the gitignored
+        reality) and real bytes elsewhere."""
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work, b, dut_rel = self._pinned_bundle(td, "design/comparator.spice")
+
+            def blob(c, p):
+                return None if p == dut_rel else _committed_blob(c, p)
+            rc, rec, out = _ingest(td, work, blob=blob)
+            self.assertEqual(rc, 0, rc)
+            self.assertTrue(rec["citable"], rec["not_citable_reasons"])
+            self.assertTrue(rec["reference"])
+            self.assertFalse(rec["dirty"])
+            self.assertEqual(rec["not_citable_reasons"], [])
+            # The item-5 (:411/:416/:465-467) and item-8 (:225/:545) gates
+            # read exactly these frozen fields; asserted, not reasoned.
+            self.assertEqual(rec["source_bundle"]["origin_dirty_paths"], [])
+            self.assertEqual(rec["source_bundle"]["origin_pinned_sources"], [dut_rel])
+            md = (td / "evidence" / BENCH / "records" / f"{rec['record_id']}.md").read_text()
+            self.assertNotIn("NOT CITABLE", md)
+            # The committed leg in miniature: the record's own tree carries
+            # the pinned bytes, hash-identical to the bundle's DUT identity.
+            cdir = td / "evidence" / BENCH / "corners" / rec["record_id"]
+            self.assertEqual(_sha(cdir / "sources/dut/comparator.spice"),
+                             b["dut"]["netlist_sha256"])
+
+    def test_without_the_class_the_same_bytes_stay_noncitable(self):
+        """Control for the positive test: identical work dir and blob mock,
+        but no pinned_sources -- the unreadable-at-origin reason fires."""
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work = _generate(td)
+            _write_reports(work)
+            dut_rel = _bundle(work)["dut"]["netlist"]
+
+            def blob(c, p):
+                return None if p == dut_rel else _committed_blob(c, p)
+            rc, rec, _ = _ingest(td, work, blob=blob)
+            self.assertEqual(rc, 0)
+            self.assertFalse(rec["citable"])
+            self.assertFalse(rec["reference"])
+            self.assertTrue(any(dut_rel in r and "not readable" in r
+                                for r in rec["not_citable_reasons"]), rec["not_citable_reasons"])
+
+    def test_gitignored_binding_config_is_also_classifiable(self):
+        """The class covers both staged file sources; a gitignored binding
+        config skips only the origin blob leg (verify_staged still binds its
+        staged copy to binding_entry_sha256)."""
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            dut_rel, b_rel = "design/comparator.spice", "sim/dut.json"
+            work, _, _ = self._pinned_bundle(td, dut_rel, b_rel)
+
+            def blob(c, p):
+                return None if p in (dut_rel, b_rel) else _committed_blob(c, p)
+            rc, rec, _ = _ingest(td, work, blob=blob)
+            self.assertEqual(rc, 0, rc)
+            self.assertTrue(rec["citable"], rec["not_citable_reasons"])
+            self.assertEqual(rec["source_bundle"]["origin_pinned_sources"],
+                             [dut_rel, b_rel])
+
+    def test_modified_tracked_source_stays_dirty_noncitable(self):
+        """Conjunctive leg 1 negated: the class never excuses a genuinely
+        dirty tree."""
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work = _generate(td, dirty=[f"sim/{BENCH}/testbench/tb.json"])
+            _write_reports(work)
+            rc, rec, _ = _ingest(td, work)
+            self.assertEqual(rc, 0)
+            self.assertTrue(rec["dirty"])
+            self.assertFalse(rec["citable"])
+            self.assertEqual(rec["source_bundle"]["origin_pinned_sources"], [])
+
+    def test_staged_copy_sha_mismatch_refused_even_when_pinned(self):
+        """Conjunctive leg sha256-matched negated: a staged copy that no
+        longer matches the bundle is refused, pin or not."""
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work, _, _ = self._pinned_bundle(td, "design/comparator.spice")
+            with (work / "sources/dut/comparator.spice").open("a") as f:
+                f.write("* tampered\n")
+            rc, rec, _ = _ingest(td, work)
+            self.assertTrue(str(rc).startswith("STAGED_SOURCE_TAMPERED"), rc)
+            self.assertIsNone(rec)
+
+    def test_deck_reference_leg_refuses_when_a_body_stops_declaring(self):
+        """Conjunctive leg referenced-by-every-deck negated: strip the
+        source-sha256 lines from one body (with a consistent re-hash, so the
+        refusal is about the missing declaration, not a hash mismatch)."""
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work, b, _ = self._pinned_bundle(td, "design/comparator.spice")
+            body = work / "body-v3.30.spice"
+            text = "\n".join(l for l in body.read_text().splitlines()
+                             if not l.startswith(mk.SOURCE_SHA_PREFIX))
+            body.write_text(text)
+            h = _sha(body)
+            b["staged"]["body-v3.30.spice"] = h
+            for r in b["requests"].values():
+                if r["netlist"] == "body-v3.30.spice":
+                    r["netlist_sha256"] = h
+            (work / mk.BUNDLE_NAME).write_text(json.dumps(b))
+            _write_reports(work)
+            rc, rec, _ = _ingest(td, work)
+            self.assertTrue(str(rc).startswith("SOURCE_BUNDLE_INCONSISTENT"), rc)
+            self.assertIn("source-sha256", str(rc))
+            self.assertIsNone(rec)
+
+    def test_pinned_path_committed_at_origin_with_other_bytes_refused(self):
+        """The class never overrides a path git actually vouches for: if the
+        pinned path IS a blob at the origin commit (a tracked file) and its
+        bytes differ from the staged copy, refuse."""
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work, _, dut_rel = self._pinned_bundle(td, "design/comparator.spice")
+
+            def blob(c, p):
+                return (_committed_blob(c, p) + b"* differs at origin\n"
+                        if p == dut_rel else _committed_blob(c, p))
+            rc, rec, _ = _ingest(td, work, blob=blob)
+            self.assertTrue(str(rc).startswith("SOURCE_COMMIT_MISMATCH"), rc)
+            self.assertIsNone(rec)
+
+    def test_pinned_source_without_a_staged_counterpart_refused(self):
+        """Edge: a gitignored source that was never staged cannot be pinned
+        -- the class covers the staged sources only."""
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work, _, _ = self._pinned_bundle(td, "layout/lvs/ghost.spice")
+            rc, rec, _ = _ingest(td, work)
+            self.assertTrue(str(rc).startswith("SOURCE_BUNDLE_INCONSISTENT"), rc)
+            self.assertIn("ghost.spice", str(rc))
+            self.assertIsNone(rec)
+
+    def test_absolute_pinned_path_refused(self):
+        """The class is for gitignored sources INSIDE the repository; an
+        out-of-repo path stays dirty at generation and cannot be smuggled in."""
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            work, _, _ = self._pinned_bundle(td, "/tmp/evil.spice")
+            rc, rec, _ = _ingest(td, work)
+            self.assertTrue(str(rc).startswith("SOURCE_BUNDLE_INCONSISTENT"), rc)
+            self.assertIsNone(rec)
+
+    def test_deck_reference_leg_covers_all_48_decks_including_probe(self):
+        """Fifth verified correction: the deck-reference leg walks EVERY
+        request -- the 45 scored corners AND the probe decks (the real
+        8a67cff record carries 48 bodies, all declaring the staged DUT)."""
+        probe = AvgPowerExtractedProbe("runTest")  # fixture instance, no tests run
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            rc, out, work = probe._two_phase(td)
+            self.assertEqual(rc, 0, out)
+            b = _bundle(work)
+            legs = [r["leg"] for r in b["requests"].values()]
+            self.assertEqual(len(b["requests"]), 48)
+            self.assertEqual([legs.count(l) for l in ("main", "probe")], [45, 3])
+            staged_srcs = {k: h for k, h in b["staged"].items()
+                           if k.startswith(f"{mk.SOURCES_DIR}/")}
+            for n, r in b["requests"].items():
+                # The exact comparison verify_staged enforces per request.
+                self.assertEqual(mk.declared_source_shas((work / r["netlist"]).read_text()),
+                                 staged_srcs, n)
+
+    def test_probe_deck_missing_declaration_refused(self):
+        """The deck-reference leg bites on a PROBE deck, not just the scored
+        corners: stripping its source-sha256 lines refuses the ingest."""
+        probe = AvgPowerExtractedProbe("runTest")
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            rc, out, work = probe._two_phase(td)
+            self.assertEqual(rc, 0, out)
+            b = _bundle(work)
+            name = next(n for n, r in b["requests"].items() if r["leg"] == "probe")
+            r = b["requests"][name]
+            body = work / r["netlist"]
+            body.write_text("\n".join(l for l in body.read_text().splitlines()
+                                      if not l.startswith(mk.SOURCE_SHA_PREFIX)))
+            h = _sha(body)
+            b["staged"][r["netlist"]] = h
+            r["netlist_sha256"] = h
+            (work / mk.BUNDLE_NAME).write_text(json.dumps(b))
+            probe._write_probe_reports(work, b)
+            probe._write_main_reports(work, b)
+            rc, rec, _ = _ingest(td, work, bench=AVG_POWER)
+            self.assertTrue(str(rc).startswith("SOURCE_BUNDLE_INCONSISTENT"), rc)
+            self.assertIn("source-sha256", str(rc))
+            self.assertIsNone(rec)
+
+
 class CheckoutDrift(unittest.TestCase):
     """Each source the bundle binds is detected when only it changes."""
 

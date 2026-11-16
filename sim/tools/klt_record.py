@@ -56,6 +56,17 @@ A record is citable REFERENCE evidence (`"reference": true`) only when BOTH
 gates pass: exact PVT/MC coverage of the bundled requests (#152, `complete`;
 otherwise exit 1) and verified, clean source identity (#151, `citable`).
 
+Pinned sources (DR-0008, operator ruling on #398): a gitignored file source
+staged into the request set -- the extracted-DUT-netlist shape -- does not
+block citability. The bundle classifies it (origin.pinned_sources, written
+only when nonempty) and ingest accepts it only under the class's conjunctive
+legs: staged into the record, committed (as part of the landed record's own
+tree), sha256-matched, and referenced by every deck. Each leg refused on its
+own failure; a modified tracked source, an untracked-but-not-ignored source,
+and any source outside the repository stay dirty. The record's
+`source_bundle.origin_pinned_sources` names the class members, so a reader
+can tell a class record from a genuinely clean tree.
+
 ngspice floor (issue #269): every ingested report's `environment.engine` /
 `engine_version` is checked against the floor snapshotted into the source
 bundle (`toolchain.ngspice_min_major`, bound to the generation commit). Below
@@ -1439,15 +1450,43 @@ def verify_reports(work: Path, b: dict, names: dict, reports: dict) -> list[str]
 def verify_origin_commit(b: dict) -> list[str]:
     """A bundle that claims a CLEAN commit: its staged bytes must be that
     commit's files. -> reasons the claim cannot be checked (non-citable);
-    refuses outright on a contradiction."""
+    refuses outright on a contradiction.
+
+    DR-0008 pinned sources (origin.pinned_sources: gitignored file sources
+    staged into the record) are checked by the class's own legs instead of an
+    origin-commit lookup, which cannot succeed for them by construction --
+    the generation path is not a blob at the origin commit (it is ignored),
+    and the committed copy of the staged bytes is a blob only of the record's
+    OWN later commit, which does not exist until the record lands. The staged
+    copy's identity is therefore verified at ingest by the legs available
+    there -- staged bytes present and sha256-matched (verify_staged),
+    referenced by every deck including the probe decks (verify_staged) --
+    while the committed leg is structural: _archive_record copies the staged
+    tree beside the record, and a reader of a committed record reads those
+    bytes from that record's own commit. The one origin-side leg that REMAINS
+    here is the contradiction guard: a pinned path that IS a blob at the
+    origin commit is a tracked file git vouches for, and the class must not
+    override that -- its staged copy has to match, else refuse."""
     o = b["origin"]
     if o.get("dirty"):
         return []
     d, t = b["dut"], b["testbench"]
+    pinned = sorted(o.get("pinned_sources") or [])
+    for rel in pinned:
+        if Path(rel).is_absolute() or ".." in Path(rel).parts:
+            refuse("SOURCE_BUNDLE_INCONSISTENT",
+                   f"pinned source {rel!r} is not a repo-relative path; the DR-0008 class "
+                   "covers gitignored sources inside the repository only")
+        if rel not in (d["netlist"], d["binding_config"]):
+            refuse("SOURCE_BUNDLE_INCONSISTENT",
+                   f"pinned source {rel!r} is neither the DUT netlist nor its binding config; "
+                   "the DR-0008 class covers the staged sources only")
     unverified = []
-    checks = {d["netlist"]: d["netlist_sha256"],
-              f"{t['dir']}/{t['netlist']}": t["netlist_sha256"],
-              f"{t['dir']}/{htb.MANIFEST_NAME}": t["manifest_sha256"]}
+    checks = {path: h for path, h in (
+        (d["netlist"], d["netlist_sha256"]),
+        (f"{t['dir']}/{t['netlist']}", t["netlist_sha256"]),
+        (f"{t['dir']}/{htb.MANIFEST_NAME}", t["manifest_sha256"]),
+    ) if path not in pinned}
     # stage_sources copies EVERY file in the testbench dir (e.g. the
     # tb_vosprobe.spice offset-probe fragments), and the bundle hashes each.
     # They are not .included by the body netlist, but a clean-commit claim
@@ -1465,16 +1504,29 @@ def verify_origin_commit(b: dict) -> list[str]:
             refuse("SOURCE_COMMIT_MISMATCH",
                    f"bundle claims clean commit {o['commit'][:7]}, but {path} there is "
                    f"{got[:16]}, staged {want[:16]}")
-    blob = git_blob(o["commit"], d["binding_config"])
-    if blob is None:
-        unverified.append(f"{d['binding_config']} @ {o['commit'][:7]} not readable from this clone")
-    else:
-        doc = json.loads(blob)
-        entry = doc["duts"].get(d["key"]) if "duts" in doc else doc
-        if mk.canonical_sha256(entry) != d["binding_entry_sha256"]:
+    for rel in pinned:
+        blob = git_blob(o["commit"], rel)
+        if blob is None:
+            continue  # absent at the origin commit: exactly the DR-0008 shape
+        staged_rel = d["staged_netlist"] if rel == d["netlist"] else d["staged_binding"]
+        if mk.sha256_bytes(blob) != (b.get("staged") or {}).get(staged_rel):
             refuse("SOURCE_COMMIT_MISMATCH",
-                   f"bundle claims clean commit {o['commit'][:7]}, but its {d['binding_config']} "
-                   f"entry {d['key']!r} differs from the staged binding")
+                   f"{rel} is committed at {o['commit'][:7]} (a tracked file git vouches "
+                   f"for), but its staged copy differs: the DR-0008 pinned-source class "
+                   "does not apply")
+    if d["binding_config"] not in pinned:
+        blob = git_blob(o["commit"], d["binding_config"])
+        if blob is None:
+            unverified.append(f"{d['binding_config']} @ {o['commit'][:7]} not readable from this clone")
+        else:
+            doc = json.loads(blob)
+            entry = doc["duts"].get(d["key"]) if "duts" in doc else doc
+            if mk.canonical_sha256(entry) != d["binding_entry_sha256"]:
+                refuse("SOURCE_COMMIT_MISMATCH",
+                       f"bundle claims clean commit {o['commit'][:7]}, but its {d['binding_config']} "
+                       f"entry {d['key']!r} differs from the staged binding")
+    # else: the staged binding copy is verified against binding_entry_sha256
+    # by verify_staged; the pinned leg here has nothing to add.
     unverified += _verify_toolchain_snapshot(o["commit"], b.get("toolchain"))
     return unverified
 
@@ -1882,7 +1934,8 @@ def _provenance(r: dict, bench: str, b: dict, drift: list[str], link_notes: list
                       "manifest_sha256": t["manifest_sha256"]},
         "source_bundle": {"file": f"corners/{r['rid']}/{mk.BUNDLE_NAME}", "sha256": r["bundle_sha"],
                           "schema": b["schema"], "version": b["version"],
-                          "origin_commit": origin["commit"], "origin_dirty_paths": origin["dirty_paths"]},
+                          "origin_commit": origin["commit"], "origin_dirty_paths": origin["dirty_paths"],
+                          "origin_pinned_sources": sorted(origin.get("pinned_sources") or [])},
         "ingest": {"commit": r["ingest_sha"], "commit_full": r.get("ingest_commit_full"), "tools_dirty": r["tools_dirty"], "source_drift": drift,
                    "linkage_notes": link_notes, "engine_floor": r["engine_floor"],
                    "pdk_qualification": r["pdk_qualification"]},

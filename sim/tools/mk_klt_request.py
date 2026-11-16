@@ -50,8 +50,10 @@ bundle hashes, and carry a `* source-sha256 <hex> <path>` comment per staged
 file, so the body's own sha256 (which a fleet report quotes) binds the
 included sources' CONTENT, not just their file names. The bundle names the originating commit, the dirty state of
 every source the run depends on, the selected DUT and its parameters, and
-the sha256 of every staged file. `klt_record.py` mints records from this
-bundle -- never from whatever the checkout holds at ingest time.
+the sha256 of every staged file. A gitignored file source that is staged is
+classified as a DR-0008 pinned source (origin.pinned_sources) rather than
+dirty: the record's own tree pins its bytes. `klt_record.py` mints records
+from this bundle -- never from whatever the checkout holds at ingest time.
 """
 
 from __future__ import annotations
@@ -386,11 +388,55 @@ def source_paths(bench: str, binding_config: Path, dut_netlist: Path) -> list[st
     return list(dict.fromkeys(paths))
 
 
+def _git_ignored(repo: Path, p: str) -> bool:
+    """Whether `git check-ignore` matches `p` (exit 0 = ignored)."""
+    return subprocess.run(["git", "-C", str(repo), "check-ignore", "-q", "--", p]).returncode == 0
+
+
+def git_ignored_sources(paths: list[str], repo: Path = REPO) -> list[str]:
+    """The FILE sources among `paths` that git ignores (DR-0008 candidates).
+
+    A source that is untracked AND matched by a .gitignore pattern -- the
+    extracted-DUT-netlist shape, regenerated per host by layout tooling and
+    about to be staged into the request set by stage_sources -- has its bytes
+    pinned by the record's own tree rather than by any commit. git_state
+    excludes exactly these from its dirty list; write_bundle carries them as
+    origin.pinned_sources so ingest can verify the class instead of refusing
+    it. A modified tracked source, an untracked-but-not-ignored source, and
+    any source outside the repository stay dirty. A path git cannot answer
+    for at all (outside a repository, git error) stays dirty: the class
+    requires git itself to have ignored the path."""
+    out = []
+    for p in paths:
+        if Path(p).is_absolute() or not (Path(repo) / p).is_file():
+            continue
+        try:
+            if subprocess.check_output(["git", "-C", str(repo), "ls-files", "--", p],
+                                       text=True).strip():
+                continue  # tracked: git vouches for it directly
+            if _git_ignored(repo, p):
+                out.append(p)
+        except (subprocess.CalledProcessError, OSError):
+            continue
+    return out
+
+
 def git_state(paths: list[str], repo: Path = REPO) -> tuple[str, list[str]]:
     """-> (HEAD commit, dirty source paths) for the sources a run depends on.
 
-    Dirty means modified, staged, untracked, or not tracked at all (a
-    gitignored or out-of-repo source has no committed identity)."""
+    Dirty means modified, staged, untracked, outside the repository, or
+    tracked-but-uncommitted-in-the-index. One narrow exception (DR-0008,
+    operator ruling on #398): a FILE source that is gitignored -- not merely
+    untracked -- is staged into the request set and sha256-pinned by every
+    deck, so its bytes are identified by the record's own tree rather than by
+    a commit; such a source is NOT listed dirty here and is classified by
+    git_ignored_sources into origin.pinned_sources instead. The recorded
+    bytes being committed is verified by klt_record.verify_origin_commit's
+    class legs, not by this function: having a committed identity at the
+    origin commit is NOT the same thing as the generation path being tracked.
+    A gitignored source staged in the git index but not yet committed is
+    still dirty (the porcelain scan sees it) -- the class covers staged bytes
+    only once the record carrying them lands."""
     def git(*args: str) -> str:
         return subprocess.check_output(["git", "-C", str(repo), *args], text=True)
 
@@ -403,6 +449,8 @@ def git_state(paths: list[str], repo: Path = REPO) -> tuple[str, list[str]]:
     for p in inside:
         if (Path(repo) / p).is_file() and not git("ls-files", "--", p).strip():
             if not any(d == p for d in dirty):
+                if _git_ignored(repo, p):
+                    continue  # DR-0008: pinned-source candidate, classified by git_ignored_sources
                 dirty.append(f"{p} (not tracked)")
     return sha, dirty
 
@@ -828,6 +876,7 @@ def main() -> int:
     binding = binding_entry(a.dut)
     checked = source_paths(a.bench, binding[0], dut.netlist)
     commit, dirty_paths = git_state(checked)
+    pinned = git_ignored_sources(checked)
     staged = stage_sources(out, tb, dut, binding, a.dut)
     source_shas = source_sha_lines(out)
 
@@ -1043,9 +1092,11 @@ def main() -> int:
         **({"tolerance_profile": {"name": a.tolerance_profile,
                                   "options": [[k, v] for k, v in TOLERANCE_PROFILES[a.tolerance_profile]],
                                   "cards": tol_lines}} if a.tolerance_profile else {}),
-    }, requests, phase=phase, probe_section=probe_section)
+    }, requests, phase=phase, probe_section=probe_section, pinned_sources=pinned)
     print(f"wrote {out}/{BUNDLE_NAME} (commit {commit[:7]}"
-          + (f", DIRTY: {', '.join(dirty_paths)})" if dirty_paths else ", clean)"))
+          + (f", DIRTY: {', '.join(dirty_paths)}" if dirty_paths else ", clean")
+          + (f", pinned (DR-0008): {', '.join(pinned)}" if pinned else "")
+          + ")")
     return 0
 
 
@@ -1069,7 +1120,8 @@ def toolchain_snapshot(commit: str, path: Path | None = None) -> dict:
 def write_bundle(out: Path, bench: str, tb, dut, binding, selector, staged: dict,
                  commit: str, dirty_paths: list[str], checked: list[str],
                  parameters: dict, requests: dict, *, phase: str = "main",
-                 probe_section: dict | None = None) -> dict:
+                 probe_section: dict | None = None,
+                 pinned_sources: list[str] | None = None) -> dict:
     """Write OUTDIR/source-bundle.json: the source identity of this request set.
 
     `staged` maps every generated input (requests, bodies, the PDK include
@@ -1095,7 +1147,12 @@ def write_bundle(out: Path, bench: str, tb, dut, binding, selector, staged: dict
         # of the probe-results file it came from.
         **({"probe": probe_section} if probe_section else {}),
         "origin": {"commit": commit, "dirty": bool(dirty_paths),
-                   "dirty_paths": dirty_paths, "checked_paths": checked},
+                   "dirty_paths": dirty_paths, "checked_paths": checked,
+                   # DR-0008: the gitignored-staged sources the record's own
+                   # tree pins. Absent when empty: pre-#421 bundles and clean
+                   # runs carry the identical origin shape, and ingest
+                   # tolerates the missing key.
+                   **({"pinned_sources": sorted(pinned_sources)} if pinned_sources else {})},
         "dut": {
             "selector": selector,
             "key": key,
