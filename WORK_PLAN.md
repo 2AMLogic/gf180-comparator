@@ -7,7 +7,7 @@ This roadmap is generated from the repository's current GitHub label state.
 
 Judge-approved PRs under a hold (`loom:blocked` or `loom:operator`) — only a human merge decision is missing.
 
-- **#426**: chore(loom): resync installed Loom to v0.19.1302
+_None._
 
 ## Very Important
 
@@ -27,7 +27,7 @@ _None._
 
 Human-approved issues ready for implementation (`loom:issue`).
 
-_None._
+- **#435**: signoff: selftest.yml attests only item 9 — item 10 has no CI attestation path, so every inventoried-file edit forces a local re-produce
 
 ## In Progress
 
@@ -45,7 +45,7 @@ _None._
 
 PRs that passed review and are queued for Champion auto-merge (`loom:pr`).
 
-- **#426**: chore(loom): resync installed Loom to v0.19.1302
+- **#437**: chore(loom): resync installed Loom to v0.19.1305
 
 ## Proposed
 
@@ -68,10 +68,10 @@ _None._
 
 | Bucket | Count |
 |------|-------|
-| Operator merge-risk holds | 1 |
+| Operator merge-risk holds | 0 |
 | Very important | 0 |
 | Important | 3 |
-| Ready (`loom:issue`) | 0 |
+| Ready (`loom:issue`) | 1 |
 | In Progress (`loom:building`) | 0 |
 | PRs awaiting review | 0 |
 | Approved PRs awaiting merge | 1 |
