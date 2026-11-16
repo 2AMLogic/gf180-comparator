@@ -1,17 +1,15 @@
 """PDK-free regressions for sim/comparator-offset-mc/yield/adapt_samples_r2.py
 (issue #169): invalid numeric inputs are refused before any output is made."""
-import importlib.util
 import json
 import math
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-_spec = importlib.util.spec_from_file_location(
-    "adapt_samples", ROOT / "sim/comparator-offset-mc/yield/adapt_samples_r2.py")
-adapt = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(adapt)
+sys.path.insert(0, str(ROOT / "sim" / "comparator-offset-mc" / "yield"))
+import adapt_samples_r2 as adapt  # noqa: E402
 
 DRAWS = [1e-3, 2e-3, 3e-3, 4e-3]
 

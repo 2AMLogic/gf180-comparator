@@ -25,6 +25,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
+# importlib stays: this file also loads the hyphenated signoff/verify-report.py, which a plain `import` statement cannot load (#415 stop condition).
 def _load(name: str, rel: str):
     spec = importlib.util.spec_from_file_location(name, REPO_ROOT / rel)
     mod = importlib.util.module_from_spec(spec)

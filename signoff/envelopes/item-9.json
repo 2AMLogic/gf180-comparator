@@ -346,14 +346,14 @@
         "role": "testbench",
         "path": "sim/harness/tests/test_adapt_samples.py",
         "passed": true,
-        "content_hash": "sha256:dacedb00a600ffa97e23fa4e8bd4c03e7cce28b1370769dbddb783a5739d13c4"
+        "content_hash": "sha256:99dfae04941dba6c4f7a82cecec267a8ecad90563c585673b291b506eab28e97"
       },
       {
         "check": "present",
         "role": "testbench",
         "path": "sim/harness/tests/test_avg_power_semantics.py",
         "passed": true,
-        "content_hash": "sha256:2959a786adfdf3de0844bcea747378833b4fa6fd71a9b793c010d956733f875c"
+        "content_hash": "sha256:5c540d5d3f5e72dd3ff305c3c6cefafd6d84c819d33bbecab676bab454a00086"
       },
       {
         "check": "present",
@@ -395,7 +395,7 @@
         "role": "testbench",
         "path": "sim/harness/tests/test_evidence_store.py",
         "passed": true,
-        "content_hash": "sha256:1d6f535f9642245a0d940b1440b915047a9c3e64a44069ce02e546c1fe318209"
+        "content_hash": "sha256:01937b0f460fee2b65bafa2a62bd31491c34c5b60f86e5e61242845ab6a4e651"
       },
       {
         "check": "present",
@@ -423,14 +423,14 @@
         "role": "testbench",
         "path": "sim/harness/tests/test_regeneration_measures.py",
         "passed": true,
-        "content_hash": "sha256:b2434f9557abef140cc87bdf55226c042b9a2f58746f2eef38f7062cd229a24b"
+        "content_hash": "sha256:81ecfb089467204bc2fcbfcdaf009656b450bcb36f0748bc6ac87082f76371e7"
       },
       {
         "check": "present",
         "role": "testbench",
         "path": "sim/harness/tests/test_regeneration_reverse.py",
         "passed": true,
-        "content_hash": "sha256:6d559a82b5d1406d5e13929a5a8d1246fc954d32076af1e2f2c68e705fbd0ade"
+        "content_hash": "sha256:63b2dcebb2c3cfedf0356a19b740a89ed321e44771cb522e730f1c09991d8cd0"
       },
       {
         "check": "present",

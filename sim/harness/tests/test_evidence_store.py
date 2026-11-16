@@ -13,12 +13,18 @@ import http.server
 import json
 import socket
 import subprocess
+import sys
 import tempfile
 import threading
 import unittest
 from pathlib import Path
 
-from harness import evidence_store as es
+SIM = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(SIM))
+
+from harness import evidence_store as es  # noqa: E402
+
+import run_store_evidence  # noqa: E402
 
 REPO = "owner/repo"
 
@@ -338,11 +344,7 @@ class CampaignCli(unittest.TestCase):
     """``sim/run_store_evidence.py``: the store path for campaign outputs."""
 
     def setUp(self):
-        import importlib.util
-        path = Path(__file__).resolve().parents[2] / "run_store_evidence.py"
-        spec = importlib.util.spec_from_file_location("run_store_evidence", path)
-        self.mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(self.mod)
+        self.mod = run_store_evidence
         td = tempfile.TemporaryDirectory()
         self.addCleanup(td.cleanup)
         self.root = Path(td.name).resolve()

@@ -5,18 +5,16 @@ trees; never touches the real docs or records.
     python3 scripts/tests/test_check_claim_drift.py
 """
 import contextlib
-import importlib.util
 import io
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-_s = importlib.util.spec_from_file_location(
-    "ccd", REPO / "scripts" / "check_claim_drift.py")
-CCD = importlib.util.module_from_spec(_s)
-_s.loader.exec_module(CCD)
+sys.path.insert(0, str(REPO / "scripts"))
+import check_claim_drift as CCD  # noqa: E402
 
 B = "comparator-demo"
 OLD, NEW = "20260101-000000-aaaaaaa", "20260201-000000-bbbbbbb"
