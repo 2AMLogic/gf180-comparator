@@ -4,6 +4,16 @@ Chronological record of merged pull requests and closed issues. Newest entries a
 
 ### 2026-11-15
 
+- **PR #413**: ci: verify WORK_PLAN.md's generated region against this repo's forge state
+- **PR #412**: fix: enforce canonical corner ids in parse_corner_id
+- **PR #409**: docs: drop stale backlog quantifier from ROADMAP DR-status paragraph
+- **PR #401**: docs: attribute fleet request-schema gaps to the schema, not klt 0.5.0
+- **PR #392**: fix: pin the cross-run counterparty by sha256 and restrict --compare-local to committed records
+- **Issue #411** (closed): Guide's WORK_PLAN regeneration wrote asap7-stdcells's label state into this repo's roadmap (PR #410)
+- **Issue #408** (closed): ROADMAP.md:50 claims ratification-gated work 'holds most of the open backlog'; measured, it is 3 of 15 open issues
+- **Issue #406** (closed): corners.parse_corner_id is not the strict inverse its docstring claims: non-canonical temperatures parse
+- **Issue #385** (closed): docs: comparator-avg-power README attributes the fleet `let` gap to klt 0.5.0, but the runner is 0.9.0
+- **Issue #384** (closed): sim: cross_run_agreement cites its local record by basename, with no content hash
 - **PR #407**: docs: refresh ROADMAP.md forward-looking sections against landed work
 - **PR #402**: refactor: single-source the corner id format and parser in harness.corners
 - **Issue #400** (closed): ROADMAP.md's Now/Next/Blocked sections present six closed issues as pending work at their own as-of commit
