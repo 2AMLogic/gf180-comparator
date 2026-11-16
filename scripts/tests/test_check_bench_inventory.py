@@ -5,17 +5,15 @@ checks (#225). Builds temp trees; never touches the real sim/ or READMEs.
     python3 scripts/tests/test_check_bench_inventory.py
 """
 import contextlib
-import importlib.util
 import io
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-_s = importlib.util.spec_from_file_location(
-    "cbi", REPO / "scripts" / "check_bench_inventory.py")
-CBI = importlib.util.module_from_spec(_s)
-_s.loader.exec_module(CBI)
+sys.path.insert(0, str(REPO / "scripts"))
+import check_bench_inventory as CBI  # noqa: E402
 
 CAMP = ["comparator-alpha", "comparator-beta"]
 EXTRA = list(CBI.NOT_RUN_BY_CHARACTERIZE)

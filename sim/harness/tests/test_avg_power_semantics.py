@@ -34,7 +34,6 @@ Stdlib only. No PDK, no ngspice, no klt, and nothing here reads a record.
 
 from __future__ import annotations
 
-import importlib.util
 import math
 import re
 import sys
@@ -43,8 +42,10 @@ from pathlib import Path
 
 SIM = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(SIM))
+sys.path.insert(0, str(SIM / "tools"))
 
 from harness import testbench as htb  # noqa: E402
+import klt_record  # noqa: E402
 
 BENCH = SIM / "comparator-avg-power"
 BENCH_DIR = BENCH / "testbench"
@@ -68,12 +69,7 @@ DR0006 = {
 
 
 def _klt_record_math() -> dict:
-    spec = importlib.util.spec_from_file_location(
-        "_klt_record_for_avg_power_test", SIM / "tools" / "klt_record.py"
-    )
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return dict(mod.MATH)
+    return dict(klt_record.MATH)
 
 
 def _seconds(token: str) -> float:

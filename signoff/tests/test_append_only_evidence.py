@@ -10,7 +10,6 @@ the real runner are stripped). Committed sim/ evidence is never touched.
 
 from __future__ import annotations
 
-import importlib.util
 import json
 import os
 import re
@@ -24,9 +23,8 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = REPO_ROOT / "signoff" / "check_append_only_evidence.py"
-_spec = importlib.util.spec_from_file_location("check_append_only_under_test", SCRIPT)
-CHECK = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(CHECK)
+sys.path.insert(0, str(REPO_ROOT / "signoff"))
+import check_append_only_evidence as CHECK  # noqa: E402
 
 REC = "sim/comparator-offset-mc/records/20260910-124917-4805118.json"
 LOG = "sim/comparator-kickback/corners/20260910-125200-4805118/tt_27_3v3.log"

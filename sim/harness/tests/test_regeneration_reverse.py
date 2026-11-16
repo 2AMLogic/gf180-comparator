@@ -23,7 +23,6 @@ negative control). Stdlib only: no PDK, ngspice or klt.
 
 from __future__ import annotations
 
-import importlib.util
 import math
 import re
 import sys
@@ -34,10 +33,12 @@ SIM = Path(__file__).resolve().parents[2]
 REPO = SIM.parent
 sys.path.insert(0, str(SIM))
 sys.path.insert(0, str(SIM / "tools"))
+sys.path.insert(0, str(REPO / "signoff"))
 
 from harness import testbench as htb  # noqa: E402
 
 import klt_record as kr  # noqa: E402
+import make_item5_envelope as m5  # noqa: E402
 import mk_klt_request as mk  # noqa: E402
 import regen_reverse_control as ctl  # noqa: E402
 
@@ -205,12 +206,8 @@ class ForwardUnchanged(unittest.TestCase):
                 self.assertNotIn("min_spread_pct_by_axis", spec, name)
 
     def test_signoff_still_reads_forward_td_od50(self):
-        spec = importlib.util.spec_from_file_location(
-            "_item5_for_test", REPO / "signoff" / "make_item5_envelope.py")
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
         point = {"measurements": {"td_od50_ns": 0.7, "td_od50_rev_ns": 9.9}, "vdd": 3.3}
-        self.assertEqual(mod._value("decision_time_od50_ns", point), 0.7)
+        self.assertEqual(m5._value("decision_time_od50_ns", point), 0.7)
         # and the fleet scorer still scores the forward measure
         self.assertEqual(kr.SPEC["comparator-regeneration"][1], "td_od50_ns")
 

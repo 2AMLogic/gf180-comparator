@@ -13,7 +13,6 @@ contract, extracted extraction-report provenance).
 from __future__ import annotations
 
 import hashlib
-import importlib.util
 import json
 import shutil
 import subprocess
@@ -23,17 +22,10 @@ import unittest
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO_ROOT / "signoff"))
 
-
-def _load(name: str, rel: str):
-    spec = importlib.util.spec_from_file_location(name, REPO_ROOT / rel)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
-
-
-M8 = _load("m8_under_test", "signoff/make_item8_envelope.py")
-M5 = _load("m5_under_test", "signoff/make_item5_envelope.py")
+import make_item5_envelope as M5  # noqa: E402
+import make_item8_envelope as M8  # noqa: E402
 REPORT = "measurements/characterization-report.md"
 SOURCES = "measurements/characterization-report.sources.json"
 ENVELOPE = "measurements/characterization-report.item8.json"

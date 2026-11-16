@@ -7,7 +7,6 @@ external contract (#194).
 
 from __future__ import annotations
 
-import importlib.util
 import re
 import sys
 import unittest
@@ -15,11 +14,9 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "layout"))
+sys.path.insert(0, str(REPO / "layout" / "pex"))
 import layout_common  # noqa: E402
-
-_spec = importlib.util.spec_from_file_location("run_pex", REPO / "layout/pex/run_pex.py")
-run_pex = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(run_pex)
+import run_pex  # noqa: E402
 
 
 def _top_ports(text: str) -> tuple:

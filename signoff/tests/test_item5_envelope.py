@@ -42,6 +42,7 @@ TIERS_DOC = REPO_ROOT / "signoff" / "design-evidence-tiers.md"
 HISTORICAL_R1_SHA256 = "8748dce2fd35883c0dc586b6a6de8f2396d2256ae1f8f9c417c95ef81ef9c95a"
 
 
+# importlib stays: each load_wrapper(root) needs a fresh module instance (unique name, REPO_ROOT patched per root); a cached plain import would leak state between roots (#415).
 def load_wrapper(root: Path):
     spec = importlib.util.spec_from_file_location(f"item5_{id(root)}", SCRIPT)
     mod = importlib.util.module_from_spec(spec)

@@ -30,6 +30,7 @@ except ImportError:
     HAVE_KLAYOUT = False
 
 
+# importlib stays: _load must mint fresh instances of route_nets.py (klayout stubbed and real), which a cached plain import cannot provide (#415).
 def _load(name: str, stub_klayout: bool):
     """Import layout/route_nets.py under a private module name."""
     saved = {k: sys.modules.get(k) for k in ("klayout", "klayout.db")}

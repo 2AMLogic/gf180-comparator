@@ -6,21 +6,19 @@
 
 from __future__ import annotations
 
-import importlib.util
 import io
 import json
 import os
 import subprocess
+import sys
 import tempfile
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-_spec = importlib.util.spec_from_file_location(
-    "check_sim_size_budget_under_test", REPO_ROOT / "signoff" / "check_sim_size_budget.py")
-CHECK = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(CHECK)
+sys.path.insert(0, str(REPO_ROOT / "signoff"))
+import check_sim_size_budget as CHECK  # noqa: E402
 
 MIB = 1024 * 1024
 BIG = "sim/comparator-x/corners/20261010-000000-abcdef0/report.json"

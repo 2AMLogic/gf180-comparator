@@ -17,7 +17,6 @@ just stated. Stdlib only; no PDK, ngspice or klt involved.
 
 from __future__ import annotations
 
-import importlib.util
 import math
 import sys
 import unittest
@@ -25,20 +24,17 @@ from pathlib import Path
 
 SIM = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(SIM))
+sys.path.insert(0, str(SIM / "tools"))
 
 from harness import testbench as htb  # noqa: E402
+import klt_record  # noqa: E402
 
 BENCH_DIR = SIM / "comparator-regeneration" / "testbench"
 NEW, OLD = "td_od1_over_tau", "resolve_decades"
 
 
 def _klt_record_math() -> dict:
-    spec = importlib.util.spec_from_file_location(
-        "_klt_record_for_test", SIM / "tools" / "klt_record.py"
-    )
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return dict(mod.MATH)
+    return dict(klt_record.MATH)
 
 
 # (td_b, td_c) in seconds: a nominal-looking point, a slow one, and a

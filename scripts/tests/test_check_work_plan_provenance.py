@@ -9,18 +9,16 @@ docs/forensics/2026-11-15-work-plan-provenance-incident.md.
     python3 scripts/tests/test_check_work_plan_provenance.py
 """
 import contextlib
-import importlib.util
 import io
 import os
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-_s = importlib.util.spec_from_file_location(
-    "cwpp", REPO / "scripts" / "check_work_plan_provenance.py")
-CWPP = importlib.util.module_from_spec(_s)
-_s.loader.exec_module(CWPP)
+sys.path.insert(0, str(REPO / "scripts"))
+import check_work_plan_provenance as CWPP  # noqa: E402
 
 REPO_NAME = "2AMLogic/gf180-comparator"
 

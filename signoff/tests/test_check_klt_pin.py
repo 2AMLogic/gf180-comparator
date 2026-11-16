@@ -9,18 +9,15 @@ and asserts the check names it. Committed files are never touched.
 
 from __future__ import annotations
 
-import importlib.util
 import shutil
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-_spec = importlib.util.spec_from_file_location(
-    "check_klt_pin_under_test", REPO_ROOT / "signoff" / "check_klt_pin.py"
-)
-CHECK = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(CHECK)
+sys.path.insert(0, str(REPO_ROOT / "signoff"))
+import check_klt_pin as CHECK  # noqa: E402
 
 
 class KltPinTests(unittest.TestCase):

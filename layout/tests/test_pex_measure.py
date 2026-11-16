@@ -12,18 +12,17 @@ only from `measure`.
 from __future__ import annotations
 
 import contextlib
-import importlib.util
 import json
 import shutil
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
 
-PEX = Path(__file__).resolve().parents[1] / "pex" / "pex_measure.py"
-_spec = importlib.util.spec_from_file_location("pex_measure", PEX)
-pm = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(pm)
+REPO = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO / "layout" / "pex"))
+import pex_measure as pm  # noqa: E402
 
 
 class CornerId(unittest.TestCase):
