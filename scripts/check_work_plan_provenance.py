@@ -13,6 +13,14 @@ incident.md. Every foreign number also existed in this repo, closed, under an
 unrelated title, so an existence-only check passes on exactly that input --
 titles are matched, not just numbers.
 
+The region's own self-consistency is checked offline, with zero API calls
+(issue #419): the renderer's section suffixes (' *(curated)*' under
+'## Proposed', ' *(architect)*' / ' *(hermit)*' under '## Proposed
+(Architect / Hermit)', none anywhere else) and the Backlog Balance counts
+against the number of rows their sections render. Both compare the file
+against the renderer's documented output shape, so neither can be reddened
+by forge activity.
+
 Fail-closed (a check that cannot run must never look like one that passed,
 .loom/docs/ci-principles.md):
   * missing or malformed region markers, or a whitespace-only region -> fail
@@ -25,6 +33,15 @@ Fail-closed (a check that cannot run must never look like one that passed,
     title' row (renderer format drift: bullet marker, indentation,
     container) -> fail, named -- a non-empty region must never parse
     to zero rows and look like a pass
+  * a row under '## Proposed' without its renderer ' *(curated)*' suffix
+    (or ' *(architect)*' / ' *(hermit)*' under '## Proposed (Architect /
+    Hermit)'), or a section suffix on a row in any other section -> fail,
+    named, quoting the row (issue #419)
+  * a 'Backlog Balance' count that does not equal the number of '- **#N**:'
+    rows its section renders -- table rows are paired to sections by
+    position, one per section -- or a table row / section added or removed
+    without the other -> fail, named, quoting both numbers and the section
+    (issue #419)
 
 Run by .github/workflows/signoff.yml as its own step. Deliberately NOT in
 scripts/run-pdk-free-tests.sh, which must stay offline and PDK-free; the
@@ -68,6 +85,19 @@ LOOSE = re.compile(r"#\d+")
 # title may also end in one, so suffix handling is a fallback, never the
 # first comparison (see match()).
 SUFFIX = re.compile(r" \*\((?:curated|architect|hermit)\)\*$")
+# Region self-consistency (issue #419): the renderer requires its suffix on
+# every row of the two Proposed sections and emits none anywhere else, and
+# it derives the Backlog Balance table from the same shell variables the
+# sections render. Both shapes are asserted offline, before the token gate.
+PROPOSED_SUFFIXES = {
+    "Proposed": (" *(curated)*",),
+    "Proposed (Architect / Hermit)": (" *(architect)*", " *(hermit)*"),
+}
+BALANCE = "Backlog Balance"
+BALANCE_HEADER = "| Bucket | Count |"
+SECTION = re.compile(r"^## (.+?)\s*$", re.M)
+COUNT_ROW = re.compile(r"^\|\s*(.+?)\s*\|\s*(\d+)\s*\|$")
+COUNT_SEPARATOR = re.compile(r"^\|(\s*:?-+:?\s*\|)+$")
 API = "https://api.github.com/repos/{repo}/issues/{number}"
 REMOTE = re.compile(r"github\.com[:/](.+/.+?)(?:\.git)?/?$")
 ERR = "WORK-PLAN-PROVENANCE: "
@@ -108,6 +138,102 @@ def unparsed_rows(region):
     own title contains #M is not a false positive."""
     return [ln for ln in region.split("\n")
             if LOOSE.search(ln) and not ROW.match(ln)]
+
+
+def split_sections(region):
+    """[(heading, section_text)] for every '## ' heading, in render order;
+    each section_text runs from its heading line to the next heading or
+    the region end."""
+    heads = list(SECTION.finditer(region))
+    out = []
+    for i, m in enumerate(heads):
+        end = heads[i + 1].start() if i + 1 < len(heads) else len(region)
+        out.append((m.group(1), region[m.start():end]))
+    return out
+
+
+def check_row_suffixes(region):
+    """The renderer's section suffixes are part of the region's documented
+    shape (issue #419): every row under '## Proposed' must end in
+    ' *(curated)*', every row under '## Proposed (Architect / Hermit)' in
+    ' *(architect)*' or ' *(hermit)*', and rows in every other section
+    must carry none. match() still tolerates a suffix when comparing
+    against the forge title -- so a regeneration that drops the suffix
+    would otherwise be indistinguishable from one that emits it; this
+    makes the drop a named failure."""
+    errs = []
+    for heading, text in split_sections(region):
+        required = PROPOSED_SUFFIXES.get(heading)
+        for m in ROW.finditer(text):
+            title = m.group(2).strip()
+            if required is None:
+                if SUFFIX.search(title):
+                    errs.append(f"{ERR}#{m.group(1)} renders under "
+                                f"'{heading}' carrying a section suffix, "
+                                f"which only the Proposed sections are "
+                                f"emitted with: {m.group(0)!r}")
+            elif not any(title.endswith(s) for s in required):
+                want = " or ".join(f"'{s}'" for s in required)
+                errs.append(f"{ERR}#{m.group(1)} renders under '{heading}' "
+                            f"without the renderer's {want} suffix: "
+                            f"{m.group(0)!r}")
+    return errs
+
+
+def check_balance(region):
+    """The Backlog Balance table is derived from the same shell variables
+    the sections render (render_plan_body's count()), so count-equals-rows
+    holds by construction at render time -- and nothing re-checked it
+    afterwards, making a row cleanly deleted from the committed region
+    invisible to every other check. Pair the table's rows to the region's
+    other sections by POSITION, not by name: the bucket labels
+    deliberately differ from the headings, so name-matching would need a
+    hand-maintained bucket->heading map that drifts from the renderer --
+    the failure mode issue #419 exists to close. The table must carry
+    exactly one row per section, in render order, and each count must
+    equal that section's number of '- **#N**:' rows, 0 included for a
+    '_None._' section."""
+    errs = []
+    sections = split_sections(region)
+    body = [(h, len(ROW.findall(t))) for h, t in sections if h != BALANCE]
+    balance = [t for h, t in sections if h == BALANCE]
+    if len(balance) != 1:
+        errs.append(f"{ERR}region has {len(balance)} '{BALANCE}' sections; "
+                    f"the renderer emits exactly one, and without it no "
+                    f"section's row count can be checked")
+        return errs
+    pipe = [ln.strip() for ln in balance[0].split("\n")
+            if ln.strip().startswith("|")]
+    if not pipe:
+        errs.append(f"{ERR}'{BALANCE}' section carries no table; the "
+                    f"renderer emits '| Bucket | Count |' with one count "
+                    f"row per section")
+        return errs
+    if pipe[0] != BALANCE_HEADER:
+        errs.append(f"{ERR}'{BALANCE}' table does not start with the "
+                    f"renderer's {BALANCE_HEADER!r} header row: "
+                    f"{pipe[0]!r}")
+    counts = []
+    for ln in pipe[1:]:
+        if COUNT_SEPARATOR.match(ln):
+            continue
+        m = COUNT_ROW.match(ln)
+        if not m:
+            errs.append(f"{ERR}'{BALANCE}' table row is not the renderer's "
+                        f"'| label | count |' shape: {ln!r}")
+            continue
+        counts.append((m.group(1), int(m.group(2))))
+    if len(counts) != len(body):
+        errs.append(f"{ERR}'{BALANCE}' table has {len(counts)} count row(s) "
+                    f"for {len(body)} rendered section(s) -- a section or a "
+                    f"table row was added or removed without the other")
+        return errs
+    for (heading, n), (label, count) in zip(body, counts):
+        if count != n:
+            errs.append(f"{ERR}'{BALANCE}' row {label!r} says {count} but "
+                        f"section '{heading}' renders {n} row(s) -- "
+                        f"regenerate the plan or restore the deleted row(s)")
+    return errs
 
 
 def match(rendered, forge_title):
@@ -177,13 +303,19 @@ def check(plan_text, repo, token, fetch=fetch_item):
     """Core: returns [error strings]; empty means the region is provenance-
     clean. `fetch` is injectable so the offline tests never touch the API."""
     errs = []
-    if not token:
-        return [f"{ERR}no forge token (set GITHUB_TOKEN or GH_TOKEN); "
-                f"cannot verify provenance"]
     try:
         region = extract_region(plan_text)
     except Failure as e:
         return [str(e)]
+    # Region-internal, offline checks (issue #419): zero API calls and no
+    # dependence on live forge state, so they run ahead of the token gate
+    # and still report on a tokenless invocation.
+    errs.extend(check_row_suffixes(region))
+    errs.extend(check_balance(region))
+    if not token:
+        errs.append(f"{ERR}no forge token (set GITHUB_TOKEN or GH_TOKEN); "
+                    f"cannot verify provenance")
+        return errs
     for line in unparsed_rows(region):
         errs.append(f"{ERR}plan-body row does not match the renderer's "
                     f"'- **#N**: title' format -- renderer drift or a "

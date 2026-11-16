@@ -4,7 +4,9 @@ Never touches the forge: the API fetch is injected as a fake. Carries the
 contaminated `<!-- guide:plan-body -->` region of commit 2af9216c (PR #410,
 which rendered asap7-stdcells' label state into this repo) as the failing
 fixture -- evidence captured in
-docs/forensics/2026-11-15-work-plan-provenance-incident.md.
+docs/forensics/2026-11-15-work-plan-provenance-incident.md. Also covers the
+region self-consistency checks (issue #419): the renderer's section
+suffixes and the Backlog Balance counts against the rows they summarise.
 
     python3 scripts/tests/test_check_work_plan_provenance.py
 """
@@ -164,8 +166,20 @@ def section(heading, blurb, rows, suffix=""):
     return f"## {heading}\n\n{blurb}\n\n{body}\n"
 
 
-TABLE = ("## Backlog Balance\n\n| Bucket | Count |\n|------|-------|\n"
-         "| Ready (`loom:issue`) | 1 |\n")
+def table(*rows):
+    """A Backlog Balance section whose counts are `rows` (label, count).
+    Labels are arbitrary: the guard pairs rows to sections by position,
+    never by name."""
+    body = "".join(f"| {label} | {n} |\n" for label, n in rows)
+    return (f"## {CWPP.BALANCE}\n\n| Bucket | Count |\n|------|-------|\n"
+            f"{body}")
+
+
+# One count row per non-balance section of CLEAN, in render order -- the
+# count check requires it (#419), so any fixture that renders N sections
+# must pair them with N table rows.
+TABLE = table(("Ready (`loom:issue`)", 1), ("Curated", 1))
+TABLE_READY = table(("Ready (`loom:issue`)", 1))
 
 CLEAN = plan(
     section("Ready", "Human-approved issues ready for implementation "
@@ -211,18 +225,20 @@ class Check(unittest.TestCase):
         # GitHub unifies PRs and issues on /issues/{n}; the title decides.
         fetch = make_fake_fetch({406: "a PR title"})
         errs = self.run_check(
-            plan(section("Ready", "blurb", [(406, "a PR title")])),
+            plan(section("Ready", "blurb", [(406, "a PR title")]),
+                 TABLE_READY),
             fetch=fetch)
         self.assertEqual(errs, [])
         errs = self.run_check(
-            plan(section("Ready", "blurb", [(406, "the issue title")])),
+            plan(section("Ready", "blurb", [(406, "the issue title")]),
+                 TABLE_READY),
             fetch=fetch)
         self.assertEqual(len(errs), 1)
 
     def test_markdown_in_title_matches_exactly(self):
         title = "`--verify` cannot re-check (a & b) **bold** [x] records"
         errs = self.run_check(
-            plan(section("Ready", "blurb", [(406, title)])),
+            plan(section("Ready", "blurb", [(406, title)]), TABLE_READY),
             fetch=make_fake_fetch({406: title}))
         self.assertEqual(errs, [])
 
@@ -234,7 +250,8 @@ class Check(unittest.TestCase):
     def test_title_that_merely_differs_fails(self):
         errs = self.run_check(
             plan(section("Ready", "blurb",
-                         [(406, READY_TITLE + " (edited later)")])),
+                         [(406, READY_TITLE + " (edited later)")]),
+                 TABLE_READY),
             fetch=make_fake_fetch({406: READY_TITLE}))
         self.assertEqual(len(errs), 1)
         self.assertIn("foreign or drifted", errs[0])
@@ -244,13 +261,162 @@ class Check(unittest.TestCase):
         # title here ends in '(#129)'): the drifted-format check is
         # line-level, never 'every #N occurrence in the region'.
         errs = self.run_check(
-            plan(section("Ready", "blurb", [(133, LOCAL_TITLES[133])])),
+            plan(section("Ready", "blurb", [(133, LOCAL_TITLES[133])]),
+                 TABLE_READY),
             fetch=make_fake_fetch(LOCAL_TITLES))
         self.assertEqual(errs, [])
 
     def test_empty_sections_pass(self):
-        text = plan(section("Very Important", "blurb", []), TABLE)
+        text = plan(section("Very Important", "blurb", []),
+                    table(("Very important", 0)))
         self.assertEqual(self.run_check(text), [])
+
+
+class RegionSelfConsistency(unittest.TestCase):
+    """The two offline checks from issue #419 -- renderer suffixes and
+    Backlog Balance counts -- each verifiable with zero API calls and no
+    dependence on live forge state."""
+
+    def run_check(self, text, token="t", fetch=None):
+        errs = CWPP.check(text, REPO_NAME, token,
+                          fetch=fetch or make_fake_fetch(LOCAL_TITLES))
+        return errs
+
+    # --- suffix requirement -------------------------------------------
+
+    def test_proposed_row_without_suffix_fails_naming_row(self):
+        # PR #418's head 52e7376a dropped the suffix on all 7 Proposed
+        # rows and the guard of the day passed everything but its $2
+        # title drift -- this is the case that head should have failed.
+        text = plan(
+            section("Ready", "blurb", [(406, READY_TITLE)]),
+            section("Proposed", "Issues carrying `loom:curated`.",
+                    [(406, READY_TITLE)]),
+            table(("Ready (`loom:issue`)", 1), ("Curated", 1)))
+        errs = self.run_check(text)
+        self.assertEqual(len(errs), 1)
+        self.assertIn("without the renderer's ' *(curated)*' suffix",
+                      errs[0])
+        self.assertIn("- **#406**:", errs[0])
+
+    def test_wrong_suffix_under_proposed_fails(self):
+        text = plan(
+            section("Ready", "blurb", [(406, READY_TITLE)]),
+            section("Proposed", "Issues carrying `loom:curated`.",
+                    [(406, READY_TITLE)], suffix=" *(hermit)*"),
+            table(("Ready (`loom:issue`)", 1), ("Curated", 1)))
+        errs = self.run_check(text)
+        self.assertEqual(len(errs), 1)
+        self.assertIn("' *(curated)*'", errs[0])
+
+    def test_curated_suffix_under_architect_hermit_fails(self):
+        text = plan(
+            section("Proposed (Architect / Hermit)", "",
+                    [(406, READY_TITLE)], suffix=" *(curated)*"),
+            table(("Architect / Hermit proposals", 1)))
+        errs = self.run_check(text)
+        self.assertEqual(len(errs), 1)
+        self.assertIn("without the renderer's ' *(architect)*' or "
+                      "' *(hermit)*' suffix", errs[0])
+
+    def test_suffix_on_non_proposed_row_fails(self):
+        # match()'s fallback would happily strip this against the bare
+        # forge title -- the section check is what names it.
+        text = plan(
+            section("Ready", "blurb", [(406, READY_TITLE)],
+                    suffix=" *(curated)*"),
+            table(("Ready (`loom:issue`)", 1)))
+        errs = self.run_check(text)
+        self.assertEqual(len(errs), 1)
+        self.assertIn("carrying a section suffix", errs[0])
+        self.assertIn("'Ready'", errs[0])
+
+    def test_forge_title_genuinely_ending_in_suffix_passes_once(self):
+        # The renderer appends its suffix to the forge title; a title that
+        # itself ends in ' *(curated)*' renders doubled, satisfies the
+        # suffix requirement, and still matches via SUFFIX's fallback --
+        # reported once at most, i.e. here: not at all.
+        title = READY_TITLE + " *(curated)*"
+        text = plan(
+            section("Proposed", "Issues carrying `loom:curated`.",
+                    [(406, title)], suffix=" *(curated)*"),
+            table(("Curated", 1)))
+        self.assertEqual(self.run_check(text, fetch=make_fake_fetch(
+            {406: title})), [])
+
+    # --- Backlog Balance counts ---------------------------------------
+
+    def test_deleted_row_fails_via_count(self):
+        # The currently-invisible case: a row cleanly deleted from a
+        # section leaves only valid rows behind and used to exit 0.
+        text = plan(
+            section("Ready", "blurb", [(406, READY_TITLE)]),
+            section("Proposed", "Issues carrying `loom:curated`.",
+                    [(406, READY_TITLE)], suffix=" *(curated)*"),
+            table(("Ready (`loom:issue`)", 1), ("Curated", 3)))
+        errs = self.run_check(text)
+        self.assertEqual(len(errs), 1)
+        self.assertIn("'Curated'", errs[0])
+        self.assertIn("says 3", errs[0])
+        self.assertIn("'Proposed'", errs[0])
+        self.assertIn("renders 1 row(s)", errs[0])
+
+    def test_none_section_with_zero_count_passes_and_nonzero_fails(self):
+        text = plan(section("Epics", "", []), table(("Active epics", 0)))
+        self.assertEqual(self.run_check(text), [])
+        text = plan(section("Epics", "", []), table(("Active epics", 1)))
+        errs = self.run_check(text)
+        self.assertEqual(len(errs), 1)
+        self.assertIn("says 1", errs[0])
+        self.assertIn("renders 0 row(s)", errs[0])
+
+    def test_table_row_added_or_removed_without_section_fails(self):
+        base = (section("Ready", "blurb", [(406, READY_TITLE)]),
+                section("Proposed", "Issues carrying `loom:curated`.",
+                        [(406, READY_TITLE)], suffix=" *(curated)*"))
+        errs = self.run_check(plan(*base, table(("Ready (`loom:issue`)", 1))))
+        self.assertEqual(len(errs), 1)
+        self.assertIn("1 count row(s) for 2 rendered section(s)", errs[0])
+        errs = self.run_check(plan(
+            section("Ready", "blurb", [(406, READY_TITLE)]),
+            table(("Ready (`loom:issue`)", 1), ("Curated", 1))))
+        self.assertEqual(len(errs), 1)
+        self.assertIn("2 count row(s) for 1 rendered section(s)", errs[0])
+
+    def test_bucket_labels_pair_positionally_not_by_name(self):
+        # The bucket labels deliberately differ from the headings (6 of
+        # the 10 differ in more than case on main), so pairing must be
+        # positional: a nonsense label with the right count passes, and
+        # the right label with the wrong count still fails.
+        text = plan(
+            section("Proposed", "Issues carrying `loom:curated`.",
+                    [(406, READY_TITLE)], suffix=" *(curated)*"),
+            table(("totally-unrelated-label", 1)))
+        self.assertEqual(self.run_check(text), [])
+        text = plan(
+            section("Proposed", "Issues carrying `loom:curated`.",
+                    [(406, READY_TITLE)], suffix=" *(curated)*"),
+            table(("Proposed", 2)))
+        errs = self.run_check(text)
+        self.assertEqual(len(errs), 1)
+        self.assertIn("'Proposed'", errs[0])
+
+    def test_malformed_balance_table_row_fails(self):
+        text = plan(
+            section("Ready", "blurb", [(406, READY_TITLE)]),
+            "## Backlog Balance\n\n| Bucket | Count |\n|------|-------|\n"
+            "| Ready (`loom:issue`) |\n")
+        errs = self.run_check(text)
+        self.assertTrue(errs)
+        joined = "\n".join(errs)
+        self.assertIn("'| label | count |' shape", joined)
+        self.assertIn("| Ready (`loom:issue`) |", joined)
+
+    def test_missing_balance_section_fails(self):
+        text = plan(section("Ready", "blurb", [(406, READY_TITLE)]))
+        errs = self.run_check(text)
+        self.assertEqual(len(errs), 1)
+        self.assertIn("'Backlog Balance'", errs[0])
 
 
 class FailClosed(unittest.TestCase):
@@ -258,6 +424,20 @@ class FailClosed(unittest.TestCase):
         errs = CWPP.check(CLEAN, REPO_NAME, "", fetch=no_fetch)
         self.assertEqual(len(errs), 1)
         self.assertIn("no forge token", errs[0])
+
+    def test_no_token_reports_offline_failures_too(self):
+        # Issue #419: the suffix/count checks run ahead of the token
+        # gate, so a tokenless invocation reports them IN ADDITION to
+        # the no-token failure -- never one instead of the other.
+        text = plan(
+            section("Proposed", "Issues carrying `loom:curated`.",
+                    [(406, READY_TITLE)]),
+            table(("Curated", 1)))
+        errs = CWPP.check(text, REPO_NAME, "", fetch=no_fetch)
+        self.assertEqual(len(errs), 2)
+        self.assertIn("without the renderer's ' *(curated)*' suffix",
+                      errs[0])
+        self.assertIn("no forge token", errs[1])
 
     def test_absent_markers_fail(self):
         errs = CWPP.check("no markers at all\n", REPO_NAME, "t",
