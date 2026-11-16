@@ -191,7 +191,12 @@ class Check(unittest.TestCase):
         # #122 exists here, closed, under an unrelated title -- existence
         # alone would pass; the title match is what must name it.
         self.assertIn("#122", joined)
-        self.assertIn("foreign or drifted", joined)
+        # One combined message (#416): this branch cannot tell a
+        # stale/mis-rendered pin from a foreign row, so it must name
+        # both causes and both remedies, not claim "foreign".
+        self.assertIn("pinned title no longer matches", joined)
+        self.assertIn("Guide document-maintenance tick", joined)
+        self.assertIn("2026-11-15-work-plan-provenance-incident.md", joined)
         self.assertIn(LOCAL_TITLES[122], joined)
         # #133 is the only *(hermit)* row and the only one exercising the
         # SUFFIX fallback; its forge title is unrelated here, so it must
@@ -235,7 +240,10 @@ class Check(unittest.TestCase):
                          [(406, READY_TITLE + " (edited later)")])),
             fetch=make_fake_fetch({406: READY_TITLE}))
         self.assertEqual(len(errs), 1)
-        self.assertIn("foreign or drifted", errs[0])
+        # Same input shape as the contaminated fixture's #122 row, so
+        # the same combined message (#416): no discriminator exists.
+        self.assertIn("pinned title no longer matches", errs[0])
+        self.assertIn("Guide document-maintenance tick", errs[0])
 
     def test_parsed_row_whose_title_contains_hash_number_is_one_row(self):
         # A parsed row's own title may legitimately contain #M (#133's

@@ -201,8 +201,17 @@ def check(plan_text, repo, token, fetch=fetch_item):
         title = seen[number]
         if title is not None and not match(rendered, title):
             errs.append(f"{ERR}#{number} renders as {rendered!r} but {repo}'s "
-                        f"item #{number} is titled {title!r} -- foreign or "
-                        f"drifted row")
+                        f"item #{number} is titled {title!r} -- the pinned "
+                        f"title no longer matches this repo's current "
+                        f"title. Either (a) the region is stale or "
+                        f"mis-rendered (an item retitle or renderer drift "
+                        f"that outran the last re-render) -- the common "
+                        f"case, cleared by regenerating the region with a "
+                        f"Guide document-maintenance tick -- or (b) the "
+                        f"row is foreign or contaminated (docs/forensics/"
+                        f"2026-11-15-work-plan-provenance-incident.md). "
+                        f"A red here does not mean your PR is at fault; "
+                        f"it clears when the region is clean.")
     return errs
 
 

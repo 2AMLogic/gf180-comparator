@@ -131,6 +131,14 @@ jobs:
       # rendered a foreign repo's label state here; the guard fails on
       # exactly that input -- see
       # docs/forensics/2026-11-15-work-plan-provenance-incident.md).
+      # Issue #416: a title mismatch is not always contamination. The
+      # region pins titles as they read at render time and only a Guide
+      # document-maintenance tick re-renders it, so an item retitle (or
+      # renderer drift) that outruns the next tick fails this step on
+      # EVERY open PR -- including PRs that touch nothing related. A
+      # red here does not mean the PR is at fault; clear it by asking
+      # Guide for a docs tick. The check cannot tell a stale pin from
+      # a foreign row, so the row message names both causes.
       # Fail-closed: a missing token, a scope-less token, or any query error
       # fails the step, it never skips (.loom/docs/ci-principles.md).
       # Deliberately NOT part of scripts/run-pdk-free-tests.sh, which must
