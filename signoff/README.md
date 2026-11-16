@@ -888,3 +888,13 @@ inventoried file changes, `--check` exits 3 until the envelope is re-produced
 from a green `selftest.yml` run (download the `item-9-envelope` artifact, commit
 it, re-pin, re-grade). See the addenda in
 `spec/decision-records/DR-0003-t1-items-1-9-10-claim-policy.md` (issue #322).
+
+**Item 10's envelope is re-produced locally** (its checks are the PDK-free
+steps of `scripts/run-pdk-free-tests.sh`, so no toolchain host is needed): the
+current `signoff/envelopes/item-10.json` was regenerated with the pinned
+`klayout-tools==0.8.0` registry wheel on `feature/issue-398` (issue #398),
+whose edit of the inventoried `scripts/check_bench_inventory.py` (the
+comparator-avg-power description now reflects the re-minted citable extracted
+record) drifted the committed envelope by design; 16/16 checks pass, the
+inventory is unchanged so the manifest pin is untouched, and the report was
+re-graded.

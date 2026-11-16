@@ -54,8 +54,9 @@ bring-up validation probe** (`tt_27c_3.30v`, schematic DUT, run locally), the
 1-of-1 fleet bring-up (issue #372), the committed **45-of-45 PVT campaign**
 (issue #373) and the extracted-DUT pair from #374 — the 5-point
 `tb_vosprobe.spice` probe leg, **not citable as a clean-tree result** (taken
-against a dirty working tree), and the **45-of-45 extracted campaign**, also
-not citable as a clean-tree result until the extracted netlist is tracked —
+against a dirty working tree), and the **45-of-45 extracted campaign**, re-minted
+citable under DR-0008's staged-source provenance class (issue #398) from its
+diagnostic first mint —
 and the bench is not wired into `characterize.sh`. See its
 [README](comparator-avg-power/README.md) for the
 clause-by-clause implementation and for why the reset-completion margin is a
@@ -300,7 +301,7 @@ consumer must read each from its own field and never infer one from another:
 | question | field | meaning |
 |---|---|---|
 | did the whole requested grid execute? | `complete` | exact PVT/MC coverage of the bundled requests (#152) |
-| is the provenance valid? | `citable` | clean, verified source identity (#151) |
+| is the provenance valid? | `citable` | clean, verified source identity (#151); a gitignored source staged into the record and committed in its own corner tree counts as pinned when sha256-matched (DR-0008) |
 | is it citable reference evidence? | `reference` | `complete` and `citable` -- nothing more |
 | did the latch decide correctly? | `decision_correctness.status` | functional decision checks (#273), regeneration and kickback only |
 | does it meet the ratified row? | `within_target` / `within_stretch` | target compliance of the headline quantity |

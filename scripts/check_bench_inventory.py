@@ -25,8 +25,9 @@ NOT_RUN_BY_CHARACTERIZE = {
         "campaign is committed (issue #373); records include the local "
         "1-point bring-up probe, the 1-point fleet bring-up, the schematic "
         "45-of-45 grid (issue #373) and the extracted-DUT pair (issue #374: "
-        "the 5-point tb_vosprobe bring-up and the 45-of-45 extracted grid, "
-        "not citable until the extracted netlist is tracked), see its README",
+        "the 5-point tb_vosprobe bring-up (diagnostic, dirty tree) and the "
+        "45-of-45 extracted grid, re-minted citable under DR-0008's "
+        "staged-source provenance class, issue #398), see its README",
 }
 
 
