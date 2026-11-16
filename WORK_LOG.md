@@ -2,6 +2,16 @@
 
 Chronological record of merged pull requests and closed issues. Newest entries appear first.
 
+### 2026-11-16
+
+- **PR #422**: refactor(tests): replace importlib path-loading with sys.path + plain import in 15 test files
+- **PR #420**: docs: identify klt 0.5.0 as the pinned pre-launch floor, not the fleet runner
+- **PR #417**: docs: narrow parse_corner_id's strictness claim to the ratified temp range
+- **Issue #425** (closed): Provenance guard: hoist the 447-char row-mismatch explanation out of the per-row loop
+- **Issue #415** (closed): Replace importlib path-loading in 16 test files with #368's sys.path + plain import idiom
+- **Issue #414** (closed): corners: parse_corner_id's "accepts exactly what corner_id emits" docstring is still an overstatement at :g's exponent boundary
+- **Issue #405** (closed): docs: sim/README.md:30 still calls klt 0.5.0 'the fleet runner' (cm-window refusal floor)
+
 ### 2026-11-15
 
 - **PR #413**: ci: verify WORK_PLAN.md's generated region against this repo's forge state
