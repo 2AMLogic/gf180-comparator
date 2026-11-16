@@ -26,8 +26,9 @@ terms `comparator-offset-mc/` cannot see (issue #157). It is fleet-only (`sim/to
 A supplemental, unscored bench, [`comparator-offset-cm-window/`](comparator-offset-cm-window/)
 (issue #182), specifies paired same-draw preamp offset/gain at the consumer's
 ±100 mV common-mode window. It is a **feasibility stage with no record**. Its
-fleet path is refused with `UNSUPPORTED_EXECUTOR_CAPABILITY`, because the fleet
-runner (klt 0.5.0) cannot address a nested sweep's points. Full 45-point
+fleet path is refused with `UNSUPPORTED_EXECUTOR_CAPABILITY`: the refusal is judged
+against the pinned pre-launch floor `FLEET_RUNNER_KLT_OBSERVED` (klt 0.5.0),
+which cannot address a nested sweep's points. Full 45-point
 coverage is not available from this bench. Its monotonic-index variant,
 [`comparator-offset-cm-index/`](comparator-offset-cm-index/) (issue #218), is
 executable on the 0.5.0 runner and has a complete unscored 45-point x N=200
