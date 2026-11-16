@@ -4,6 +4,10 @@ Chronological record of merged pull requests and closed issues. Newest entries a
 
 ### 2026-11-16
 
+- **PR #427**: fix: classify gitignored staged sources as pinned provenance (DR-0008)
+- **PR #424**: fix: name stale-pin and foreign causes in provenance row mismatch
+- **Issue #421** (closed): sim/tools: accept a staged-and-committed sha256-matched source as pinned provenance (#398 ruling, option a)
+- **Issue #416** (closed): Provenance guard: one title edit on any WORK_PLAN-referenced item reddens signoff CI on every open PR, and only a Guide tick can clear it
 - **PR #422**: refactor(tests): replace importlib path-loading with sys.path + plain import in 15 test files
 - **PR #420**: docs: identify klt 0.5.0 as the pinned pre-launch floor, not the fleet runner
 - **PR #417**: docs: narrow parse_corner_id's strictness claim to the ratified temp range
