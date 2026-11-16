@@ -211,6 +211,10 @@ def corner_id(process: str, temp_c: float, vdd: float) -> str:
 #: (``27.0``/``027`` match); canonicality of the temperature field is
 #: enforced by re-formatting through ``corner_id`` inside ``parse_corner_id``
 #: and comparing, so ``:g``'s rendering is not re-encoded here a second time.
+#: That re-format cannot rescue an id the regex never matched: the temperature
+#: class does not cover ``:g``'s exponent form (``1e+06``, reached at
+#: ``|T| >= 1e6`` or ``0 < |T| < 1e-4``), so an id ``corner_id`` emits at
+#: such a temperature raises "unparseable" here.
 _CID_RE = re.compile(
     r"^(?P<process>[a-z][a-z_]*)_(?P<temp>-?\d+(?:\.\d+)?)c_(?P<vdd>\d+\.\d\d)v$"
 )
@@ -219,11 +223,15 @@ _CID_RE = re.compile(
 def parse_corner_id(cid: str) -> tuple[str, float, float]:
     """The inverse of ``corner_id``: a ratified corner id -> (process, temp_c, vdd).
 
-    Strict: accepts exactly what ``corner_id`` emits. A well-formed but
-    non-canonical id (``tt_27.0c_3.30v``, ``tt_027c_3.30v``, ``tt_27c_3.3v``)
-    is rejected too -- canonicality is checked by re-formatting through
-    ``corner_id`` and comparing, so callers need no canonical re-check of
-    their own.
+    Strict over the ratified temperature range: accepts what ``corner_id``
+    emits there. Outside that range ``:g`` switches to exponent notation
+    (``|T| >= 1e6``, or ``0 < |T| < 1e-4``), which ``_CID_RE``'s temperature
+    class cannot match -- so such ids raise ``ValueError`` even though
+    ``corner_id`` emits them (nothing on the ratified grid does). A
+    well-formed but non-canonical id (``tt_27.0c_3.30v``, ``tt_027c_3.30v``,
+    ``tt_27c_3.3v``) is rejected too -- canonicality is checked by
+    re-formatting through ``corner_id`` and comparing, so callers need no
+    canonical re-check of their own.
 
     Raises:
         ValueError: if ``cid`` is not something ``corner_id`` could have
