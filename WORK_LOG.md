@@ -2,6 +2,11 @@
 
 Chronological record of merged pull requests and closed issues. Newest entries appear first.
 
+### 2026-11-17
+
+- **PR #439**: ci: produce and upload item-1/item-10 signoff envelopes in CI
+- **Issue #435** (closed): signoff: selftest.yml attests only item 9 — item 10 has no CI attestation path, so every inventoried-file edit forces a local re-produce
+
 ### 2026-11-16
 
 - **PR #426**: chore(loom): resync installed Loom to v0.19.1302
