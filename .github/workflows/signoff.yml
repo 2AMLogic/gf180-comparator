@@ -169,6 +169,50 @@ jobs:
               --check "signoff/envelopes/item-$item.json"
           done
 
+      # Issue #435: CI also PRODUCES the item-1 and item-10 envelopes, not
+      # only checks them. Item 9's producer is selftest.yml (its cold start
+      # needs the toolchain host); items 1 and 10 had only a hand-run local
+      # producer, so every edit to an inventoried file forced a local
+      # re-attest and "envelopes from a green CI run" was unsatisfiable for
+      # half the pair. Production is host-independent (the envelopes carry
+      # no host or timestamp fields -- klt_version 0.8.0 and per-file
+      # sha256 only), so on a green tree this step's output byte-matches
+      # the committed envelopes. `always()` so a drifted PR still yields
+      # the fresh envelope to download and commit (edit drift keeps the
+      # inventory's checks green, so the fresh envelope is written); a
+      # genuinely failing check attests nothing and writes no file
+      # (exit 3), which leaves the upload to fail `if-no-files-found:
+      # error` -- the honest outcome. The klt on PATH is the pinned 0.8.0
+      # wheel installed above; keep that pin in sync with
+      # signoff/regenerate.sh's KLT_VERSION.
+      - name: Produce fresh item 1 and 10 envelopes (klt signoff --attest -o)
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/attest"
+          rc=0
+          for item in 1 10; do
+            klt signoff --attest "$item" \
+              --inventory "signoff/inventory/item-$item.json" \
+              -o "$RUNNER_TEMP/attest/item-$item.json" || rc=1
+          done
+          exit "$rc"
+
+      - name: Upload the item 1 envelope
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: item-1-envelope
+          path: ${{ runner.temp }}/attest/item-1.json
+          if-no-files-found: error
+
+      - name: Upload the item 10 envelope
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: item-10-envelope
+          path: ${{ runner.temp }}/attest/item-10.json
+          if-no-files-found: error
+
       # Issue #129: the single enumeration of PDK-free tests and --check
       # verifiers lives in scripts/run-pdk-free-tests.sh (also `npm test`).
       # Each step there is a collapsed ::group:: named as the old CI step was
