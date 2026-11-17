@@ -4,6 +4,9 @@ Chronological record of merged pull requests and closed issues. Newest entries a
 
 ### 2026-11-17
 
+- **PR #443**: chore: prune 16 retired entries from the Loom install manifest
+- **PR #441**: chore(loom): resync installed Loom to v0.19.1306
+- **Issue #442** (closed): Loom install manifest lists 16 files that are not on disk (incl. a script an installed role prompt invokes)
 - **PR #439**: ci: produce and upload item-1/item-10 signoff envelopes in CI
 - **Issue #435** (closed): signoff: selftest.yml attests only item 9 — item 10 has no CI attestation path, so every inventoried-file edit forces a local re-produce
 
