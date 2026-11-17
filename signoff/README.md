@@ -859,7 +859,16 @@ pinned 0.8.0 wheel). Items **1 and 10** are attested: the tool-produced
 envelopes are `signoff/envelopes/item-{1,10}.json`, the manifest cites them
 with the inventory's sha256, and `signoff.yml` re-runs
 `klt signoff --attest N --inventory ... --check ...` per item (exit 3 on
-drift). Refresh after editing any inventoried file:
+drift), and — since issue
+[#435](https://github.com/2AMLogic/gf180-comparator/issues/435) — also
+**produces** the item-1 and item-10 envelopes on every run (`item-1-envelope`
+/ `item-10-envelope` artifacts, uploaded `always()` so a drifted PR still
+yields the fresh envelope to download and commit; item 9's producer stays
+`selftest.yml`, whose host alone re-runs the `local_only` cold start).
+Refresh after editing any inventoried file — download the fresh envelope
+from the green `signoff.yml` run and commit it; production is
+host-independent (the envelopes carry no host or timestamp fields), so the
+local command below is the byte-identical fallback:
 
     klt signoff --attest 1  --inventory signoff/inventory/item-1.json  -o signoff/envelopes/item-1.json
     klt signoff --attest 10 --inventory signoff/inventory/item-10.json -o signoff/envelopes/item-10.json
@@ -889,12 +898,16 @@ from a green `selftest.yml` run (download the `item-9-envelope` artifact, commit
 it, re-pin, re-grade). See the addenda in
 `spec/decision-records/DR-0003-t1-items-1-9-10-claim-policy.md` (issue #322).
 
-**Item 10's envelope is re-produced locally** (its checks are the PDK-free
-steps of `scripts/run-pdk-free-tests.sh`, so no toolchain host is needed): the
-current `signoff/envelopes/item-10.json` was regenerated with the pinned
-`klayout-tools==0.8.0` registry wheel on `feature/issue-398` (issue #398),
-whose edit of the inventoried `scripts/check_bench_inventory.py` (the
-comparator-avg-power description now reflects the re-minted citable extracted
-record) drifted the committed envelope by design; 16/16 checks pass, the
-inventory is unchanged so the manifest pin is untouched, and the report was
-re-graded.
+**Item 10's envelope needs no toolchain host** (its checks are the PDK-free
+steps of `scripts/run-pdk-free-tests.sh`), and since issue #435 `signoff.yml`
+produces it on every run: refresh by downloading the `item-10-envelope`
+artifact from the green run and committing it, with the local command above
+as the fallback. Provenance of the current `signoff/envelopes/item-10.json`:
+regenerated with the pinned `klayout-tools==0.8.0` registry wheel on
+`feature/issue-398` (issue #398), whose edit of the inventoried
+`scripts/check_bench_inventory.py` (the comparator-avg-power description now
+reflects the re-minted citable extracted record) drifted the committed
+envelope by design; and re-attested the same way for issue #435's edit of
+the inventoried `.github/workflows/signoff.yml` (the produce-and-upload
+steps above); 16/16 checks pass, the inventory is unchanged so the manifest
+pin is untouched, and the report was re-graded.
