@@ -415,6 +415,8 @@ check never skips:
   checkout's synthetic merge commit is not used.
 - `push` to `main`: the event's `before` → `after`, covering every commit in
   the push, forced pushes included.
+- `merge_group`: the event's `base_sha` → `head_sha`, covering every queued
+  commit in the group's merged result.
 - Missing, malformed or unfetchable SHAs, an all-zero `before`, or any other
   event fail with a diagnostic. The workflow passes the SHAs as `env:` values
   and checks out with `fetch-depth: 0` plus an explicit fetch of each SHA.

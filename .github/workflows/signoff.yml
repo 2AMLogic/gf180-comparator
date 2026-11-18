@@ -36,7 +36,10 @@ name: Signoff
 #
 # A klt-free `evidence` step (issue #135) enforces sim/ append-only evidence:
 # signoff/check_append_only_evidence.py fails if any committed protected sim
-# artifact is modified, deleted, re-moded or moved (see sim/README.md).
+# artifact is modified, deleted, re-moded or moved (see sim/README.md). Since
+# issue #450 the workflow also runs on the merge queue (merge_group:
+# checks_requested); the guard takes that event's base_sha/head_sha the same
+# fail-closed way.
 #
 # The job runs scripts/run-pdk-free-tests.sh (issue #129), the same script as
 # package.json's `npm test`: the sim/harness unittest suite (#110), the netlist
@@ -66,6 +69,11 @@ on:
   pull_request:
   push:
     branches: [main]
+  # Issue #450: the merge queue reports required contexts via
+  # merge_group/checks_requested on the default branch (enforced by the repo
+  # ruleset, not by filters here). Same checks, same env plumbing.
+  merge_group:
+    types: [checks_requested]
 
 permissions:
   contents: read
@@ -89,14 +97,18 @@ jobs:
     # scripts/run-pdk-free-tests.sh) compares event-specific commits, never the
     # checkout's HEAD. pull_request: merge-base(PR base, PR head) .. PR head
     # (HEAD there is GitHub's synthetic merge commit). push: before .. after,
-    # the whole push including forced pushes. The SHAs travel ONLY as env
-    # values -- never `${{ }}`-interpolated into a run: script -- and the
-    # verifier validates them as full hex SHAs and fails (never skips) in CI
-    # when any is missing, all-zero, or unavailable.
+    # the whole push including forced pushes. merge_group (issue #450): the
+    # queue's base_sha .. head_sha -- the whole group, including its merged
+    # result. The SHAs travel ONLY as env values -- never `${{ }}`-interpolated
+    # into a run: script -- and the verifier validates them as full hex SHAs
+    # and fails (never skips) in CI when any is missing, all-zero, or
+    # unavailable.
     env:
       APPEND_ONLY_EVENT: ${{ github.event_name }}
       APPEND_ONLY_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
       APPEND_ONLY_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      APPEND_ONLY_MG_BASE_SHA: ${{ github.event.merge_group.base_sha }}
+      APPEND_ONLY_MG_HEAD_SHA: ${{ github.event.merge_group.head_sha }}
       APPEND_ONLY_PUSH_BEFORE: ${{ github.event.before }}
       APPEND_ONLY_PUSH_AFTER: ${{ github.event.after }}
     steps:
@@ -112,6 +124,7 @@ jobs:
       - name: Fetch the event commits for the append-only evidence check
         run: |
           for sha in "$APPEND_ONLY_PR_BASE_SHA" "$APPEND_ONLY_PR_HEAD_SHA" \
+                     "$APPEND_ONLY_MG_BASE_SHA" "$APPEND_ONLY_MG_HEAD_SHA" \
                      "$APPEND_ONLY_PUSH_BEFORE" "$APPEND_ONLY_PUSH_AFTER"; do
             [[ "$sha" =~ ^[0-9a-f]{40}$ ]] || continue
             [[ "$sha" =~ ^0+$ ]] && continue

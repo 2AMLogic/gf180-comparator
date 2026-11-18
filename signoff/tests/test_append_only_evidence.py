@@ -56,7 +56,8 @@ UNPROTECTED = [
 
 _CLEAN_KEYS = ("CI", "GITHUB_ACTIONS", "GITHUB_EVENT_NAME", "GITHUB_EVENT_PATH",
                CHECK.ENV_EVENT, CHECK.ENV_PR_BASE, CHECK.ENV_PR_HEAD,
-               CHECK.ENV_PUSH_BEFORE, CHECK.ENV_PUSH_AFTER)
+               CHECK.ENV_PUSH_BEFORE, CHECK.ENV_PUSH_AFTER,
+               CHECK.ENV_MG_BASE, CHECK.ENV_MG_HEAD)
 
 
 def base_env() -> dict[str, str]:
@@ -504,6 +505,90 @@ class CiBaselineTests(Base):
         self.assertEqual(rc, 2, out)
         self.assertIn("not a full commit SHA", out)
 
+    # ---- merge_group (issue #450) ------------------------------------------
+    def _merge_group_branch(self, violate: bool):
+        """The queue's merged result: head_sha is the merge result commit."""
+        self.r.git("checkout", "-q", "-b", "queue")
+        self.r.write("sim/comparator-kickback/records/queue-new.md", "q\n")
+        if violate:
+            self.r.write(REC, "rewritten in the queued PR\n")
+        head = self.r.commit("queued merge result")
+        return head
+
+    def test_merge_group_pure_addition_passes(self):
+        head = self._merge_group_branch(violate=False)
+        rc, out = self.ci(APPEND_ONLY_EVENT="merge_group",
+                          APPEND_ONLY_MG_BASE_SHA=self.base,
+                          APPEND_ONLY_MG_HEAD_SHA=head)
+        self.assertEqual(rc, 0, out)
+        self.assertIn("merge_group", out)
+        self.assertIn("1 protected path(s) added", out)
+
+    def test_merge_group_modified_protected_fails(self):
+        head = self._merge_group_branch(violate=True)
+        rc, out = self.ci(APPEND_ONLY_EVENT="merge_group",
+                          APPEND_ONLY_MG_BASE_SHA=self.base,
+                          APPEND_ONLY_MG_HEAD_SHA=head)
+        self.assertEqual(rc, 1, out)
+        self.assertIn(f"modified: {REC}", out)
+        self.assertIn("::error", out)
+
+    def test_merge_group_whole_range_not_just_head_commit(self):
+        # A violation in an earlier queued commit must still fail: base..head
+        # covers the whole group, not only the last commit.
+        self.r.git("rm", "-q", LOG)
+        self.r.commit("first queued commit deletes evidence")
+        self.r.write("sim/comparator-kickback/records/queue-new.md", "q\n")
+        head = self.r.commit("second queued commit re-adds")
+        rc, out = self.ci(APPEND_ONLY_EVENT="merge_group",
+                          APPEND_ONLY_MG_BASE_SHA=self.base,
+                          APPEND_ONLY_MG_HEAD_SHA=head)
+        self.assertEqual(rc, 1, out)
+        self.assertIn(f"deleted: {LOG}", out)
+
+    def test_merge_group_missing_base_fails(self):
+        head = self._merge_group_branch(violate=False)
+        rc, out = self.ci(APPEND_ONLY_EVENT="merge_group",
+                          APPEND_ONLY_MG_HEAD_SHA=head)
+        self.assertEqual(rc, 2, out)
+        self.assertIn("base SHA is missing", out)
+
+    def test_merge_group_zero_base_fails(self):
+        head = self._merge_group_branch(violate=False)
+        rc, out = self.ci(APPEND_ONLY_EVENT="merge_group",
+                          APPEND_ONLY_MG_BASE_SHA="0" * 40,
+                          APPEND_ONLY_MG_HEAD_SHA=head)
+        self.assertEqual(rc, 2, out)
+        self.assertIn("all-zero", out)
+        self.assertNotIn("SKIP", out)
+
+    def test_merge_group_unreachable_base_fails(self):
+        head = self._merge_group_branch(violate=False)
+        rc, out = self.ci(APPEND_ONLY_EVENT="merge_group",
+                          APPEND_ONLY_MG_BASE_SHA="c" * 40,
+                          APPEND_ONLY_MG_HEAD_SHA=head)
+        self.assertEqual(rc, 2, out)
+        self.assertIn("not available in this clone", out)
+        self.assertIn("git fetch origin", out)
+        self.assertNotIn("SKIP", out)
+
+    def test_merge_group_from_event_payload_file(self):
+        head = self._merge_group_branch(violate=True)
+        ev = self.r.root.parent / f"{self.r.root.name}-merge-group.json"
+        ev.write_text(json.dumps(
+            {"merge_group": {"base_sha": self.base, "head_sha": head}}))
+        self.addCleanup(ev.unlink)
+        rc, out = self.ci(GITHUB_EVENT_NAME="merge_group", GITHUB_EVENT_PATH=str(ev))
+        self.assertEqual(rc, 1, out)
+        self.assertIn(f"modified: {REC}", out)
+
+    def test_merge_group_malformed_sha_fails(self):
+        rc, out = self.ci(APPEND_ONLY_EVENT="merge_group",
+                          APPEND_ONLY_MG_BASE_SHA="../../etc",
+                          APPEND_ONLY_MG_HEAD_SHA=self.base)
+        self.assertEqual(rc, 2, out)
+        self.assertIn("not a full commit SHA", out)
+
     # ---- unsupported / missing events --------------------------------------
     def test_missing_event_in_ci_fails_not_skips(self):
         for env in ({"GITHUB_ACTIONS": "true"}, {"CI": "true"}, {"CI": "1"}):
@@ -619,10 +704,23 @@ class WorkflowWiringTests(unittest.TestCase):
             "APPEND_ONLY_EVENT: ${{ github.event_name }}",
             "APPEND_ONLY_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}",
             "APPEND_ONLY_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}",
+            "APPEND_ONLY_MG_BASE_SHA: ${{ github.event.merge_group.base_sha }}",
+            "APPEND_ONLY_MG_HEAD_SHA: ${{ github.event.merge_group.head_sha }}",
             "APPEND_ONLY_PUSH_BEFORE: ${{ github.event.before }}",
             "APPEND_ONLY_PUSH_AFTER: ${{ github.event.after }}",
         ):
             self.assertIn(line, self.wf)
+
+    def test_merge_group_trigger_declared(self):
+        # The exact trigger block, not stray comment text: merge_group: with
+        # checks_requested and no branches/paths filters of its own.
+        self.assertRegex(self.wf, r"(?m)^on:$")
+        m = re.search(r"(?ms)^  merge_group:$.*?^    types: \[checks_requested\]$",
+                      self.wf)
+        self.assertIsNotNone(m)
+        block = m.group(0) if m else ""
+        self.assertNotIn("branches:", block)
+        self.assertNotIn("paths:", block)
 
     def test_full_history_and_explicit_fetch(self):
         self.assertIn("fetch-depth: 0", self.wf)

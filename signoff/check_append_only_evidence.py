@@ -51,9 +51,14 @@ CI (GITHUB_ACTIONS or CI set): the event decides, and nothing is ever skipped.
   push          event `before` SHA .. event `after` SHA, directly -- every
                 commit in the push, forced pushes included. An all-zero
                 `before` fails.
+  merge_group   event `base_sha` .. event `head_sha`, directly -- every queued
+                commit in the group's merged result (issue #450). Same
+                validation as the other events; a missing, all-zero or
+                unfetchable endpoint fails.
   SHAs come from the workflow environment (APPEND_ONLY_EVENT,
-  APPEND_ONLY_PR_BASE_SHA, APPEND_ONLY_PR_HEAD_SHA, APPEND_ONLY_PUSH_BEFORE,
-  APPEND_ONLY_PUSH_AFTER), falling back to GITHUB_EVENT_NAME and the JSON at
+  APPEND_ONLY_PR_BASE_SHA, APPEND_ONLY_PR_HEAD_SHA, APPEND_ONLY_MG_BASE_SHA,
+  APPEND_ONLY_MG_HEAD_SHA, APPEND_ONLY_PUSH_BEFORE, APPEND_ONLY_PUSH_AFTER),
+  falling back to GITHUB_EVENT_NAME and the JSON at
   GITHUB_EVENT_PATH. Missing/malformed/unresolvable data or an unsupported
   event fails with a diagnostic (exit 2).
 
@@ -106,6 +111,8 @@ PROTECTED_PATHSPECS = ("sim", "manifests/artifacts", *ARCHIVE_ROOTS)
 ENV_EVENT = "APPEND_ONLY_EVENT"
 ENV_PR_BASE = "APPEND_ONLY_PR_BASE_SHA"
 ENV_PR_HEAD = "APPEND_ONLY_PR_HEAD_SHA"
+ENV_MG_BASE = "APPEND_ONLY_MG_BASE_SHA"
+ENV_MG_HEAD = "APPEND_ONLY_MG_HEAD_SHA"
 ENV_PUSH_BEFORE = "APPEND_ONLY_PUSH_BEFORE"
 ENV_PUSH_AFTER = "APPEND_ONLY_PUSH_AFTER"
 
@@ -342,9 +349,19 @@ def ci_endpoints(repo: Path, env: dict[str, str]) -> tuple[str, str, str]:
                           env.get(ENV_PUSH_AFTER, "").strip() or _dig(payload, "after"),
                           f"{ENV_PUSH_AFTER} or event.after")
         return before, after, f"push: before {before[:12]} -> after {after[:12]}"
+    if event == "merge_group":
+        base = _need_sha(repo, "merge_group base SHA",
+                         env.get(ENV_MG_BASE, "").strip()
+                         or _dig(payload, "merge_group", "base_sha"),
+                         f"{ENV_MG_BASE} or merge_group.base_sha")
+        head = _need_sha(repo, "merge_group head SHA",
+                         env.get(ENV_MG_HEAD, "").strip()
+                         or _dig(payload, "merge_group", "head_sha"),
+                         f"{ENV_MG_HEAD} or merge_group.head_sha")
+        return base, head, f"merge_group: base {base[:12]} -> head {head[:12]}"
     raise BaselineError(
-        f"unsupported CI event {event!r}: only pull_request and push are "
-        "supported; refusing to skip")
+        f"unsupported CI event {event!r}: only pull_request, push and "
+        "merge_group are supported; refusing to skip")
 
 
 def local_endpoints(repo: Path, args) -> tuple[str, str, str] | str:
