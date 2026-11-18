@@ -2,6 +2,11 @@
 
 Chronological record of merged pull requests and closed issues. Newest entries appear first.
 
+### 2026-11-18
+
+- **PR #447**: fix: accept the renderer's *(held)* row marker in the WORK_PLAN provenance checker
+- **Issue #446** (closed): WORK_PLAN: annotate held issues in the machine-generated region (renderer + checker support)
+
 ### 2026-11-17
 
 - **PR #443**: chore: prune 16 retired entries from the Loom install manifest
