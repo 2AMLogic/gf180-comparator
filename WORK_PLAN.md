@@ -19,13 +19,13 @@ _None._
 
 `loom:important`; taken before unlabelled work.
 
-- **#3**: Gap-to-T1 tracker: gf180-comparator artifact-presence survey *(held)*
-- **#112**: layout/PEX/signoff re-run for the DR-0004 input-cascode netlist (follow-up to #102) *(held)*
-- **#125**: Define and measure the missing average-power operating condition for T1 *(held)*
+- **#3**: Gap-to-T1 tracker: gf180-comparator artifact-presence survey
+- **#112**: layout/PEX/signoff re-run for the DR-0004 input-cascode netlist (follow-up to #102)
+- **#125**: Define and measure the missing average-power operating condition for T1
 
 ## Ready
 
-Human-approved issues (`loom:issue`) ready for implementation — excluding held (`loom:blocked`/`loom:operator`/`loom:frozen`), `loom:building`, and issues closed by an open `loom:pr` PR (listed under Approved).
+Human-approved issues ready for implementation (`loom:issue`).
 
 _None._
 
@@ -51,9 +51,9 @@ _None._
 
 Issues carrying `loom:curated`.
 
-- **#3**: Gap-to-T1 tracker: gf180-comparator artifact-presence survey *(curated)* *(held)*
-- **#125**: Define and measure the missing average-power operating condition for T1 *(curated)* *(held)*
-- **#323**: Propose a design change that closes the 7 post-layout decision-time misses (T1 item 7) *(curated)* *(held)*
+- **#3**: Gap-to-T1 tracker: gf180-comparator artifact-presence survey *(curated)*
+- **#125**: Define and measure the missing average-power operating condition for T1 *(curated)*
+- **#323**: Propose a design change that closes the 7 post-layout decision-time misses (T1 item 7) *(curated)*
 
 ## Proposed (Architect / Hermit)
 
@@ -70,7 +70,7 @@ _None._
 | Operator merge-risk holds | 0 |
 | Very important | 0 |
 | Important | 3 |
-| Ready (`loom:issue`, net of holds/building/merge-pending) | 0 |
+| Ready (`loom:issue`) | 0 |
 | In Progress (`loom:building`) | 0 |
 | PRs awaiting review | 0 |
 | Approved PRs awaiting merge | 0 |
