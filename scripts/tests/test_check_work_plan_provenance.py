@@ -6,7 +6,9 @@ which rendered asap7-stdcells' label state into this repo) as the failing
 fixture -- evidence captured in
 docs/forensics/2026-11-15-work-plan-provenance-incident.md. Also covers the
 region self-consistency checks (issue #419): the renderer's section
-suffixes and the Backlog Balance counts against the rows they summarise.
+suffixes and the Backlog Balance counts against the rows they summarise,
+plus the renderer's hold marker ' *(held)*' (issue #446): legal on a row
+in every section, only as its final token.
 
     python3 scripts/tests/test_check_work_plan_provenance.py
 """
@@ -250,6 +252,24 @@ class Check(unittest.TestCase):
             {406: READY_TITLE}))
         self.assertEqual(errs, [])
 
+    def test_held_row_in_ready_accepted(self):
+        # Issue #446: the renderer's hold marker on a Ready row -- the
+        # forge title carries no marker, so match() strips it.
+        errs = self.run_check(
+            plan(section("Ready", "blurb",
+                         [(406, READY_TITLE + " *(held)*")]), TABLE_READY),
+            fetch=make_fake_fetch({406: READY_TITLE}))
+        self.assertEqual(errs, [])
+
+    def test_title_genuinely_ending_in_held_matches_exactly(self):
+        # Exact match runs first: a forge title that really ends in
+        # ' *(held)*' must not be broken by the hold-marker strip.
+        title = READY_TITLE + " *(held)*"
+        errs = self.run_check(
+            plan(section("Ready", "blurb", [(406, title)]), TABLE_READY),
+            fetch=make_fake_fetch({406: title}))
+        self.assertEqual(errs, [])
+
     def test_title_that_merely_differs_fails(self):
         errs = self.run_check(
             plan(section("Ready", "blurb",
@@ -349,6 +369,39 @@ class RegionSelfConsistency(unittest.TestCase):
             table(("Curated", 1)))
         self.assertEqual(self.run_check(text, fetch=make_fake_fetch(
             {406: title})), [])
+
+    def test_held_and_curated_in_proposed_accepted(self):
+        # Issue #446: the hold marker is legal in every section, and in
+        # the Proposed sections it trails the section suffix.
+        text = plan(
+            section("Proposed", "Issues carrying `loom:curated`.",
+                    [(406, READY_TITLE)], suffix=" *(curated)* *(held)*"),
+            table(("Curated", 1)))
+        self.assertEqual(self.run_check(text), [])
+
+    def test_proposed_row_with_only_held_still_rejected(self):
+        # '(held)' is not a section suffix: it never satisfies the
+        # Proposed sections' own requirement.
+        text = plan(
+            section("Proposed", "Issues carrying `loom:curated`.",
+                    [(406, READY_TITLE)], suffix=" *(held)*"),
+            table(("Curated", 1)))
+        errs = self.run_check(text)
+        self.assertEqual(len(errs), 1)
+        self.assertIn("without the renderer's ' *(curated)*' suffix",
+                      errs[0])
+
+    def test_held_before_section_suffix_rejected(self):
+        # The renderer emits ' *(held)*' only as a row's final token;
+        # ' *(held)* *(curated)*' is a shape it cannot produce, so the
+        # offline shape check names it.
+        text = plan(
+            section("Proposed", "Issues carrying `loom:curated`.",
+                    [(406, READY_TITLE)], suffix=" *(held)* *(curated)*"),
+            table(("Curated", 1)))
+        errs = self.run_check(text)
+        joined = "\n".join(errs)
+        self.assertIn("hold marker before a section suffix", joined)
 
     # --- Backlog Balance counts ---------------------------------------
 

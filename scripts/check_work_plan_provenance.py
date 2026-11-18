@@ -16,10 +16,12 @@ titles are matched, not just numbers.
 The region's own self-consistency is checked offline, with zero API calls
 (issue #419): the renderer's section suffixes (' *(curated)*' under
 '## Proposed', ' *(architect)*' / ' *(hermit)*' under '## Proposed
-(Architect / Hermit)', none anywhere else) and the Backlog Balance counts
-against the number of rows their sections render. Both compare the file
-against the renderer's documented output shape, so neither can be reddened
-by forge activity.
+(Architect / Hermit)', none anywhere else), the renderer's hold marker
+' *(held)*' (issue #446) -- legal on a row in every section, but only as
+the row's final token, after a section suffix in the Proposed sections --
+and the Backlog Balance counts against the number of rows their sections
+render. Both compare the file against the renderer's documented output
+shape, so neither can be reddened by forge activity.
 
 Fail-closed (a check that cannot run must never look like one that passed,
 .loom/docs/ci-principles.md):
@@ -36,7 +38,8 @@ Fail-closed (a check that cannot run must never look like one that passed,
   * a row under '## Proposed' without its renderer ' *(curated)*' suffix
     (or ' *(architect)*' / ' *(hermit)*' under '## Proposed (Architect /
     Hermit)'), or a section suffix on a row in any other section -> fail,
-    named, quoting the row (issue #419)
+    named, quoting the row (issue #419); a hold marker ' *(held)*' before
+    a section suffix -> fail, named (issue #446)
   * a 'Backlog Balance' count that does not equal the number of '- **#N**:'
     rows its section renders -- table rows are paired to sections by
     position, one per section -- or a table row / section added or removed
@@ -83,8 +86,24 @@ ROW = re.compile(r"^- \*\*#(\d+)\*\*: (.*)$", re.M)
 LOOSE = re.compile(r"#\d+")
 # The renderer appends these suffixes in the Proposed sections only; a real
 # title may also end in one, so suffix handling is a fallback, never the
-# first comparison (see match()).
-SUFFIX = re.compile(r" \*\((?:curated|architect|hermit)\)\*$")
+# first comparison (see match()). 'held' is the renderer's hold marker
+# (issue #446): appended to any row whose item carries a hold label, in
+# every section -- it lives in this alternation so match()'s fallback
+# strips it too, never as a section requirement (see PROPOSED_SUFFIXES).
+SUFFIX = re.compile(r" \*\((?:curated|architect|hermit|held)\)\*$")
+# The hold marker alone: one trailing ' *(held)*' (issue #446), stripped
+# before title comparison -- after match()'s exact-match-first, so a forge
+# title that genuinely ends in the same literal still matches exactly.
+HELD = re.compile(r" \*\(held\)\*$")
+# A trailing RUN of hold markers: a forge title that itself ends in the
+# literal renders doubled, like a doubled section suffix; the shape check
+# tolerates that the same way (see check_row_suffixes).
+HELD_RUN = re.compile(r"(?: \*\(held\)\*)+$")
+# A hold marker directly before a section suffix: a shape the renderer
+# cannot emit -- ' *(held)*' is always a row's final token -- so it is
+# rejected offline, before any forge query (issue #446).
+MISPLACED_HELD = re.compile(
+    r" \*\(held\)\* \*\((?:curated|architect|hermit)\)\*$")
 # Region self-consistency (issue #419): the renderer requires its suffix on
 # every row of the two Proposed sections and emits none anywhere else, and
 # it derives the Backlog Balance table from the same shell variables the
@@ -157,22 +176,34 @@ def check_row_suffixes(region):
     shape (issue #419): every row under '## Proposed' must end in
     ' *(curated)*', every row under '## Proposed (Architect / Hermit)' in
     ' *(architect)*' or ' *(hermit)*', and rows in every other section
-    must carry none. match() still tolerates a suffix when comparing
-    against the forge title -- so a regeneration that drops the suffix
-    would otherwise be indistinguishable from one that emits it; this
-    makes the drop a named failure."""
+    must carry none. The hold marker ' *(held)*' (issue #446) is part of
+    that shape too: legal on a row in ANY section, but only as the row's
+    final token -- after the section suffix in the Proposed sections -- so
+    trailing hold markers are stripped before the per-section test, and
+    one that precedes a section suffix is a named failure. match() still
+    tolerates a suffix when comparing against the forge title -- so a
+    regeneration that drops the suffix would otherwise be
+    indistinguishable from one that emits it; this makes the drop a named
+    failure."""
     errs = []
     for heading, text in split_sections(region):
         required = PROPOSED_SUFFIXES.get(heading)
         for m in ROW.finditer(text):
             title = m.group(2).strip()
+            if MISPLACED_HELD.search(title):
+                errs.append(f"{ERR}#{m.group(1)} renders under "
+                            f"'{heading}' with the hold marker before a "
+                            f"section suffix, but the renderer emits "
+                            f"' *(held)*' only as a row's final token: "
+                            f"{m.group(0)!r}")
+            base = HELD_RUN.sub("", title)
             if required is None:
-                if SUFFIX.search(title):
+                if SUFFIX.search(base):
                     errs.append(f"{ERR}#{m.group(1)} renders under "
                                 f"'{heading}' carrying a section suffix, "
                                 f"which only the Proposed sections are "
                                 f"emitted with: {m.group(0)!r}")
-            elif not any(title.endswith(s) for s in required):
+            elif not any(base.endswith(s) for s in required):
                 want = " or ".join(f"'{s}'" for s in required)
                 errs.append(f"{ERR}#{m.group(1)} renders under '{heading}' "
                             f"without the renderer's {want} suffix: "
@@ -237,13 +268,19 @@ def check_balance(region):
 
 
 def match(rendered, forge_title):
-    """Exact match first; then allow a renderer-appended section suffix
-    (the forge title itself never carries it unless it genuinely ends in
-    one, which the exact comparison already covers)."""
+    """Exact match first (a forge title may genuinely end in a renderer
+    suffix -- ' *(held)*' included, issue #446 -- which stripping would
+    otherwise eat); then allow the renderer-appended markers: one hold
+    marker, then a section suffix (the forge title itself never carries
+    one, unless it genuinely ends in it, which the exact comparison
+    already covers)."""
     if rendered == forge_title:
         return True
-    m = SUFFIX.search(rendered)
-    return bool(m) and rendered[:m.start()] == forge_title
+    base = HELD.sub("", rendered, count=1)
+    if base == forge_title:
+        return True
+    m = SUFFIX.search(base)
+    return bool(m) and base[:m.start()] == forge_title
 
 
 def fetch_item(repo, number, token, api=API):
