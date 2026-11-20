@@ -17,6 +17,18 @@
   [#75](https://github.com/2AMLogic/gf180-comparator/issues/75) (scoring
   pass), [#112](https://github.com/2AMLogic/gf180-comparator/issues/112)
   (cascode adoption / layout refresh; not a dependency of this draft),
+  [#364](https://github.com/2AMLogic/gf180-comparator/issues/364),
+  [#373](https://github.com/2AMLogic/gf180-comparator/issues/373),
+  [#374](https://github.com/2AMLogic/gf180-comparator/issues/374),
+  [#398](https://github.com/2AMLogic/gf180-comparator/issues/398),
+  [#452](https://github.com/2AMLogic/gf180-comparator/issues/452)
+  (pre-ratification validation of this record),
+  [2AMLogic/klayout-tools#6080](https://github.com/2AMLogic/klayout-tools/issues/6080)
+  (no request field for control-block commands between the analysis and the
+  measurements — why `reset_margin_ns` is fleet-unavailable),
+  [2AMLogic/klayout-tools#5651](https://github.com/2AMLogic/klayout-tools/issues/5651)
+  (the dry-run-passes, every-corner-errors failure shape that makes shipping
+  the `t_rst` card alone wrong),
   [DR-0001](DR-0001-comparator-topology.md), DR-0002,
   [DR-0003](DR-0003-t1-items-1-9-10-claim-policy.md),
   [DR-0004](DR-0004-preamp-input-cascode-kickback.md),
@@ -25,6 +37,8 @@
   `spec/consumers.md`, `spec/evidence-ledger.md#supply--power`,
   `sim/comparator-regeneration/records/20260910-125206-4805118` (schematic),
   `…/20261002-202641-baeffe5` (post-layout extracted),
+  `sim/comparator-avg-power/` (this record's own validation bench; see its
+  README and the records cited under "Feasibility status"),
   `sim/comparator-regeneration/testbench/tb.json` and
   `tb_regeneration.spice`, `signoff/make_item5_envelope.py`,
   `sim/characterize.sh`.
@@ -190,29 +204,71 @@ Established from committed evidence, with its limits:
   reset can complete in some time ≤ 20 ns at the 33 MHz bench, but it was
   not designed as a reset measurement.
 
-**Not established — validation required before ratification**:
+**Validation status (revised 2026-11-20, issue #452 — items 1–3 measured,
+item 4 partially measured; each cites its committed record and that record's
+sha256)**:
 
-1. **Reset time is unmeasured.** No committed record measures how long the
-   latch, isolation and SR-latch nodes take to reach their reset state, nor
-   at which corner (expected slowest at `ss`, 125 °C, 2.97 V is a
-   hypothesis, not a result). The 31.25 ns reset phase at 16 MHz is longer
-   than the 20 ns the existing bench already survived, but "longer than a
-   passing bench" is not a measurement. The validation is: run the proposed
-   periodic stimulus at all 45 corners on the schematic and on the
-   post-layout extracted DUT and show every cycle decides correctly,
-   including the first post-warm-up cycle and including at the worst corners
-   found, with a reset-completion margin recorded.
-2. **Steady-state feasibility of ≤ 1 mW / ≤ 500 µW at 16 MHz is unmeasured.**
-   No dynamic-power figure exists. The `e_dec_fj` hint above is not
-   evidence (see Context), and the post-layout run is expected to differ
-   (the extracted record shows +58 % on that same hint).
-3. **Settledness and window length** (8-cycle warm-up, 16-cycle window, 1 %
-   half-window agreement) are proposed, not yet shown adequate; the
-   validation run must show them adequate or the numbers change in a revised
-   record.
-4. **Output load, overdrive and clock-charge boundary** are judgment
-   choices; the sensitivities listed above must be run so reviewers can see
-   how much the scored figure depends on them.
+The validation bench is `sim/comparator-avg-power/` (issue #356; fleet path
+issues #372/#373/#374, citable re-mint #398). Its two 45-corner records are:
+
+- schematic: `sim/comparator-avg-power/records/20261115-075832478887-79abbcc`
+  (sha256 `b33962e622ddc9df37679e8baa7f8cfbdcebbdd1ec92a6cc052042a5bab10ced`)
+- post-layout extracted: `sim/comparator-avg-power/records/20261116-203811672880-81544ac`
+  (sha256 `cdc0590763c8a56017d6868eebbdd72a2062fdec085eca41c7420317e71e7d38`)
+
+Both cover all 45 points (tt/ff/ss/fs/sf × −40/27/125 °C × 2.97/3.30/3.63 V)
+and read `citable: true`, `reference: true` (the extracted one under DR-0008's
+staged-source provenance class). UNSCORED: both are evidence for the
+ratification reviewers, not verdicts.
+
+1. **Every cycle decides correctly at every corner: MEASURED, both
+   bindings.** `dec_cycles_correct` = 16/16 at all 45 points on both records,
+   including the first post-warm-up cycle, on the alternating ±10 mV
+   stimulus about each point's own trip point (the extracted record carries
+   the per-corner probed `dut_vos` referral). The hypothesised slow corner
+   `ss`/125 °C/2.97 V completed cleanly on both bindings (schematic
+   `p_avg_uw` 124.908, extracted 143.760) — and the grid refuted the
+   hypothesis that it is the *power* worst corner: the maximum sits at
+   `ff_125c_3.63v` on both bindings. **The reset-completion margin itself is
+   measured only at the local bring-up point** (`reset_margin_ns` = 30.48 ns
+   of the 31.25 ns reset phase at `tt_27c_3.30v`, record
+   `20261114-032046866512-d02a882`): the fleet request schema has no field
+   for a control-block command between the run and the measurements, which is
+   what the threshold's interactive `let` needs — the gap is
+   [2AMLogic/klayout-tools#6080](https://github.com/2AMLogic/klayout-tools/issues/6080),
+   and shipping the `t_rst` card without its `let` is the
+   [2AMLogic/klayout-tools#5651](https://github.com/2AMLogic/klayout-tools/issues/5651)
+   dry-run-passes-then-every-corner-errors failure shape, so the pair is
+   omitted together. The checked backstop `dec_cycles_correct` = 16 — 16
+   alternating decisions cannot happen unless the latch reset between them —
+   is what the 45-corner records actually establish. **Open:** a direct
+   fleet-path reset-margin number, pending klayout-tools#6080.
+2. **Dynamic-power figure: MEASURED, both bindings.** Worst `P_avg` over the
+   45 corners: **174.487 µW @ `ff_125c_3.63v`** (schematic; `e_dec_fj`
+   10 905 fJ/decision) and **207.376 µW @ `ff_125c_3.63v`** (extracted;
+   12 961 fJ/decision), the extracted figure 19 % higher (interconnect
+   parasitics — an inference stated by the record, not a cross-measured
+   delta). Both are figures for the reviewers, not compliance claims: this
+   record is `proposed`, and neither the ≤ 1 mW target nor the ≤ 500 µW
+   stretch is scored here. Static power from `i_static_ua` stays partial
+   evidence and is not summed with `P_avg`.
+3. **Settledness / window adequacy: MEASURED, both bindings.** Worst
+   `q_half_mismatch_pct` over the grid: **0.00440 % @ `fs_125c_3.30v`**
+   (schematic) and **0.00231 % @ `fs_27c_2.97v`** (extracted) — about 230× /
+   430× inside the 1 % criterion at every point, so the proposed 8-cycle
+   warm-up and 16-cycle window held; no lengthening and re-record was
+   needed. **Open:** none.
+4. **Output load, overdrive and clock-charge boundary sensitivities:
+   PARTIALLY MEASURED.** The **clock-charge boundary is computed from the
+   committed records** — see
+   `sim/comparator-avg-power/clock-charge-boundary.md` (issue #452): moving
+   the clock source's charge inside the row adds at most +0.028 µW
+   (schematic) / +0.045 µW (extracted) at the binding corner, ≤ 0.08 %
+   relative anywhere on the grid, and does not change which corner binds.
+   **Open:** the 0/100 fF load, 1/50 mV overdrive and 32 MHz (informational)
+   sweep records — the fleet recorder's sensitivity mechanism landed with
+   issue #452 and the sweep records are the remainder of that issue's work.
+   No chosen value is revised until those records exist.
 
 These items validate the *condition*; they are not a compliance claim. A
 ratified condition with a measured miss is a miss, and no bound moves to
@@ -298,4 +354,7 @@ fully scored".
 PR approval is not ratification. Pending, declined and missing-key outcomes
 all leave this record `proposed` and the README row unchanged. Before the
 ceremony the reviewers should be given: a live re-read of the consumer's
-rate, and the validation list under "Feasibility status".
+rate, and the validation status under "Feasibility status" — which since
+issue #452 cites, per item, the committed records and their sha256 that
+establish it (items 1–3 measured on both bindings; item 4's boundary
+computed, its sensitivity sweep records listed as open until they land).

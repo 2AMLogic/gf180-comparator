@@ -1740,6 +1740,14 @@ def run_two_phase(a, work: Path) -> None:
     request set carries BOTH phases."""
     mk_args = [sys.executable, str(HERE / "mk_klt_request.py"), a.bench, str(work),
                "--mc-n", str(a.mc_n)] + (["--dut", a.dut] if a.dut else [])
+    # Issue #452: a sensitivity's overrides and corner subset ride along on
+    # BOTH phases -- the probe grid must cover exactly the subset the main
+    # requests will ask `load_probe_results` for.
+    for key, val in (("v-od", a.v_od), ("c-load", a.c_load), ("t-per", a.t_per)):
+        if val is not None:
+            mk_args += [f"--{key}", repr(float(val))]
+    if a.corner_points:
+        mk_args += ["--corner-points", *a.corner_points]
     subprocess.check_call(mk_args + ["--emit", "probe"])
     b1 = load_bundle(work, a.bench)
     probe_names = names_from_bundle(b1, leg="probe")
@@ -1982,6 +1990,17 @@ def reproduce_line(bench: str, b: dict, r: dict, tb) -> str:
         args += f" --mc-n {params['mc_n']}"
     if sel:
         args += f" --dut {sel}"
+    # Issue #452: a sensitivity run's selection flags ride on the Reproduce
+    # line itself (the #362 rule) -- the overrides and corner subset are part
+    # of the run's identity, and at --from-report ingest they are validated
+    # against the bundle (an OVERRIDE_MISMATCH refuses), so this command both
+    # states and replays the condition.
+    if bench == mk.AVG_POWER_BENCH:
+        for key in mk.AVG_POWER_OVERRIDE_PARAMS:
+            if key in (params.get("overrides") or {}):
+                args += f" --{key.replace('_', '-')} {params['overrides'][key]!r}"
+        if params.get("corner_points"):
+            args += " --corner-points " + " ".join(params["corner_points"])
     cmd = f"KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py {args}"
     try:
         default_grid = {"corners": [c.name for c in hc.resolve_corners(list(tb.corners))],
@@ -2150,10 +2169,28 @@ def main() -> int:
                     help="comparator-avg-power only: signed deltas of the headline quantities against a "
                          "committed local record (cross-run agreement, issue #372); the asserted band "
                          "policy is stated in the minted record")
+    ap.add_argument("--v-od", type=float, default=None,
+                    help="comparator-avg-power only (issue #452): override tb.json's nominal v_od "
+                         "for a DR-0006 item-4 sensitivity record; the record is stamped "
+                         "SENSITIVITY-ONLY and can never be read as the nominal condition")
+    ap.add_argument("--c-load", type=float, default=None,
+                    help="comparator-avg-power only (issue #452): override tb.json's nominal c_load (farad)")
+    ap.add_argument("--t-per", type=float, default=None,
+                    help="comparator-avg-power only (issue #452): override tb.json's nominal t_per (second) "
+                         "-- a clock-rate override; the whole .meas schedule and the period-coupled "
+                         "quantities are re-derived from the effective period")
+    ap.add_argument("--corner-points", nargs="*", default=None, metavar="CORNER_ID",
+                    help="comparator-avg-power only (issue #452): an explicit non-cartesian PVT-point "
+                         "subset as ratified corner ids, e.g. tt_27c_3.30v ff_125c_3.63v ss_125c_2.97v")
     a = ap.parse_args()
 
     if a.compare_local and a.bench != "comparator-avg-power":
         refuse("BAD_ARGUMENT", "--compare-local is defined for comparator-avg-power only (issue #372)")
+    sensitivity_cli = (a.v_od is not None or a.c_load is not None or a.t_per is not None
+                       or a.corner_points is not None)
+    if sensitivity_cli and a.bench != "comparator-avg-power":
+        refuse("BAD_ARGUMENT", "--v-od / --c-load / --t-per / --corner-points are defined for "
+                               "comparator-avg-power only (issue #452, DR-0006 item-4 sensitivities)")
     if a.compare_local:
         # Issue #384: the minted record pins its counterparty by sha256, so
         # the target must be a readable record under this bench's records/
@@ -2180,6 +2217,15 @@ def main() -> int:
                mk.cm_window_capability_gap(mk.FLEET_RUNNER_KLT_OBSERVED)
                or f"{a.bench} has no record-minting path yet (full 45-point coverage pending, issue #182)")
     work = Path(a.from_report or a.work or f"/tmp/klt-{a.bench}").resolve()
+    # Sensitivity pass-through (issue #452): the flags ride to
+    # mk_klt_request.py at generation; at --from-report ingest the bundle is
+    # the authority and the same flags are validated AGAINST it below.
+    sensitivity_flags: list[str] = []
+    for key, val in (("v-od", a.v_od), ("c-load", a.c_load), ("t-per", a.t_per)):
+        if val is not None:
+            sensitivity_flags += [f"--{key}", repr(float(val))]
+    if a.corner_points:
+        sensitivity_flags += ["--corner-points", *a.corner_points]
     two_phase = False
     if not a.from_report:
         work.mkdir(parents=True, exist_ok=True)
@@ -2191,7 +2237,7 @@ def main() -> int:
             run_two_phase(a, work)
             two_phase = True
         else:
-            subprocess.check_call([sys.executable, str(HERE / "mk_klt_request.py"), a.bench, str(work), "--mc-n", str(a.mc_n)] + (["--dut", a.dut] if a.dut else []))
+            subprocess.check_call([sys.executable, str(HERE / "mk_klt_request.py"), a.bench, str(work), "--mc-n", str(a.mc_n)] + (["--dut", a.dut] if a.dut else []) + sensitivity_flags)
     elif a.legacy_diagnostic and not (work / mk.BUNDLE_NAME).is_file():
         return legacy_diagnostic(a.bench, work)
 
@@ -2201,6 +2247,37 @@ def main() -> int:
     check_dut_selection(b, a.dut)
     d, t = b["dut"], b["testbench"]
     tb = htb.load(_staged_path(work, t["staged_dir"]))  # originating manifest + `measure`
+    # Sensitivity condition (issue #452): the BUNDLE's overrides and corner
+    # subset govern -- they are what the requests were generated under. CLI
+    # flags on an ingest are only a cross-check and a mismatch refuses, so a
+    # mis-pasted Reproduce command cannot quietly mint under the wrong
+    # condition. apply_avg_power_overrides rescales the period-coupled check
+    # bounds and window-baked uW expressions on the loaded STAGED manifest
+    # (never the committed tb.json).
+    bundle_params = b.get("parameters") or {}
+    condition = None
+    if bundle_params.get("overrides") or bundle_params.get("corner_points"):
+        if a.bench != "comparator-avg-power":
+            refuse("SOURCE_BUNDLE_INCONSISTENT",
+                   f"{work / mk.BUNDLE_NAME}: carries avg-power sensitivity parameters "
+                   f"for bench {a.bench!r}")
+        ov = {k: float(v) for k, v in (bundle_params.get("overrides") or {}).items()}
+        for key, val in (("v_od", a.v_od), ("c_load", a.c_load), ("t_per", a.t_per)):
+            if val is None:
+                continue
+            flag = key.replace("_", "-")
+            if key not in ov:
+                refuse("OVERRIDE_MISMATCH",
+                       f"--{flag} was given but this bundle carries no {key} override -- the "
+                       "bundle is the authority; it was generated without that override")
+            if ov[key] != float(val):
+                refuse("OVERRIDE_MISMATCH",
+                       f"--{flag} {float(val)!r} contradicts the bundle's override "
+                       f"{ov[key]!r} -- the bundle is the authority; re-generate or drop the flag")
+        condition = (mk.apply_avg_power_overrides(tb, ov) if ov
+                     else {"sensitivity_only": True, "overrides": {}})
+        if bundle_params.get("corner_points"):
+            condition["corner_points"] = list(bundle_params["corner_points"])
     # The supply split is the one grid dimension that lives in the request-SET
     # naming (one request per supply point, the rail baked into each body), so
     # unlike process/temperature it cannot be read back from a single request.
@@ -2320,6 +2397,31 @@ def main() -> int:
                       "stays `proposed -- not ratified`, and nothing here performs the DR-0002 ratification "
                       "ceremony. The manifest's checks are functional decision reads, measurement plumbing and "
                       "DR-0006's own same-run settledness criterion -- none is a spec verdict.")
+    if condition:
+        # Issue #452: the sensitivity stamp. The overrides and subset are the
+        # record's own condition statement -- a reader must not have to open
+        # the bundle to learn this is not the nominal DR-0006 condition.
+        ov_txt = ", ".join(f"`{k}` = {v!r}" for k, v in sorted(condition["overrides"].items()))
+        subset = (", ".join(f"`{p}`" for p in condition["corner_points"])
+                  if condition.get("corner_points") else "the full 45-point grid")
+        scaled = ""
+        if "t_per" in condition["overrides"]:
+            scaled = (f" Every period-coupled schedule time (integration window, half split, per-cycle "
+                      f"decision reads, quiescent probe, reset-search anchor, transient stop) was "
+                      f"re-rendered from the effective `t_per` = {condition['t_per_s']!r} s "
+                      f"(window {condition['t_win_s']!r} s vs the nominal 1.000 us), the `clk_period_ns` "
+                      f"check bounds were rescaled to it, and the uW window expressions carry the "
+                      f"{condition['uw_scale']!r} window scale their `1e12` factor needs at this rate. "
+                      f"The input-setup margin scales with the period (`t_setup` = "
+                      f"{condition['t_setup_s']!r} s vs the nominal 2e-08 s): DR-0006's literal "
+                      f"\">= 20 ns before the next rising edge\" clause is stated for 16 MHz and does "
+                      f"not bind at a non-nominal rate -- the deviation is named here, not hidden.")
+        condition_line = (
+            f"- **Condition**: SENSITIVITY-ONLY, NON-NOMINAL (issue #452, DR-0006 feasibility item 4). "
+            f"Overrides: {ov_txt or 'none (corner subset only)'} against the committed nominal `tb.json` "
+            f"condition; corner subset: {subset}.{scaled} UNSCORED: this record is sensitivity evidence "
+            f"for the ratification reviewers and can never be read as the nominal DR-0006 condition, a "
+            f"scored row, or 45-point-grid coverage.")
     n_probe = sum(1 for leg, _ in names.values() if leg == "probe")
     exp_line = (
         f"- **Experiment**: `sim/{a.bench}/` (klt sim requests, two phases -- issue #374: "
@@ -2335,6 +2437,7 @@ def main() -> int:
         exp_line,
         f"- **Topology label**: {a.label or d['dut_id']}",
         claim_line,
+        *([condition_line] if condition else []),
         f"- **DUT**: `{d['dut_id']}` -- **{d['provenance']}** -- `{d['netlist']}` (sha256 `{d['netlist_sha256'][:16]}`), binding `{d['binding_config']}` entry `{d['key']}` (sha256 `{d['binding_entry_sha256'][:16]}`), params {json.dumps(d['params'], sort_keys=True)}",
         f"- **Testbench**: `{t['dir']}/{t['netlist']}` (sha256 `{t['netlist_sha256'][:16]}`), manifest sha256 `{t['manifest_sha256'][:16]}`",
         f"- **Commit**: `{sha}` (originating commit, from the source bundle `corners/{rid}/{mk.BUNDLE_NAME}` sha256 `{bundle_sha[:16]}`; sources staged at request generation and verified at ingest)"
@@ -2414,6 +2517,7 @@ def main() -> int:
         "complete": complete, "outcome": "complete" if complete else "incomplete", "expected_points": expected,
         "reference": reference,
         "points": len(derived), "problems": problems,
+        **({"condition": condition} if condition else {}),
         **({"supplemental_reverse_polarity": rev} if (rev := reverse_polarity_summary(derived)) else {}),
         "derived": derived,
         **({"dut_vos_referral": {**b["probe"],
