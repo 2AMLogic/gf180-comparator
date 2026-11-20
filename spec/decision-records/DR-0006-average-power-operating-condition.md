@@ -258,13 +258,18 @@ ratification reviewers, not verdicts.
    430× inside the 1 % criterion at every point, so the proposed 8-cycle
    warm-up and 16-cycle window held; no lengthening and re-record was
    needed. **Open:** none.
-4. **Output load, overdrive and clock-charge boundary sensitivities:
-   PARTIALLY MEASURED.** The **clock-charge boundary is computed from the
+4. **Output load, overdrive and clock-pin-charge sensitivities:
+   PARTIALLY MEASURED.** The **signed clock-pin charge is computed from the
    committed records** — see
-   `sim/comparator-avg-power/clock-charge-boundary.md` (issue #452): moving
-   the clock source's charge inside the row adds at most +0.028 µW
-   (schematic) / +0.045 µW (extracted) at the binding corner, ≤ 0.08 %
-   relative anywhere on the grid, and does not change which corner binds.
+   `sim/comparator-avg-power/clock-charge-boundary.md` (issue #452). It is an
+   informational pin diagnostic only: the signed net charge of a capacitive
+   clock load cancels over whole cycles, so it is **not** a measure of clock-driver
+   supply cost and no bound on that cost is claimed. Adding it to the row's
+   charge integral moves the figure by at most +0.1254 µW (schematic,
+   `sf_27c_3.63v`) / +0.0640 µW (extracted, `fs_125c_3.63v`); at the binding
+   corner (`ff_125c_3.63v`) by +0.028 / +0.045 µW. The binding corner does not
+   change. **Open:** the clock-driver supply cost (needs a specified driver or the
+   `-∫ v(clk)·i(vclk) dt` port integral).
    **Open:** the 0/100 fF load, 1/50 mV overdrive and 32 MHz (informational)
    sweep records — the fleet recorder's sensitivity mechanism landed with
    issue #452 and the sweep records are the remainder of that issue's work.
@@ -356,5 +361,8 @@ all leave this record `proposed` and the README row unchanged. Before the
 ceremony the reviewers should be given: a live re-read of the consumer's
 rate, and the validation status under "Feasibility status" — which since
 issue #452 cites, per item, the committed records and their sha256 that
-establish it (items 1–3 measured on both bindings; item 4's boundary
-computed, its sensitivity sweep records listed as open until they land).
+establish it (items 1–3 measured on the nominal 45-corner grid on both bindings,
+except that the direct reset margin of 30.484 ns is a single schematic
+TT/27 °C/3.30 V measurement; item 4's signed clock-pin charge is an
+informational diagnostic, its clock-driver cost and sensitivity sweep records
+open until they land).

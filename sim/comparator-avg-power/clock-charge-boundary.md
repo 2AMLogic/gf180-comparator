@@ -10,31 +10,42 @@ loads) with **no new simulation**: every number below is computed from the two
 committed 45-corner records' own `q_win_pc`, `q_clk_pc`, `vsup_v` and
 `p_avg_uw` columns.
 
-**Definition.** `P_avg(clk inside the row) = VDD · (Q_win + Q_clk) / (N·T)`,
+**Definition.** `P_avg(pin charge inside the row) = VDD · (Q_win + Q_clk) / (N·T)`,
 the same charge-form integral as the committed `p_avg_uw = VDD · Q_win / (N·T)`
-with the clock source's delivered charge added to the DUT's. At the nominal
+with the clock pin's signed net charge added to the DUT's. At the nominal
 condition `N·T` is exactly 1.000 µs (16 × 62.5 ns), so both figures are
-`(charge in pC) × VDD in V` in µW. `Q_clk` is the charge the ideal `vclk`
-source (referenced to ground, amplitude = the corner rail) delivers through
-the clock input; multiplying it by the same VDD is the consumer-cost
-equivalent DR-0006's "recorded for the integrator" line means. The committed
-records measure `q_clk_pc` at every corner; the deltas below are exact
-arithmetic on those measurements, not an estimate.
+`(charge in pC) × VDD in V` in µW. `Q_clk` is the signed net charge
+(`-∫ i(vclk) dt` over 16 whole cycles) that the ideal `vclk` source delivers
+through the clock input. The deltas below are exact arithmetic on the
+committed measurements, not an estimate.
 
-**Reading.** The boundary is negligible on both DUTs: moving the clock-source
-charge inside the row adds at most **+0.028 µW (+0.016 %)** on the schematic
-grid and **+0.045 µW (+0.022 %)** on the extracted grid, and the binding
-corner does not change (`ff_125c_3.63v` either way). A ratification reviewer
-who prefers the clock charge inside the row is looking at a ≤ 0.08 % boundary
-choice, not a row-defining one.
+**What this is NOT.** The gate capacitance on the clock pin charges on each
+rising edge and returns that charge on each falling edge, so over whole cycles
+the signed net charge nearly cancels. A conventional CMOS clock driver
+nevertheless draws about `C·VDD²` per cycle from *its* supply. The signed pin
+charge therefore neither measures the energy delivered at the ideal clock port
+(that is `-∫ v(clk)·i(vclk) dt`) nor the supply cost of any specified clock
+driver (that is the integral of that driver's rail power). **The deltas below
+are a diagnostic of the signed pin-charge integral only. They are not a bound
+on, or an estimate of, the clock-driver cost a consumer pays**, and this report
+makes no claim about that cost. Measuring it needs a specified driver or the
+`v·i` port integral and is left open.
+
+**Reading.** Folding the signed pin charge into the row's charge integral moves
+the figure by at most **+0.1254 µW (+0.0753 %)** on the schematic grid
+(`sf_27c_3.63v`) and **+0.0640 µW (+0.0318 %)** on the extracted grid
+(`fs_125c_3.63v`). At the binding corner (`ff_125c_3.63v` on both DUTs) the
+changes are +0.028 µW (schematic) and +0.045 µW (extracted). The binding corner
+is the same with or without the pin charge. These figures say the signed pin
+charge is small; they do not say the clock costs ≤ 0.08 % of the row.
 
 
-## Schematic DUT — record [`20261115-075832478887-79abbcc`](20261115-075832478887-79abbcc.json)
+## Schematic DUT — record [`20261115-075832478887-79abbcc`](records/20261115-075832478887-79abbcc.json)
 
 Source: the 45-corner schematic campaign (issue #373), `citable: true`, 45 of 45 points; content hash (sha256, `20261115-075832478887-79abbcc.json`): `b33962e622ddc9df37679e8baa7f8cfbdcebbdd1ec92a6cc052042a5bab10ced`.
 
 
-| corner | `q_win_pc` [pC] | `q_clk_pc` [pC] | `p_avg_uw` (clk outside, committed) | `p_avg_uw` (clk inside, computed) | delta [µW] | delta [%] |
+| corner | `q_win_pc` [pC] | `q_clk_pc` [pC] | `p_avg_uw` (pin charge outside, committed) | `p_avg_uw` (pin charge inside, computed) | delta [µW] | delta [%] |
 |---|---:|---:|---:|---:|---:|---:|
 | `ff_-40c_2.97v` | 42.3656 | 0.012203 | 125.826 | 125.862 | +0.0362 | +0.0288 |
 | `ff_-40c_3.30v` | 44.2493 | 0.006337 | 146.023 | 146.044 | +0.0209 | +0.0143 |
@@ -82,15 +93,15 @@ Source: the 45-corner schematic campaign (issue #373), `citable: true`, 45 of 45
 | `tt_27c_3.30v` | 43.9052 | 0.007074 | 144.887 | 144.910 | +0.0233 | +0.0161 |
 | `tt_27c_3.63v` | 45.8287 | 0.014796 | 166.358 | 166.412 | +0.0537 | +0.0323 |
 
-- **Maximum over corners, clock inside the row**: **174.514 µW @ `ff_125c_3.63v`** (committed outside-boundary figure 174.487 µW at the same corner; +0.028 µW).
-- **Largest relative move**: +0.0753 % @ `sf_27c_3.63v`; the boundary does not change which corner binds (`ff_125c_3.63v` on both DUTs, either side of the boundary).
+- **Maximum over corners, pin charge inside the row**: **174.514 µW @ `ff_125c_3.63v`** (committed outside-boundary figure 174.487 µW at the same corner; +0.028 µW).
+- **Largest absolute and relative move**: +0.1254 µW, +0.0753 % @ `sf_27c_3.63v`; the boundary does not change which corner binds (`ff_125c_3.63v` on both DUTs, either side of the boundary).
 
-## Extracted DUT — record [`20261116-203811672880-81544ac`](20261116-203811672880-81544ac.json)
+## Extracted DUT — record [`20261116-203811672880-81544ac`](records/20261116-203811672880-81544ac.json)
 
 Source: the 45-corner post-layout extracted campaign, citable DR-0008 re-mint (issue #398), `citable: true`, 45 of 45 points; content hash (sha256, `20261116-203811672880-81544ac.json`): `cdc0590763c8a56017d6868eebbdd72a2062fdec085eca41c7420317e71e7d38`.
 
 
-| corner | `q_win_pc` [pC] | `q_clk_pc` [pC] | `p_avg_uw` (clk outside, committed) | `p_avg_uw` (clk inside, computed) | delta [µW] | delta [%] |
+| corner | `q_win_pc` [pC] | `q_clk_pc` [pC] | `p_avg_uw` (pin charge outside, committed) | `p_avg_uw` (pin charge inside, computed) | delta [µW] | delta [%] |
 |---|---:|---:|---:|---:|---:|---:|
 | `ff_-40c_2.97v` | 48.6138 | 0.009360 | 144.383 | 144.411 | +0.0278 | +0.0193 |
 | `ff_-40c_3.30v` | 51.4128 | 0.011824 | 169.662 | 169.701 | +0.0390 | +0.0230 |
@@ -138,5 +149,5 @@ Source: the 45-corner post-layout extracted campaign, citable DR-0008 re-mint (i
 | `tt_27c_3.30v` | 51.0494 | 0.013698 | 168.463 | 168.508 | +0.0452 | +0.0268 |
 | `tt_27c_3.63v` | 53.9454 | 0.012415 | 195.822 | 195.867 | +0.0451 | +0.0230 |
 
-- **Maximum over corners, clock inside the row**: **207.421 µW @ `ff_125c_3.63v`** (committed outside-boundary figure 207.376 µW at the same corner; +0.045 µW).
-- **Largest relative move**: +0.0318 % @ `fs_125c_3.63v`; the boundary does not change which corner binds (`ff_125c_3.63v` on both DUTs, either side of the boundary).
+- **Maximum over corners, pin charge inside the row**: **207.421 µW @ `ff_125c_3.63v`** (committed outside-boundary figure 207.376 µW at the same corner; +0.045 µW).
+- **Largest absolute and relative move**: +0.0640 µW, +0.0318 % @ `fs_125c_3.63v`; the boundary does not change which corner binds (`ff_125c_3.63v` on both DUTs, either side of the boundary).
