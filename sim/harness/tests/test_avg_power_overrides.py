@@ -435,5 +435,49 @@ class SensitivityIngest(unittest.TestCase):
         self.assertIsNone(rec)
 
 
+class ExtractedReferralPeriod(unittest.TestCase):
+    """Issue #459: the extracted referral's probe-resolution line quotes the
+    period the bundle's probe requests actually ran under -- the bundle's
+    t_per override when one governs, the staged manifest's nominal t_per
+    otherwise (including a corner-only condition)."""
+
+    def setUp(self):
+        self.tb = htb.load(SIM / BENCH)
+        vspan, tramp, _vs_raw, _tr_raw = mk.probe_deck_spans(
+            (SIM / BENCH / "testbench"
+             / self.tb.offset_probe["netlist"]).read_text())
+        self.sec = {"vos_formula": mk.PROBE_VOS_FORMULA,
+                    "probe_deck": self.tb.offset_probe["netlist"],
+                    "vspan_v": vspan, "tramp_s": tramp}
+        self.derived = {"tt_27c_3.30v": {"dut_vos_v": 1e-04}}
+        self.names = {"probe-v3.30": ("probe", None)}
+
+    def _resolution(self, condition):
+        lines = kr.probe_referral_lines(self.sec, self.derived, self.tb,
+                                        self.names, condition)
+        return next(l for l in lines if "Probe resolution" in l)
+
+    def test_32mhz_bundle_period_governs_the_resolution(self):
+        # The bundle supplies the period even when ingest receives no clock
+        # flag: the condition stamp -- not a CLI cross-check -- is the source.
+        condition = mk.apply_avg_power_overrides(self.tb,
+                                                 {"t_per": TWO_X_RATE_T_PER})
+        line = self._resolution(condition)
+        self.assertIn("31.25 ns", line)
+        self.assertIn("31.25 uV", line)
+        self.assertIn("`t_per` override", line)
+        self.assertNotIn("tb.json `t_per`", line)
+
+    def test_nominal_and_corner_only_keep_the_staged_manifest_period(self):
+        for condition in (None,
+                          {"sensitivity_only": True, "overrides": {},
+                           "corner_points": ["tt_27c_3.30v"]}):
+            with self.subTest(condition=condition):
+                line = self._resolution(condition)
+                self.assertIn("62.5 ns", line)
+                self.assertIn("62.5 uV", line)
+                self.assertIn("tb.json `t_per`", line)
+
+
 if __name__ == "__main__":
     unittest.main()

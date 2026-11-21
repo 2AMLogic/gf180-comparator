@@ -1804,7 +1804,8 @@ def verify_probe_provenance(work: Path, b: dict, names: dict, requests: dict,
     return vos, problems
 
 
-def probe_referral_lines(sec: dict, derived: dict, tb, names: dict) -> list[str]:
+def probe_referral_lines(sec: dict, derived: dict, tb, names: dict,
+                         condition: dict | None = None) -> list[str]:
     """The extracted record's dut_vos referral section (issue #374)."""
     vos = {cid: dd["dut_vos_v"] for cid, dd in derived.items() if "dut_vos_v" in dd}
     probe_requests = sorted(n for n, (leg, _) in names.items() if leg == "probe")
@@ -1817,12 +1818,23 @@ def probe_referral_lines(sec: dict, derived: dict, tb, names: dict) -> list[str]
            f"(`{min(vos, key=vos.get)}`) to {max(vos.values()):.6g} V (`{max(vos, key=vos.get)}`)."
            if vos else " (no probe-derived dut_vos survived verification -- see problems)")
     ]
-    t_per = tb.params.get("t_per")
+    # Issue #459: the probe legs of a t_per-overridden bundle ran under the
+    # effective clock, so the referral must quote the bundle-derived period
+    # (the condition stamp's t_per_s), never the staged manifest's nominal
+    # one. A corner-only condition carries no t_per override and keeps the
+    # staged-manifest attribution.
+    t_per = None
+    period_source = "tb.json `t_per`"
+    if condition and "t_per" in condition.get("overrides", {}):
+        t_per = condition["t_per_s"]
+        period_source = "the bundle's `t_per` override"
+    else:
+        t_per = tb.params.get("t_per")
     if t_per:
         slope = 2 * sec["vspan_v"] / sec["tramp_s"]
         out.append(
             f"  - Probe resolution: the ramp moves {slope:.4g} V/s and the decision updates once "
-            f"per {float(t_per) * 1e9:.4g} ns (tb.json `t_per`), so the trip point is resolved to "
+            f"per {float(t_per) * 1e9:.4g} ns ({period_source}), so the trip point is resolved to "
             f"about {slope * float(t_per) * 1e6:.4g} uV -- against the "
             f"{float(tb.params.get('v_od', 0.0)) * 1e3:.4g} mV overdrive it refers.")
     out.append(
@@ -2478,7 +2490,7 @@ def main() -> int:
         # Issue #374: the extracted record's referral provenance, then its
         # own worst corners -- stated separately from the schematic
         # campaign's numbers, never merged with them.
-        lines += probe_referral_lines(b["probe"], derived, tb, names)
+        lines += probe_referral_lines(b["probe"], derived, tb, names, condition)
         pw = {cid: dd["p_avg_uw"] for cid, dd in derived.items()}
         qm = {cid: dd["q_half_mismatch_pct"] for cid, dd in derived.items()}
         lines.append(
