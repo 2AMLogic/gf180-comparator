@@ -3,14 +3,14 @@
   "kind": "generic",
   "status": "pass",
   "t1_item": 9,
-  "summary": "T1 item 9 (Testbenches shipped): 78/78 attestation checks passed (klt signoff --attest)",
+  "summary": "T1 item 9 (Testbenches shipped): 79/79 attestation checks passed (klt signoff --attest)",
   "source": "signoff/inventory/item-9.json",
   "attestation": {
     "producer": "klt signoff --attest",
     "inventory_schema_version": 1,
     "hash_algorithm": "sha256-raw-bytes",
-    "check_count": 78,
-    "passed_count": 78,
+    "check_count": 79,
+    "passed_count": 79,
     "checks": [
       {
         "check": "present",
@@ -31,7 +31,7 @@
         "role": "testbench",
         "path": "sim/comparator-avg-power/README.md",
         "passed": true,
-        "content_hash": "sha256:edc57478b97f7555ec0220c06282da88d9704e1a229f03542fc60fedfbb96465"
+        "content_hash": "sha256:09332e8621d6782832af122dab958759ca53234f1a4577e1237b36f84fce0521"
       },
       {
         "check": "present",
@@ -351,6 +351,13 @@
       {
         "check": "present",
         "role": "testbench",
+        "path": "sim/harness/tests/test_avg_power_overrides.py",
+        "passed": true,
+        "content_hash": "sha256:f1f3ec56e81e537965755d8ae6d423d13189674b8de280899c983b317911623d"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
         "path": "sim/harness/tests/test_avg_power_semantics.py",
         "passed": true,
         "content_hash": "sha256:5c540d5d3f5e72dd3ff305c3c6cefafd6d84c819d33bbecab676bab454a00086"
@@ -579,7 +586,7 @@
         "path": "signoff/inventory/item-9.json",
         "scope": "repo"
       },
-      "content_hash": "sha256:a5a98970545b29083ace6b8dd5fa6831c436f5663bb609a8b205416a885ab4c0"
+      "content_hash": "sha256:c2908de194e3d7c3faa2e5e5780a11df47d51eb836dbc4073dfb53040325a086"
     }
   }
 }
