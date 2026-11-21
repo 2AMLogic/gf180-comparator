@@ -31,7 +31,7 @@
         "role": "testbench",
         "path": "sim/comparator-avg-power/README.md",
         "passed": true,
-        "content_hash": "sha256:09332e8621d6782832af122dab958759ca53234f1a4577e1237b36f84fce0521"
+        "content_hash": "sha256:74f48bbd60740946ac506fb1b018ce35f3e0fa3530b8af7aaa860e7057f64dd8"
       },
       {
         "check": "present",
