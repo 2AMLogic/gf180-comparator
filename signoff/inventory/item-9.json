@@ -53,6 +53,7 @@
     "sim/harness/tests/__init__.py",
     "sim/harness/tests/test_adapt_samples.py",
     "sim/harness/tests/test_avg_power_semantics.py",
+    "sim/harness/tests/test_avg_power_overrides.py",
     "sim/harness/tests/test_cli_failed_logs.py",
     "sim/harness/tests/test_cli_main.py",
     "sim/harness/tests/test_cm_index_semantics.py",

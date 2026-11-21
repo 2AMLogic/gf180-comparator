@@ -130,17 +130,53 @@ the 110 % threshold is relative to the SAME run's quiescent current, so it
 must be defined interactively between the run and the measurement. The fleet
 request schema (one analysis plus `{name, spice}` measurement entries, no
 position for an interactive command between the run and the measurements) has
-no position for that `let` at any runner version, and shipping the
-`t_rst` card without it would be the
+no position for that `let` at any runner version — the missing request field
+is tracked upstream as
+[2AMLogic/klayout-tools#6080](https://github.com/2AMLogic/klayout-tools/issues/6080)
+— and shipping the `t_rst` card without it would be the
 [2AMLogic/klayout-tools#5651](https://github.com/2AMLogic/klayout-tools/issues/5651)
 failure shape (passes `--dry-run`, then errors every corner). The pair is
 therefore omitted from the fleet request together, and fleet records omit
-`reset_margin_ns` — its only consumer. The quantity carries **no check** in
+`reset_margin_ns` – its only consumer. The quantity carries **no check** in
 `tb.json` (DR-0006 states no bound on it), so a fleet record still answers
 every bound quantity DR-0006 asks for; the checked backstop for reset
 completion is `dec_cycles_correct` = 16, which IS requested and IS checked.
 Every fleet record states the omission under "Not computed by this
-executor". `2AMLogic/klayout-tools#5651` tracks the underlying tool gap.
+executor"; DR-0006's feasibility item 1 names both upstream issues for the
+gap. No local workaround is built for the missing field.
+
+## Sensitivity conditions on the fleet path (issue #452)
+
+DR-0006's feasibility item 4 needs records at NON-nominal conditions. The
+nominal `tb.json` is never edited (append-only, and the condition stays
+exactly what DR-0006 proposes); instead the recorder overrides parameters at
+request-build time and stamps the record:
+
+```bash
+KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py comparator-avg-power \
+  --c-load 1e-13 \
+  --corner-points tt_27c_3.30v ff_125c_3.63v ss_125c_2.97v
+```
+
+- `--v-od V`, `--c-load F`, `--t-per S` override exactly those tb.json
+  params. A `--t-per` override is a **clock-rate** override: `t_hi` stays
+  half the period, `f_clk = 1/t_per`, `t_setup` scales with the period
+  (20 ns at 62.5 ns → 10 ns at 31.25 ns, keeping the input sign change
+  inside the reset phase), every period-coupled `.meas` literal is
+  re-rendered from the effective schedule, the `clk_period_ns` check bounds
+  follow the effective period, and the µW expressions carry the window
+  scale their `1e12` factor needs at a non-1 µs window. The renderer is
+  refused unless it reproduces the committed nominal cards byte for byte,
+  and a nominal-valued override is not an override at all — the request set
+  stays byte-identical to the no-flag one
+  (`sim/harness/tests/test_avg_power_overrides.py`).
+- `--corner-points ID…` declares an explicit, non-cartesian PVT-point
+  subset as ratified corner ids; one request per supply point, exactly the
+  declared points, never their product.
+- The minted record names its overrides and subset in its header **and** its
+  Reproduce line, and is marked **SENSITIVITY-ONLY, NON-NOMINAL** (JSON
+  `condition` block) so it can never be read as the nominal DR-0006
+  condition or as a scored row.
 
 ## Records
 
@@ -268,7 +304,7 @@ one corner settles no corner question.
 | | `reset_margin_ns` = **30.48 ns** of the 31.25 ns reset phase | the precharge transient settled to within 10 % of the same run's quiescent current **0.77 ns** after the falling edge. **Not settled:** this is the supply-current proxy described above, not the latch's internal state, and it is one corner. |
 | **2.** no dynamic-power figure exists | `q_win_pc` = **43.905 pC** over 16 cycles → `p_avg_uw` = **144.9 µW**, `e_dec_fj` = **9055 fJ** per decision | the first figure of any kind for this row's dynamic component. Static is 30.28 µA × 3.3 V = **99.9 µW** of it (≈ 69 %), leaving ≈ 45 µW — **2.81 pJ per decision** — dynamic. **Not a compliance statement:** `P_avg` is scored as the *maximum over all 45 corners* and 44 of them are unrun, so nothing here says the ≤ 1 mW target or the ≤ 500 µW stretch is met. |
 | **3.** the proposed 8-cycle warm-up and 16-cycle window are not shown adequate | `q_half_mismatch_pct` = **0.00228 %** against DR-0006's 1 % criterion — a 440× margin | the window is in steady state at this point: the two 8-cycle halves integrate to 21.9524 pC and 21.9529 pC. **Not settled:** at a slow/hot corner the settling time is longer, and that is where the criterion earns its keep. |
-| **4.** output load, overdrive and clock-charge boundary are judgment choices whose sensitivities must be run | `q_clk_pc` = **0.00707 pC**, i.e. the ideal clock source draws **0.016 %** of the DUT's supply charge at this condition | records the boundary line DR-0006 asks for. **Not run:** the sensitivity sweeps themselves (0/100 fF, 1/50 mV, 32 MHz, clock charge inside the row) — how much the figure *moves* — are a follow-up. |
+| **4.** output load, overdrive and clock-charge boundary are judgment choices whose sensitivities must be run | `q_clk_pc` = **0.00707 pC**, i.e. the signed net charge at the ideal clock pin is **0.016 %** of the DUT's supply charge at this condition (a pin diagnostic, not a clock-driver cost: signed charge cancels over whole cycles) | records the boundary line DR-0006 asks for. **Computed since issue #452:** the signed clock-pin charge (informational; not a bound on clock-driver supply cost) at all 45 corners on both DUTs is reported in [`clock-charge-boundary.md`](clock-charge-boundary.md) (from the committed records, no new simulation). **Not run:** the load/overdrive/32 MHz sensitivity sweeps themselves — how much the figure *moves* — are a follow-up. |
 | — (implementation, not a record item) | `p_avg_form_delta_pct` = **1.9 × 10⁻⁵ %**; `q_split_delta_pct` = **4.1 × 10⁻⁴ %**; `clk_period_ns` = **62.5**, `t_win_start_ns` = **510.05** | the `v·i` form agrees with the charge form, the halves partition the window, and the clock the simulator produced is the one every hard-coded `.meas` boundary was derived from. |
 
 **No number DR-0006 chose came out unworkable at this point**, so this probe
@@ -329,8 +365,12 @@ current coverage state.
   provenance class from the diagnostic first mint
   `20261115-064156694329-8a67cff` (issue #374). The extracted leg's evidence
   is citable reference-grade (unscored); the figures did not move.
-- It does not run DR-0006's sensitivity sweeps (0/100 fF load, 1/50 mV
-  overdrive, 32 MHz, clock-charge boundary), which its feasibility item 4
-  requires before ratification. `q_clk_pc` records the clock charge at the
-  nominal condition; how much the scored figure would *move* if the boundary
-  changed is the sweep, and it is not run here.
+- It does not run DR-0006's load/overdrive/32 MHz sensitivity sweeps (0/100 fF
+  load, 1/50 mV overdrive, 32 MHz), which its feasibility item 4 requires
+  before ratification; the recorder's sensitivity mechanism for them landed
+  with issue #452 and their records are that issue's remaining work. The
+  signed clock-pin-charge half of item 4 IS reported (informational only; clock-driver supply cost stays open), at every corner on both
+  DUTs, in [`clock-charge-boundary.md`](clock-charge-boundary.md) — computed
+  from the committed records' `q_clk_pc`/`q_win_pc` columns, no new
+  simulation; how much the scored figure would *move* under the load,
+  overdrive and clock-rate sweeps is still the open part.

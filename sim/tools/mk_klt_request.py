@@ -59,6 +59,7 @@ from this bundle -- never from whatever the checkout holds at ingest time.
 from __future__ import annotations
 
 import argparse
+import dataclasses
 import hashlib
 import json
 import math
@@ -169,6 +170,21 @@ NOISE_LEG_ANALYSIS = {"noise": 1, "ac": 3}
 EXPR_MEASUREMENT_BENCHES = (NOISE_BENCH,)
 #: `measurements[].expr` (klt #2533) first shipped in klt 0.7.0.
 EXPR_MIN_RUNNER_KLT = (0, 7, 0)
+
+#: DR-0006 item-4 sensitivity overrides for the average-power bench
+#: (issue #452). The nominal condition is fixed by the committed tb.json and
+#: is never edited -- a sensitivity record overrides exactly one of these
+#: parameters at request-build time, on a declared corner subset, and
+#: klt_record.py stamps the minted record SENSITIVITY-ONLY so it can never be
+#: read as the nominal condition.
+AVG_POWER_BENCH = "comparator-avg-power"
+AVG_POWER_OVERRIDE_PARAMS = ("v_od", "c_load", "t_per")
+#: The avg-power deck reads its decision 250 ps before each falling edge and
+#: averages the quiescent probe over the last 3 ns of the window. Neither
+#: literal is a tb.json param; both are schedule constants the renderer below
+#: owns, pinned by sim/harness/tests/test_avg_power_overrides.py.
+AVG_POWER_READ_MARGIN_S = 250e-12
+AVG_POWER_IQ_WIDTH_S = 3e-9
 
 #: Monotonic-index variant of the consumer-window bench (issue #218). A SEPARATE
 #: bench: the nested-sweep bench above keeps its refused/expr contract, and
@@ -548,6 +564,230 @@ def tran_meas_cards(tb, *, drop_let_pairs: bool = False) -> list[dict]:
     return out
 
 
+# --- avg-power sensitivity overrides (issue #452) --------------------------- #
+
+def avg_power_effective_params(params: dict, overrides: dict) -> tuple[dict, float, dict]:
+    """Nominal tb.json `params` + `{v_od, c_load, t_per}` overrides ->
+    (effective params, uw_scale, applied overrides).
+
+    `v_od` / `c_load` substitute directly. A `t_per` override is a CLOCK-RATE
+    override and re-derives every period-coupled parameter: `t_hi` stays
+    exactly half the period (the 50 % duty), `f_clk = 1/t_per`, and `t_setup`
+    scales with the period (20 ns at 62.5 ns -> 10 ns at 31.25 ns) so the
+    input sign change still completes before the next rising edge AND begins
+    after the preceding falling edge, i.e. stays inside the reset phase at
+    the same phase fraction. DR-0006's literal ">= 20 ns before the next
+    rising edge" clause cannot hold at a faster rate (the whole reset phase
+    is 15.625 ns at 32 MHz); the deviation is stated in the record, never
+    hidden. An override numerically equal to the nominal value is dropped
+    (a no-op is not a sensitivity), which is what keeps an explicitly
+    nominal `--t-per 6.25e-08` byte-identical to no override at all.
+
+    `uw_scale` = nominal_window / effective_window rescales the manifest's
+    `p_avg_uw` / `p_avg_vi_uw` expressions, whose `1e12` factor bakes in the
+    nominal `n_win * t_per` = 1.000 us window: at 32 MHz the window is
+    500 ns and the unscaled expression would report half the true power.
+    """
+    unknown = sorted(set(overrides) - set(AVG_POWER_OVERRIDE_PARAMS))
+    if unknown:
+        raise SystemExit(f"unknown avg-power override(s) {', '.join(unknown)}; "
+                         f"overridable: {', '.join(AVG_POWER_OVERRIDE_PARAMS)}")
+    eff = dict(params)
+    applied: dict[str, float] = {}
+    for key in AVG_POWER_OVERRIDE_PARAMS:
+        val = overrides.get(key)
+        if val is None:
+            continue
+        val = float(val)
+        if key == "v_od" and not val > 0:
+            raise SystemExit(f"--v-od {val!r}: an overdrive must be positive")
+        if key == "c_load" and val < 0:
+            raise SystemExit(f"--c-load {val!r}: a load capacitance cannot be negative")
+        if key == "t_per" and not val > 0:
+            raise SystemExit(f"--t-per {val!r}: a clock period must be positive")
+        if val == float(params[key]):
+            continue  # numerically nominal: not a sensitivity, no override stamp
+        applied[key] = val
+    if "t_per" in applied:
+        tp = applied["t_per"]
+        eff["t_per"] = tp
+        eff["t_hi"] = tp / 2.0
+        eff["f_clk"] = 1.0 / tp
+        eff["t_setup"] = float(params["t_setup"]) * tp / float(params["t_per"])
+    for key in ("v_od", "c_load"):
+        if key in applied:
+            eff[key] = applied[key]
+    uw_scale = float(params["t_per"]) / float(eff["t_per"])  # N cancels
+    if not math.isfinite(uw_scale) or uw_scale <= 0:
+        raise SystemExit(f"t_per override produced a non-finite window scale {uw_scale!r}")
+    return eff, uw_scale, applied
+
+
+def render_avg_power_cards(p: dict) -> list[str]:
+    """The avg-power bench's whole `analyses` card list, rendered from
+    EFFECTIVE params (issue #452).
+
+    tb.json's cards carry literal times because an ngspice `.meas` card takes
+    literal times, and every one of those literals is derived from the params
+    (anchor `t_rise0`, period `t_per`, half-period `t_hi`, edge `t_edge`,
+    warm-up `n_warm`, window `n_win`). This renders them from the effective
+    parameter set, so a `t_per` override rescales the ENTIRE schedule -- the
+    integration window and its half split, every per-cycle decision read,
+    the quiescent-current probe, the reset-search anchor and the transient
+    stop -- instead of sampling 16 MHz instants at 32 MHz. Fed the nominal
+    params it reproduces tb.json's cards byte for byte; that identity is
+    asserted by the caller before any scaled render is used and pinned by
+    sim/harness/tests/test_avg_power_overrides.py.
+    """
+    tr, tp = float(p["t_rise0"]), float(p["t_per"])
+    th, te = float(p["t_hi"]), float(p["t_edge"])
+    nw, nn = int(p["n_warm"]), int(p["n_win"])
+
+    def ns(t: float) -> str:
+        return f"{t * 1e9:.6g}n"
+
+    t0 = tr + nw * tp                      # window-open rising edge
+    t1 = tr + (nw + nn) * tp               # window-close rising edge
+    tm = tr + (nw + nn / 2) * tp           # half-window split
+    cards = [
+        f"tran 10p {ns(t1)}",
+        f"meas tran vsup_v find v(vdda) at={ns(t0)}",
+        f"meas tran t_elo when v(clkn)=0.5 rise={nw + 1}",
+        f"meas tran t_ehi when v(clkn)=0.5 rise={nw + nn}",
+    ]
+    for k in range(nw, nw + nn):
+        # the decision read sits READ_MARGIN before cycle k's falling edge
+        at = tr + k * tp + th - AVG_POWER_READ_MARGIN_S
+        cards.append(f"meas tran d{k:02d} find v(dn) at={ns(at)}")
+    # complementary-output reads: the window's first and last cycles
+    for k in (nw, nw + nn - 1):
+        at = tr + k * tp + th - AVG_POWER_READ_MARGIN_S
+        cards.append(f"meas tran db{k:02d} find v(dbn) at={ns(at)}")
+    cards += [
+        f"meas tran q_win integ i(vsupa) from={ns(t0)} to={ns(t1)}",
+        f"meas tran q_h1 integ i(vsupa) from={ns(t0)} to={ns(tm)}",
+        f"meas tran q_h2 integ i(vsupa) from={ns(tm)} to={ns(t1)}",
+        f"meas tran e_win integ v(pwr) from={ns(t0)} to={ns(t1)}",
+        f"meas tran q_clk integ i(vclk) from={ns(t0)} to={ns(t1)}",
+        # quiescent probe: the last IQ_WIDTH of the final reset phase, ending
+        # one edge before the window closes
+        f"meas tran i_q avg i(vsupa) from={ns(t1 - AVG_POWER_IQ_WIDTH_S)} to={ns(t1 - te)}",
+        # reset-completion search: confined to the last window cycle's reset
+        # phase (starts one edge after that cycle's falling edge). Dropped
+        # from fleet requests together with its `let` (issue #372).
+        f"let i_rst_thr = -1.1*i_q*1e6",
+        f"meas tran t_rst when v(irst)=i_rst_thr fall=LAST td={ns(tr + (nw + nn - 1) * tp + th + te)}",
+    ]
+    return cards
+
+
+def avg_power_schedule(tb, overrides: dict) -> tuple[dict, list[str], float, dict]:
+    """Resolve overrides against a LOADED nominal manifest ->
+    (effective params, analyses cards, uw_scale, applied overrides).
+
+    Without a `t_per` override the cards are `tb.analyses` verbatim, so a
+    `v_od`/`c_load`-only sensitivity changes no schedule byte. With one, the
+    whole card list is re-rendered from the effective schedule -- but only
+    after the renderer has proven it reproduces the committed nominal cards
+    byte for byte, so a renderer that drifted from tb.json can never quietly
+    ship a scaled schedule that no longer means the nominal one.
+    """
+    eff, uw_scale, applied = avg_power_effective_params(tb.params, overrides)
+    if "t_per" not in applied:
+        return eff, list(tb.analyses), uw_scale, applied
+    if render_avg_power_cards(tb.params) != list(tb.analyses):
+        raise SystemExit(
+            "NOMINAL_RENDER_DRIFT: render_avg_power_cards(tb.params) no longer "
+            "reproduces tb.json's committed `analyses` byte for byte -- the "
+            "scaled schedule cannot be trusted; fix the renderer (see "
+            "sim/harness/tests/test_avg_power_overrides.py)")
+    return eff, render_avg_power_cards(eff), uw_scale, applied
+
+
+def apply_avg_power_overrides(tb, overrides: dict) -> dict:
+    """Apply a bundle's overrides to a loaded STAGED manifest at ingest and
+    return the record's `condition` stamp (issue #452).
+
+    Mutates `tb` in place: the `clk_period_ns` plumbing check is rescaled to
+    the effective period (its nominal 62.49/62.51 bounds would otherwise fail
+    every corner of a 32 MHz run), and the two window-baked µW expressions
+    are multiplied by uw_scale so `p_avg_uw` stays VDD*Q_win/(N*T) at the
+    effective window rather than the nominal 1.000 us its `1e12` factor
+    assumes. Everything else on the manifest is timing-independent and stays
+    nominal -- the staged manifest itself is never edited.
+    """
+    eff, cards, uw_scale, applied = avg_power_schedule(tb, overrides)
+    if not applied:
+        return {}
+    checks = dict(tb.checks)
+    if "clk_period_ns" in checks and "t_per" in applied:
+        tp_ns = float(eff["t_per"]) * 1e9
+        checks["clk_period_ns"] = {**checks["clk_period_ns"],
+                                   "min": tp_ns - 0.01, "max": tp_ns + 0.01}
+    tb.checks = checks
+    if "t_per" in applied:
+        measure = dict(tb.measure)
+        for name in ("p_avg_uw", "p_avg_vi_uw"):
+            measure[name] = f"({measure[name]})*{uw_scale!r}"
+        tb.measure = measure
+    return {
+        "sensitivity_only": True,
+        "overrides": dict(applied),
+        "t_per_s": float(eff["t_per"]),
+        "t_setup_s": float(eff["t_setup"]),
+        "t_win_s": float(eff["t_per"]) * float(tb.params["n_win"]),
+        "uw_scale": uw_scale,
+    }
+
+
+def resolve_corner_points(points: list[str], tb, corner_list, rails: list[float]) \
+        -> list[tuple[float, list, list[float]]]:
+    """Explicit ratified corner ids -> [(vdd, [Corner, ...], [temps, ...])],
+    one group per supply point, in the rails' own order (issue #452).
+
+    The subset is NON-cartesian on purpose (the DR-0006 item-4 sensitivities
+    run nominal / worst-power / slowest, which differ on every axis), but a
+    single request can only carry a process x temperature PRODUCT per supply
+    point -- so each supply's declared points must BE that product, and a set
+    whose per-supply points are not a product is refused (split the run)
+    rather than silently expanded to corners nobody declared.
+    """
+    known = {c.name: c for c in corner_list}
+    by_vdd: dict[float, list[tuple[str, float]]] = {}
+    for cid in points:
+        try:
+            proc, temp, vdd = hc.parse_corner_id(cid)
+        except ValueError as e:
+            raise SystemExit(f"--corner-points: {e}")
+        if proc not in known:
+            raise SystemExit(f"--corner-points: corner {cid!r}: process {proc!r} is not on "
+                             f"this bench's corner list ({', '.join(sorted(known))})")
+        if not any(abs(vdd - r) < 1e-9 for r in rails):
+            raise SystemExit(f"--corner-points: corner {cid!r}: supply {vdd}v is not among "
+                             f"the tolerance rails {rails}")
+        if temp not in (float(t) for t in tb.temperatures_c):
+            raise SystemExit(f"--corner-points: corner {cid!r}: temperature {temp:g}C is not "
+                             f"on this bench's axis {list(tb.temperatures_c)}")
+        by_vdd.setdefault(vdd, []).append((proc, temp))
+    out: list[tuple[float, list, list[float]]] = []
+    for rail in rails:  # the rails' own order keeps request naming deterministic
+        declared = by_vdd.get(rail)
+        if not declared:
+            continue
+        procs = [known[c.name] for c in corner_list if c.name in {p for p, _t in declared}]
+        temps = sorted({t for _p, t in declared})
+        product = {(c.name, t) for c in procs for t in temps}
+        if product != set(declared):
+            extra = sorted(product - set(declared))
+            raise SystemExit(
+                f"--corner-points at {rail}v: the declared points are not a process x "
+                f"temperature product -- one request per supply would also run "
+                f"{', '.join(hc.corner_id(p, t, rail) for p, t in extra)}, which nobody "
+                "declared. Split the subset into one run per supply point.")
+        out.append((rail, procs, temps))
+    return out
+
+
 # --- extracted-binding probe leg (issue #374) ------------------------------ #
 
 #: Subcircuits a testbench fragment may instantiate, mapped to the thing that
@@ -815,10 +1055,38 @@ def main() -> int:
     ap.add_argument("--from-probe", default=None, metavar="PROBE_RESULTS_JSON",
                     help="phase-2 input: the probe-results file sim/tools/klt_record.py writes "
                          "after dispatching the phase-1 probe requests")
+    ap.add_argument("--v-od", type=float, default=None,
+                    help=f"{AVG_POWER_BENCH} only (issue #452): override tb.json's nominal "
+                         "v_od for a DR-0006 item-4 sensitivity record")
+    ap.add_argument("--c-load", type=float, default=None,
+                    help=f"{AVG_POWER_BENCH} only (issue #452): override tb.json's nominal "
+                         "c_load (farad) for a DR-0006 item-4 sensitivity record")
+    ap.add_argument("--t-per", type=float, default=None,
+                    help=f"{AVG_POWER_BENCH} only (issue #452): override tb.json's nominal "
+                         "t_per (second) -- a clock-rate override; every period-coupled "
+                         "parameter and .meas schedule time is re-derived from it")
+    ap.add_argument("--corner-points", nargs="*", default=None, metavar="CORNER_ID",
+                    help=f"{AVG_POWER_BENCH} only (issue #452): an explicit, NON-cartesian "
+                         "PVT-point subset as ratified corner ids (<process>_<temp>c_<supply>v), "
+                         "e.g. tt_27c_3.30v ff_125c_3.63v ss_125c_2.97v; one request per supply "
+                         "point, exactly the declared points -- never their cartesian product")
     a = ap.parse_args()
 
     if a.tolerance_profile and a.bench != CM_INDEX_BENCH:
         raise SystemExit(f"--tolerance-profile is defined for {CM_INDEX_BENCH} only (issue #240)")
+
+    # Sensitivity overrides and the corner subset (issue #452): avg-power
+    # only, and never mixed with the cartesian grid restricts, whose
+    # combination would be ambiguous about which points the set covers.
+    overrides_cli = {"v_od": a.v_od, "c_load": a.c_load, "t_per": a.t_per}
+    if (any(v is not None for v in overrides_cli.values()) or a.corner_points) \
+            and a.bench != AVG_POWER_BENCH:
+        raise SystemExit(f"--v-od / --c-load / --t-per / --corner-points are defined for "
+                         f"{AVG_POWER_BENCH} only (issue #452, DR-0006 item-4 sensitivities)")
+    if a.corner_points and (a.corners or a.temps or a.supply_v):
+        raise SystemExit("--corner-points is an explicit PVT-point subset and cannot be "
+                         "combined with the cartesian --corners / --temps / --supply-v "
+                         "restricts (which points would the set cover? split the runs)")
 
     if a.bench == CM_WINDOW_BENCH:
         # Refused BEFORE anything is staged (issue #182): no request set,
@@ -891,6 +1159,30 @@ def main() -> int:
     tol_lines = tolerance_option_lines(a.tolerance_profile) if a.tolerance_profile else []
     temps = list(a.temps) if a.temps else [float(t) for t in tb.temperatures_c]
 
+    # Sensitivity schedule (issue #452): effective params for the body's
+    # `.param` lines and -- with a t_per override -- the re-rendered `meas`
+    # card list. legs_for reads tb.analyses; a t_per override re-points it at
+    # the rendered cards via the schedule-verified shallow copy. Other benches
+    # take no overrides (gated above) and keep their manifest params verbatim.
+    if a.bench == AVG_POWER_BENCH:
+        eff_params, sched_cards, _uw_scale, overrides = avg_power_schedule(tb, overrides_cli)
+    else:
+        eff_params, overrides = dict(tb.params), {}
+    legs_tb = tb
+    if overrides and "t_per" in overrides:
+        legs_tb = dataclasses.replace(tb, analyses=tuple(sched_cards))
+
+    # The grid. Default: the full cartesian corner_list x temps x vdds, one
+    # request per supply point. --corner-points (issue #452): an explicit
+    # NON-cartesian PVT-point subset, still one request per supply point --
+    # each request's process x temperature list must cover exactly that
+    # supply's declared points, never their product.
+    grid_by_vdd: list[tuple[float, list, list[float]]] = [
+        (vdd, corner_list, temps) for vdd in vdds]
+    if a.corner_points:
+        grid_by_vdd = resolve_corner_points(a.corner_points, tb, corner_list, vdds)
+        vdds = [vdd for vdd, _c, _t in grid_by_vdd]
+
     def body_for(vdd: float, *, dut_vos_lines: list[str], include_netlist: str,
                  main_leg: bool) -> list[str]:
       return [
@@ -912,7 +1204,7 @@ def main() -> int:
         # differential probe for the dc `.meas` cards (the 0.5.0 runner cannot
         # evaluate v(a)-v(b) inside .meas); a high-Z VCVS, no loading.
         *(["Eddprobe dd 0 aop aon 1"] if a.bench == "comparator-offset-mc" else []),
-        *(f".param {k}={v}" for k, v in tb.params.items()),
+        *(f".param {k}={v}" for k, v in eff_params.items()),
         # A copy of the PDK's design.ngspice, staged with the request: an
         # off-host runner does not expand the harness's absolute PDK path.
         '.include "design.ngspice"',
@@ -988,7 +1280,6 @@ def main() -> int:
     # An `alter vdd_val=...` on the .param name is a silent no-op -- an
     # earlier revision of this tool did exactly that and produced
     # supply-independent "45-corner" records.
-    process = [{"name": c.name, "sections": list(c.sections)} for c in corner_list]
     if phase == "probe":
         # Phase 1 (issue #374): the offset_probe deck over the full grid, one
         # body per supply point (the probe fragment is offset-free -- a
@@ -1003,13 +1294,14 @@ def main() -> int:
             "vspan_v": vspan, "tramp_s": tramp,
             "vos_formula": PROBE_VOS_FORMULA,
         }
-        for vdd in vdds:
+        for vdd, cs, ts in grid_by_vdd:
             vtag = f"v{vdd:.2f}"
             (out / f"body-{vtag}.spice").write_text("\n".join(body_for(
                 vdd, dut_vos_lines=[], include_netlist=staged["probe_netlist"],
                 main_leg=False)))
             for leg, spec in probe_legs(tb).items():
-                write_leg_requests(leg, vdd, vtag, spec, process, temps)
+                write_leg_requests(leg, vdd, vtag, spec,
+                                   [{"name": c.name, "sections": list(c.sections)} for c in cs], ts)
     elif dut.provenance == "extracted":
         # Phase 2 (issue #374): ONE body -- and one request -- PER PVT POINT,
         # each baking that point's PROBED dut_vos as a parse-time literal. A
@@ -1023,7 +1315,7 @@ def main() -> int:
         vspan, tramp, _vs_raw, _tr_raw = probe_deck_spans(
             (out / staged["probe_netlist"]).read_text())
         wanted = {hc.corner_id(c.name, float(t), vdd)
-                  for c in corner_list for t in temps for vdd in vdds}
+                  for vdd, cs, ts in grid_by_vdd for c in cs for t in ts}
         # The phase-1 probe requests live on in the phase-2 bundle (same
         # staged sources, same bytes): the record archives ONE bundle whose
         # request set covers both phases, so ingestion verifies and archives
@@ -1064,27 +1356,28 @@ def main() -> int:
             **({"probe_reports": probe_raw["probe_reports"]}
                if isinstance(probe_raw.get("probe_reports"), dict) else {}),
         }
-        for vdd in vdds:
-            for c in corner_list:
-                for t in temps:
+        for vdd, cs, ts in grid_by_vdd:
+            for c in cs:
+                for t in ts:
                     cid = hc.corner_id(c.name, float(t), vdd)
                     (out / f"body-{cid}.spice").write_text("\n".join(body_for(
                         vdd,
                         dut_vos_lines=[f".param dut_vos={float(probe_raw['vos_by_corner'][cid])!r}"],
                         include_netlist=staged["testbench_netlist"], main_leg=True)))
-                    for leg, spec in legs_for(a.bench, tb, a.mc_n).items():
+                    for leg, spec in legs_for(a.bench, legs_tb, a.mc_n).items():
                         write_leg_requests(leg, vdd, cid, spec,
                                            [{"name": c.name, "sections": list(c.sections)}],
                                            [float(t)])
     else:
-        for vdd in vdds:
+        for vdd, cs, ts in grid_by_vdd:
             vtag = f"v{vdd:.2f}"
             (out / f"body-{vtag}.spice").write_text("\n".join(body_for(
                 vdd,
                 dut_vos_lines=[".param dut_vos=0.0"],
                 include_netlist=staged["testbench_netlist"], main_leg=True)))
-            for leg, spec in legs_for(a.bench, tb, a.mc_n).items():
-                write_leg_requests(leg, vdd, vtag, spec, process, temps)
+            for leg, spec in legs_for(a.bench, legs_tb, a.mc_n).items():
+                write_leg_requests(leg, vdd, vtag, spec,
+                                   [{"name": c.name, "sections": list(c.sections)} for c in cs], ts)
     write_bundle(out, a.bench, tb, dut, binding, a.dut, staged, commit, dirty_paths, checked, {
         "corners": [c.name for c in corner_list], "temperatures_c": temps,
         "supply_tolerance": tol, "supply_v": vdds,
@@ -1092,6 +1385,13 @@ def main() -> int:
         **({"tolerance_profile": {"name": a.tolerance_profile,
                                   "options": [[k, v] for k, v in TOLERANCE_PROFILES[a.tolerance_profile]],
                                   "cards": tol_lines}} if a.tolerance_profile else {}),
+        # Issue #452: the DR-0006 item-4 sensitivity declaration. `overrides`
+        # carries only the APPLIED (non-nominal) values; `corner_points` the
+        # explicit PVT subset when one was declared. klt_record.py reads both
+        # at ingest, stamps the record SENSITIVITY-ONLY and rescales the
+        # period-coupled quantities (mk.apply_avg_power_overrides).
+        **({"overrides": overrides} if overrides else {}),
+        **({"corner_points": list(a.corner_points)} if a.corner_points else {}),
     }, requests, phase=phase, probe_section=probe_section, pinned_sources=pinned)
     print(f"wrote {out}/{BUNDLE_NAME} (commit {commit[:7]}"
           + (f", DIRTY: {', '.join(dirty_paths)}" if dirty_paths else ", clean")
