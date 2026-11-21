@@ -178,6 +178,69 @@ KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py comparator-avg-power \
   `condition` block) so it can never be read as the nominal DR-0006
   condition or as a scored row.
 
+### What the item-4 sensitivity records measured (issue #452, 2026-11-21)
+
+Ten records — five conditions × two DUTs — each at the 3-point subset
+`tt_27c_3.30v` / `ff_125c_3.63v` / `ss_125c_2.97v` (nominal point, the
+nominal campaigns' measured power maximum, and DR-0006's hypothesised slow
+corner), all through the batch fleet path from clean `fd2a190` (45 fleet
+units: 15 schematic mains; 15 extracted probes + 15 extracted mains). Deltas
+are `derived[corner_id].p_avg_uw` minus the same point in the corresponding
+nominal 45-corner record
+([`20261115-075832478887-79abbcc`](records/20261115-075832478887-79abbcc.md)
+schematic, [`20261116-203811672880-81544ac`](records/20261116-203811672880-81544ac.md)
+extracted), shown as range over the three corners:
+
+| condition | schematic Δ`p_avg_uw` | extracted Δ`p_avg_uw` | worst `p_avg_uw` among sampled |
+|---|---|---|---|
+| `c_load` = 0 fF | −4.59 … −3.03 µW | −4.50 … −2.96 µW | 169.894 µW @ `ff_125c_3.63v` (sch) |
+| `c_load` = 100 fF | +11.69 … +17.86 µW | +11.61 … +17.70 µW | 225.079 µW @ `ff_125c_3.63v` (ext) |
+| `v_od` = 1 mV | +3.74 … +9.83 µW | +6.14 … +15.72 µW | 223.092 µW @ `ff_125c_3.63v` (ext) |
+| `v_od` = 50 mV | −5.20 … −1.04 µW | −8.46 … −2.59 µW | 198.917 µW @ `ff_125c_3.63v` (ext) |
+| `t_per` = 31.25 ns (32 MHz) | +36.16 … +65.39 µW (+37.5 % @ ff) | +59.48 … +104.56 µW (+50.4 % @ ff) | 311.937 µW @ `ff_125c_3.63v` (ext) |
+
+Reading:
+
+- **Every sampled measurement passed its checks**: `dec_cycles_correct` = 16
+  at all 30 DUT/condition/corner points, worst `q_half_mismatch_pct` =
+  0.00472 % (≈ 212× inside DR-0006's 1 % criterion), 3-of-3 corners derived
+  in every record — none dropped at ingest. The 32 MHz records read
+  `clk_period_ns` = 31.25 with the whole measure schedule re-rendered from
+  the effective period, and `dec_cycles_correct` = 16 there is not an
+  artifact of 16 MHz sample times (the edge case the issue named).
+- **The binding corner did not move**: the highest-power corner among the
+  sampled points is `ff_125c_3.63v` in every condition on both bindings —
+  the same corner the 45-point nominal campaigns identify as the grid
+  maximum — so no condition triggered a full 45-corner re-run.
+- **Power falls as overdrive grows** (1 mV costs more: slower regeneration
+  spends longer at the static bias; 50 mV costs less), so DR-0006's 10 mV is
+  not a power-optimistic choice. All 16 decisions were correct even at
+  1 mV on both bindings.
+- **The 20 fF load choice is not fragile**: the load slope is ≈ 0.22 µW/fF
+  on both bindings; even the 5× (100 fF) load leaves the worst sampled point
+  inside the 500 µW stretch.
+- **32 MHz stays informational**: worst sampled 311.937 µW (extracted,
+  `ff_125c_3.63v`) is inside the 1 mW target but 62 % of the 500 µW stretch —
+  supporting DR-0006's choice of the ratified 16 MHz as the scored rate.
+- **Clock-charge boundary at the sensitivity conditions** (`q_clk_pc` from
+  each record): folding the signed clock-pin charge into the row moves the
+  figure by at most +0.039 µW (schematic) / +0.054 µW (extracted) over the
+  16 MHz conditions' sampled points, and +0.056 µW / +0.084 µW at 32 MHz —
+  details in [`clock-charge-boundary.md`](clock-charge-boundary.md).
+- **Known display artifact in the 32 MHz extracted record** (disclosed, not
+  fixed here — recorder rework is out of scope for this increment): the
+  `dut_vos referral` section's quantisation note quotes the staged nominal
+  `tb.json` `t_per` ("once per 62.5 ns … about 62.5 uV"). The probe leg
+  itself DID run under the overridden clock (the bundle carries
+  `t_per` = 3.125e-08 s, and the re-probed `dut_vos` values differ from the
+  16 MHz runs' accordingly), so the trip-point resolution at 32 MHz is
+  actually about 31.25 µV — finer than stated, never coarser. The `dut_vos`
+  values themselves are measured, not affected by the note.
+
+**No DR-0006-chosen value (load, overdrive, window) is revised by these
+records.** DR-0006's feasibility item 4 cites them; its item-1 reset-margin
+gap (klayout-tools#6080/#5651) and the clock-driver supply cost stay open.
+
 ## Records
 
 | record | coverage | status |
@@ -188,6 +251,16 @@ KLT_SIM_BACKEND=batch python3 sim/tools/klt_record.py comparator-avg-power \
 | [`20261115-053040016592-a4eca5b`](records/20261115-053040016592-a4eca5b.md) | **5 of 45** PVT points (tt/ff/ss/fs/sf × 27 °C × 3.30 V), **extracted** DUT, ngspice-47 / open_pdks `f6eeac7` | the probe leg's bring-up record (issue #374): first-ever `tb_vosprobe.spice` run (local, via `sim/run_corners.py`), unscored — **not citable as a clean-tree result**: taken against a dirty working tree (`sim/harness/testbench.py` and its test modified), so it is a diagnostic |
 | [`20261115-064156694329-8a67cff`](records/20261115-064156694329-8a67cff.md) | **45 of 45** PVT points (tt/ff/ss/fs/sf × −40/27/125 °C × 2.97/3.30/3.63 V), **extracted** DUT, ngspice-47 / open_pdks `f6eeac7`, fleet path | the extracted-DUT campaign (issue #374), unscored — **not citable as a clean-tree result**: minted before the staged-source provenance correction (DR-0008), so it grades as a diagnostic; superseded by [`20261116-203811672880-81544ac`](records/20261116-203811672880-81544ac.md), which re-mints the same campaign citable (issue #398) |
 | [`20261116-203811672880-81544ac`](records/20261116-203811672880-81544ac.md) | **45 of 45** PVT points (tt/ff/ss/fs/sf × −40/27/125 °C × 2.97/3.30/3.63 V), **extracted** DUT, ngspice-47 / open_pdks `f6eeac7`, fleet path | the extracted-DUT campaign re-minted under DR-0008's staged-source provenance class (issue #398), unscored — `citable` / `reference` hold: the gitignored generation netlist's staged bytes are sha256-pinned by every deck and committed in the record's own corner tree (`origin.pinned_sources`) |
+| [`20261121-032749529701-fd2a190`](records/20261121-032749529701-fd2a190.md) | **3 of 3** PVT points (`tt_27c_3.30v`, `ff_125c_3.63v`, `ss_125c_2.97v`), schematic DUT, **`c_load` = 0 fF**, fleet path | DR-0006 item-4 load sensitivity (issue #452), SENSITIVITY-ONLY, unscored |
+| [`20261121-033511010875-fd2a190`](records/20261121-033511010875-fd2a190.md) | **3 of 3** PVT points (as above), schematic DUT, **`c_load` = 100 fF**, fleet path | DR-0006 item-4 load sensitivity (issue #452), SENSITIVITY-ONLY, unscored |
+| [`20261121-033708169651-fd2a190`](records/20261121-033708169651-fd2a190.md) | **3 of 3** PVT points (as above), schematic DUT, **`v_od` = 1 mV**, fleet path | DR-0006 item-4 overdrive sensitivity (issue #452), SENSITIVITY-ONLY, unscored |
+| [`20261121-033802179758-fd2a190`](records/20261121-033802179758-fd2a190.md) | **3 of 3** PVT points (as above), schematic DUT, **`v_od` = 50 mV**, fleet path | DR-0006 item-4 overdrive sensitivity (issue #452), SENSITIVITY-ONLY, unscored |
+| [`20261121-034107310717-fd2a190`](records/20261121-034107310717-fd2a190.md) | **3 of 3** PVT points (as above), schematic DUT, **`t_per` = 31.25 ns (32 MHz)**, fleet path | DR-0006 item-4 clock-rate sensitivity (issue #452; informational per DR-0006 "Alternatives"), SENSITIVITY-ONLY, unscored |
+| [`20261121-034429183380-fd2a190`](records/20261121-034429183380-fd2a190.md) | **3 of 3** PVT points (as above), **extracted** DUT, **`c_load` = 0 fF**, fleet path | DR-0006 item-4 load sensitivity (issue #452), SENSITIVITY-ONLY, unscored; carries the per-corner probed `dut_vos` referral |
+| [`20261121-034303477762-fd2a190`](records/20261121-034303477762-fd2a190.md) | **3 of 3** PVT points (as above), **extracted** DUT, **`c_load` = 100 fF**, fleet path | DR-0006 item-4 load sensitivity (issue #452), SENSITIVITY-ONLY, unscored; carries the per-corner probed `dut_vos` referral |
+| [`20261121-034624876214-fd2a190`](records/20261121-034624876214-fd2a190.md) | **3 of 3** PVT points (as above), **extracted** DUT, **`v_od` = 1 mV**, fleet path | DR-0006 item-4 overdrive sensitivity (issue #452), SENSITIVITY-ONLY, unscored; carries the per-corner probed `dut_vos` referral |
+| [`20261121-034303118261-fd2a190`](records/20261121-034303118261-fd2a190.md) | **3 of 3** PVT points (as above), **extracted** DUT, **`v_od` = 50 mV**, fleet path | DR-0006 item-4 overdrive sensitivity (issue #452), SENSITIVITY-ONLY, unscored; carries the per-corner probed `dut_vos` referral |
+| [`20261121-034523379992-fd2a190`](records/20261121-034523379992-fd2a190.md) | **3 of 3** PVT points (as above), **extracted** DUT, **`t_per` = 31.25 ns (32 MHz)**, fleet path | DR-0006 item-4 clock-rate sensitivity (issue #452; informational per DR-0006 "Alternatives"), SENSITIVITY-ONLY, unscored; carries the per-corner probed `dut_vos` referral |
 
 > The record's own **Reproduce** line is the harness's generic template
 > (`python3 sim/run_corners.py comparator-avg-power`), which would run the full
@@ -304,7 +377,7 @@ one corner settles no corner question.
 | | `reset_margin_ns` = **30.48 ns** of the 31.25 ns reset phase | the precharge transient settled to within 10 % of the same run's quiescent current **0.77 ns** after the falling edge. **Not settled:** this is the supply-current proxy described above, not the latch's internal state, and it is one corner. |
 | **2.** no dynamic-power figure exists | `q_win_pc` = **43.905 pC** over 16 cycles → `p_avg_uw` = **144.9 µW**, `e_dec_fj` = **9055 fJ** per decision | the first figure of any kind for this row's dynamic component. Static is 30.28 µA × 3.3 V = **99.9 µW** of it (≈ 69 %), leaving ≈ 45 µW — **2.81 pJ per decision** — dynamic. **Not a compliance statement:** `P_avg` is scored as the *maximum over all 45 corners* and 44 of them are unrun, so nothing here says the ≤ 1 mW target or the ≤ 500 µW stretch is met. |
 | **3.** the proposed 8-cycle warm-up and 16-cycle window are not shown adequate | `q_half_mismatch_pct` = **0.00228 %** against DR-0006's 1 % criterion — a 440× margin | the window is in steady state at this point: the two 8-cycle halves integrate to 21.9524 pC and 21.9529 pC. **Not settled:** at a slow/hot corner the settling time is longer, and that is where the criterion earns its keep. |
-| **4.** output load, overdrive and clock-charge boundary are judgment choices whose sensitivities must be run | `q_clk_pc` = **0.00707 pC**, i.e. the signed net charge at the ideal clock pin is **0.016 %** of the DUT's supply charge at this condition (a pin diagnostic, not a clock-driver cost: signed charge cancels over whole cycles) | records the boundary line DR-0006 asks for. **Computed since issue #452:** the signed clock-pin charge (informational; not a bound on clock-driver supply cost) at all 45 corners on both DUTs is reported in [`clock-charge-boundary.md`](clock-charge-boundary.md) (from the committed records, no new simulation). **Not run:** the load/overdrive/32 MHz sensitivity sweeps themselves — how much the figure *moves* — are a follow-up. |
+| **4.** output load, overdrive and clock-charge boundary are judgment choices whose sensitivities must be run | `q_clk_pc` = **0.00707 pC**, i.e. the signed net charge at the ideal clock pin is **0.016 %** of the DUT's supply charge at this condition (a pin diagnostic, not a clock-driver cost: signed charge cancels over whole cycles) | records the boundary line DR-0006 asks for. **Computed since issue #452:** the signed clock-pin charge (informational; not a bound on clock-driver supply cost) at all 45 corners on both DUTs is reported in [`clock-charge-boundary.md`](clock-charge-boundary.md) (from the committed records, no new simulation), and **the load/overdrive/32 MHz sensitivity sweeps have since run** as the ten SENSITIVITY-ONLY records above (section ["What the item-4 sensitivity records measured"](README.md#what-the-item-4-sensitivity-records-measured-issue-452-2026-11-21)): ±load moves the figure by −4.6 … +17.9 µW, overdrive by −8.5 … +15.7 µW, 32 MHz by up to +104.6 µW over the sampled corners — the binding corner did not move and no chosen value is revised. |
 | — (implementation, not a record item) | `p_avg_form_delta_pct` = **1.9 × 10⁻⁵ %**; `q_split_delta_pct` = **4.1 × 10⁻⁴ %**; `clk_period_ns` = **62.5**, `t_win_start_ns` = **510.05** | the `v·i` form agrees with the charge form, the halves partition the window, and the clock the simulator produced is the one every hard-coded `.meas` boundary was derived from. |
 
 **No number DR-0006 chose came out unworkable at this point**, so this probe
@@ -365,12 +438,19 @@ current coverage state.
   provenance class from the diagnostic first mint
   `20261115-064156694329-8a67cff` (issue #374). The extracted leg's evidence
   is citable reference-grade (unscored); the figures did not move.
-- It does not run DR-0006's load/overdrive/32 MHz sensitivity sweeps (0/100 fF
-  load, 1/50 mV overdrive, 32 MHz), which its feasibility item 4 requires
-  before ratification; the recorder's sensitivity mechanism for them landed
-  with issue #452 and their records are that issue's remaining work. The
-  signed clock-pin-charge half of item 4 IS reported (informational only; clock-driver supply cost stays open), at every corner on both
-  DUTs, in [`clock-charge-boundary.md`](clock-charge-boundary.md) — computed
-  from the committed records' `q_clk_pc`/`q_win_pc` columns, no new
-  simulation; how much the scored figure would *move* under the load,
-  overdrive and clock-rate sweeps is still the open part.
+- DR-0006's load/overdrive/32 MHz sensitivity sweeps (0/100 fF load, 1/50 mV
+  overdrive, 32 MHz), which feasibility item 4 requires before ratification,
+  **have run** (issue #452, closing increment): ten SENSITIVITY-ONLY records
+  — see ["What the item-4 sensitivity records
+  measured"](README.md#what-the-item-4-sensitivity-records-measured-issue-452-2026-11-21)
+  above — with `dec_cycles_correct` = 16 and the 1 % half-window criterion
+  holding at all 30 DUT/condition/corner points, and no binding-corner
+  change. The signed clock-pin-charge half of item 4 is likewise reported
+  (informational only; clock-driver supply cost stays open), at every corner
+  on both DUTs in [`clock-charge-boundary.md`](clock-charge-boundary.md) —
+  computed from the committed records' `q_clk_pc`/`q_win_pc` columns, no new
+  simulation — and at the 100 fF / 32 MHz sensitivity conditions from the new
+  records' own `q_clk_pc`. Nothing here ratifies the record: DR-0006 stays
+  `proposed`, and the reset-margin fleet gap
+  (2AMLogic/klayout-tools#6080/#5651) and the clock-driver supply cost
+  remain open.
