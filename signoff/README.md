@@ -889,7 +889,9 @@ of `scripts/run-pdk-free-tests.sh`, excluding the re-grade (circular).
 toolchain host (ngspice >= 46, pinned open_pdks) in `workflow_dispatch` run 43953014100 on `feature/issue-398` (issue #398)
 and downloaded unmodified; re-produced the same way (79/79 checks, adding
 `sim/harness/tests/test_avg_power_overrides.py` and the edited avg-power README) from
-`selftest.yml` run 44840704257 on `feature/issue-452` (issue #452). The manifest pins the inventory hash it is bound to,
+`selftest.yml` run 44840704257 on `feature/issue-452` (issue #452); and re-produced
+again (79/79 checks, the avg-power README as edited by #452's closing increment) from
+`selftest.yml` run 44863740368 on `feature/issue-452` (issue #452). The manifest pins the inventory hash it is bound to,
 and `signoff.yml` re-runs `--check` for items 1, 9 and 10. Caveat: item 9's cold
 start (`./sim/selftest.sh`) is `local_only`, so the PDK-free `--check`
 re-verifies the 79 inventoried checks — the 76 files, plus the committed
