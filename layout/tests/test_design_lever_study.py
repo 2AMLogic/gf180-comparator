@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import contextlib
 import io
+import json
 import sys
 import tempfile
 import unittest
@@ -131,6 +132,44 @@ class CombinedStudy(unittest.TestCase):
             with self.assertRaises(FileExistsError):
                 dl.main(["combined-run", str(root)])
             self.assertEqual(submit.call_count, 1)
+
+    def test_conditional_followups(self):
+        # Exercise the dispatch decisions using real report shapes and
+        # synthetic delays. These values are never campaign evidence.
+        two = pa.budget_points("two")
+        ref = next((dl.HERE / "artifacts/design-levers").glob("*/stage.json")).parent
+        control = {v: pa._budget_values(ref / v, two) for v in ("ctrl", "sch")}
+        for winner, expected in (("primary", ["controls", "primary", "remaining-five"]),
+                                 ("larger-pair", ["controls", "primary", "larger-pair", "remaining-five"]),
+                                 (None, ["controls", "primary", "larger-pair"])):
+            stages = []
+
+            def measure(root, stage, text, plan, points, jobs):
+                stages.append(stage)
+                if stage == "controls":
+                    return control
+                if stage == "remaining-five":
+                    self.assertEqual(len(points), 5)
+                    self.assertEqual(len(plan), 1)
+                results = {}
+                for v in plan:
+                    passes = v is plan[0] and stage in (winner, "remaining-five")
+                    row = dict(control["ctrl"][two[0]], td_od50_ns=1.4 if passes else 1.6)
+                    results[v["id"]] = dict.fromkeys(points, row)
+                return results
+
+            with self.subTest(winner=winner), tempfile.TemporaryDirectory() as tmp, \
+                    patch.object(dl, "combined_stage", side_effect=measure), \
+                    patch.object(dl, "kickback_stage", return_value="record") as kickback:
+                root = Path(tmp) / "run"
+                self.assertEqual(dl.main(["combined-run", str(root)]), 0)
+                summary = json.loads((root / "timing.json").read_text())
+                self.assertEqual(stages, expected)
+                self.assertEqual(len(summary["seven_corner_passes"]), int(bool(winner)))
+                self.assertEqual(kickback.call_count, 2 if winner else 0)
+                if winner:
+                    self.assertEqual([c.args[1]["id"] for c in kickback.call_args_list],
+                                     ["ctrl", *summary["two_corner_passes"]])
 
 
 class CommittedEvidence(unittest.TestCase):

@@ -49,7 +49,9 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -57,7 +59,9 @@ HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[1]
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(REPO / "sim"))
+sys.path.insert(0, str(REPO / "sim/tools"))
 
+import klt_record as kr  # noqa: E402
 import parasitic_attribution as pa  # noqa: E402
 from harness import corners as hc  # noqa: E402
 
@@ -411,6 +415,7 @@ def combined_budget(ctrl, primary, larger, two, five):
     # The kickback bench uses #389's two-phase referral for each DUT, including
     # a comparison against an unmodified extracted DUT if any candidate passes.
     kickback = pa.count_requests(ctrl[:1], two)
+
     def follow(candidates):
         return pa.count_requests(candidates, five) + (1 + len(candidates)) * kickback
 
@@ -438,15 +443,74 @@ def combined_stage(root, name, text, plan, points, jobs):
     results = {}
     for variant in plan:
         vid = variant["id"]
-        values = pa._budget_values(directory / vid, points)
+        vdir = directory / vid
+        expected = {f"ladder-{pa.pid(pt)}": [pt] for pt in points}
+        if variant["centre"] == "probed":
+            for (t, v), processes in pa.tv_groups(points).items():
+                expected[pa._probe_tag(t, v)] = [(p, t, v) for p in processes]
+        for tag, units in expected.items():
+            report = json.loads((vdir / f"{tag}.report.json").read_text())
+            if not (report["environment"].get("remote") or {}).get("job_id"):
+                raise ValueError(f"{name}/{vid}/{tag}: missing fleet job id")
+            if sorted(pa.pm._point_key(c) for c in report["corners"]) != sorted(units):
+                raise ValueError(f"{name}/{vid}/{tag}: measured PVT points differ from request")
+        values = pa._budget_values(vdir, points)
         for pt in points:
-            r = values[pt]
-            if not r["job_ids"] or (variant["centre"] == "probed" and not r["probe_job_ids"]):
-                raise ValueError(f"{name}/{vid}/{pa.pid(pt)}: missing fleet job id")
-            if r["td_od50_ns"] is None or not math.isfinite(r["td_od50_ns"]):
+            td = values[pt]["td_od50_ns"]
+            if td is None or not math.isfinite(td):
                 raise ValueError(f"{name}/{vid}/{pa.pid(pt)}: unresolved td_od50_ns")
         results[vid] = values
     return results
+
+
+def kickback_stage(root, variant):
+    """Use the kickback bench's own phase generator, offset referral and scorer."""
+    bench = "comparator-kickback"
+    work = root / "kickback" / variant["id"]
+    work.mkdir(parents=True)
+    net = work / "variant.cir"
+    net.write_text(variant["dut"])
+    sim = REPO / "sim"
+    binding = json.loads((sim / "dut.json").read_text())["duts"]["comparator-dr0001-layout"]
+    binding.update(id=variant["id"], netlist=os.path.relpath(net, sim))
+    config = work / "binding.json"
+    config.write_text(json.dumps(binding, indent=2) + "\n")
+    generate = [sys.executable, str(sim / "tools/mk_klt_request.py"), bench, str(work),
+                "--dut", str(config), "--corners", *pa.PROCESSES, "--temps", str(pa.TEMP_C),
+                "--supply-v", str(pa.VDD_V)]
+    for phase, count in (("probe", 1), ("main", 2)):
+        referral = ["--from-probe", str(work / kr.mk.PROBE_RESULTS_NAME)] if phase == "main" else []
+        subprocess.run([*generate, "--emit", phase, *referral], check=True)
+        bundle = kr.load_bundle(work, bench)
+        names = kr.names_from_bundle(bundle)
+        kr.verify_staged(work, bundle, names)
+        legs = kr.names_from_bundle(bundle, leg=phase)
+        if len(legs) != count:
+            raise ValueError(f"{bench}/{phase}: {len(legs)} requests, expected {count}")
+        kr.dispatch(work, list(legs), backend="batch",
+                    sim_command=[*pa.pm._klt("0.9.2"), "sim", "--wait-for-capacity", "600"])
+        if phase == "probe":
+            kr.derive_probe_results(work, bundle, legs)
+
+    reports = {n: json.loads((work / f"report-{n}.json").read_text()) for n in names}
+    requests = {n: json.loads((work / bundle["requests"][n]["request"]).read_text()) for n in names}
+    kr.verify_reports(work, bundle, names, reports)
+    kr.check_engine_floor(bundle, reports, False)
+    kr.check_pdk_identity(work, bundle, reports, False)
+    vos, errors = kr.verify_probe_provenance(work, bundle, names, requests, reports)
+    main, coverage, _ = kr._collect_checked_legs(bench, legs, reports, requests)
+    tb = kr.htb.load(sim / bench)
+    derived, problems = kr.derive(bench, tb, main)
+    jobs = {n: (report["environment"].get("remote") or {}).get("job_id")
+            for n, report in reports.items()}
+    if not all(jobs.values()):
+        raise ValueError(f"{bench}/{variant['id']}: missing fleet job id")
+    if set(derived) != set(pa.CORNER_IDS.values()) or errors or coverage or problems:
+        raise ValueError(f"{bench}/{variant['id']}: incomplete corner evidence: {errors + coverage + problems}")
+    return {"dut_sha256": pa.sha(variant["dut"]), "job_ids": jobs,
+            "decision_checks": kr.decision_correctness(bench, tb, derived, set(derived)),
+            "corners": {cid: {"dut_vos_v": vos[cid], "kick_1k_peak_mv": d["kick_1k_peak_mv"]}
+                        for cid, d in derived.items()}}
 
 
 def cmd_combined(args) -> int:
@@ -486,9 +550,17 @@ def cmd_combined(args) -> int:
             for vid, r in rest.items():
                 summary["variants"][vid].update({pa.pid(pt): pa._corner_cell(r[pt], None, {})
                                                  for pt in five})
-        summary["seven_corner_passes"] = [v["id"] for v in candidates
-                                          if all(pa._ok(c) for c in summary["variants"][v["id"]].values())]
-    except ValueError as exc:
+        variants = summary["variants"]
+        summary["ranked_by_ss_td_od50"] = sorted(
+            variants, key=lambda vid: variants[vid][pa.CORNER_IDS["ss"]]["td_od50_ns"])
+        summary["seven_corner_passes"] = [
+            v["id"] for v in candidates if all(pa._ok(c) for c in variants[v["id"]].values())]
+        if candidates:
+            summary["kickback_and_offset"] = {}
+            for variant in [ctrl[0], *candidates]:
+                summary["kickback_and_offset"][variant["id"]] = kickback_stage(root, variant)
+            summary["noise_gap"] = "preamp_noise_pvt.py pins the extracted DUT hash to #202"
+    except (ValueError, KeyError, OSError, subprocess.CalledProcessError, SystemExit) as exc:
         summary["validity_failure"] = str(exc)
         print(exc, file=sys.stderr)
     (root / "timing.json").write_text(json.dumps(summary, indent=2, sort_keys=True, allow_nan=False) + "\n")
