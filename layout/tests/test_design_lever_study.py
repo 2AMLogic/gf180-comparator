@@ -15,6 +15,7 @@ from __future__ import annotations
 import contextlib
 import io
 import json
+import os
 import shutil
 import sys
 import tempfile
@@ -256,16 +257,38 @@ class CombinedReportValidation(unittest.TestCase):
         ctrl = dl.controls(self.text)[0]
         _, t, v = self.points[0]
         tag = pa._probe_tag(t, v)
-        report = json.loads((self.archive / "ctrl" / f"{tag}.report.json").read_text())
-        report["corners"][0]["measurements"][0]["status"] = "error"
-        with tempfile.TemporaryDirectory() as tmp, patch.object(pa.pm, "_klt_identity", return_value={}), \
-                patch.object(pa, "submit", return_value={"ok": True, "report": report}) as submit:
-            root = Path(tmp)
-            with self.assertRaisesRegex(ValueError, "controls: fleet reports incomplete"):
-                dl.combined_stage(root, "controls", self.text, [ctrl], self.points, 1)
-            submit.assert_called_once()
-            log = json.loads((root / "controls" / "run-log.json").read_text())
-            self.assertIn("t_flip status 'error'", log["job_errors"][f"ctrl/{tag}"])
+        path = self.archive / "ctrl" / f"{tag}.report.json"
+        for change, diagnostic in (({"status": "error"}, "t_flip status 'error'"),
+                                   ({"value": 0.0}, "probe span"),
+                                   ({"value": pa.pm.PROBE_TRAMP}, "probe span"),
+                                   ({"value": 1.1 * pa.pm.PROBE_TRAMP}, "probe span")):
+            report = json.loads(path.read_text())
+            report["corners"][-1]["measurements"][0].update(change)
+
+            def submit_probe(vdir, job, *args):
+                self.assertEqual(job, tag, "invalid probe dispatched a dependent ladder")
+                return {"ok": True, "report": report}
+
+            with self.subTest(change=change), tempfile.TemporaryDirectory() as tmp, \
+                    patch.object(pa.pm, "_klt_identity", return_value={}), \
+                    patch.object(pa, "submit", side_effect=submit_probe) as submit:
+                root = Path(tmp)
+                with self.assertRaisesRegex(ValueError, "controls: fleet reports incomplete"):
+                    dl.combined_stage(root, "controls", self.text, [ctrl], self.points, 1)
+                submit.assert_called_once()
+                log = json.loads((root / "controls" / "run-log.json").read_text())
+                self.assertIn(diagnostic, log["job_errors"][f"ctrl/{tag}"])
+
+    def test_archived_candidate_with_clamped_probe_cannot_qualify(self):
+        pair = next(v for v in dl.lever_variants(self.text) if v["id"] == "pair-x1.5")
+        _, t, v = self.points[0]
+        tag = pa._probe_tag(t, v)
+
+        def clamp(report):
+            report["corners"][-1]["measurements"][0]["value"] = pa.pm.PROBE_TRAMP
+
+        with self.assertRaisesRegex(ValueError, f"primary/pair-x1.5/{tag}.*probe span"):
+            self.replay(pair, tag, clamp)
 
     def test_wrong_decision_at_a_followup_corner_withholds_seven_corner_pass(self):
         pair = next(v for v in dl.lever_variants(self.text) if v["id"] == "pair-x1.5")
@@ -304,6 +327,74 @@ class CombinedReportValidation(unittest.TestCase):
             self.assertIn(f"remaining-five/{pair['id']}/ladder-{pa.pid(bad_point)}", result["validity_failure"])
             self.assertIn("dout_od50_end", result["validity_failure"])
             kick.assert_not_called()
+
+
+class KickbackReportValidation(unittest.TestCase):
+    """Generate both request phases and replace fleet dispatch with finite test values."""
+
+    @staticmethod
+    def passing_report(request, entry, toolchain):
+        t, = request["corners"]["temperature_c"]
+        corners = []
+        values = {"t_flip": 3.6e-5, "ad_pos": 0.012, "da_end": 1, "db_end": 1, "dc_end": 1}
+        for proc in request["corners"]["process"]:
+            p = proc["name"]
+            measures = [{"name": m["name"], "value": values.get(m["name"], 0.001), "status": "pass"}
+                        for m in request["measurements"]]
+            corners.append({"corner_id": f"{p}/novdd/{t:g}C", "process": p, "temperature_c": t,
+                            "supply_v": {}, "status": "pass", "measurements": measures})
+        return {
+            "status": "pass", "corners": corners,
+            "environment": {"netlist_sha256": entry["netlist_sha256"], "remote": {"job_id": "test-job"},
+                            "engine": "ngspice", "engine_version": str(toolchain["ngspice_min_major"])},
+            "provenance": {"pdk": {"name": toolchain["pdk_variant"],
+                                   "version": "open_pdks " + toolchain["open_pdks"]}},
+        }
+
+    def test_report_and_ingredient_status_gate_each_phase(self):
+        variant = dl.controls(pa.load_extracted())[0]
+        for phase, field in (("probe", "report"), ("probe", "corner"), ("probe", "t_flip"),
+                             ("main", "report"), ("main", "corner"), ("main", "ad_pos"),
+                             ("main", "dc_end"), (None, None)):
+            def dispatch(work, names, **kwargs):
+                bundle = dl.kr.load_bundle(work, "comparator-kickback")
+                for name in names:
+                    entry = bundle["requests"][name]
+                    request = json.loads((work / entry["request"]).read_text())
+                    report = self.passing_report(request, entry, bundle["toolchain"])
+                    corner = next((c for c in report["corners"] if c["process"] == "tt"), None)
+                    if entry["leg"] == phase and corner:
+                        if field == "report":
+                            report["status"] = "error"
+                        elif field == "corner":
+                            corner["status"] = "error"
+                        else:
+                            next(m for m in corner["measurements"] if m["name"] == field)["status"] = "error"
+                    (work / f"report-{name}.json").write_text(json.dumps(report))
+
+            with self.subTest(phase=phase, field=field), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                pdk = root / "gf180mcuD"
+                models = pdk / "libs.tech/ngspice"
+                models.mkdir(parents=True)
+                (models / "sm141064.ngspice").touch()
+                (models / "design.ngspice").touch()
+                with patch.dict(os.environ, GF180_PDK_PATH=str(pdk)), \
+                        patch.object(dl.kr, "dispatch", side_effect=dispatch) as submit:
+                    if phase:
+                        with self.assertRaisesRegex(ValueError, f"{phase}.*{field}.*error"):
+                            dl.kickback_stage(root, variant)
+                    else:
+                        result = dl.kickback_stage(root, variant)
+                        self.assertEqual(set(result["corners"]), set(pa.CORNER_IDS.values()))
+                        for corner in result["corners"].values():
+                            self.assertAlmostEqual(corner["kick_1k_peak_mv"], 12.0)
+                            self.assertAlmostEqual(corner["dut_vos_v"], -0.004)
+                self.assertEqual(submit.call_count, 1 if phase == "probe" else 2)
+                if phase == "probe":
+                    work = root / "kickback" / variant["id"]
+                    self.assertFalse((work / dl.kr.mk.PROBE_RESULTS_NAME).exists())
+                    self.assertEqual(list(work.glob("request-main-*.json")), [])
 
 
 class CommittedEvidence(unittest.TestCase):

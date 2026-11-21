@@ -433,13 +433,14 @@ def combined_budget(ctrl, primary, larger, two, five):
 
 
 def validate_combined_report(report, request, label):
-    """Qualify a single-temperature, single-voltage probe or ladder request."""
+    """Qualify a single-temperature, single-voltage request in the combined study."""
     if report.get("status") != "pass":
         raise ValueError(f"{label}: report status {report.get('status')!r}")
     if not ((report.get("environment") or {}).get("remote") or {}).get("job_id"):
         raise ValueError(f"{label}: missing fleet job id")
     grid = request["corners"]
-    supplies = {rail: voltage for rail, (voltage,) in grid["supply_v"].items()}
+    # The kickback bench sets VDD in the body netlist and omits supply_v.
+    supplies = {rail: voltage for rail, (voltage,) in grid.get("supply_v", {}).items()}
     remaining = {(p["name"], t) for p in grid["process"] for t in grid["temperature_c"]}
     required = [m["name"] for m in request["measurements"]]
     for corner in report.get("corners") or []:
@@ -448,7 +449,7 @@ def validate_combined_report(report, request, label):
             raise ValueError(f"{label}: unexpected or duplicate PVT point {point}")
         remaining.remove(point)
         where = f"{label} {point}"
-        if corner.get("supply_v") != supplies:
+        if corner.get("supply_v", {}) != supplies:
             raise ValueError(f"{where}: expected supplies {supplies}, got {corner.get('supply_v')}")
         if corner.get("status") != "pass":
             raise ValueError(f"{where}: corner status {corner.get('status')!r}")
@@ -466,12 +467,20 @@ def validate_combined_report(report, request, label):
         raise ValueError(f"{label}: missing PVT points {sorted(remaining)}")
 
 
+def validate_timing_probe(report, request, label):
+    validate_combined_report(report, request, label)
+    for point, vos in pa._trip_from_probe(report).items():
+        if pa.pm._grade("dut_vos_v", vos, {}) != "pass":
+            raise ValueError(f"{label} {pa.pid(point)}: t_flip gives dut_vos_v={vos:g} V, "
+                             f"but the probe span requires |dut_vos_v| < {pa.pm.PROBE_VSPAN:g} V")
+
+
 def combined_stage(root, name, text, plan, points, jobs):
     directory = root / name
     directory.mkdir()
     man = manifest(text, plan, points, combined=True)
     if pa.run_stage(directory, man, plan, points, "batch", jobs, 453, capacity_wait_s=600,
-                    validate_probe=validate_combined_report):
+                    validate_probe=validate_timing_probe):
         raise ValueError(f"{name}: fleet reports incomplete (see {name}/run-log.json)")
     checks = pa.pm._load_tb()["checks"]
     timing_checks = {
@@ -487,13 +496,13 @@ def combined_stage(root, name, text, plan, points, jobs):
         if variant["centre"] == "probed":
             for (t, v), processes in pa.tv_groups(points).items():
                 tag = pa._probe_tag(t, v)
-                requests[tag] = pa.budget_probe_request(tag, processes, t, v)
+                requests[tag] = (pa.budget_probe_request(tag, processes, t, v), validate_timing_probe)
         for pt in points:
             tag = f"ladder-{pa.pid(pt)}"
-            requests[tag] = pa.budget_ladder_request(tag, pt)
-        for tag, request in requests.items():
+            requests[tag] = (pa.budget_ladder_request(tag, pt), validate_combined_report)
+        for tag, (request, validate) in requests.items():
             report = json.loads((vdir / f"{tag}.report.json").read_text())
-            validate_combined_report(report, request, f"{name}/{vid}/{tag}")
+            validate(report, request, f"{name}/{vid}/{tag}")
         values = pa._budget_values(vdir, points)
         for pt, row in values.items():
             failures = scalar_bound_failures(timing_checks, row)
@@ -532,22 +541,21 @@ def kickback_stage(root, variant):
             raise ValueError(f"{bench}/{phase}: {len(legs)} requests, expected {count}")
         kr.dispatch(work, list(legs), backend="batch",
                     sim_command=[*pa.pm._klt("0.9.2"), "sim", "--wait-for-capacity", "600"])
+        reports = {n: json.loads((work / f"report-{n}.json").read_text()) for n in names}
+        requests = {n: json.loads((work / bundle["requests"][n]["request"]).read_text()) for n in names}
+        for n in names:
+            validate_combined_report(reports[n], requests[n], f"{bench}/{variant['id']}/{n}")
+        kr.verify_reports(work, bundle, names, reports)
         if phase == "probe":
             kr.derive_probe_results(work, bundle, legs)
 
-    reports = {n: json.loads((work / f"report-{n}.json").read_text()) for n in names}
-    requests = {n: json.loads((work / bundle["requests"][n]["request"]).read_text()) for n in names}
-    kr.verify_reports(work, bundle, names, reports)
     kr.check_engine_floor(bundle, reports, False)
     kr.check_pdk_identity(work, bundle, reports, False)
     vos, errors = kr.verify_probe_provenance(work, bundle, names, requests, reports)
     main, coverage, _ = kr._collect_checked_legs(bench, legs, reports, requests)
     tb = kr.htb.load(sim / bench)
     derived, problems = kr.derive(bench, tb, main)
-    jobs = {n: (report["environment"].get("remote") or {}).get("job_id")
-            for n, report in reports.items()}
-    if not all(jobs.values()):
-        raise ValueError(f"{bench}/{variant['id']}: missing fleet job id")
+    jobs = {n: report["environment"]["remote"]["job_id"] for n, report in reports.items()}
     if set(derived) != set(pa.CORNER_IDS.values()) or errors or coverage or problems:
         raise ValueError(f"{bench}/{variant['id']}: incomplete corner evidence: {errors + coverage + problems}")
     return {"dut_sha256": pa.sha(variant["dut"]), "job_ids": jobs,
