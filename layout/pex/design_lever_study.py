@@ -64,6 +64,7 @@ sys.path.insert(0, str(REPO / "sim/tools"))
 import klt_record as kr  # noqa: E402
 import parasitic_attribution as pa  # noqa: E402
 from harness import corners as hc  # noqa: E402
+from harness.report import scalar_bound_failures  # noqa: E402
 
 LEVER_ISSUE = 323
 LEVER_REQUEST_CAP = 23
@@ -431,35 +432,77 @@ def combined_budget(ctrl, primary, larger, two, five):
             "larger_max": larger_max, "cap": COMBINED_REQUEST_CAP}
 
 
+def validate_combined_report(report, request, label):
+    """Qualify a single-temperature, single-voltage probe or ladder request."""
+    if report.get("status") != "pass":
+        raise ValueError(f"{label}: report status {report.get('status')!r}")
+    if not ((report.get("environment") or {}).get("remote") or {}).get("job_id"):
+        raise ValueError(f"{label}: missing fleet job id")
+    grid = request["corners"]
+    supplies = {rail: voltage for rail, (voltage,) in grid["supply_v"].items()}
+    remaining = {(p["name"], t) for p in grid["process"] for t in grid["temperature_c"]}
+    required = [m["name"] for m in request["measurements"]]
+    for corner in report.get("corners") or []:
+        point = (corner.get("process"), corner.get("temperature_c"))
+        if point not in remaining:
+            raise ValueError(f"{label}: unexpected or duplicate PVT point {point}")
+        remaining.remove(point)
+        where = f"{label} {point}"
+        if corner.get("supply_v") != supplies:
+            raise ValueError(f"{where}: expected supplies {supplies}, got {corner.get('supply_v')}")
+        if corner.get("status") != "pass":
+            raise ValueError(f"{where}: corner status {corner.get('status')!r}")
+        measurements = corner.get("measurements") or []
+        for name in required:
+            matches = [m for m in measurements if m.get("name") == name]
+            if len(matches) != 1:
+                raise ValueError(f"{where}: expected one {name} measurement, got {len(matches)}")
+            measure = matches[0]
+            if measure.get("status") != "pass":
+                raise ValueError(f"{where}: {name} status {measure.get('status')!r}")
+            if not kr._finite(measure.get("value")):
+                raise ValueError(f"{where}: {name} missing or non-finite")
+    if remaining:
+        raise ValueError(f"{label}: missing PVT points {sorted(remaining)}")
+
+
 def combined_stage(root, name, text, plan, points, jobs):
     directory = root / name
     directory.mkdir()
     man = manifest(text, plan, points, combined=True)
-    if pa.run_stage(directory, man, plan, points, "batch", jobs, 453, capacity_wait_s=600):
+    if pa.run_stage(directory, man, plan, points, "batch", jobs, 453, capacity_wait_s=600,
+                    validate_probe=validate_combined_report):
         raise ValueError(f"{name}: fleet reports incomplete (see {name}/run-log.json)")
-    errors = pa.verify_stage_reports(directory, plan, points)
-    if errors:
-        raise ValueError(f"{name}: " + ", ".join(errors))
+    checks = pa.pm._load_tb()["checks"]
+    timing_checks = {
+        "td_od50_ns": {bound: checks["td_od50_ns"][bound] for bound in ("min", "max")},
+        "dout_od50_first": {"max": checks["dout_od50_first"]["max"]},
+        "dout_od50_end": {"min": checks["dout_od50_end"]["min"]},
+    }
     results = {}
     for variant in plan:
         vid = variant["id"]
         vdir = directory / vid
-        expected = {f"ladder-{pa.pid(pt)}": [pt] for pt in points}
+        requests = {}
         if variant["centre"] == "probed":
             for (t, v), processes in pa.tv_groups(points).items():
-                expected[pa._probe_tag(t, v)] = [(p, t, v) for p in processes]
-        for tag, units in expected.items():
-            report = json.loads((vdir / f"{tag}.report.json").read_text())
-            if not (report["environment"].get("remote") or {}).get("job_id"):
-                raise ValueError(f"{name}/{vid}/{tag}: missing fleet job id")
-            if sorted(pa.pm._point_key(c) for c in report["corners"]) != sorted(units):
-                raise ValueError(f"{name}/{vid}/{tag}: measured PVT points differ from request")
-        values = pa._budget_values(vdir, points)
+                tag = pa._probe_tag(t, v)
+                requests[tag] = pa.budget_probe_request(tag, processes, t, v)
         for pt in points:
-            td = values[pt]["td_od50_ns"]
-            if td is None or not math.isfinite(td):
-                raise ValueError(f"{name}/{vid}/{pa.pid(pt)}: unresolved td_od50_ns")
+            tag = f"ladder-{pa.pid(pt)}"
+            requests[tag] = pa.budget_ladder_request(tag, pt)
+        for tag, request in requests.items():
+            report = json.loads((vdir / f"{tag}.report.json").read_text())
+            validate_combined_report(report, request, f"{name}/{vid}/{tag}")
+        values = pa._budget_values(vdir, points)
+        for pt, row in values.items():
+            failures = scalar_bound_failures(timing_checks, row)
+            if failures:
+                raise ValueError(f"{name}/{vid}/ladder-{pa.pid(pt)}: " + ", ".join(failures))
         results[vid] = values
+    errors = pa.verify_stage_reports(directory, plan, points)
+    if errors:
+        raise ValueError(f"{name}: " + ", ".join(errors))
     return results
 
 

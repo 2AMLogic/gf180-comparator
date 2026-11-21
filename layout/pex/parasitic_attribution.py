@@ -929,7 +929,8 @@ def _probe_tag(t, v):
     return f"probe-{tv_tag(t, v)}"
 
 
-def run_budget_variant(v: dict, outdir: Path, backend: str, points, capacity_wait_s=None) -> dict:
+def run_budget_variant(v: dict, outdir: Path, backend: str, points, capacity_wait_s=None,
+                       validate_probe=None) -> dict:
     vdir = outdir / v["id"]
     vdir.mkdir(parents=True, exist_ok=True)
     log = {"id": v["id"], "jobs": {}}
@@ -937,8 +938,13 @@ def run_budget_variant(v: dict, outdir: Path, backend: str, points, capacity_wai
     if v["centre"] == "probed":
         for (t, vv), procs in tv_groups(points).items():
             tag = _probe_tag(t, vv)
-            r = submit(vdir, tag, probe_deck(v["dut"]), budget_probe_request(tag, procs, t, vv),
-                       backend, capacity_wait_s)
+            request = budget_probe_request(tag, procs, t, vv)
+            r = submit(vdir, tag, probe_deck(v["dut"]), request, backend, capacity_wait_s)
+            if r["ok"] and validate_probe is not None:
+                try:
+                    validate_probe(r["report"], request, f"{v['id']}/{tag}")
+                except ValueError as exc:
+                    r = {**r, "ok": False, "stderr": str(exc)}
             log["jobs"][tag] = {k: r[k] for k in ("ok", "rc", "stderr", "attempts") if k in r}
             if r["ok"]:
                 trips.update(_trip_from_probe(r["report"]))
@@ -1066,7 +1072,7 @@ def append_only_conflict(committed: dict, regenerated: dict) -> bool:
 
 
 def run_stage(outdir: Path, man: dict, plan: list[dict], points, backend: str, jobs: int,
-              issue: int, *, capacity_wait_s=None) -> int:
+              issue: int, *, capacity_wait_s=None, validate_probe=None) -> int:
     """Write (or check, append-only) stage.json, submit every request of the
     plan, write run-log.json."""
     mpath = outdir / "stage.json"
@@ -1082,8 +1088,8 @@ def run_stage(outdir: Path, man: dict, plan: list[dict], points, backend: str, j
     client = pm._klt_identity(_stage_client(capacity_wait_s))
     started = datetime.now(timezone.utc).isoformat(timespec="seconds")
     with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as pool:
-        logs = list(pool.map(lambda x: run_budget_variant(x, outdir, backend, points, capacity_wait_s),
-                             plan))
+        logs = list(pool.map(lambda x: run_budget_variant(
+            x, outdir, backend, points, capacity_wait_s, validate_probe), plan))
     failed = [(l["id"], t) for l in logs for t, j in l["jobs"].items() if not j.get("ok")]
     (outdir / "run-log.json").write_text(json.dumps({
         "issue": issue, "backend": backend, "klt_sim_client": client,
