@@ -617,7 +617,6 @@ def avg_power_effective_params(params: dict, overrides: dict) -> tuple[dict, flo
     for key in ("v_od", "c_load"):
         if key in applied:
             eff[key] = applied[key]
-    n_win = float(params["n_win"])
     uw_scale = float(params["t_per"]) / float(eff["t_per"])  # N cancels
     if not math.isfinite(uw_scale) or uw_scale <= 0:
         raise SystemExit(f"t_per override produced a non-finite window scale {uw_scale!r}")
