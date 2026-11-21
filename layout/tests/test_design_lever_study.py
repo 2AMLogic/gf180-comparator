@@ -15,8 +15,10 @@ from __future__ import annotations
 import contextlib
 import io
 import sys
+import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "pex"))
@@ -93,6 +95,42 @@ class Plan(unittest.TestCase):
     def test_duplicate_ids_refused(self):
         with self.assertRaises(ValueError):
             dl.lever_variants(self.text, dl.LEVERS + dl.LEVERS[:1])
+
+
+class CombinedStudy(unittest.TestCase):
+    def test_global_rc_and_pair_tail_edits_commute(self):
+        text = pa.load_extracted()
+        self.assertIs(dl.combined_transform(text, {}, 1, 1), text)
+        factors = dl.lever_factors({"pair": 1.5, "tail": 1.5})
+        scaled = pa.scale_cg_r(text, 0.25, 0.5)
+        self.assertEqual(dl.combined_transform(text, factors, 0.25, 0.5),
+                         dl.scale_devices(scaled, factors))
+        self.assertNotEqual(text, scaled)
+
+    def test_invalid_factors_fail_closed(self):
+        for bad in (0, -1, float("nan"), float("inf"), True, "0.5"):
+            for factors, fc, fr in (({"M$1": bad}, 1, 1), ({}, bad, 1), ({}, 1, bad)):
+                with self.subTest(bad=bad, factors=factors, fc=fc, fr=fr):
+                    with self.assertRaises(ValueError):
+                        dl.combined_transform(SYN, factors, fc, fr)
+
+    def test_cap_checked_before_any_submission(self):
+        with tempfile.TemporaryDirectory() as tmp, patch.object(pa, "run_stage") as submit:
+            with patch.object(dl, "COMBINED_REQUEST_CAP", 322):
+                with self.assertRaisesRegex(ValueError, "323.*cap 322"):
+                    dl.main(["combined-run", str(Path(tmp) / "study")])
+            submit.assert_not_called()
+
+    def test_control_refusal_stops_before_grid(self):
+        with tempfile.TemporaryDirectory() as tmp, patch.object(pa, "run_stage", return_value=1) as submit:
+            root = Path(tmp) / "study"
+            self.assertEqual(dl.main(["combined-run", str(root)]), 1)
+            self.assertEqual(submit.call_count, 1)
+            self.assertEqual([v["id"] for v in submit.call_args.args[2]], ["ctrl", "sch"])
+            self.assertEqual(submit.call_args.args[4], "batch")
+            with self.assertRaises(FileExistsError):
+                dl.main(["combined-run", str(root)])
+            self.assertEqual(submit.call_count, 1)
 
 
 class CommittedEvidence(unittest.TestCase):

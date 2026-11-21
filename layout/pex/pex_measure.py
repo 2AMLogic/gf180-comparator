@@ -577,15 +577,15 @@ def _request(netlist: str, processes: list[str], meas, tran: str, timeout_s: int
     }
 
 
-def _klt() -> list[str]:
+def _klt(version: str = "0.6.0") -> list[str]:
     return shlex.split(os.environ.get(
-        "PEX_SIM_KLT", "uvx --isolated --from klayout-tools==0.6.0 klt"))
+        "PEX_SIM_KLT", f"uvx --isolated --from klayout-tools=={version} klt"))
 
 
-def _klt_identity() -> dict:
+def _klt_identity(command=None) -> dict:
     """The submitting client's build identity -- must be a released wheel
     (a same-version snapshot is not the same code, signoff/regenerate.sh)."""
-    proc = subprocess.run([*_klt(), "version", "--format", "json"],
+    proc = subprocess.run([*(command or _klt()), "version", "--format", "json"],
                           capture_output=True, text=True, check=True)
     info = json.loads(proc.stdout)
     if info.get("is_release") is not True or not info.get("git_tag"):
