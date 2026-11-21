@@ -37,6 +37,11 @@ ctrl + 6 levers + sch = 7 x 3 + 2 = 23 requests (cap 23).
     python3 layout/pex/design_lever_study.py run OUTDIR [--jobs 2]
     python3 layout/pex/design_lever_study.py analyze OUTDIR
     python3 layout/pex/design_lever_study.py verify OUTDIR   (PDK-free)
+
+Issue #453 combines device widths with #264's global ground-C/series-R grid.
+See artifacts/design-levers-combined/PLAN.md for stages and stopping rules.
+    python3 layout/pex/design_lever_study.py combined-plan
+    python3 layout/pex/design_lever_study.py combined-run NEW_OUTDIR
 """
 
 from __future__ import annotations
@@ -44,7 +49,9 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -52,12 +59,16 @@ HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[1]
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(REPO / "sim"))
+sys.path.insert(0, str(REPO / "sim/tools"))
 
+import klt_record as kr  # noqa: E402
 import parasitic_attribution as pa  # noqa: E402
 from harness import corners as hc  # noqa: E402
+from harness.report import scalar_bound_failures  # noqa: E402
 
 LEVER_ISSUE = 323
 LEVER_REQUEST_CAP = 23
+COMBINED_REQUEST_CAP = 323
 
 _MOS_CARD_RE = re.compile(r"^(?P<name>M\S+) (?P<nodes>(?:\S+ ){4})(?P<model>[np]fet_03v3) "
                           r"(?P<params>.*)$")
@@ -88,6 +99,11 @@ LEVERS = (
     ("tail+regen", "tail W x1.5 with both regeneration pairs W x1.5",
      {"tail": 1.5, "regen_n": 1.5, "regen_p": 1.5}, True),
 )
+
+PRIMARY_LEVERS = tuple(x for x in LEVERS if x[0] in ("pair-x1.5", "tail-x1.5")) + (
+    ("pair+tail", "latch input pair and tail W x1.5", {"pair": 1.5, "tail": 1.5}, False),
+)
+LARGER_PAIR = (("pair-x2", "latch input pair W x2", {"pair": 2.0}, False),)
 
 
 def validate_factor(f) -> float:
@@ -166,20 +182,33 @@ def lever_factors(spec: dict[str, float]) -> dict[str, float]:
     return {dev: spec[g] for g in spec for dev in DEVICES[g]}
 
 
+def combined_transform(text, factors, fc, fr):
+    sized = scale_devices(text, factors) if factors else text
+    return pa.scale_cg_r(sized, fc, fr)
+
+
+def controls(text):
+    return [
+        {"id": "ctrl", "side": "extracted", "centre": "probed", "group": "control",
+         "dut": text, "factors": {}, "description": "cited extracted DUT, unchanged"},
+        {"id": "sch", "side": "schematic", "centre": "zero", "group": "control",
+         "dut": pa.SCHEMATIC_DUT.read_text(), "factors": {},
+         "description": "schematic leg as cited (ladder at 0 V)"},
+    ]
+
+
 def lever_variants(text: str, levers=LEVERS) -> list[dict]:
     ids = [x[0] for x in levers]
     if not levers or len(set(ids)) != len(ids):
         raise ValueError("lever grid is empty or has duplicate ids")
-    v = [{"id": "ctrl", "side": "extracted", "centre": "probed", "group": "control",
-          "dut": text, "factors": {}, "description": "cited extracted DUT, unchanged"}]
+    ctrl, sch = controls(text)
+    v = [ctrl]
     for vid, desc, spec, indep in levers:
         fac = lever_factors(spec)
         v.append({"id": vid, "side": "extracted", "centre": "probed", "group": "lever",
                   "dut": scale_devices(text, fac), "factors": fac, "description": desc,
                   "cascode_independent": indep})
-    v.append({"id": "sch", "side": "schematic", "centre": "zero", "group": "control",
-              "dut": pa.SCHEMATIC_DUT.read_text(), "factors": {},
-              "description": "schematic leg as cited (ladder at 0 V)"})
+    v.append(sch)
     return v
 
 
@@ -190,7 +219,7 @@ def check_budget(plan: list[dict], points) -> int:
     return n
 
 
-def manifest(text: str, plan: list[dict], points) -> dict:
+def manifest(text: str, plan: list[dict], points, *, combined=False) -> dict:
     base = device_widths_um(text)
     man = {
         "issue": LEVER_ISSUE,
@@ -199,14 +228,17 @@ def manifest(text: str, plan: list[dict], points) -> dict:
                   "parasitic cards unchanged; each variant centred on its own probed trip point; "
                   "no spec row scored, T1 item 7 unchanged"),
         "points": [pa.pid(p) for p in points],
-        "requests_planned": check_budget(plan, points),
-        "request_cap": LEVER_REQUEST_CAP,
+        "requests_planned": pa.count_requests(plan, points) if combined else check_budget(plan, points),
+        "request_cap": COMBINED_REQUEST_CAP if combined else LEVER_REQUEST_CAP,
         "source_sha256": {
             **pa.common_source_sha256(text),
             "design_lever_study_py": pa.file_sha(Path(__file__).resolve()),
         },
         "variants": [],
     }
+    if combined:
+        man.update(issue=453, generated_by="layout/pex/design_lever_study.py combined-run",
+                   scope="pre-cascode diagnostic, device W and global ground-C / series-R residue")
     for x in plan:
         e = {"id": x["id"], "side": x["side"], "centre": x["centre"],
              "description": x["description"], "dut_sha256": pa.sha(x["dut"]),
@@ -216,6 +248,8 @@ def manifest(text: str, plan: list[dict], points) -> dict:
             w = device_widths_um(x["dut"])
             e["device_w_um"] = {d: w[d] for d in sorted(x["factors"])}
             e["device_w_um_source"] = {d: base[d] for d in sorted(x["factors"])}
+        if "fc" in x:
+            e.update(lever=x["lever"], fc=x["fc"], fr=x["fr"])
         man["variants"].append(e)
     return man
 
@@ -364,6 +398,226 @@ def cmd_verify(args) -> int:
     return 1 if errors else 0
 
 
+def combined_grid(text, levers):
+    plan = []
+    for lever, desc, spec, indep in levers:
+        factors = lever_factors(spec)
+        for fc, fr in [(1.0, 1.0), *pa.combo_cells()]:
+            plan.append({"id": f"{lever}-{pa.combo_id(fc, fr)}", "lever": lever,
+                         "group": "lever", "description": desc, "centre": "probed",
+                         "side": "extracted", "cascode_independent": indep, "factors": factors,
+                         "fc": fc, "fr": fr, "dut": combined_transform(text, factors, fc, fr)})
+    return plan
+
+
+def combined_budget(ctrl, primary, larger, two, five):
+    """Upper bounds of the two mutually exclusive paths, including item 5."""
+    fixed = pa.count_requests(ctrl + primary, two)
+    # The kickback bench uses #389's two-phase referral for each DUT, including
+    # a comparison against an unmodified extracted DUT if any candidate passes.
+    kickback = pa.count_requests(ctrl[:1], two)
+
+    def follow(candidates):
+        return pa.count_requests(candidates, five) + (1 + len(candidates)) * kickback
+
+    primary_max = fixed + follow(primary)
+    larger_max = fixed + pa.count_requests(larger, two) + follow(larger)
+    maximum = max(primary_max, larger_max)
+    if maximum > COMBINED_REQUEST_CAP:
+        raise ValueError(f"combined plan needs {maximum} requests > cap {COMBINED_REQUEST_CAP}")
+    return {"controls": pa.count_requests(ctrl, two), "primary": pa.count_requests(primary, two),
+            "larger_if_no_pass": pa.count_requests(larger, two),
+            "remaining_five_per_pass": pa.count_requests(primary[:1], five),
+            "kickback_and_offset_per_dut": kickback, "primary_max": primary_max,
+            "larger_max": larger_max, "cap": COMBINED_REQUEST_CAP}
+
+
+def validate_combined_report(report, request, label):
+    """Qualify a single-temperature, single-voltage request in the combined study."""
+    if report.get("status") != "pass":
+        raise ValueError(f"{label}: report status {report.get('status')!r}")
+    if not ((report.get("environment") or {}).get("remote") or {}).get("job_id"):
+        raise ValueError(f"{label}: missing fleet job id")
+    grid = request["corners"]
+    # The kickback bench sets VDD in the body netlist and omits supply_v.
+    supplies = {rail: voltage for rail, (voltage,) in grid.get("supply_v", {}).items()}
+    remaining = {(p["name"], t) for p in grid["process"] for t in grid["temperature_c"]}
+    required = [m["name"] for m in request["measurements"]]
+    for corner in report.get("corners") or []:
+        point = (corner.get("process"), corner.get("temperature_c"))
+        if point not in remaining:
+            raise ValueError(f"{label}: unexpected or duplicate PVT point {point}")
+        remaining.remove(point)
+        where = f"{label} {point}"
+        if corner.get("supply_v", {}) != supplies:
+            raise ValueError(f"{where}: expected supplies {supplies}, got {corner.get('supply_v')}")
+        if corner.get("status") != "pass":
+            raise ValueError(f"{where}: corner status {corner.get('status')!r}")
+        measurements = corner.get("measurements") or []
+        for name in required:
+            matches = [m for m in measurements if m.get("name") == name]
+            if len(matches) != 1:
+                raise ValueError(f"{where}: expected one {name} measurement, got {len(matches)}")
+            measure = matches[0]
+            if measure.get("status") != "pass":
+                raise ValueError(f"{where}: {name} status {measure.get('status')!r}")
+            if not kr._finite(measure.get("value")):
+                raise ValueError(f"{where}: {name} missing or non-finite")
+    if remaining:
+        raise ValueError(f"{label}: missing PVT points {sorted(remaining)}")
+
+
+def validate_timing_probe(report, request, label):
+    validate_combined_report(report, request, label)
+    for point, vos in pa._trip_from_probe(report).items():
+        if pa.pm._grade("dut_vos_v", vos, {}) != "pass":
+            raise ValueError(f"{label} {pa.pid(point)}: t_flip gives dut_vos_v={vos:g} V, "
+                             f"but the probe span requires |dut_vos_v| < {pa.pm.PROBE_VSPAN:g} V")
+
+
+def combined_stage(root, name, text, plan, points, jobs):
+    directory = root / name
+    directory.mkdir()
+    man = manifest(text, plan, points, combined=True)
+    if pa.run_stage(directory, man, plan, points, "batch", jobs, 453, capacity_wait_s=600,
+                    validate_probe=validate_timing_probe):
+        raise ValueError(f"{name}: fleet reports incomplete (see {name}/run-log.json)")
+    checks = pa.pm._load_tb()["checks"]
+    timing_checks = {
+        "td_od50_ns": {bound: checks["td_od50_ns"][bound] for bound in ("min", "max")},
+        "dout_od50_first": {"max": checks["dout_od50_first"]["max"]},
+        "dout_od50_end": {"min": checks["dout_od50_end"]["min"]},
+    }
+    results = {}
+    for variant in plan:
+        vid = variant["id"]
+        vdir = directory / vid
+        requests = {}
+        if variant["centre"] == "probed":
+            for (t, v), processes in pa.tv_groups(points).items():
+                tag = pa._probe_tag(t, v)
+                requests[tag] = (pa.budget_probe_request(tag, processes, t, v), validate_timing_probe)
+        for pt in points:
+            tag = f"ladder-{pa.pid(pt)}"
+            requests[tag] = (pa.budget_ladder_request(tag, pt), validate_combined_report)
+        for tag, (request, validate) in requests.items():
+            report = json.loads((vdir / f"{tag}.report.json").read_text())
+            validate(report, request, f"{name}/{vid}/{tag}")
+        values = pa._budget_values(vdir, points)
+        for pt, row in values.items():
+            failures = scalar_bound_failures(timing_checks, row)
+            if failures:
+                raise ValueError(f"{name}/{vid}/ladder-{pa.pid(pt)}: " + ", ".join(failures))
+        results[vid] = values
+    errors = pa.verify_stage_reports(directory, plan, points)
+    if errors:
+        raise ValueError(f"{name}: " + ", ".join(errors))
+    return results
+
+
+def kickback_stage(root, variant):
+    """Use the kickback bench's own phase generator, offset referral and scorer."""
+    bench = "comparator-kickback"
+    work = root / "kickback" / variant["id"]
+    work.mkdir(parents=True)
+    net = work / "variant.cir"
+    net.write_text(variant["dut"])
+    sim = REPO / "sim"
+    binding = json.loads((sim / "dut.json").read_text())["duts"]["comparator-dr0001-layout"]
+    binding.update(id=variant["id"], netlist=os.path.relpath(net, sim))
+    config = work / "binding.json"
+    config.write_text(json.dumps(binding, indent=2) + "\n")
+    generate = [sys.executable, str(sim / "tools/mk_klt_request.py"), bench, str(work),
+                "--dut", str(config), "--corners", *pa.PROCESSES, "--temps", str(pa.TEMP_C),
+                "--supply-v", str(pa.VDD_V)]
+    for phase, count in (("probe", 1), ("main", 2)):
+        referral = ["--from-probe", str(work / kr.mk.PROBE_RESULTS_NAME)] if phase == "main" else []
+        subprocess.run([*generate, "--emit", phase, *referral], check=True)
+        bundle = kr.load_bundle(work, bench)
+        names = kr.names_from_bundle(bundle)
+        kr.verify_staged(work, bundle, names)
+        legs = kr.names_from_bundle(bundle, leg=phase)
+        if len(legs) != count:
+            raise ValueError(f"{bench}/{phase}: {len(legs)} requests, expected {count}")
+        kr.dispatch(work, list(legs), backend="batch",
+                    sim_command=[*pa.pm._klt("0.9.2"), "sim", "--wait-for-capacity", "600"])
+        reports = {n: json.loads((work / f"report-{n}.json").read_text()) for n in names}
+        requests = {n: json.loads((work / bundle["requests"][n]["request"]).read_text()) for n in names}
+        for n in names:
+            validate_combined_report(reports[n], requests[n], f"{bench}/{variant['id']}/{n}")
+        kr.verify_reports(work, bundle, names, reports)
+        if phase == "probe":
+            kr.derive_probe_results(work, bundle, legs)
+
+    kr.check_engine_floor(bundle, reports, False)
+    kr.check_pdk_identity(work, bundle, reports, False)
+    vos, errors = kr.verify_probe_provenance(work, bundle, names, requests, reports)
+    main, coverage, _ = kr._collect_checked_legs(bench, legs, reports, requests)
+    tb = kr.htb.load(sim / bench)
+    derived, problems = kr.derive(bench, tb, main)
+    jobs = {n: report["environment"]["remote"]["job_id"] for n, report in reports.items()}
+    if set(derived) != set(pa.CORNER_IDS.values()) or errors or coverage or problems:
+        raise ValueError(f"{bench}/{variant['id']}: incomplete corner evidence: {errors + coverage + problems}")
+    return {"dut_sha256": pa.sha(variant["dut"]), "job_ids": jobs,
+            "decision_checks": kr.decision_correctness(bench, tb, derived, set(derived)),
+            "corners": {cid: {"dut_vos_v": vos[cid], "kick_1k_peak_mv": d["kick_1k_peak_mv"]}
+                        for cid, d in derived.items()}}
+
+
+def cmd_combined(args) -> int:
+    text = pa.load_extracted()
+    two = pa.budget_points("two")
+    five = [pt for pt in pa.budget_points("seven") if pt not in two]
+    ctrl = controls(text)
+    primary = combined_grid(text, PRIMARY_LEVERS)
+    larger = combined_grid(text, LARGER_PAIR)
+    budget = combined_budget(ctrl, primary, larger, two, five)
+    print(json.dumps(budget, indent=2), flush=True)
+    if args.cmd == "combined-plan":
+        return 0
+    pa.check_bench()
+    root = Path(args.outdir).resolve()
+    root.mkdir(parents=True, exist_ok=False)
+    summary = {"request_plan": budget, "controls_valid": False, "variants": {}}
+    try:
+        reference = combined_stage(root, "controls", text, ctrl, two, args.jobs)
+        summary["controls"], summary["controls_valid"] = pa.stage_controls(reference, two)
+        if not summary["controls_valid"]:
+            raise ValueError(f"controls: cited delay outside {pa.CONTROL_TOL_NS:g} ns tolerance")
+        candidates = []
+        for name, grid in (("primary", primary), ("larger-pair", larger)):
+            results = combined_stage(root, name, text, grid, two, args.jobs)
+            for v in grid:
+                r = results[v["id"]]
+                cells = {pa.pid(pt): pa._corner_cell(r[pt], reference["ctrl"][pt], {}) for pt in two}
+                summary["variants"][v["id"]] = cells
+                if all(pa._ok(c) for c in cells.values()):
+                    candidates.append(v)
+            if candidates:
+                break
+        summary["two_corner_passes"] = [v["id"] for v in candidates]
+        if candidates:
+            rest = combined_stage(root, "remaining-five", text, candidates, five, args.jobs)
+            for vid, r in rest.items():
+                summary["variants"][vid].update({pa.pid(pt): pa._corner_cell(r[pt], None, {})
+                                                 for pt in five})
+        variants = summary["variants"]
+        summary["ranked_by_ss_td_od50"] = sorted(
+            variants, key=lambda vid: variants[vid][pa.CORNER_IDS["ss"]]["td_od50_ns"])
+        summary["seven_corner_passes"] = [
+            v["id"] for v in candidates if all(pa._ok(c) for c in variants[v["id"]].values())]
+        if candidates:
+            summary["kickback_and_offset"] = {}
+            for variant in [ctrl[0], *candidates]:
+                summary["kickback_and_offset"][variant["id"]] = kickback_stage(root, variant)
+            summary["noise_gap"] = "preamp_noise_pvt.py pins the extracted DUT hash to #202"
+    except (ValueError, KeyError, OSError, subprocess.CalledProcessError, SystemExit) as exc:
+        summary["validity_failure"] = str(exc)
+        print(exc, file=sys.stderr)
+    (root / "timing.json").write_text(json.dumps(summary, indent=2, sort_keys=True, allow_nan=False) + "\n")
+    return int("validity_failure" in summary)
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -374,9 +628,14 @@ def main(argv=None) -> int:
     r.add_argument("--jobs", type=int, default=2)
     for name in ("analyze", "verify"):
         sub.add_parser(name).add_argument("outdir")
+    sub.add_parser("combined-plan")
+    combined = sub.add_parser("combined-run")
+    combined.add_argument("outdir", help="fresh campaign directory")
+    combined.add_argument("--jobs", type=int, default=2)
     args = ap.parse_args(argv)
     return {"plan": cmd_plan, "run": cmd_run, "analyze": cmd_analyze,
-            "verify": cmd_verify}[args.cmd](args)
+            "verify": cmd_verify, "combined-plan": cmd_combined,
+            "combined-run": cmd_combined}[args.cmd](args)
 
 
 if __name__ == "__main__":
