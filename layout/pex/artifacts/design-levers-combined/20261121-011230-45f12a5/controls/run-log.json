@@ -1,0 +1,35 @@
+{
+  "backend": "batch",
+  "failed_jobs": [
+    [
+      "ctrl",
+      "probe-125c_2.97v"
+    ],
+    [
+      "sch",
+      "ladder-tt_125c_2.97v"
+    ],
+    [
+      "sch",
+      "ladder-ss_125c_2.97v"
+    ]
+  ],
+  "finished_utc": "2026-11-21T01:12:34+00:00",
+  "issue": 453,
+  "job_errors": {
+    "ctrl/probe-125c_2.97v": "klt: warning: 2 installs provide PDK variant 'gf180mcuD'; read /home/loom/.ciel (search root: ~/.ciel), skipped /home/loom/.volare (search root: ~/.volare). Resolution is first-match-wins, so a pinned open_pdks build may not be the one this client read -- set $PDK_ROOT to choose which install this client resolves (the only client-side pin backend 'batch' accepts); the runner reads its own install, selected by models.pdk.\nklt sim: warning: batch job bound 3720s (options.timeout_s 1800s x 2 units + 120s; a conservative fully-serial upper bound, not a runtime estimate) exceeds the fleet's whole-job ceiling of 3600s (max_job_seconds from fleet_config); a job still running at the ceiling is killed and every unit is reported batch_job_timeout. Set request.remote.hosts to at least 2 to run one job per shard of at most 1 units, each within the ceiling\nklt: batch job klt-sim-aac383e1254e submitting to s3://<bucket>/jobs/klt-sim-aac383e1254e\n{\n  \"schema_version\": 1,\n  \"error\": {\n    \"command\": \"sim\",\n    \"message\": \"batch backend failed: aws s3 cp (netlist input) failed (exit 255): The config profile (batch-runner-submit) could not be found\"\n  }\n}\n",
+    "sch/ladder-ss_125c_2.97v": "klt: warning: 2 installs provide PDK variant 'gf180mcuD'; read /home/loom/.ciel (search root: ~/.ciel), skipped /home/loom/.volare (search root: ~/.volare). Resolution is first-match-wins, so a pinned open_pdks build may not be the one this client read -- set $PDK_ROOT to choose which install this client resolves (the only client-side pin backend 'batch' accepts); the runner reads its own install, selected by models.pdk.\nklt: batch job klt-sim-64c890d79f79 submitting to s3://<bucket>/jobs/klt-sim-64c890d79f79\n{\n  \"schema_version\": 1,\n  \"error\": {\n    \"command\": \"sim\",\n    \"message\": \"batch backend failed: aws s3 cp (netlist input) failed (exit 255): The config profile (batch-runner-submit) could not be found\"\n  }\n}\n",
+    "sch/ladder-tt_125c_2.97v": "klt: warning: 2 installs provide PDK variant 'gf180mcuD'; read /home/loom/.ciel (search root: ~/.ciel), skipped /home/loom/.volare (search root: ~/.volare). Resolution is first-match-wins, so a pinned open_pdks build may not be the one this client read -- set $PDK_ROOT to choose which install this client resolves (the only client-side pin backend 'batch' accepts); the runner reads its own install, selected by models.pdk.\nklt: batch job klt-sim-39a0e7ca85fa submitting to s3://<bucket>/jobs/klt-sim-39a0e7ca85fa\n{\n  \"schema_version\": 1,\n  \"error\": {\n    \"command\": \"sim\",\n    \"message\": \"batch backend failed: aws s3 cp (netlist input) failed (exit 255): The config profile (batch-runner-submit) could not be found\"\n  }\n}\n"
+  },
+  "klt_sim_client": {
+    "git_commit": "046ba74652fc096bd97071fc3237f7159dd40183",
+    "git_tag": "v0.9.2",
+    "is_release": true,
+    "version": "0.9.2"
+  },
+  "started_utc": "2026-11-21T01:12:31+00:00",
+  "variants": [
+    "ctrl",
+    "sch"
+  ]
+}

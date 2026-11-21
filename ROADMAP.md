@@ -101,12 +101,12 @@ is [`WORK_PLAN.md`](WORK_PLAN.md).
   devices, the DRC/LVS/extract envelopes are re-pinned and a 45-point
   post-layout kickback and regeneration record exists. Blocked by: DR-0004
   ratification.
-- **Combined decision-time lever, re-measured on the cascode layout.** DR-0007
-  recommends the input-pair lever together with the parasitic reduction the
-  combined-budget study (#264) found necessary; the pair-plus-tail combination
-  was never run. Done when a proposed record ranks the combination at
-  `ss_125c_2.97v` and `tt_125c_2.97v` with source records. Blocked by: #112.
-  Needs a new issue; #323 is parked as delivered-with-negative-result.
+- **Combined decision-time lever, re-measured on the cascode layout.**
+  The pre-cascode study (#453) still needs a fleet run. Its controls failed
+  to launch, so [DR-0009](spec/decision-records/DR-0009-combined-decision-time-lever-budget.md)
+  withholds the global C/R budget. Re-measure the pair and pair-plus-tail
+  levers on the cascode extraction and rank them at `ss_125c_2.97v` and
+  `tt_125c_2.97v` with source records. Post-cascode re-measurement is blocked by #112.
 - **Average-power scoring** (#125 stage 2): transient-power bench wired into
   the item-5 corner-matrix wrapper with regressions. Blocked by: DR-0006
   ratification.
