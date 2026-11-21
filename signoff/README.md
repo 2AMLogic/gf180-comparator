@@ -892,7 +892,7 @@ and downloaded unmodified; re-produced the same way (79/79 checks, adding
 `selftest.yml` run 44840704257 on `feature/issue-452` (issue #452). The manifest pins the inventory hash it is bound to,
 and `signoff.yml` re-runs `--check` for items 1, 9 and 10. Caveat: item 9's cold
 start (`./sim/selftest.sh`) is `local_only`, so the PDK-free `--check`
-re-verifies the 78 inventoried checks — the 75 files, plus the committed
+re-verifies the 79 inventoried checks — the 76 files, plus the committed
 cold-start outcome (`pass`) and the two pins — and carries that outcome
 forward; it does not re-run the cold start. `selftest.yml` does. If an
 inventoried file changes, `--check` exits 3 until the envelope is re-produced
