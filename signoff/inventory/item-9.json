@@ -61,6 +61,7 @@
     "sim/harness/tests/test_dut.py",
     "sim/harness/tests/test_evidence_store.py",
     "sim/harness/tests/test_extracted_tran_feasibility.py",
+    "sim/harness/tests/klt_record_fixtures.py",
     "sim/harness/tests/test_klt_record.py",
     "sim/harness/tests/test_pdk_discovery.py",
     "sim/harness/tests/test_regeneration_measures.py",
