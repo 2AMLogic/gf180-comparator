@@ -13,7 +13,6 @@ the subcommand surface this repo actually has work for. Kept: ``--check-env``,
 from __future__ import annotations
 
 import argparse
-import re
 import shutil
 import sys
 from pathlib import Path
@@ -105,14 +104,6 @@ def _load_dut(selector: str | None):
     return dut_mod.load(selector), "path"
 
 
-#: Subcircuit names a testbench fragment may instantiate, mapped to the
-#: thing that must supply them. The DUT binding owns all of these
-#: (sim/dut/README.md); a fragment never defines them.
-_FRAGMENT_DUT_SUBCKTS = ("comparator_dut", "comparator_dut_analog",
-                         "comparator_dut_latch")
-_FRAGMENT_DUT_RE = {name: re.compile(rf"\b{name}\b") for name in _FRAGMENT_DUT_SUBCKTS}
-
-
 def _check_dut_compatibility(dut: dut_mod.Dut, tb: tb_mod.Testbench) -> None:
     """Refuse a bench whose fragment instantiates a subckt the bound DUT
     cannot provide -- with a message naming a binding that can.
@@ -121,17 +112,19 @@ def _check_dut_compatibility(dut: dut_mod.Dut, tb: tb_mod.Testbench) -> None:
     check: an extracted (flat, post-layout) binding legitimately defines
     only ``comparator_dut``, so the two analog-partition benches must be
     told apart BEFORE ngspice spends a grid on an undefined-subckt deck.
+    The scan lives in ``Dut.missing_fragment_subckt`` (shared with the
+    fleet request builder); this wrapper keeps the CLI's DutError,
+    bench naming, and schematic-binding hint.
     """
-    fragment = tb.netlist.read_text()
-    for name, pattern in _FRAGMENT_DUT_RE.items():
-        if pattern.search(fragment) and not dut.provides(name):
-            raise dut_mod.DutError(
-                f"sim/{tb.experiment}'s fragment instantiates `{name}`, which "
-                f"the bound DUT `{dut.dut_id}` ({dut.provenance}) does not "
-                "define -- a flat extracted netlist carries no analog/latch "
-                "partition. Re-run against the schematic binding "
-                "(--dut comparator-dr0001, or no --dut at all)."
-            )
+    name = dut.missing_fragment_subckt(tb.netlist.read_text())
+    if name is not None:
+        raise dut_mod.DutError(
+            f"sim/{tb.experiment}'s fragment instantiates `{name}`, which "
+            f"the bound DUT `{dut.dut_id}` ({dut.provenance}) does not "
+            "define -- a flat extracted netlist carries no analog/latch "
+            "partition. Re-run against the schematic binding "
+            "(--dut comparator-dr0001, or no --dut at all)."
+        )
 
 
 def _list() -> int:

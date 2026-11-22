@@ -790,30 +790,24 @@ def resolve_corner_points(points: list[str], tb, corner_list, rails: list[float]
 
 # --- extracted-binding probe leg (issue #374) ------------------------------ #
 
-#: Subcircuits a testbench fragment may instantiate, mapped to the thing that
-#: must supply them. The DUT binding owns all of these (sim/dut/README.md).
-_FRAGMENT_DUT_SUBCKTS = ("comparator_dut", "comparator_dut_analog",
-                         "comparator_dut_latch")
-_FRAGMENT_DUT_RE = {name: re.compile(rf"\b{name}\b") for name in _FRAGMENT_DUT_SUBCKTS}
-
-
 def check_dut_fragment_compatibility(dut, tb) -> None:
     """Refuse a bench whose fragment instantiates a subckt the bound DUT
     cannot provide -- before any request is written, let alone simulated.
 
-    This is `sim/harness/cli.py`'s runtime DUT-compatibility check, ported to
-    the fleet path now that this tool accepts extracted bindings: a flat
-    extracted netlist defines only the whole-comparator `comparator_dut`, so
-    the two analog-partition benches (offset-mc, preamp-noise) must be told
-    apart BEFORE a grid burns on an undefined-subckt deck."""
-    fragment = tb.netlist.read_text()
-    for name, pattern in _FRAGMENT_DUT_RE.items():
-        if pattern.search(fragment) and not dut.provides(name):
-            raise SystemExit(
-                f"{tb.name}'s fragment instantiates `{name}`, which the bound DUT "
-                f"`{dut.dut_id}` ({dut.provenance}) does not define -- a flat extracted "
-                "netlist carries no analog/latch partition. Re-run against the "
-                "schematic binding (--dut comparator-dr0001, or no --dut at all).")
+    The scan lives in ``harness.dut.Dut.missing_fragment_subckt``, shared
+    with `sim/harness/cli.py`'s runtime DUT-compatibility check (this
+    fleet-side guard ported it in issue #374): a flat extracted netlist
+    defines only the whole-comparator `comparator_dut`, so the two
+    analog-partition benches (offset-mc, preamp-noise) must be told apart
+    BEFORE a grid burns on an undefined-subckt deck. This wrapper keeps the
+    fleet path's SystemExit and bench naming."""
+    name = dut.missing_fragment_subckt(tb.netlist.read_text())
+    if name is not None:
+        raise SystemExit(
+            f"{tb.name}'s fragment instantiates `{name}`, which the bound DUT "
+            f"`{dut.dut_id}` ({dut.provenance}) does not define -- a flat extracted "
+            "netlist carries no analog/latch partition. Re-run against the "
+            "schematic binding (--dut comparator-dr0001, or no --dut at all).")
 
 
 #: ngspice numeric-literal scale suffixes (a trailing letter after the digits).
