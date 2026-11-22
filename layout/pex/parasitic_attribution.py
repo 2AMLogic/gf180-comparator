@@ -383,35 +383,15 @@ def ladder_deck(dut: str, side: str, process: str, centre: str, vos_here: float 
     """The cited ladder deck shape. Points this study does not run keep the
     cited trip points (extracted) or 0 V (schematic, the cited convention);
     the studied point carries this variant's own centring."""
-    keys = [(t, v) for t in pm.TEMPERATURES_C for v in pm.SUPPLIES_V]
-    if side == "extracted":
-        base = cited_vos("extracted")
-        table = {k: base[(process, *k)] for k in keys}
-    else:
-        table = {k: 0.0 for k in keys}
-    if centre == "zero":
-        table[(TEMP_C, VDD_V)] = 0.0
-    else:
-        if vos_here is None:
-            raise ValueError("probed centring needs a probed trip point")
-        table[(TEMP_C, VDD_V)] = vos_here
-    return pm._flatten(dut, pm._main_body(), [pm._vos_source(table)])
-
-
-def _narrow(req: dict) -> dict:
-    req["corners"]["temperature_c"] = [TEMP_C]
-    req["corners"]["supply_v"] = {k: [VDD_V] for k in req["corners"]["supply_v"]}
-    return req
+    return budget_ladder_deck(dut, side, process, centre, {(TEMP_C, VDD_V): vos_here})
 
 
 def probe_request(processes) -> dict:
-    return _narrow(pm._request("probe.spice", list(processes), pm.PROBE_MEAS,
-                               "100n 80u 0 100n", pm.TIMEOUT_PROBE_S, ["vsup"]))
+    return budget_probe_request("probe", processes, TEMP_C, VDD_V)
 
 
 def ladder_request(process: str) -> dict:
-    return _narrow(pm._request(f"ladder-{process}.spice", [process], pm.MAIN_MEAS, "5p 60n",
-                               pm.TIMEOUT_MAIN_S, ["vsup", "vsupa"]))
+    return budget_ladder_request(f"ladder-{process}", (process, TEMP_C, VDD_V))
 
 
 def sha(text: str) -> str:
