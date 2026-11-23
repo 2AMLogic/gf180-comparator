@@ -1620,9 +1620,10 @@ def checkout_drift(b: dict, repo: Path | None = None) -> list[str]:
     return drift
 
 
-def dispatch(work: Path, names: list[str]) -> None:
+def dispatch(work: Path, names: list[str], *, backend=None, sim_command=("klt", "sim")) -> None:
     """Submit every request concurrently (each is a batch job on the fleet)."""
-    backend = os.environ.get("KLT_SIM_BACKEND", "")
+    if backend is None:
+        backend = os.environ.get("KLT_SIM_BACKEND", "")
     if backend not in ("batch", "remote"):
         raise SystemExit(
             f"KLT_SIM_BACKEND={backend!r}: refusing to run a multi-unit grid on a "
@@ -1638,7 +1639,7 @@ def dispatch(work: Path, names: list[str]) -> None:
         # dispatch worker instead of fleet jobs.
         with (work / f"report-{n}.json").open("w") as out, (work / f"stderr-{n}.txt").open("w") as err:
             procs[n] = subprocess.Popen(
-                ["klt", "sim", "--backend", backend, "-o", str(work / f"out-{n}"),
+                [*sim_command, "--backend", backend, "-o", str(work / f"out-{n}"),
                  str(work / f"request-{n}.json"), "--format", "json"],
                 stdout=out,
                 stderr=err,

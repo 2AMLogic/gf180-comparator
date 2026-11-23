@@ -1,0 +1,10 @@
+klt: warning: 2 installs provide PDK variant 'gf180mcuD'; read /home/loom/.ciel (search root: ~/.ciel), skipped /home/loom/.volare (search root: ~/.volare). Resolution is first-match-wins, so a pinned open_pdks build may not be the one this client read -- set $PDK_ROOT to choose which install this client resolves (the only client-side pin backend 'batch' accepts); the runner reads its own install, selected by models.pdk.
+klt sim: warning: batch job bound 3720s (options.timeout_s 1800s x 2 units + 120s; a conservative fully-serial upper bound, not a runtime estimate) exceeds the fleet's whole-job ceiling of 3600s (max_job_seconds from fleet_config); a job still running at the ceiling is killed and every unit is reported batch_job_timeout. Set request.remote.hosts to at least 2 to run one job per shard of at most 1 units, each within the ceiling
+klt: batch job klt-sim-aac383e1254e submitting to s3://<bucket>/jobs/klt-sim-aac383e1254e
+{
+  "schema_version": 1,
+  "error": {
+    "command": "sim",
+    "message": "batch backend failed: aws s3 cp (netlist input) failed (exit 255): The config profile (batch-runner-submit) could not be found"
+  }
+}

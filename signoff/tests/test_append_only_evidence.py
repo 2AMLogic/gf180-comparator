@@ -620,6 +620,7 @@ ARCHIVED = [
     ARCH_PA + "/sources/netlist.cir",
     ARCH_GC + "/README.md",
     ARCH_GC + "/stage1/manifest.txt",
+    "layout/pex/artifacts/design-levers-combined/20261121-010000-1234567/controls/stage.json",
 ]
 ARCH_EDITABLE = [
     "layout/pex/artifacts/parasitic-attribution/README.md",

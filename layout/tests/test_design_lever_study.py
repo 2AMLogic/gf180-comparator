@@ -14,9 +14,14 @@ from __future__ import annotations
 
 import contextlib
 import io
+import json
+import os
+import shutil
 import sys
+import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "pex"))
@@ -93,6 +98,351 @@ class Plan(unittest.TestCase):
     def test_duplicate_ids_refused(self):
         with self.assertRaises(ValueError):
             dl.lever_variants(self.text, dl.LEVERS + dl.LEVERS[:1])
+
+
+class CombinedStudy(unittest.TestCase):
+    def test_global_rc_and_pair_tail_edits_commute(self):
+        text = pa.load_extracted()
+        self.assertIs(dl.combined_transform(text, {}, 1, 1), text)
+        factors = dl.lever_factors({"pair": 1.5, "tail": 1.5})
+        scaled = pa.scale_cg_r(text, 0.25, 0.5)
+        self.assertEqual(dl.combined_transform(text, factors, 0.25, 0.5),
+                         dl.scale_devices(scaled, factors))
+        self.assertNotEqual(text, scaled)
+
+    def test_invalid_factors_fail_closed(self):
+        for bad in (0, -1, float("nan"), float("inf"), True, "0.5"):
+            for factors, fc, fr in (({"M$1": bad}, 1, 1), ({}, bad, 1), ({}, 1, bad)):
+                with self.subTest(bad=bad, factors=factors, fc=fc, fr=fr):
+                    with self.assertRaises(ValueError):
+                        dl.combined_transform(SYN, factors, fc, fr)
+
+    def test_cap_checked_before_any_submission(self):
+        with tempfile.TemporaryDirectory() as tmp, patch.object(pa, "run_stage") as submit:
+            with patch.object(dl, "COMBINED_REQUEST_CAP", 322):
+                with self.assertRaisesRegex(ValueError, "323.*cap 322"):
+                    dl.main(["combined-run", str(Path(tmp) / "study")])
+            submit.assert_not_called()
+
+    def test_control_refusal_stops_before_grid(self):
+        with tempfile.TemporaryDirectory() as tmp, patch.object(pa, "run_stage", return_value=1) as submit:
+            root = Path(tmp) / "study"
+            self.assertEqual(dl.main(["combined-run", str(root)]), 1)
+            self.assertEqual(submit.call_count, 1)
+            self.assertEqual([v["id"] for v in submit.call_args.args[2]], ["ctrl", "sch"])
+            self.assertEqual(submit.call_args.args[4], "batch")
+            with self.assertRaises(FileExistsError):
+                dl.main(["combined-run", str(root)])
+            self.assertEqual(submit.call_count, 1)
+
+    def test_conditional_followups(self):
+        # Exercise the dispatch decisions using real report shapes and
+        # synthetic delays. These values are never campaign evidence.
+        two = pa.budget_points("two")
+        ref = next((dl.HERE / "artifacts/design-levers").glob("*/stage.json")).parent
+        control = {v: pa._budget_values(ref / v, two) for v in ("ctrl", "sch")}
+        for winner, expected in (("primary", ["controls", "primary", "remaining-five"]),
+                                 ("larger-pair", ["controls", "primary", "larger-pair", "remaining-five"]),
+                                 (None, ["controls", "primary", "larger-pair"])):
+            stages = []
+
+            def measure(root, stage, text, plan, points, jobs):
+                stages.append(stage)
+                if stage == "controls":
+                    return control
+                if stage == "remaining-five":
+                    self.assertEqual(len(points), 5)
+                    self.assertEqual(len(plan), 1)
+                results = {}
+                for v in plan:
+                    passes = v is plan[0] and stage in (winner, "remaining-five")
+                    row = dict(control["ctrl"][two[0]], td_od50_ns=1.4 if passes else 1.6)
+                    results[v["id"]] = dict.fromkeys(points, row)
+                return results
+
+            with self.subTest(winner=winner), tempfile.TemporaryDirectory() as tmp, \
+                    patch.object(dl, "combined_stage", side_effect=measure), \
+                    patch.object(dl, "kickback_stage", return_value="record") as kickback:
+                root = Path(tmp) / "run"
+                self.assertEqual(dl.main(["combined-run", str(root)]), 0)
+                summary = json.loads((root / "timing.json").read_text())
+                self.assertEqual(stages, expected)
+                self.assertEqual(len(summary["seven_corner_passes"]), int(bool(winner)))
+                self.assertEqual(kickback.call_count, 2 if winner else 0)
+                if winner:
+                    self.assertEqual([c.args[1]["id"] for c in kickback.call_args_list],
+                                     ["ctrl", *summary["two_corner_passes"]])
+
+
+class CombinedReportValidation(unittest.TestCase):
+    """Replay the DR-0007 reports through the combined study's report reader."""
+
+    archive = dl.HERE / "artifacts/design-levers/20261017-192854-fa963e7"
+    text = pa.load_extracted()
+    points = pa.budget_points("two")
+
+    def replay(self, variant, tag, change, stage="primary"):
+        def restore(directory, *args, **kwargs):
+            dest = directory / variant["id"]
+            shutil.copytree(self.archive / variant["id"], dest)
+            path = dest / f"{tag}.report.json"
+            report = json.loads(path.read_text())
+            change(report)
+            path.write_text(json.dumps(report))
+            return 0
+
+        with tempfile.TemporaryDirectory() as tmp, patch.object(pa, "run_stage", restore):
+            return dl.combined_stage(Path(tmp), stage, self.text, [variant], self.points, 1)
+
+    def test_control_and_candidate_require_a_sane_low_to_high_decision(self):
+        ctrl = dl.controls(self.text)[0]
+        pair = next(v for v in dl.lever_variants(self.text) if v["id"] == "pair-x1.5")
+        pt = self.points[0]
+        tag = f"ladder-{pa.pid(pt)}"
+        for field, bad, diagnostic, bound in (("da_first", 1.0, "dout_od50_first 1", "0.1"),
+                                              ("da_end", 0.0, "dout_od50_end 0", "0.9"),
+                                              ("td_a", 0.5e-12, "td_od50_ns 0.0005", "0.001"),
+                                              ("td_a", 26e-9, "td_od50_ns 26", "25")):
+            def change(report):
+                measurements = {m["name"]: m for m in report["corners"][0]["measurements"]}
+                if variant is pair:
+                    measurements["td_a"]["value"] = 1.4e-9
+                measurements[field]["value"] = bad
+
+            variant = ctrl
+            with self.subTest(stage="controls", field=field, bad=bad):
+                with self.assertRaisesRegex(ValueError, f"controls/ctrl/{tag}.*{diagnostic}.*{bound}"):
+                    self.replay(ctrl, tag, change, "controls")
+            variant = pair
+            with self.subTest(stage="primary", field=field, bad=bad):
+                row = self.replay(pair, tag, change, "primary")[pair["id"]][pt]
+                cell = dl.combined_corner_cell(row, None)
+                self.assertFalse(cell["decision_ok"])
+                self.assertFalse(cell["meets_1p5ns"])
+                self.assertFalse(pa._ok(cell))
+                self.assertEqual(len(cell["decision_failures"]), 1)
+                self.assertRegex(cell["decision_failures"][0], f"{diagnostic}.*{bound}")
+
+    def test_bench_bounds_are_inclusive_and_controls_can_exceed_the_design_target(self):
+        ctrl = dl.controls(self.text)[0]
+        for delay in (1e-12, 1.5e-9, 25e-9):
+            def change(report):
+                measures = {m["name"]: m for m in report["corners"][0]["measurements"]}
+                for field, value in (("td_a", delay), ("da_first", 0.1), ("da_end", 0.9)):
+                    measures[field]["value"] = value
+
+            with self.subTest(delay=delay):
+                pt = self.points[0]
+                row = self.replay(ctrl, f"ladder-{pa.pid(pt)}", change)["ctrl"][pt]
+                self.assertEqual(pa._corner_cell(row, None, {})["meets_1p5ns"], delay <= 1.5e-9)
+
+    def test_every_requested_supply_is_checked(self):
+        tag = f"ladder-{pa.pid(self.points[0])}"
+        for variant in dl.controls(self.text):
+            for supplies in ({"vsup": 2.97, "vsupa": 3.63}, {"vsup": 2.97}):
+                with self.subTest(variant=variant["id"], supplies=supplies):
+                    with self.assertRaisesRegex(ValueError, f"{variant['id']}/{tag}.*vsupa"):
+                        self.replay(variant, tag, lambda r: r["corners"][0].update(supply_v=supplies))
+
+    def test_failed_execution_or_required_measurement_rejects_numeric_values(self):
+        ctrl = dl.controls(self.text)[0]
+        p, t, v = self.points[0]
+        for tag, names in ((pa._probe_tag(t, v), ("t_flip",)),
+                           (f"ladder-{pa.pid((p, t, v))}", ("td_a", "da_first", "da_end"))):
+            for field in ("report", "corner", *names):
+                def change(report):
+                    corner = report["corners"][-1]
+                    if field == "report":
+                        report["status"] = "error"
+                    elif field == "corner":
+                        corner["status"] = "error"
+                    else:
+                        next(m for m in corner["measurements"] if m["name"] == field)["status"] = "error"
+
+                with self.subTest(tag=tag, field=field):
+                    with self.assertRaisesRegex(ValueError, f"ctrl/{tag}.*{field}.*error"):
+                        self.replay(ctrl, tag, change)
+
+    def test_failed_offset_probe_stops_before_ladder_dispatch(self):
+        ctrl = dl.controls(self.text)[0]
+        _, t, v = self.points[0]
+        tag = pa._probe_tag(t, v)
+        path = self.archive / "ctrl" / f"{tag}.report.json"
+        for change, diagnostic in (({"status": "error"}, "t_flip status 'error'"),
+                                   ({"value": 0.0}, "probe span"),
+                                   ({"value": pa.pm.PROBE_TRAMP}, "probe span"),
+                                   ({"value": 1.1 * pa.pm.PROBE_TRAMP}, "probe span")):
+            report = json.loads(path.read_text())
+            report["corners"][-1]["measurements"][0].update(change)
+
+            def submit_probe(vdir, job, *args):
+                self.assertEqual(job, tag, "invalid probe dispatched a dependent ladder")
+                return {"ok": True, "report": report}
+
+            with self.subTest(change=change), tempfile.TemporaryDirectory() as tmp, \
+                    patch.object(pa.pm, "_klt_identity", return_value={}), \
+                    patch.object(pa, "submit", side_effect=submit_probe) as submit:
+                root = Path(tmp)
+                with self.assertRaisesRegex(ValueError, "controls: fleet reports incomplete"):
+                    dl.combined_stage(root, "controls", self.text, [ctrl], self.points, 1)
+                submit.assert_called_once()
+                log = json.loads((root / "controls" / "run-log.json").read_text())
+                self.assertIn(diagnostic, log["job_errors"][f"ctrl/{tag}"])
+
+    def test_archived_candidate_with_clamped_probe_cannot_qualify(self):
+        pair = next(v for v in dl.lever_variants(self.text) if v["id"] == "pair-x1.5")
+        _, t, v = self.points[0]
+        tag = pa._probe_tag(t, v)
+
+        def clamp(report):
+            report["corners"][-1]["measurements"][0]["value"] = pa.pm.PROBE_TRAMP
+
+        with self.assertRaisesRegex(ValueError, f"primary/pair-x1.5/{tag}.*probe span"):
+            self.replay(pair, tag, clamp)
+
+    def test_wrong_decision_at_a_followup_corner_withholds_seven_corner_pass(self):
+        by_lever = {v["lever"]: v for v in dl.combined_grid(self.text, dl.PRIMARY_LEVERS)
+                    if (v["fc"], v["fr"]) == (1.0, 1.0) and v["lever"] in ("pair-x1.5", "tail-x1.5")}
+        pair, tail = by_lever["pair-x1.5"], by_lever["tail-x1.5"]
+        grid = [pair, tail]
+        larger = [v for v in dl.combined_grid(self.text, dl.LARGER_PAIR)
+                  if (v["fc"], v["fr"]) == (1.0, 1.0)]
+        pair2, = larger
+        cases = (
+            (("ss", 125.0, 3.63), 1.4e-9, 1.4e-9, [pair["id"], tail["id"]],
+             [pair["id"]], ["ctrl", pair["id"], tail["id"]]),
+            (("tt", 125.0, 2.97), 1.4e-9, 1.4e-9, [pair["id"]],
+             [pair["id"]], ["ctrl", pair["id"]]),
+            (("ss", 125.0, 2.97), 0.5e-9, 1.4e-9, [pair["id"]],
+             [pair["id"]], ["ctrl", pair["id"]]),
+            (("tt", 125.0, 2.97), 1.4e-9, 1.6e-9, [pair2["id"]],
+             [pair2["id"]], ["ctrl", pair2["id"]]),
+        )
+        for bad_point, bad_td, pair_td, expected_two, expected_seven, expected_kick in cases:
+            def submit(vdir, tag, deck, request, *args):
+                req_grid = request["corners"]
+                processes = [p["name"] for p in req_grid["process"]]
+                points = {(p, req_grid["temperature_c"][0], req_grid["supply_v"]["vsup"][0])
+                          for p in processes}
+                probe = tag.startswith("probe-")
+                source = "probe" if probe else f"ladder-{processes[0]}"
+                side = "schematic" if vdir.name == "sch" else "extracted"
+                archive = dl.HERE / "artifacts/measure" / side / f"{source}.report.json"
+                template = json.loads(archive.read_text())
+                template["corners"] = [c for c in template["corners"]
+                                       if pa.pm._point_key(c) in points]
+                if not probe and vdir.name in (pair["id"], tail["id"], pair2["id"]):
+                    corner, = template["corners"]
+                    measurements = {m["name"]: m for m in corner["measurements"]}
+                    if vdir.name == pair["id"]:
+                        measurements["td_a"]["value"] = pair_td
+                    elif vdir.name == tail["id"]:
+                        measurements["td_a"]["value"] = 1.45e-9
+                    else:
+                        measurements["td_a"]["value"] = 1.35e-9
+                    if vdir.name == tail["id"] and pa.pm._point_key(corner) == bad_point:
+                        measurements["td_a"]["value"] = bad_td
+                        measurements["da_end"]["value"] = 0.0
+                template["environment"]["netlist_sha256"] = pa.sha(deck)
+                (vdir / f"{tag}.request.json").write_text(json.dumps(request))
+                (vdir / f"{tag}.report.json").write_text(json.dumps(template))
+                return {"ok": True, "report": template}
+
+            def small_grid(_text, levers):
+                return grid if levers == dl.PRIMARY_LEVERS else larger
+
+            winner = expected_seven[0]
+            with self.subTest(bad_point=bad_point, pair_td=pair_td), tempfile.TemporaryDirectory() as tmp, \
+                    patch.object(pa, "submit", submit), \
+                    patch.object(pa.pm, "_klt_identity", return_value={}), \
+                    patch.object(dl, "combined_grid", side_effect=small_grid), \
+                    patch.object(dl, "kickback_stage", return_value={"status": "recorded"}) as kick:
+                root = Path(tmp) / "study"
+                self.assertEqual(dl.main(["combined-run", str(root)]), 0)
+                result = json.loads((root / "timing.json").read_text())
+                self.assertNotIn("validity_failure", result)
+                self.assertTrue(result["controls_valid"])
+                self.assertEqual(result["two_corner_passes"], expected_two)
+                self.assertEqual(result["seven_corner_passes"], expected_seven)
+                self.assertEqual(len(result["variants"][winner]), 7)
+                self.assertTrue(all(pa._ok(c) for c in result["variants"][winner].values()))
+                bad_cell = result["variants"][tail["id"]][pa.pid(bad_point)]
+                self.assertFalse(bad_cell["decision_ok"])
+                self.assertFalse(bad_cell["meets_1p5ns"])
+                self.assertEqual(bad_cell["dout_od50_end"], 0.0)
+                self.assertEqual(bad_cell["decision_failures"],
+                                 ["dout_od50_end 0 < required min 0.9"])
+                self.assertEqual(result["ranked_by_ss_td_od50"][0], winner)
+                self.assertEqual([c.args[1]["id"] for c in kick.call_args_list], expected_kick)
+                self.assertEqual(set(result["kickback_and_offset"]), set(expected_kick))
+
+
+class KickbackReportValidation(unittest.TestCase):
+    """Generate both request phases and replace fleet dispatch with finite test values."""
+
+    @staticmethod
+    def passing_report(request, entry, toolchain):
+        t, = request["corners"]["temperature_c"]
+        corners = []
+        values = {"t_flip": 3.6e-5, "ad_pos": 0.012, "da_end": 1, "db_end": 1, "dc_end": 1}
+        for proc in request["corners"]["process"]:
+            p = proc["name"]
+            measures = [{"name": m["name"], "value": values.get(m["name"], 0.001), "status": "pass"}
+                        for m in request["measurements"]]
+            corners.append({"corner_id": f"{p}/novdd/{t:g}C", "process": p, "temperature_c": t,
+                            "supply_v": {}, "status": "pass", "measurements": measures})
+        return {
+            "status": "pass", "corners": corners,
+            "environment": {"netlist_sha256": entry["netlist_sha256"], "remote": {"job_id": "test-job"},
+                            "engine": "ngspice", "engine_version": str(toolchain["ngspice_min_major"])},
+            "provenance": {"pdk": {"name": toolchain["pdk_variant"],
+                                   "version": "open_pdks " + toolchain["open_pdks"]}},
+        }
+
+    def test_report_and_ingredient_status_gate_each_phase(self):
+        variant = dl.controls(pa.load_extracted())[0]
+        for phase, field in (("probe", "report"), ("probe", "corner"), ("probe", "t_flip"),
+                             ("main", "report"), ("main", "corner"), ("main", "ad_pos"),
+                             ("main", "dc_end"), (None, None)):
+            def dispatch(work, names, **kwargs):
+                bundle = dl.kr.load_bundle(work, "comparator-kickback")
+                for name in names:
+                    entry = bundle["requests"][name]
+                    request = json.loads((work / entry["request"]).read_text())
+                    report = self.passing_report(request, entry, bundle["toolchain"])
+                    corner = next((c for c in report["corners"] if c["process"] == "tt"), None)
+                    if entry["leg"] == phase and corner:
+                        if field == "report":
+                            report["status"] = "error"
+                        elif field == "corner":
+                            corner["status"] = "error"
+                        else:
+                            next(m for m in corner["measurements"] if m["name"] == field)["status"] = "error"
+                    (work / f"report-{name}.json").write_text(json.dumps(report))
+
+            with self.subTest(phase=phase, field=field), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                pdk = root / "gf180mcuD"
+                models = pdk / "libs.tech/ngspice"
+                models.mkdir(parents=True)
+                (models / "sm141064.ngspice").touch()
+                (models / "design.ngspice").touch()
+                with patch.dict(os.environ, GF180_PDK_PATH=str(pdk)), \
+                        patch.object(dl.kr, "dispatch", side_effect=dispatch) as submit:
+                    if phase:
+                        with self.assertRaisesRegex(ValueError, f"{phase}.*{field}.*error"):
+                            dl.kickback_stage(root, variant)
+                    else:
+                        result = dl.kickback_stage(root, variant)
+                        self.assertEqual(set(result["corners"]), set(pa.CORNER_IDS.values()))
+                        for corner in result["corners"].values():
+                            self.assertAlmostEqual(corner["kick_1k_peak_mv"], 12.0)
+                            self.assertAlmostEqual(corner["dut_vos_v"], -0.004)
+                self.assertEqual(submit.call_count, 1 if phase == "probe" else 2)
+                if phase == "probe":
+                    work = root / "kickback" / variant["id"]
+                    self.assertFalse((work / dl.kr.mk.PROBE_RESULTS_NAME).exists())
+                    self.assertEqual(list(work.glob("request-main-*.json")), [])
 
 
 class CommittedEvidence(unittest.TestCase):

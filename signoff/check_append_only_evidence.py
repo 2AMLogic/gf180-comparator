@@ -18,6 +18,7 @@ is protected with no edit here):
     manifests/artifacts/*.manifest.json  (stored-evidence manifests, issue #331)
     layout/pex/artifacts/parasitic-attribution/<run-id>/**   (issue #266)
     layout/pex/artifacts/ground-c-budget/<run-id>/**
+    layout/pex/artifacts/design-levers-combined/<run-id>/**
 
 Probe artifacts (reports, logs, refusals, and the `sources/` / `extract/`
 copies bundled into a probe) are empirical results exactly as run, so the whole
@@ -26,7 +27,7 @@ make them signoff evidence. Editable testbench/DUT sources live outside
 `probes/`; a correction is a NEW probe identifier.
 
 Parasitic-study run archives are immutable too: each `<run-id>`
-(`YYYYMMDD-HHMMSS-<7+ hex>`) directory under the two archive families above is
+(`YYYYMMDD-HHMMSS-<7+ hex>`) directory under the archive families above is
 protected as a complete subtree (requests, reports, source snapshots, stage
 manifests, derived tables, any extension). Family-level documentation and the
 study code stay editable; a correction is a NEW run identifier. Other
@@ -103,6 +104,7 @@ ZERO_RE = re.compile(r"^0+$")
 ARCHIVE_ROOTS = (
     "layout/pex/artifacts/parasitic-attribution",
     "layout/pex/artifacts/ground-c-budget",
+    "layout/pex/artifacts/design-levers-combined",
 )
 RUN_ID_RE = re.compile(r"^\d{8}-\d{6}-[0-9a-f]{7,40}$")
 # Git pathspecs covering every protected family root (used by the size guard).

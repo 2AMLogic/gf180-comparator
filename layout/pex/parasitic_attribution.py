@@ -432,7 +432,13 @@ def _report_ok(path: Path, deck_sha: str) -> dict | None:
     return rep
 
 
-def submit(vdir: Path, tag: str, deck: str, request: dict, backend: str) -> dict:
+def _stage_client(capacity_wait_s):
+    # Native --wait-for-capacity is available in the newer released wheel.
+    return pm._klt("0.9.2") if capacity_wait_s is not None else pm._klt()
+
+
+def submit(vdir: Path, tag: str, deck: str, request: dict, backend: str,
+           capacity_wait_s: int | None = None) -> dict:
     """Write the deck + request, run `klt sim`, keep the report. Never exits:
     a failure is returned and recorded."""
     deck_path = vdir / request["netlist"]
@@ -444,17 +450,18 @@ def submit(vdir: Path, tag: str, deck: str, request: dict, backend: str) -> dict
     if done is not None:
         return {"tag": tag, "ok": True, "report": done, "resumed": True}
     deadline = time.monotonic() + CAPACITY_WAIT_S
+    wait_args = [] if capacity_wait_s is None else ["--wait-for-capacity", str(capacity_wait_s)]
     attempts = 0
     while True:
         attempts += 1
-        proc = subprocess.run([*pm._klt(), "sim", req_path.name, "--backend", backend,
-                               "--format", "json"], capture_output=True, text=True, cwd=vdir)
+        proc = subprocess.run([*_stage_client(capacity_wait_s), "sim", req_path.name, "--backend", backend,
+                               *wait_args, "--format", "json"], capture_output=True, text=True, cwd=vdir)
         try:
             ok = proc.returncode in (0, 4) and bool(json.loads(proc.stdout).get("corners"))
         except ValueError:
             ok = False
         refused = not ok and any(s in proc.stdout + proc.stderr for s in CAPACITY_REFUSALS)
-        if ok or not refused or time.monotonic() > deadline:
+        if ok or capacity_wait_s is not None or not refused or time.monotonic() > deadline:
             break
         # The fleet's shared instance cap (other sweeps share it) refused the
         # launch before anything ran: wait and resubmit the same request.
@@ -902,7 +909,8 @@ def _probe_tag(t, v):
     return f"probe-{tv_tag(t, v)}"
 
 
-def run_budget_variant(v: dict, outdir: Path, backend: str, points) -> dict:
+def run_budget_variant(v: dict, outdir: Path, backend: str, points, capacity_wait_s=None,
+                       validate_probe=None) -> dict:
     vdir = outdir / v["id"]
     vdir.mkdir(parents=True, exist_ok=True)
     log = {"id": v["id"], "jobs": {}}
@@ -910,8 +918,13 @@ def run_budget_variant(v: dict, outdir: Path, backend: str, points) -> dict:
     if v["centre"] == "probed":
         for (t, vv), procs in tv_groups(points).items():
             tag = _probe_tag(t, vv)
-            r = submit(vdir, tag, probe_deck(v["dut"]), budget_probe_request(tag, procs, t, vv),
-                       backend)
+            request = budget_probe_request(tag, procs, t, vv)
+            r = submit(vdir, tag, probe_deck(v["dut"]), request, backend, capacity_wait_s)
+            if r["ok"] and validate_probe is not None:
+                try:
+                    validate_probe(r["report"], request, f"{v['id']}/{tag}")
+                except ValueError as exc:
+                    r = {**r, "ok": False, "stderr": str(exc)}
             log["jobs"][tag] = {k: r[k] for k in ("ok", "rc", "stderr", "attempts") if k in r}
             if r["ok"]:
                 trips.update(_trip_from_probe(r["report"]))
@@ -924,7 +937,7 @@ def run_budget_variant(v: dict, outdir: Path, backend: str, points) -> dict:
             continue
         vos_at = {(t, vv): trips.get((p, t, vv)) for (p, t, vv) in points if p == pt[0]}
         deck = budget_ladder_deck(v["dut"], v["side"], pt[0], v["centre"], vos_at)
-        r = submit(vdir, tag, deck, budget_ladder_request(tag, pt), backend)
+        r = submit(vdir, tag, deck, budget_ladder_request(tag, pt), backend, capacity_wait_s)
         log["jobs"][tag] = {k: r[k] for k in ("ok", "rc", "stderr", "attempts") if k in r}
     return log
 
@@ -1039,7 +1052,7 @@ def append_only_conflict(committed: dict, regenerated: dict) -> bool:
 
 
 def run_stage(outdir: Path, man: dict, plan: list[dict], points, backend: str, jobs: int,
-              issue: int) -> int:
+              issue: int, *, capacity_wait_s=None, validate_probe=None) -> int:
     """Write (or check, append-only) stage.json, submit every request of the
     plan, write run-log.json."""
     mpath = outdir / "stage.json"
@@ -1052,10 +1065,11 @@ def run_stage(outdir: Path, man: dict, plan: list[dict], points, backend: str, j
             sys.exit(f"{mpath} exists with a different plan; stage directories are append-only")
     else:
         mpath.write_text(json.dumps(man, indent=2, sort_keys=True) + "\n")
-    client = pm._klt_identity()
+    client = pm._klt_identity(_stage_client(capacity_wait_s))
     started = datetime.now(timezone.utc).isoformat(timespec="seconds")
     with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as pool:
-        logs = list(pool.map(lambda x: run_budget_variant(x, outdir, backend, points), plan))
+        logs = list(pool.map(lambda x: run_budget_variant(
+            x, outdir, backend, points, capacity_wait_s, validate_probe), plan))
     failed = [(l["id"], t) for l in logs for t, j in l["jobs"].items() if not j.get("ok")]
     (outdir / "run-log.json").write_text(json.dumps({
         "issue": issue, "backend": backend, "klt_sim_client": client,
@@ -1691,7 +1705,8 @@ def cmd_combo_run(args) -> int:
 
 
 def _ok(x) -> bool:
-    return bool(x and x.get("td_od50_ns") is not None and x["meets_1p5ns"])
+    return bool(x and x.get("td_od50_ns") is not None and x["meets_1p5ns"]
+                and x.get("decision_ok", True) and not x.get("decision_failures"))
 
 
 def combo_analyze(outdir: Path) -> dict:

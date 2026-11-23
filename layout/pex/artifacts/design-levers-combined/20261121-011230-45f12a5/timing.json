@@ -1,0 +1,15 @@
+{
+  "controls_valid": false,
+  "request_plan": {
+    "cap": 323,
+    "controls": 5,
+    "kickback_and_offset_per_dut": 3,
+    "larger_if_no_pass": 21,
+    "larger_max": 176,
+    "primary": 63,
+    "primary_max": 323,
+    "remaining_five_per_pass": 9
+  },
+  "validity_failure": "controls: fleet reports incomplete (see controls/run-log.json)",
+  "variants": {}
+}
