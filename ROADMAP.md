@@ -102,11 +102,18 @@ is [`WORK_PLAN.md`](WORK_PLAN.md).
   post-layout kickback and regeneration record exists. Blocked by: DR-0004
   ratification.
 - **Combined decision-time lever, re-measured on the cascode layout.**
-  The pre-cascode study (#453) still needs a fleet run. Its controls failed
-  to launch, so [DR-0009](spec/decision-records/DR-0009-combined-decision-time-lever-budget.md)
-  withholds the global C/R budget. Re-measure the pair and pair-plus-tail
-  levers on the cascode extraction and rank them at `ss_125c_2.97v` and
-  `tt_125c_2.97v` with source records. Post-cascode re-measurement is blocked by #112.
+  The pre-cascode study (#453, proposed
+  [DR-0009](spec/decision-records/DR-0009-combined-decision-time-lever-budget.md))
+  is complete on the current extraction
+  (`layout/pex/artifacts/design-levers-combined/20261123-192546-559b686/`): all
+  three width levers (`tail-x1.5`, `pair-x1.5`, `pair+tail`) clear 1.5 ns across
+  all seven failing corners at global residue `(f_c, f_r) = (0.25, 1.0)` and
+  `(0.25, 0.5)` while none clears at `f_c >= 0.50`, setting a pre-cascode global
+  budget of `f_c <= 0.25, f_r <= 1.0` with cascode-independent `tail-x1.5`
+  (`+8 µm` added W, `ss_125c_2.97v` `1.49201 ns`). Re-measure the pair and
+  pair-plus-tail levers (which load `aop/aon`) on the cascode extraction and
+  rank them at `ss_125c_2.97v` and `tt_125c_2.97v` with source records.
+  Post-cascode re-measurement remains open and is blocked by #112.
 - **Average-power scoring** (#125 stage 2): transient-power bench wired into
   the item-5 corner-matrix wrapper with regressions. Blocked by: DR-0006
   ratification.

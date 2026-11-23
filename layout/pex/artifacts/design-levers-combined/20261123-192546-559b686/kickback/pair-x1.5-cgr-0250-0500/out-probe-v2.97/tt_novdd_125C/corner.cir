@@ -1,0 +1,16 @@
+* klt sim -- generated corner deck, do not edit
+.lib /opt/pdk/gf180mcuD/libs.tech/ngspice/sm141064.ngspice typical
+.lib /opt/pdk/gf180mcuD/libs.tech/ngspice/sm141064.ngspice res_typical
+.lib /opt/pdk/gf180mcuD/libs.tech/ngspice/sm141064.ngspice bjt_typical
+.lib /opt/pdk/gf180mcuD/libs.tech/ngspice/sm141064.ngspice diode_typical
+.lib /opt/pdk/gf180mcuD/libs.tech/ngspice/sm141064.ngspice moscap_typical
+.lib /opt/pdk/gf180mcuD/libs.tech/ngspice/sm141064.ngspice mimcap_typical
+.include /var/tmp/eda-job-klt-sim-bc9c3a391267/inputs/netlist.cir
+.temp 125.0
+.meas tran t_flip when v(dn)=0.5 rise=1 td=8u
+.control
+save all
+tran 100n 80u 0 100n
+quit
+.endc
+.end

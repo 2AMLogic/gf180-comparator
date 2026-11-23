@@ -1,0 +1,15 @@
+{
+ "schema": "probe-results/1",
+ "bench": "comparator-kickback",
+ "dut": "pair-x1.5-cgr-0250-1000",
+ "vspan_v": 0.04,
+ "tramp_s": 7.999999999999999e-05,
+ "vos_formula": "-vspan + 2*vspan*t_flip/tramp",
+ "vos_by_corner": {
+  "tt_125c_2.97v": -0.0030681009052199934,
+  "ss_125c_2.97v": -0.001897450991519993
+ },
+ "probe_reports": {
+  "probe-v2.97": "4443796197ebd13cbce94940f3b992a0c41c0c700d510a42540d28fd4e403c6b"
+ }
+}
