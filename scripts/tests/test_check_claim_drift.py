@@ -286,5 +286,47 @@ class ReportClaims(unittest.TestCase):
         self.assertEqual({c["scope"] for c in mine}, {"scored", "diagnostic", "historical"})
 
 
+class CountThreshold(unittest.TestCase):
+    """#454: resolve()/walk() carry the count threshold per call."""
+
+    def test_interleaved_resolutions_keep_their_own_threshold(self):
+        class Interleave(dict):
+            def items(self):
+                inner.append(CCD.resolve({"ff": 2}, "/*", "count_le", 3))
+                return super().items()
+
+        inner = []
+        self.assertEqual(CCD.resolve({"tt": 2}, "/*", "count_le", 1), (0, 1))
+        self.assertEqual(
+            CCD.resolve(Interleave(tt=2), "/*", "count_le", 1), (0, 1))
+        self.assertEqual(inner, [(1, 1)])
+
+    def test_count_boundaries_and_totals(self):
+        twin = {"tt": 2, "ff": 3, "ss": 4}
+        self.assertEqual(CCD.resolve(twin, "/*", "count_le", 3), (2, 3))
+        self.assertEqual(CCD.resolve(twin, "/*", "count_gt", 3), (1, 3))
+        nested = {"tt": {"m": 1}, "ff": {}, "ss": {"m": 3}}
+        self.assertEqual(CCD.resolve(nested, "/*/m", "count_le", 3), (2, 2))
+        rows = [{"corner_id": "tt", "m": 2}, {"corner_id": "ff", "m": 3}]
+        self.assertEqual(CCD.resolve(rows, "/*/m", "count_gt", 2), (1, 2))
+
+    def test_count_threshold_must_be_numeric(self):
+        for thr in (None, True, "2"):
+            with self.assertRaises(KeyError):
+                CCD.resolve({"tt": 2}, "/*", "count_le", thr)
+
+    def test_positional_calls_and_threshold_forwarding(self):
+        twin = {"corners": [{"corner_id": "tt", "out": {"a": 2, "b": 4}},
+                            {"corner_id": "ff", "out": {"a": 1, "b": 5}}]}
+        self.assertEqual(CCD.resolve(twin, "/corners/*/out/*", "max"),
+                         (5, "ff"))
+        self.assertEqual(CCD.walk(twin, ["corners", "*", "out", "*"], "max"),
+                         (5, "ff"))
+        self.assertEqual(CCD.resolve(twin, "/corners/corner_id=ff/out/*",
+                                     "count_gt", 2), (1, 2))
+        self.assertEqual(CCD.walk({"tt": 2, "ff": 3}, ["*"], "count_gt",
+                                  threshold=2), (1, 2))
+
+
 if __name__ == "__main__":
     unittest.main()
