@@ -360,7 +360,7 @@
         "role": "testbench",
         "path": "sim/harness/tests/test_avg_power_overrides.py",
         "passed": true,
-        "content_hash": "sha256:9bd85ceed052fa7627b298237ccf4ee33318da99ee6cfb71e32436c487313427"
+        "content_hash": "sha256:95b43e1ed3be339fd4c5bc386c50e07b471c9249c95d64b2d6cb67d20728d770"
       },
       {
         "check": "present",
