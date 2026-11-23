@@ -193,13 +193,55 @@ extracted), shown as range over the three corners:
 
 | condition | schematic Δ`p_avg_uw` | extracted Δ`p_avg_uw` | worst `p_avg_uw` among sampled |
 |---|---|---|---|
-| `c_load` = 0 fF | −4.59 … −3.03 µW | −4.50 … −2.96 µW | 169.894 µW @ `ff_125c_3.63v` (sch) |
+| `c_load` = 0 fF | −4.59 … −3.03 µW | −4.49 … −2.96 µW | 202.882 µW @ `ff_125c_3.63v` (ext); 169.894 µW (sch) |
 | `c_load` = 100 fF | +11.69 … +17.86 µW | +11.61 … +17.70 µW | 225.079 µW @ `ff_125c_3.63v` (ext) |
 | `v_od` = 1 mV | +3.74 … +9.83 µW | +6.14 … +15.72 µW | 223.092 µW @ `ff_125c_3.63v` (ext) |
 | `v_od` = 50 mV | −5.20 … −1.04 µW | −8.46 … −2.59 µW | 198.917 µW @ `ff_125c_3.63v` (ext) |
-| `t_per` = 31.25 ns (32 MHz) | +36.16 … +65.39 µW (+37.5 % @ ff) | +59.48 … +104.56 µW (+50.4 % @ ff) | 311.937 µW @ `ff_125c_3.63v` (ext) |
+| `t_per` = 31.25 ns (32 MHz) | +36.16 … +65.39 µW (+37.5 % @ ff) | +59.47 … +104.56 µW (+50.4 % @ ff) | 311.937 µW @ `ff_125c_3.63v` (ext) |
 
 Reading:
+
+**Per-corner deltas (all 30 points).** Each row is the sensitivity record's
+`derived[corner_id].p_avg_uw` minus the same corner in the matching nominal
+45-corner record (schematic [`20261115-075832478887-79abbcc`](records/20261115-075832478887-79abbcc.md),
+extracted [`20261116-203811672880-81544ac`](records/20261116-203811672880-81544ac.md)),
+computed from the unrounded JSON. The ranges above are the min/max of these rows.
+(Not to be confused with the per-corner delta in
+[`clock-charge-boundary.md`](clock-charge-boundary.md), which is the effect of
+folding the clock-pin charge into the row.)
+
+| condition | DUT | corner | sensitivity `p_avg_uw` [µW] | nominal `p_avg_uw` [µW] | sensitivity − nominal [µW] |
+|---|---|---|---:|---:|---:|
+| `c_load` = 0 fF | schematic | `tt_27c_3.30v` | 141.133 | 144.887 | -3.7540 |
+| `c_load` = 0 fF | schematic | `ff_125c_3.63v` | 169.894 | 174.487 | -4.5927 |
+| `c_load` = 0 fF | schematic | `ss_125c_2.97v` | 121.875 | 124.908 | -3.0327 |
+| `c_load` = 0 fF | extracted | `tt_27c_3.30v` | 164.797 | 168.463 | -3.6660 |
+| `c_load` = 0 fF | extracted | `ff_125c_3.63v` | 202.882 | 207.376 | -4.4948 |
+| `c_load` = 0 fF | extracted | `ss_125c_2.97v` | 140.802 | 143.760 | -2.9586 |
+| `c_load` = 100 fF | schematic | `tt_27c_3.30v` | 159.393 | 144.887 | +14.5058 |
+| `c_load` = 100 fF | schematic | `ff_125c_3.63v` | 192.350 | 174.487 | +17.8632 |
+| `c_load` = 100 fF | schematic | `ss_125c_2.97v` | 136.600 | 124.908 | +11.6924 |
+| `c_load` = 100 fF | extracted | `tt_27c_3.30v` | 182.858 | 168.463 | +14.3949 |
+| `c_load` = 100 fF | extracted | `ff_125c_3.63v` | 225.079 | 207.376 | +17.7023 |
+| `c_load` = 100 fF | extracted | `ss_125c_2.97v` | 155.367 | 143.760 | +11.6066 |
+| `v_od` = 1 mV | schematic | `tt_27c_3.30v` | 150.357 | 144.887 | +5.4699 |
+| `v_od` = 1 mV | schematic | `ff_125c_3.63v` | 184.312 | 174.487 | +9.8258 |
+| `v_od` = 1 mV | schematic | `ss_125c_2.97v` | 128.647 | 124.908 | +3.7387 |
+| `v_od` = 1 mV | extracted | `tt_27c_3.30v` | 177.277 | 168.463 | +8.8144 |
+| `v_od` = 1 mV | extracted | `ff_125c_3.63v` | 223.092 | 207.376 | +15.7159 |
+| `v_od` = 1 mV | extracted | `ss_125c_2.97v` | 149.904 | 143.760 | +6.1438 |
+| `v_od` = 50 mV | schematic | `tt_27c_3.30v` | 142.938 | 144.887 | -1.9489 |
+| `v_od` = 50 mV | schematic | `ff_125c_3.63v` | 169.289 | 174.487 | -5.1975 |
+| `v_od` = 50 mV | schematic | `ss_125c_2.97v` | 123.868 | 124.908 | -1.0398 |
+| `v_od` = 50 mV | extracted | `tt_27c_3.30v` | 164.694 | 168.463 | -3.7685 |
+| `v_od` = 50 mV | extracted | `ff_125c_3.63v` | 198.917 | 207.376 | -8.4597 |
+| `v_od` = 50 mV | extracted | `ss_125c_2.97v` | 141.166 | 143.760 | -2.5940 |
+| `t_per` = 31.25 ns (32 MHz) | schematic | `tt_27c_3.30v` | 190.486 | 144.887 | +45.5988 |
+| `t_per` = 31.25 ns (32 MHz) | schematic | `ff_125c_3.63v` | 239.876 | 174.487 | +65.3897 |
+| `t_per` = 31.25 ns (32 MHz) | schematic | `ss_125c_2.97v` | 161.070 | 124.908 | +36.1615 |
+| `t_per` = 31.25 ns (32 MHz) | extracted | `tt_27c_3.30v` | 243.073 | 168.463 | +74.6106 |
+| `t_per` = 31.25 ns (32 MHz) | extracted | `ff_125c_3.63v` | 311.937 | 207.376 | +104.5608 |
+| `t_per` = 31.25 ns (32 MHz) | extracted | `ss_125c_2.97v` | 203.235 | 143.760 | +59.4750 |
 
 - **Every sampled measurement passed its checks**: `dec_cycles_correct` = 16
   at all 30 DUT/condition/corner points, worst `q_half_mismatch_pct` =
@@ -212,10 +254,15 @@ Reading:
   sampled points is `ff_125c_3.63v` in every condition on both bindings —
   the same corner the 45-point nominal campaigns identify as the grid
   maximum — so no condition triggered a full 45-corner re-run.
-- **Power falls as overdrive grows** (1 mV costs more: slower regeneration
-  spends longer at the static bias; 50 mV costs less), so DR-0006's 10 mV is
-  not a power-optimistic choice. All 16 decisions were correct even at
-  1 mV on both bindings.
+- **Power falls as overdrive grows**: at every sampled corner on both DUTs
+  1 mV measured higher than 10 mV (by up to 15.716 µW at extracted
+  `ff_125c_3.63v`: 207.376 → 223.092 µW) and 50 mV measured lower. So the
+  nominal 10 mV reference stimulus understates power relative to 1 mV and
+  overstates it relative to 50 mV. The mechanism (slower regeneration
+  dwelling longer at the static bias) is a hypothesis: total rail charge does
+  not isolate the energy by stage. 10 mV is retained as the proposed
+  operating point on its stated engineering basis, not on a power-optimism
+  argument. All 16 decisions were correct even at 1 mV on both bindings.
 - **The 20 fF load choice is not fragile**: the load slope is ≈ 0.22 µW/fF
   on both bindings; even the 5× (100 fF) load leaves the worst sampled point
   inside the 500 µW stretch.
@@ -236,6 +283,16 @@ Reading:
   16 MHz runs' accordingly), so the trip-point resolution at 32 MHz is
   actually about 31.25 µV — finer than stated, never coarser. The `dut_vos`
   values themselves are measured, not affected by the note.
+- **Stale overdrive text in two extracted records** (disclosed; the records
+  are append-only and are not edited): line 24 of
+  [`20261121-034624876214-fd2a190.md`](records/20261121-034624876214-fd2a190.md)
+  (1 mV) and of
+  [`20261121-034303118261-fd2a190.md`](records/20261121-034303118261-fd2a190.md)
+  (50 mV) say the probe resolution is "against the 10 mV overdrive it
+  refers". Their main decks apply `v_od=0.001` and `v_od=0.05`. Read those
+  sentences against the applied overdrive: at 1 mV the stated ≈ 62.5 µV probe
+  step is 6.25 % of the overdrive; at 50 mV it is 0.125 %. The `dut_vos`
+  values themselves are measured and unaffected.
 
 **No DR-0006-chosen value (load, overdrive, window) is revised by these
 records.** DR-0006's feasibility item 4 cites them; its item-1 reset-margin

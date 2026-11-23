@@ -275,7 +275,7 @@ ratification reviewers, not verdicts.
      `20261121-034303477762-fd2a190` (100 fF, sha256
      `60f48af91b04ad2558e2fa643611b09598f8180a423d4766eb52f6ecaaaa809a`).
      Removing the loads moves `p_avg_uw` by −3.0 … −4.6 µW (schematic) and
-     −3.0 … −4.5 µW (extracted); 100 fF moves it by +11.7 … +17.9 µW and
+     −3.0 … −4.5 µW (extracted; 202.882 µW worst sampled at 0 fF, extracted); 100 fF moves it by +11.7 … +17.9 µW and
      +11.6 … +17.7 µW — ≈ 0.22 µW/fF on both bindings, so the chosen 20 fF
      sits on a gentle slope: even the 5× load leaves the worst sampled point
      at 192.350 µW / 225.079 µW, inside the 500 µW stretch. **No revision to
@@ -292,8 +292,11 @@ ratification reviewers, not verdicts.
      `p_avg_uw` RISES as the overdrive shrinks (1 mV: +3.7 … +9.8 µW
      schematic, +6.1 … +15.7 µW extracted — slower regeneration spends longer
      at the static bias) and falls as it grows (50 mV: −5.2 … −1.0 µW and
-     −8.5 … −2.6 µW). The chosen 10 mV is therefore not a power-optimistic
-     choice, and all 16 decisions were correct at 1 mV on both bindings (the
+     −8.5 … −2.6 µW), at every sampled corner on both bindings. The chosen
+     10 mV reference stimulus therefore understates power relative to 1 mV
+     (by up to 15.7 µW extracted) and overstates it relative to 50 mV; the
+     regeneration-dwell mechanism is a hypothesis, and 10 mV is retained on
+     its stated engineering basis. All 16 decisions were correct at 1 mV on both bindings (the
      extracted leg overdrive referred to each corner's own probed trip
      point). **No revision to the 10 mV choice is proposed.**
    - **Clock rate (32 MHz, informational per "Alternatives considered").**
