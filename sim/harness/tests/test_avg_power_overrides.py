@@ -46,6 +46,7 @@ sys.path.insert(0, str(SIM))
 sys.path.insert(0, str(SIM / "tools"))
 
 from harness import testbench as htb  # noqa: E402
+from harness.tests import klt_record_fixtures as kfix  # noqa: E402
 import klt_record as kr  # noqa: E402
 import mk_klt_request as mk  # noqa: E402
 
@@ -375,15 +376,14 @@ class SensitivityIngest(unittest.TestCase):
 
     The full main() path is exercised (bundle validation, staged-source
     verification, derive under the applied overrides, header stamping,
-    Reproduce line) against a temp evidence tree -- the same fixture style
-    test_klt_record.py uses, no PDK, no klt, nothing dispatched."""
+    Reproduce line) against a temp evidence tree -- the shared fixtures from
+    harness.tests.klt_record_fixtures, no PDK, no klt, nothing dispatched."""
 
     def _run(self, *mk_extra, ingest_extra=()):
-        from sim.harness.tests import test_klt_record as tk
         with tempfile.TemporaryDirectory() as td:
             td = Path(td)
-            work = tk._generate(td, *mk_extra, bench=BENCH)
-            b = tk._bundle(work)
+            work = kfix._generate(td, *mk_extra, bench=BENCH)
+            b = kfix._bundle(work)
             raw = ApplyAtIngest.raw_32mhz()
             for n, r in b["requests"].items():
                 req = json.loads((work / r["request"]).read_text())
@@ -392,8 +392,8 @@ class SensitivityIngest(unittest.TestCase):
                             "measurements": [{"name": m, "value": raw[m]} for m in meas]}]
                 (work / f"report-{n}.json").write_text(json.dumps(
                     {"corners": corners, "measurements": [{"name": m} for m in meas],
-                     "environment": tk._link_env(work, b, r), "provenance": tk._prov()}))
-            rc, rec, out = tk._ingest(td, work, *ingest_extra, bench=BENCH)
+                     "environment": kfix._link_env(work, b, r), "provenance": kfix._prov()}))
+            rc, rec, out = kfix._ingest(td, work, *ingest_extra, bench=BENCH)
             md = next((td / "evidence" / BENCH / "records").glob("*.md"), None)
             return rc, rec, out, (md.read_text() if md else "")
 

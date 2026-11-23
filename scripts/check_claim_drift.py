@@ -156,18 +156,7 @@ def check_stale(root, cites, waivers):
     return errs, used
 
 
-class _Threshold:
-    """Carries the claim threshold into walk() without widening its API."""
-    value = None
-
-    def get(self):
-        return self.value
-
-
-_THRESHOLD = _Threshold()
-
-
-def walk(node, segs, agg):
+def walk(node, segs, agg, *, threshold=None):
     """Resolve segs in node. Returns (value, key_or_None)."""
     if not segs:
         return node, None
@@ -184,16 +173,16 @@ def walk(node, segs, agg):
         vals = {}
         for k, sub in items:
             try:
-                vals[k] = walk(sub, rest, agg)[0]
+                vals[k] = walk(sub, rest, agg, threshold=threshold)[0]
             except KeyError:
                 pass
         if not vals:
             raise KeyError("'*' matched nothing")
         if agg in COUNT_AGGS:
-            thr = _THRESHOLD.get()
-            if isinstance(thr, bool) or not isinstance(thr, (int, float)):
+            if (isinstance(threshold, bool)
+                    or not isinstance(threshold, (int, float))):
                 raise KeyError("count agg needs a numeric threshold")
-            n = sum(v <= thr if agg == "count_le" else v > thr
+            n = sum(v <= threshold if agg == "count_le" else v > threshold
                     for v in vals.values())
             return n, len(vals)  # (count, total)
         k = (min if agg == "min" else max)(vals, key=vals.get)
@@ -205,17 +194,16 @@ def walk(node, segs, agg):
         hits = [e for e in node if isinstance(e, dict) and str(e.get(k)) == v]
         if len(hits) != 1:
             raise KeyError(f"{seg}: {len(hits)} matches")
-        return walk(hits[0], rest, agg)
+        return walk(hits[0], rest, agg, threshold=threshold)
     if not isinstance(node, dict) or seg not in node:
         raise KeyError(f"no key {seg!r}")
-    return walk(node[seg], rest, agg)
+    return walk(node[seg], rest, agg, threshold=threshold)
 
 
 def resolve(twin, pointer, agg=None, threshold=None):
-    _THRESHOLD.value = threshold
     if not isinstance(pointer, str) or not pointer.startswith("/"):
         raise KeyError(f"bad pointer {pointer!r}")
-    return walk(twin, pointer[1:].split("/"), agg)
+    return walk(twin, pointer[1:].split("/"), agg, threshold=threshold)
 
 
 def has_token(literal, shown):

@@ -280,12 +280,14 @@ class BudgetCommitted(unittest.TestCase):
                                          {(pa.TEMP_C, pa.VDD_V): vos[(p, pa.TEMP_C, pa.VDD_V)]})
             self.assertEqual(pa.sha(deck), cited, p)
 
-    def test_requests_match_229_shape_at_the_same_point(self):
+    def test_requests_match_the_committed_229_controls(self):
+        ctrl = (pa.HERE / "artifacts" / "parasitic-attribution"
+                / "20261010-120720-230574b" / "ctrl")
+        self.assertEqual(pa.probe_request(pa.PROCESSES),
+                         json.loads((ctrl / "probe.request.json").read_text()))
         for p in pa.PROCESSES:
-            r = pa.budget_ladder_request("ladder-x", (p, pa.TEMP_C, pa.VDD_V))
-            old = pa.ladder_request(p)
-            r["netlist"] = old["netlist"]
-            self.assertEqual(r, old)
+            self.assertEqual(pa.ladder_request(p),
+                             json.loads((ctrl / f"ladder-{p}.request.json").read_text()), p)
 
 
 class BudgetCommittedEvidence(unittest.TestCase):
