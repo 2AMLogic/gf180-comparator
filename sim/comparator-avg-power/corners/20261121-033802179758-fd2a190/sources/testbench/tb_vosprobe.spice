@@ -1,0 +1,50 @@
+* tb_vosprobe.spice -- DUT systematic input-referred offset probe (issue #23)
+*
+* Adapted from sim/comparator-regeneration/testbench/tb_vosprobe.spice. The
+* ONLY change is the clock: this probe runs the 16 MHz / 50 % periodic clock
+* this bench's main deck uses (built from the same tb.json params), not the
+* regeneration deck's 30 ns / 33 % timing rig, so the trip point is located
+* under the same clocking as the measurement that refers to it.
+*
+* Measures the bound comparator's trip point at THIS PVT point: a slow
+* differential ramp (+/- vspan around the common mode, applied
+* symmetrically) under this bench's own clock, free-running, with the
+* decision output watched for the LOW->HIGH flip. The ramp value at the
+* flip is the differential input the comparator actually trips at, i.e.
+* minus its systematic input-referred offset -- the deterministic
+* asymmetry a flat extracted netlist carries (per-net parasitic R/C
+* differences between the two sides) and a symmetric schematic cannot.
+*
+* The main deck's dut_vos param takes this value, so the alternating
+* +/- v_od stimulus is referred to the comparator's own trip point rather
+* than to 0 V, which is how DR-0006 defines the overdrive ("schematic:
+* trip point 0 V; extracted: the per-corner probed dut_vos, as the
+* existing tb_vosprobe.spice flow does"). Against a schematic DUT the
+* probe does not run at all and dut_vos is 0.
+*
+* Quantisation: the ramp moves (2*vspan)/tramp = 80m/80u = 1 V/ms and the
+* decision updates once per clock period, so the trip point is resolved to
+* about 1 V/ms * 62.5 ns ~= 62.5 uV -- 160x finer than the 10 mV overdrive
+* it refers, and the same order as the ~30 uV the regeneration probe
+* reaches under its shorter period. The +/- 40 mV span exists because the
+* measured offset moves across PVT (about -2 mV at ss/-40C/2.97 V to
+* beyond -20 mV at ff/125C on this layout); an offset outside the span
+* produces no crossing at all and fails the point loudly, never a
+* silently wrong referral.
+.param vspan=40m
+.param tramp=80u
+
+vsup vdd 0 dc {vdd_val}
+vcm  cm  0 dc {dut_vcm}
+vclk clk 0 pulse(0 {vdd_val} {t_rise0} {t_edge} {t_edge} {t_hi-t_edge} {t_per})
+
+* slow differential ramp, applied symmetrically about the common mode
+vrmp rmp 0 pwl(0 {-vspan} {tramp} {vspan})
+Bpp  vp 0 v = 'v(cm)+v(rmp)/2'
+Bnn  vn 0 v = 'v(cm)-v(rmp)/2'
+
+ib   vdd ibn dc {dut_ib}
+Xdut vp vn clk ibn dout doutb vdd 0 comparator_dut
+
+* supply-normalized decision output (the flip crosses 0.5)
+Bdn  dn 0 v = 'v(dout)/v(vdd)'
