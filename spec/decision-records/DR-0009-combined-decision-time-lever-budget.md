@@ -160,8 +160,12 @@ through the committed two-phase extracted kickback and offset-referral bench
   kickback probe measure **deterministic systematic offset** on the extracted
   netlist. Reducing ground-C to `f_c = 0.25` shrinks asymmetric extracted C
   imbalance, moving `|dut_vos_v|` from `8.92 / 5.17 mV` (`ctrl`) down to
-  `2.77..3.61 / 1.66..2.14 mV` (well within DR-0002's `10 mV` 3-sigma target
-  envelope). **Random mismatch offset (`sigma(Vos)`) is a separate bench gap** on
+  `2.77..3.61 / 1.66..2.14 mV` (`tt / ss`). Because `dut_vos_v` is a
+  deterministic layout-systematic offset rather than a 3σ random-mismatch
+  sigma, it is a different quantity from DR-0002's ratified offset row
+  (`<= 15 mV 3σ` target / `<= 8 mV 3σ` stretch, whose basis disclaims
+  extracted-layout and layout-systematic offset) and is not scored against it.
+  **Random mismatch offset (`sigma(Vos)`) is a separate bench gap** on
   transformed extracted netlists: only an unrecorded feasibility probe
   (`sim/comparator-offset-tran-extracted-feasibility`) exists for extracted
   transient mismatch.
@@ -190,9 +194,11 @@ netlist (`comparator-dr0001-layout` / #202 extraction).
   figure is therefore **optimistic on wiring load** until layout re-extraction
   (especially `tail-x1.5-cgr-0250-1000`'s `+7.99 ps` margin).
 - **Severity of the global `f_c <= 0.25` budget:** Even `pair+tail` (`+16 µm`)
-  misses `1.5 ns` by `64.2 ps` at `f_c = 0.50, f_r = 0.50`, so device widening
-  within `1.5x` shifts `ss_125c_2.97v` by `86..140 ps` at `(1.0, 1.0)` and
-  `31..86 ps` at `(0.25, 0.5)` — enough to turn #264's `1.5062 ns` near-miss into
+  misses `1.5 ns` by `64.2 ps` at `f_c = 0.50, f_r = 0.50`. Across the three
+  `1.5x` levers (`tail-x1.5` to `pair+tail`), device widening reduces
+  `ss_125c_2.97v` by `44.9..139.8 ps` relative to `ctrl` (`2.02956 ns`) at
+  `(1.0, 1.0)` and by `31.5..86.0 ps` relative to #264's `1.5062 ns` baseline
+  at `(0.25, 0.5)` — enough to turn #264's `1.5062 ns` near-miss into
   a pass at `f_c = 0.25`, but not enough to lift the global capacitance ceiling
   to `f_c = 0.50`. Realizing `<= 25 %` of current global ground-C across all 20
   nets in layout is severe; after #112 lands, per-net attribution on the
