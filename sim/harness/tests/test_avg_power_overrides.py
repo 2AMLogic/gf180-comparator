@@ -435,11 +435,8 @@ class SensitivityIngest(unittest.TestCase):
         self.assertIsNone(rec)
 
 
-class ExtractedReferralPeriod(unittest.TestCase):
-    """Issue #459: the extracted referral's probe-resolution line quotes the
-    period the bundle's probe requests actually ran under -- the bundle's
-    t_per override when one governs, the staged manifest's nominal t_per
-    otherwise (including a corner-only condition)."""
+class ExtractedReferralResolution(unittest.TestCase):
+    """The probe-resolution line reports the bundle's effective period and overdrive."""
 
     def setUp(self):
         self.tb = htb.load(SIM / BENCH)
@@ -467,6 +464,11 @@ class ExtractedReferralPeriod(unittest.TestCase):
         self.assertIn("31.25 uV", line)
         self.assertIn("`t_per` override", line)
         self.assertNotIn("tb.json `t_per`", line)
+        self.assertIn("against the 10 mV overdrive", line)
+
+    def test_bundle_overdrive_governs_the_referral(self):
+        condition = mk.apply_avg_power_overrides(self.tb, {"v_od": 0.02})
+        self.assertIn("against the 20 mV overdrive", self._resolution(condition))
 
     def test_nominal_and_corner_only_keep_the_staged_manifest_period(self):
         for condition in (None,
@@ -474,9 +476,10 @@ class ExtractedReferralPeriod(unittest.TestCase):
                            "corner_points": ["tt_27c_3.30v"]}):
             with self.subTest(condition=condition):
                 line = self._resolution(condition)
-                self.assertIn("62.5 ns", line)
-                self.assertIn("62.5 uV", line)
-                self.assertIn("tb.json `t_per`", line)
+                self.assertEqual(
+                    line, "  - Probe resolution: the ramp moves 1000 V/s and the decision "
+                    "updates once per 62.5 ns (tb.json `t_per`), so the trip point is "
+                    "resolved to about 62.5 uV -- against the 10 mV overdrive it refers.")
 
 
 if __name__ == "__main__":

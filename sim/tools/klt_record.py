@@ -1826,18 +1826,20 @@ def probe_referral_lines(sec: dict, derived: dict, tb, names: dict,
     # staged-manifest attribution.
     t_per = None
     period_source = "tb.json `t_per`"
-    if condition and "t_per" in condition.get("overrides", {}):
+    overrides = (condition or {}).get("overrides", {})
+    if "t_per" in overrides:
         t_per = condition["t_per_s"]
         period_source = "the bundle's `t_per` override"
     else:
         t_per = tb.params.get("t_per")
     if t_per:
         slope = 2 * sec["vspan_v"] / sec["tramp_s"]
+        v_od = overrides.get("v_od", tb.params.get("v_od", 0.0))
         out.append(
             f"  - Probe resolution: the ramp moves {slope:.4g} V/s and the decision updates once "
             f"per {float(t_per) * 1e9:.4g} ns ({period_source}), so the trip point is resolved to "
             f"about {slope * float(t_per) * 1e6:.4g} uV -- against the "
-            f"{float(tb.params.get('v_od', 0.0)) * 1e3:.4g} mV overdrive it refers.")
+            f"{float(v_od) * 1e3:.4g} mV overdrive it refers.")
     out.append(
         "- **NOT comparable with the schematic records, and no cross-run band was applied**: "
         "extracted and schematic are different DUTs whose same-named quantities legitimately "
