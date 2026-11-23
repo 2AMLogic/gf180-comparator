@@ -197,21 +197,31 @@ class CombinedReportValidation(unittest.TestCase):
     def test_control_and_candidate_require_a_sane_low_to_high_decision(self):
         ctrl = dl.controls(self.text)[0]
         pair = next(v for v in dl.lever_variants(self.text) if v["id"] == "pair-x1.5")
-        tag = f"ladder-{pa.pid(self.points[0])}"
-        for field, bad, diagnostic in (("da_first", 1.0, "dout_od50_first"),
-                                       ("da_end", 0.0, "dout_od50_end"),
-                                       ("td_a", 0.5e-12, "td_od50_ns"),
-                                       ("td_a", 26e-9, "td_od50_ns")):
+        pt = self.points[0]
+        tag = f"ladder-{pa.pid(pt)}"
+        for field, bad, diagnostic, bound in (("da_first", 1.0, "dout_od50_first 1", "0.1"),
+                                              ("da_end", 0.0, "dout_od50_end 0", "0.9"),
+                                              ("td_a", 0.5e-12, "td_od50_ns 0.0005", "0.001"),
+                                              ("td_a", 26e-9, "td_od50_ns 26", "25")):
             def change(report):
                 measurements = {m["name"]: m for m in report["corners"][0]["measurements"]}
                 if variant is pair:
                     measurements["td_a"]["value"] = 1.4e-9
                 measurements[field]["value"] = bad
 
-            for stage, variant in (("controls", ctrl), ("primary", pair)):
-                with self.subTest(stage=stage, field=field, bad=bad):
-                    with self.assertRaisesRegex(ValueError, f"{stage}/{variant['id']}/{tag}.*{diagnostic}"):
-                        self.replay(variant, tag, change, stage)
+            variant = ctrl
+            with self.subTest(stage="controls", field=field, bad=bad):
+                with self.assertRaisesRegex(ValueError, f"controls/ctrl/{tag}.*{diagnostic}.*{bound}"):
+                    self.replay(ctrl, tag, change, "controls")
+            variant = pair
+            with self.subTest(stage="primary", field=field, bad=bad):
+                row = self.replay(pair, tag, change, "primary")[pair["id"]][pt]
+                cell = dl.combined_corner_cell(row, None)
+                self.assertFalse(cell["decision_ok"])
+                self.assertFalse(cell["meets_1p5ns"])
+                self.assertFalse(pa._ok(cell))
+                self.assertEqual(len(cell["decision_failures"]), 1)
+                self.assertRegex(cell["decision_failures"][0], f"{diagnostic}.*{bound}")
 
     def test_bench_bounds_are_inclusive_and_controls_can_exceed_the_design_target(self):
         ctrl = dl.controls(self.text)[0]
@@ -291,42 +301,80 @@ class CombinedReportValidation(unittest.TestCase):
             self.replay(pair, tag, clamp)
 
     def test_wrong_decision_at_a_followup_corner_withholds_seven_corner_pass(self):
-        pair = next(v for v in dl.lever_variants(self.text) if v["id"] == "pair-x1.5")
-        bad_point = ("ss", 125.0, 3.63)
+        by_lever = {v["lever"]: v for v in dl.combined_grid(self.text, dl.PRIMARY_LEVERS)
+                    if (v["fc"], v["fr"]) == (1.0, 1.0) and v["lever"] in ("pair-x1.5", "tail-x1.5")}
+        pair, tail = by_lever["pair-x1.5"], by_lever["tail-x1.5"]
+        grid = [pair, tail]
+        larger = [v for v in dl.combined_grid(self.text, dl.LARGER_PAIR)
+                  if (v["fc"], v["fr"]) == (1.0, 1.0)]
+        pair2, = larger
+        cases = (
+            (("ss", 125.0, 3.63), 1.4e-9, 1.4e-9, [pair["id"], tail["id"]],
+             [pair["id"]], ["ctrl", pair["id"], tail["id"]]),
+            (("tt", 125.0, 2.97), 1.4e-9, 1.4e-9, [pair["id"]],
+             [pair["id"]], ["ctrl", pair["id"]]),
+            (("ss", 125.0, 2.97), 0.5e-9, 1.4e-9, [pair["id"]],
+             [pair["id"]], ["ctrl", pair["id"]]),
+            (("tt", 125.0, 2.97), 1.4e-9, 1.6e-9, [pair2["id"]],
+             [pair2["id"]], ["ctrl", pair2["id"]]),
+        )
+        for bad_point, bad_td, pair_td, expected_two, expected_seven, expected_kick in cases:
+            def submit(vdir, tag, deck, request, *args):
+                req_grid = request["corners"]
+                processes = [p["name"] for p in req_grid["process"]]
+                points = {(p, req_grid["temperature_c"][0], req_grid["supply_v"]["vsup"][0])
+                          for p in processes}
+                probe = tag.startswith("probe-")
+                source = "probe" if probe else f"ladder-{processes[0]}"
+                side = "schematic" if vdir.name == "sch" else "extracted"
+                archive = dl.HERE / "artifacts/measure" / side / f"{source}.report.json"
+                template = json.loads(archive.read_text())
+                template["corners"] = [c for c in template["corners"]
+                                       if pa.pm._point_key(c) in points]
+                if not probe and vdir.name in (pair["id"], tail["id"], pair2["id"]):
+                    corner, = template["corners"]
+                    measurements = {m["name"]: m for m in corner["measurements"]}
+                    if vdir.name == pair["id"]:
+                        measurements["td_a"]["value"] = pair_td
+                    elif vdir.name == tail["id"]:
+                        measurements["td_a"]["value"] = 1.45e-9
+                    else:
+                        measurements["td_a"]["value"] = 1.35e-9
+                    if vdir.name == tail["id"] and pa.pm._point_key(corner) == bad_point:
+                        measurements["td_a"]["value"] = bad_td
+                        measurements["da_end"]["value"] = 0.0
+                template["environment"]["netlist_sha256"] = pa.sha(deck)
+                (vdir / f"{tag}.request.json").write_text(json.dumps(request))
+                (vdir / f"{tag}.report.json").write_text(json.dumps(template))
+                return {"ok": True, "report": template}
 
-        def submit(vdir, tag, deck, request, *args):
-            grid = request["corners"]
-            processes = [p["name"] for p in grid["process"]]
-            points = {(p, grid["temperature_c"][0], grid["supply_v"]["vsup"][0]) for p in processes}
-            probe = tag.startswith("probe-")
-            source = "probe" if probe else f"ladder-{processes[0]}"
-            side = "schematic" if vdir.name == "sch" else "extracted"
-            archive = dl.HERE / "artifacts/measure" / side / f"{source}.report.json"
-            template = json.loads(archive.read_text())
-            template["corners"] = [c for c in template["corners"] if pa.pm._point_key(c) in points]
-            if not probe and vdir.name == pair["id"]:
-                corner, = template["corners"]
-                measurements = {m["name"]: m for m in corner["measurements"]}
-                measurements["td_a"]["value"] = 1.4e-9
-                if pa.pm._point_key(corner) == bad_point:
-                    measurements["da_end"]["value"] = 0.0
-            template["environment"]["netlist_sha256"] = pa.sha(deck)
-            (vdir / f"{tag}.request.json").write_text(json.dumps(request))
-            (vdir / f"{tag}.report.json").write_text(json.dumps(template))
-            return {"ok": True, "report": template}
+            def small_grid(_text, levers):
+                return grid if levers == dl.PRIMARY_LEVERS else larger
 
-        with tempfile.TemporaryDirectory() as tmp, patch.object(pa, "submit", submit), \
-                patch.object(pa.pm, "_klt_identity", return_value={}), \
-                patch.object(dl, "combined_grid", return_value=[pair]), patch.object(dl, "kickback_stage") as kick:
-            root = Path(tmp) / "study"
-            self.assertEqual(dl.main(["combined-run", str(root)]), 1)
-            result = json.loads((root / "timing.json").read_text())
-            self.assertTrue(result["controls_valid"])
-            self.assertEqual(result["two_corner_passes"], [pair["id"]])
-            self.assertNotIn("seven_corner_passes", result)
-            self.assertIn(f"remaining-five/{pair['id']}/ladder-{pa.pid(bad_point)}", result["validity_failure"])
-            self.assertIn("dout_od50_end", result["validity_failure"])
-            kick.assert_not_called()
+            winner = expected_seven[0]
+            with self.subTest(bad_point=bad_point, pair_td=pair_td), tempfile.TemporaryDirectory() as tmp, \
+                    patch.object(pa, "submit", submit), \
+                    patch.object(pa.pm, "_klt_identity", return_value={}), \
+                    patch.object(dl, "combined_grid", side_effect=small_grid), \
+                    patch.object(dl, "kickback_stage", return_value={"status": "recorded"}) as kick:
+                root = Path(tmp) / "study"
+                self.assertEqual(dl.main(["combined-run", str(root)]), 0)
+                result = json.loads((root / "timing.json").read_text())
+                self.assertNotIn("validity_failure", result)
+                self.assertTrue(result["controls_valid"])
+                self.assertEqual(result["two_corner_passes"], expected_two)
+                self.assertEqual(result["seven_corner_passes"], expected_seven)
+                self.assertEqual(len(result["variants"][winner]), 7)
+                self.assertTrue(all(pa._ok(c) for c in result["variants"][winner].values()))
+                bad_cell = result["variants"][tail["id"]][pa.pid(bad_point)]
+                self.assertFalse(bad_cell["decision_ok"])
+                self.assertFalse(bad_cell["meets_1p5ns"])
+                self.assertEqual(bad_cell["dout_od50_end"], 0.0)
+                self.assertEqual(bad_cell["decision_failures"],
+                                 ["dout_od50_end 0 < required min 0.9"])
+                self.assertEqual(result["ranked_by_ss_td_od50"][0], winner)
+                self.assertEqual([c.args[1]["id"] for c in kick.call_args_list], expected_kick)
+                self.assertEqual(set(result["kickback_and_offset"]), set(expected_kick))
 
 
 class KickbackReportValidation(unittest.TestCase):

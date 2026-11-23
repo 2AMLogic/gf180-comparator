@@ -1725,7 +1725,8 @@ def cmd_combo_run(args) -> int:
 
 
 def _ok(x) -> bool:
-    return bool(x and x.get("td_od50_ns") is not None and x["meets_1p5ns"])
+    return bool(x and x.get("td_od50_ns") is not None and x["meets_1p5ns"]
+                and x.get("decision_ok", True) and not x.get("decision_failures"))
 
 
 def combo_analyze(outdir: Path) -> dict:

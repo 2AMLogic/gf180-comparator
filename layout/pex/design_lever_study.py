@@ -475,6 +475,28 @@ def validate_timing_probe(report, request, label):
                              f"but the probe span requires |dut_vos_v| < {pa.pm.PROBE_VSPAN:g} V")
 
 
+def timing_checks() -> dict:
+    checks = pa.pm._load_tb()["checks"]
+    return {
+        "td_od50_ns": {bound: checks["td_od50_ns"][bound] for bound in ("min", "max")},
+        "dout_od50_first": {"max": checks["dout_od50_first"]["max"]},
+        "dout_od50_end": {"min": checks["dout_od50_end"]["min"]},
+    }
+
+
+def combined_corner_cell(row: dict, ctrl_row: dict | None, checks: dict | None = None) -> dict:
+    failures = list(row["decision_failures"] if "decision_failures" in row
+                    else scalar_bound_failures(checks or timing_checks(), row))
+    cell = pa._corner_cell(row, ctrl_row, {
+        "dout_od50_first": row.get("dout_od50_first"),
+        "decision_ok": not failures,
+        "decision_failures": failures,
+    })
+    if failures:
+        cell["meets_1p5ns"] = False
+    return cell
+
+
 def combined_stage(root, name, text, plan, points, jobs):
     directory = root / name
     directory.mkdir()
@@ -482,12 +504,7 @@ def combined_stage(root, name, text, plan, points, jobs):
     if pa.run_stage(directory, man, plan, points, "batch", jobs, 453, capacity_wait_s=600,
                     validate_probe=validate_timing_probe):
         raise ValueError(f"{name}: fleet reports incomplete (see {name}/run-log.json)")
-    checks = pa.pm._load_tb()["checks"]
-    timing_checks = {
-        "td_od50_ns": {bound: checks["td_od50_ns"][bound] for bound in ("min", "max")},
-        "dout_od50_first": {"max": checks["dout_od50_first"]["max"]},
-        "dout_od50_end": {"min": checks["dout_od50_end"]["min"]},
-    }
+    checks = timing_checks()
     results = {}
     for variant in plan:
         vid = variant["id"]
@@ -505,9 +522,10 @@ def combined_stage(root, name, text, plan, points, jobs):
             validate(report, request, f"{name}/{vid}/{tag}")
         values = pa._budget_values(vdir, points)
         for pt, row in values.items():
-            failures = scalar_bound_failures(timing_checks, row)
-            if failures:
+            failures = scalar_bound_failures(checks, row)
+            if failures and (name == "controls" or variant.get("group") == "control"):
                 raise ValueError(f"{name}/{vid}/ladder-{pa.pid(pt)}: " + ", ".join(failures))
+            row["decision_failures"] = failures
         results[vid] = values
     errors = pa.verify_stage_reports(directory, plan, points)
     if errors:
@@ -584,12 +602,14 @@ def cmd_combined(args) -> int:
         summary["controls"], summary["controls_valid"] = pa.stage_controls(reference, two)
         if not summary["controls_valid"]:
             raise ValueError(f"controls: cited delay outside {pa.CONTROL_TOL_NS:g} ns tolerance")
+        checks = timing_checks()
         candidates = []
         for name, grid in (("primary", primary), ("larger-pair", larger)):
             results = combined_stage(root, name, text, grid, two, args.jobs)
             for v in grid:
                 r = results[v["id"]]
-                cells = {pa.pid(pt): pa._corner_cell(r[pt], reference["ctrl"][pt], {}) for pt in two}
+                cells = {pa.pid(pt): combined_corner_cell(r[pt], reference["ctrl"][pt], checks)
+                         for pt in two}
                 summary["variants"][v["id"]] = cells
                 if all(pa._ok(c) for c in cells.values()):
                     candidates.append(v)
@@ -599,11 +619,14 @@ def cmd_combined(args) -> int:
         if candidates:
             rest = combined_stage(root, "remaining-five", text, candidates, five, args.jobs)
             for vid, r in rest.items():
-                summary["variants"][vid].update({pa.pid(pt): pa._corner_cell(r[pt], None, {})
-                                                 for pt in five})
+                summary["variants"][vid].update({
+                    pa.pid(pt): combined_corner_cell(r[pt], None, checks) for pt in five
+                })
         variants = summary["variants"]
+        ss = pa.CORNER_IDS["ss"]
         summary["ranked_by_ss_td_od50"] = sorted(
-            variants, key=lambda vid: variants[vid][pa.CORNER_IDS["ss"]]["td_od50_ns"])
+            (vid for vid in variants if variants[vid][ss]["decision_ok"]),
+            key=lambda vid: variants[vid][ss]["td_od50_ns"])
         summary["seven_corner_passes"] = [
             v["id"] for v in candidates if all(pa._ok(c) for c in variants[v["id"]].values())]
         if candidates:
