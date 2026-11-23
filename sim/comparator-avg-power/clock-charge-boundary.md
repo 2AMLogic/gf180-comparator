@@ -151,3 +151,57 @@ Source: the 45-corner post-layout extracted campaign, citable DR-0008 re-mint (i
 
 - **Maximum over corners, pin charge inside the row**: **207.421 µW @ `ff_125c_3.63v`** (committed outside-boundary figure 207.376 µW at the same corner; +0.045 µW).
 - **Largest absolute and relative move**: +0.0640 µW, +0.0318 % @ `fs_125c_3.63v`; the boundary does not change which corner binds (`ff_125c_3.63v` on both DUTs, either side of the boundary).
+
+## The boundary at the item-4 sensitivity conditions (issue #452, 2026-11-21)
+
+DR-0006's item 4 also asks that the boundary be visible where the condition
+itself moves — at 100 fF loads and at 32 MHz. The ten SENSITIVITY-ONLY
+records listed in the bench README (five conditions × two DUTs, each at
+`tt_27c_3.30v` / `ff_125c_3.63v` / `ss_125c_2.97v`) each carry their own
+`q_clk_pc` column, so the same fold-in arithmetic extends to them with no new
+simulation: `p_avg_uw(inside) = p_avg_uw + VDD · q_clk_pc / (N·T)` with
+`N·T` = 1.000 µs at the 16 MHz conditions and 0.500 µs at 32 MHz.
+
+| condition | DUT | corner | `q_clk_pc` [pC] | `p_avg_uw` (outside, committed) | `p_avg_uw` (inside, computed) | delta [µW] | delta [%] |
+|---|---|---|---:|---:|---:|---:|---:|
+| `c_load` = 100 fF | schematic | `tt_27c_3.30v` | 0.006366 | 159.393 | 159.414 | +0.0210 | +0.0132 |
+| `c_load` = 100 fF | schematic | `ff_125c_3.63v` | 0.006671 | 192.350 | 192.374 | +0.0242 | +0.0126 |
+| `c_load` = 100 fF | schematic | `ss_125c_2.97v` | 0.006635 | 136.600 | 136.620 | +0.0197 | +0.0144 |
+| `c_load` = 100 fF | extracted | `tt_27c_3.30v` | 0.012403 | 182.858 | 182.899 | +0.0409 | +0.0224 |
+| `c_load` = 100 fF | extracted | `ff_125c_3.63v` | 0.012446 | 225.079 | 225.124 | +0.0452 | +0.0201 |
+| `c_load` = 100 fF | extracted | `ss_125c_2.97v` | 0.010760 | 155.367 | 155.399 | +0.0320 | +0.0206 |
+| `v_od` = 1 mV | schematic | `tt_27c_3.30v` | 0.006712 | 150.357 | 150.379 | +0.0221 | +0.0147 |
+| `v_od` = 1 mV | schematic | `ff_125c_3.63v` | -0.001884 | 184.312 | 184.306 | -0.0068 | -0.0037 |
+| `v_od` = 1 mV | schematic | `ss_125c_2.97v` | 0.010517 | 128.647 | 128.678 | +0.0312 | +0.0243 |
+| `v_od` = 1 mV | extracted | `tt_27c_3.30v` | 0.012791 | 177.277 | 177.320 | +0.0422 | +0.0238 |
+| `v_od` = 1 mV | extracted | `ff_125c_3.63v` | 0.013726 | 223.092 | 223.142 | +0.0498 | +0.0223 |
+| `v_od` = 1 mV | extracted | `ss_125c_2.97v` | 0.011218 | 149.904 | 149.938 | +0.0333 | +0.0222 |
+| `v_od` = 50 mV | schematic | `tt_27c_3.30v` | 0.004911 | 142.938 | 142.954 | +0.0162 | +0.0113 |
+| `v_od` = 50 mV | schematic | `ff_125c_3.63v` | -0.003171 | 169.289 | 169.278 | -0.0115 | -0.0068 |
+| `v_od` = 50 mV | schematic | `ss_125c_2.97v` | 0.013082 | 123.868 | 123.907 | +0.0389 | +0.0314 |
+| `v_od` = 50 mV | extracted | `tt_27c_3.30v` | 0.013228 | 164.694 | 164.738 | +0.0437 | +0.0265 |
+| `v_od` = 50 mV | extracted | `ff_125c_3.63v` | 0.011721 | 198.917 | 198.959 | +0.0425 | +0.0214 |
+| `v_od` = 50 mV | extracted | `ss_125c_2.97v` | 0.013189 | 141.166 | 141.206 | +0.0392 | +0.0277 |
+| `c_load` = 0 fF | schematic | `tt_27c_3.30v` | 0.006395 | 141.133 | 141.154 | +0.0211 | +0.0150 |
+| `c_load` = 0 fF | schematic | `ff_125c_3.63v` | 0.007251 | 169.894 | 169.920 | +0.0263 | +0.0155 |
+| `c_load` = 0 fF | schematic | `ss_125c_2.97v` | 0.008481 | 121.875 | 121.901 | +0.0252 | +0.0207 |
+| `c_load` = 0 fF | extracted | `tt_27c_3.30v` | 0.015175 | 164.797 | 164.847 | +0.0501 | +0.0304 |
+| `c_load` = 0 fF | extracted | `ff_125c_3.63v` | 0.014756 | 202.882 | 202.935 | +0.0536 | +0.0264 |
+| `c_load` = 0 fF | extracted | `ss_125c_2.97v` | 0.010403 | 140.802 | 140.833 | +0.0309 | +0.0219 |
+| `t_per` = 31.25 ns | schematic | `tt_27c_3.30v` | 0.004482 | 190.486 | 190.515 | +0.0296 | +0.0155 |
+| `t_per` = 31.25 ns | schematic | `ff_125c_3.63v` | 0.007651 | 239.876 | 239.932 | +0.0555 | +0.0232 |
+| `t_per` = 31.25 ns | schematic | `ss_125c_2.97v` | 0.006568 | 161.070 | 161.109 | +0.0390 | +0.0242 |
+| `t_per` = 31.25 ns | extracted | `tt_27c_3.30v` | 0.011848 | 243.073 | 243.152 | +0.0782 | +0.0322 |
+| `t_per` = 31.25 ns | extracted | `ff_125c_3.63v` | 0.011499 | 311.937 | 312.021 | +0.0835 | +0.0268 |
+| `t_per` = 31.25 ns | extracted | `ss_125c_2.97v` | 0.010565 | 203.235 | 203.298 | +0.0628 | +0.0309 |
+
+Reading: at the 16 MHz sensitivity conditions the fold-in moves the figure by
+at most +0.0389 µW (schematic, `v_od` = 50 mV @ `ss_125c_2.97v`) /
++0.0536 µW (extracted, `c_load` = 0 fF @ `ff_125c_3.63v`); at 32 MHz, where
+the same pin charge is spread over a 0.500 µs window, by at most +0.0555 µW
+(schematic) / +0.0835 µW (extracted), both at `ff_125c_3.63v`. Two
+`q_clk_pc` values are small and negative (schematic `v_od` = 1/50 mV @
+`ff_125c_3.63v`) — the signed integral crossing zero, not an anomaly. The
+boundary does not change which corner binds in any condition, and — the same
+caveat as above — none of these numbers bounds the clock-driver supply cost,
+which stays open.

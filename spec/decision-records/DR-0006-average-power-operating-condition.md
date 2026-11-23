@@ -204,9 +204,8 @@ Established from committed evidence, with its limits:
   reset can complete in some time ≤ 20 ns at the 33 MHz bench, but it was
   not designed as a reset measurement.
 
-**Validation status (revised 2026-11-20, issue #452 — items 1–3 measured,
-item 4 partially measured; each cites its committed record and that record's
-sha256)**:
+**Validation status (revised 2026-11-21, issue #452 — items 1–4 measured;
+each cites its committed record and that record's sha256)**:
 
 The validation bench is `sim/comparator-avg-power/` (issue #356; fleet path
 issues #372/#373/#374, citable re-mint #398). Its two 45-corner records are:
@@ -259,21 +258,79 @@ ratification reviewers, not verdicts.
    warm-up and 16-cycle window held; no lengthening and re-record was
    needed. **Open:** none.
 4. **Output load, overdrive and clock-pin-charge sensitivities:
-   PARTIALLY MEASURED.** The **signed clock-pin charge is computed from the
-   committed records** — see
-   `sim/comparator-avg-power/clock-charge-boundary.md` (issue #452). It is an
-   informational pin diagnostic only: the signed net charge of a capacitive
-   clock load cancels over whole cycles, so it is **not** a measure of clock-driver
-   supply cost and no bound on that cost is claimed. Adding it to the row's
-   charge integral moves the figure by at most +0.1254 µW (schematic,
-   `sf_27c_3.63v`) / +0.0640 µW (extracted, `fs_125c_3.63v`); at the binding
-   corner (`ff_125c_3.63v`) by +0.028 / +0.045 µW. The binding corner does not
-   change. **Open:** the clock-driver supply cost (needs a specified driver or the
-   `-∫ v(clk)·i(vclk) dt` port integral).
-   **Open:** the 0/100 fF load, 1/50 mV overdrive and 32 MHz (informational)
-   sweep records — the fleet recorder's sensitivity mechanism landed with
-   issue #452 and the sweep records are the remainder of that issue's work.
-   No chosen value is revised until those records exist.
+   MEASURED.** Three parts, all as unscored SENSITIVITY-ONLY records under
+   `sim/comparator-avg-power/records/` (issue #452's closing increment; every
+   record carries its override set and its 3-point corner subset —
+   `tt_27c_3.30v`, `ff_125c_3.63v`, `ss_125c_2.97v`: the nominal point, the
+   nominal campaign's measured power maximum, and this record's hypothesised
+   slow corner — in its header and Reproduce line, and is stamped so it can
+   never be read as the nominal condition or a scored row):
+   - **Load (0 fF and 100 fF against the chosen 20 fF).** Schematic
+     `20261121-032749529701-fd2a190` (0 fF, sha256
+     `46779f53a919092ad213507db086d2ca96c3a89e1bcb7074c0d708e71430d033`) and
+     `20261121-033511010875-fd2a190` (100 fF, sha256
+     `6633bfbe72a8004f215d7fc6e13b094e7566bddd50e9ce12a6762e5c18e521af`);
+     extracted `20261121-034429183380-fd2a190` (0 fF, sha256
+     `9d35ff9942eb071fd05d9ec7232be9c923dc7e24836383da5210e56f894d0955`) and
+     `20261121-034303477762-fd2a190` (100 fF, sha256
+     `60f48af91b04ad2558e2fa643611b09598f8180a423d4766eb52f6ecaaaa809a`).
+     Removing the loads moves `p_avg_uw` by −3.0 … −4.6 µW (schematic) and
+     −3.0 … −4.5 µW (extracted; 202.882 µW worst sampled at 0 fF, extracted); 100 fF moves it by +11.7 … +17.9 µW and
+     +11.6 … +17.7 µW — ≈ 0.22 µW/fF on both bindings, so the chosen 20 fF
+     sits on a gentle slope: even the 5× load leaves the worst sampled point
+     at 192.350 µW / 225.079 µW, inside the 500 µW stretch. **No revision to
+     the 20 fF choice is proposed.**
+   - **Overdrive (1 mV and 50 mV against the chosen 10 mV).** Schematic
+     `20261121-033708169651-fd2a190` (1 mV, sha256
+     `d05280f12432407d731a0e60ca9c49bcd737558ea431be2c8c1837dd19e9233d`) and
+     `20261121-033802179758-fd2a190` (50 mV, sha256
+     `37d87a4b1740d9b9b8d922af2b8d0aa2a942d08e7c2a73a6f4f218df6ac2cefc`);
+     extracted `20261121-034624876214-fd2a190` (1 mV, sha256
+     `4436669b85d711d052d7afcba37940938d60964068365e3e9add05647d0661f5`) and
+     `20261121-034303118261-fd2a190` (50 mV, sha256
+     `ec1161acf7ce111291cdf6232d5ca7372fc72c933dff773da1fed545af3b432b`).
+     `p_avg_uw` RISES as the overdrive shrinks (1 mV: +3.7 … +9.8 µW
+     schematic, +6.1 … +15.7 µW extracted — slower regeneration spends longer
+     at the static bias) and falls as it grows (50 mV: −5.2 … −1.0 µW and
+     −8.5 … −2.6 µW), at every sampled corner on both bindings. The chosen
+     10 mV reference stimulus therefore understates power relative to 1 mV
+     (by up to 15.7 µW extracted) and overstates it relative to 50 mV; the
+     regeneration-dwell mechanism is a hypothesis, and 10 mV is retained on
+     its stated engineering basis. All 16 decisions were correct at 1 mV on both bindings (the
+     extracted leg overdrive referred to each corner's own probed trip
+     point). **No revision to the 10 mV choice is proposed.**
+   - **Clock rate (32 MHz, informational per "Alternatives considered").**
+     Schematic `20261121-034107310717-fd2a190` (sha256
+     `608e87c18b3ca3d23d6860c8bb1030a9f039f93e6f7b2f782397ce8252af453b`);
+     extracted `20261121-034523379992-fd2a190` (sha256
+     `afbaf1af850bf35f90c7c837cf284ca5a4a04d81dadac70e3e63b32d7aa519f2`).
+     Doubling the rate moves the figure by +36.2 … +65.4 µW (schematic,
+     +37.5 % at the binding corner) and +59.5 … +104.6 µW (extracted, +50.4 %
+     at the binding corner): worst sampled 239.876 µW / 311.937 µW — inside
+     the 1 mW target but 62 % of the 500 µW stretch on the extracted
+     binding. This supports keeping the ratified 16 MHz as the scored rate
+     (the "Alternatives" reasoning stands); it is not a scored condition and
+     moves no bound.
+   Every one of the 10 records: `dec_cycles_correct` = 16/16 at all 3 points,
+   worst `q_half_mismatch_pct` 0.00472 % (≈ 212× inside the 1 % criterion),
+   and the highest-power corner **among the sampled points** is
+   `ff_125c_3.63v` in every condition on both bindings — the same corner the
+   45-point nominal campaigns identify as the grid maximum, so no condition
+   moved the binding corner and no full-grid re-run was triggered.
+   - **Signed clock-pin charge: computed from the committed records** — see
+     `sim/comparator-avg-power/clock-charge-boundary.md` (issue #452). It is
+     an informational pin diagnostic only: the signed net charge of a
+     capacitive clock load cancels over whole cycles, so it is **not** a
+     measure of clock-driver supply cost and no bound on that cost is
+     claimed. Adding it to the row's charge integral moves the figure by at
+     most +0.1254 µW (schematic, `sf_27c_3.63v`) / +0.0640 µW (extracted,
+     `fs_125c_3.63v`); at the binding corner (`ff_125c_3.63v`) by +0.028 /
+     +0.045 µW. The same boundary is visible in the sensitivity records
+     (100 fF and 32 MHz): the largest fold-in over the sampled points is
+     +0.039 µW (schematic) / +0.054 µW (extracted) at 16 MHz conditions and
+     +0.056 µW / +0.084 µW at 32 MHz. The binding corner does not change
+     under any of them. **Open:** the clock-driver supply cost (needs a
+     specified driver or the `-∫ v(clk)·i(vclk) dt` port integral).
 
 These items validate the *condition*; they are not a compliance claim. A
 ratified condition with a measured miss is a miss, and no bound moves to

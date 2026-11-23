@@ -1,0 +1,173 @@
+{
+ "schema": "gf180-comparator/klt-source-bundle",
+ "version": 2,
+ "generator": "sim/tools/mk_klt_request.py",
+ "generated_utc": "2026-11-21T03:41:38Z",
+ "bench": "comparator-avg-power",
+ "phase": "main",
+ "probe": {
+  "mechanism": "two-phase dut_vos referral (issue #374): the phase-1 requests request-probe-*.json measured each point's trip time t_flip; these phase-2 bodies bake each point's dut_vos = -vspan + 2*vspan*t_flip/tramp",
+  "probe_deck": "tb_vosprobe.spice",
+  "vspan_v": 0.04,
+  "tramp_s": 7.999999999999999e-05,
+  "vos_formula": "-vspan + 2*vspan*t_flip/tramp",
+  "vos_by_corner": {
+   "ff_125c_3.63v": -0.021363273798359998,
+   "ss_125c_2.97v": -0.005111709375660002,
+   "tt_27c_3.30v": -0.008113173191909996
+  },
+  "probe_results_sha256": "ca4a9ee485cd5f7945b885e0db62ae54d052aa5e92137a9a231828f811aff2ff",
+  "probe_reports": {
+   "probe-v2.97": "b84b88c8d2906d08fbf98bc362273e4740e7e279e9107b18d0ef2f0caf6e486b",
+   "probe-v3.30": "beda768a7969f6039acff8ea8c71fa97b164a5dce854f4e6cd4d2a1af88db3ae",
+   "probe-v3.63": "da8a76de8c786240a032ee328dae9883b554411a88bbdfbf4c4272e313b22d85"
+  }
+ },
+ "origin": {
+  "commit": "fd2a19061f44b6f69c9981f6ae290288e4c62f4f",
+  "dirty": false,
+  "dirty_paths": [],
+  "checked_paths": [
+   "design",
+   "sim/tools",
+   "sim/harness",
+   "sim/comparator-avg-power/testbench",
+   "sim/dut.json",
+   "layout/lvs/comparator.dut-layout.spice"
+  ],
+  "pinned_sources": [
+   "layout/lvs/comparator.dut-layout.spice"
+  ]
+ },
+ "dut": {
+  "selector": "comparator-dr0001-layout",
+  "key": "comparator-dr0001-layout",
+  "dut_id": "comparator-dr0001-layout",
+  "provenance": "extracted",
+  "netlist": "layout/lvs/comparator.dut-layout.spice",
+  "netlist_sha256": "796431fd771e080d82491fdd9e6b5b7809fa76212a61cace42139128dbf2dbf6",
+  "params": {
+   "dut_ib": 1e-05,
+   "dut_vcm": 1.65
+  },
+  "binding_config": "sim/dut.json",
+  "binding_entry_sha256": "d85e3d045eb6a24fd816c4d7b415bb7d5377331a2061a25f4df1f062a49910ec",
+  "staged_netlist": "sources/dut/comparator.dut-layout.spice",
+  "staged_binding": "sources/dut-binding.json"
+ },
+ "testbench": {
+  "experiment": "comparator-avg-power",
+  "dir": "sim/comparator-avg-power/testbench",
+  "netlist": "tb_avg_power.spice",
+  "netlist_sha256": "a2bb5545b89137e1f21332108f28575697b771b05030bc829ee0eea26051986e",
+  "manifest_sha256": "ad9454f781c63108fa9997c293f3477f45e63954928dd872e7d82ff2f5d936a1",
+  "staged_dir": "sources/testbench"
+ },
+ "toolchain": {
+  "file": "sim/toolchain.json",
+  "sha256": "9f31fd9f7b46d10913524529b7d39070594913954a753e1d608639525f68f60b",
+  "commit": "fd2a19061f44b6f69c9981f6ae290288e4c62f4f",
+  "ngspice_min_major": 46,
+  "open_pdks": "f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7",
+  "pdk_variant": "gf180mcuD"
+ },
+ "parameters": {
+  "corners": [
+   "tt",
+   "ff",
+   "ss",
+   "fs",
+   "sf"
+  ],
+  "temperatures_c": [
+   -40.0,
+   27.0,
+   125.0
+  ],
+  "supply_tolerance": 0.1,
+  "supply_v": [
+   2.97,
+   3.3,
+   3.63
+  ],
+  "mc_n": null,
+  "overrides": {
+   "v_od": 0.05
+  },
+  "corner_points": [
+   "tt_27c_3.30v",
+   "ff_125c_3.63v",
+   "ss_125c_2.97v"
+  ]
+ },
+ "requests": {
+  "probe-v2.97": {
+   "leg": "probe",
+   "vdd": 2.97,
+   "request": "request-probe-v2.97.json",
+   "request_sha256": "467793afffbc1dbdcd6eb951be72c0ecf61401bc1a837d8b38b86cc9833a6d22",
+   "netlist": "body-v2.97.spice",
+   "netlist_sha256": "543894e1eb17c293eb8c078a058d4fbd0849bea40eea1a00a72b5bea7d905361"
+  },
+  "probe-v3.30": {
+   "leg": "probe",
+   "vdd": 3.3,
+   "request": "request-probe-v3.30.json",
+   "request_sha256": "2164dffc530b8e0a9f91628796cb55aaa162d469a2a789f070cf7b2657add92e",
+   "netlist": "body-v3.30.spice",
+   "netlist_sha256": "f1fa3d1117cdeb72f32e77875910a3c138a7a5c0bb20c70cd9aa47556d6de757"
+  },
+  "probe-v3.63": {
+   "leg": "probe",
+   "vdd": 3.63,
+   "request": "request-probe-v3.63.json",
+   "request_sha256": "38a74e7d5cd22304b9a6bc46e9a00dcd8e68b26577165ce593456c5e78e47093",
+   "netlist": "body-v3.63.spice",
+   "netlist_sha256": "7c6bc85738f443f434a1988d1705d0b88717242eaaf0b061fb70422482094f9e"
+  },
+  "main-ss_125c_2.97v": {
+   "leg": "main",
+   "vdd": 2.97,
+   "request": "request-main-ss_125c_2.97v.json",
+   "request_sha256": "12f40f74c5d7fb41320298e158255dde5f46efbcd254e7b52e7b212eb36f727e",
+   "netlist": "body-ss_125c_2.97v.spice",
+   "netlist_sha256": "a1bb1a338ae194ef2acc32f4fca2fe956ab42d5f722c3f4372af07e98277e9ae"
+  },
+  "main-tt_27c_3.30v": {
+   "leg": "main",
+   "vdd": 3.3,
+   "request": "request-main-tt_27c_3.30v.json",
+   "request_sha256": "6a5297463cf2490745b6f3c23a239023639ea85e01421c0033d1258301db6e2b",
+   "netlist": "body-tt_27c_3.30v.spice",
+   "netlist_sha256": "7f86eed84609391cb8abb85ceac2633e4672eff731aa68ddd7eec992575f69bf"
+  },
+  "main-ff_125c_3.63v": {
+   "leg": "main",
+   "vdd": 3.63,
+   "request": "request-main-ff_125c_3.63v.json",
+   "request_sha256": "5c09214f5d9bcf93a18e721cba05d3a157d89f89eb9431a4bb8d23e9742729dd",
+   "netlist": "body-ff_125c_3.63v.spice",
+   "netlist_sha256": "b53f676456b5e56ce6bcd54b61e4be24fd790d4e55f453780bbedaf11d37d72e"
+  }
+ },
+ "staged": {
+  "body-ff_125c_3.63v.spice": "b53f676456b5e56ce6bcd54b61e4be24fd790d4e55f453780bbedaf11d37d72e",
+  "body-ss_125c_2.97v.spice": "a1bb1a338ae194ef2acc32f4fca2fe956ab42d5f722c3f4372af07e98277e9ae",
+  "body-tt_27c_3.30v.spice": "7f86eed84609391cb8abb85ceac2633e4672eff731aa68ddd7eec992575f69bf",
+  "body-v2.97.spice": "543894e1eb17c293eb8c078a058d4fbd0849bea40eea1a00a72b5bea7d905361",
+  "body-v3.30.spice": "f1fa3d1117cdeb72f32e77875910a3c138a7a5c0bb20c70cd9aa47556d6de757",
+  "body-v3.63.spice": "7c6bc85738f443f434a1988d1705d0b88717242eaaf0b061fb70422482094f9e",
+  "design.ngspice": "7e222f050318388f37543a64fbd0be55cc15e4b93f57501a09f7c159c4c9e561",
+  "request-main-ff_125c_3.63v.json": "5c09214f5d9bcf93a18e721cba05d3a157d89f89eb9431a4bb8d23e9742729dd",
+  "request-main-ss_125c_2.97v.json": "12f40f74c5d7fb41320298e158255dde5f46efbcd254e7b52e7b212eb36f727e",
+  "request-main-tt_27c_3.30v.json": "6a5297463cf2490745b6f3c23a239023639ea85e01421c0033d1258301db6e2b",
+  "request-probe-v2.97.json": "467793afffbc1dbdcd6eb951be72c0ecf61401bc1a837d8b38b86cc9833a6d22",
+  "request-probe-v3.30.json": "2164dffc530b8e0a9f91628796cb55aaa162d469a2a789f070cf7b2657add92e",
+  "request-probe-v3.63.json": "38a74e7d5cd22304b9a6bc46e9a00dcd8e68b26577165ce593456c5e78e47093",
+  "sources/dut/comparator.dut-layout.spice": "796431fd771e080d82491fdd9e6b5b7809fa76212a61cace42139128dbf2dbf6",
+  "sources/dut-binding.json": "0c3561ab929e88c25421e8ec10dd3c60f2c02fe73050c2dabacbf04497316636",
+  "sources/testbench/tb.json": "ad9454f781c63108fa9997c293f3477f45e63954928dd872e7d82ff2f5d936a1",
+  "sources/testbench/tb_avg_power.spice": "a2bb5545b89137e1f21332108f28575697b771b05030bc829ee0eea26051986e",
+  "sources/testbench/tb_vosprobe.spice": "35c7012038e6ffadf3db48e3b34982d93157f36e493d2e526a710c4fe5bc144f"
+ }
+}

@@ -1,0 +1,18 @@
+{
+ "schema": "probe-results/1",
+ "bench": "comparator-avg-power",
+ "dut": "comparator-dr0001-layout",
+ "vspan_v": 0.04,
+ "tramp_s": 7.999999999999999e-05,
+ "vos_formula": "-vspan + 2*vspan*t_flip/tramp",
+ "vos_by_corner": {
+  "ss_125c_2.97v": -0.005111709375660002,
+  "tt_27c_3.30v": -0.008113173191909996,
+  "ff_125c_3.63v": -0.021363273798359998
+ },
+ "probe_reports": {
+  "probe-v2.97": "b84b88c8d2906d08fbf98bc362273e4740e7e279e9107b18d0ef2f0caf6e486b",
+  "probe-v3.30": "beda768a7969f6039acff8ea8c71fa97b164a5dce854f4e6cd4d2a1af88db3ae",
+  "probe-v3.63": "da8a76de8c786240a032ee328dae9883b554411a88bbdfbf4c4272e313b22d85"
+ }
+}
