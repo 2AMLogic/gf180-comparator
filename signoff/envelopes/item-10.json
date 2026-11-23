@@ -52,7 +52,7 @@
         "role": "hygiene",
         "path": "scripts/check_claim_drift.py",
         "passed": true,
-        "content_hash": "sha256:9ca0e0b70988c7e7fd3484ae92d73d0827dafe10d42d6383f3a10beebdc8a9e1"
+        "content_hash": "sha256:b493fa44843cefe048e43bba8675d92a47d60288b5c5b8961822c2ccb95a622b"
       },
       {
         "check": "present",
