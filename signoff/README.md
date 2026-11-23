@@ -890,7 +890,8 @@ toolchain host (ngspice >= 46, pinned open_pdks) in `workflow_dispatch` run 4395
 and downloaded unmodified; re-produced the same way (79/79 checks, adding
 `sim/harness/tests/test_avg_power_overrides.py` and the edited avg-power README) from
 `selftest.yml` run 44840704257 on `feature/issue-452` (issue #452), and again from
-run 44863740368 on `feature/issue-452` (issue #452).
+runs 44863740368 and 45186423722 on `feature/issue-452` (issue #452; the latter after the
+Judge-feedback edits to the avg-power README).
 After issue #461 added `sim/harness/tests/klt_record_fixtures.py` to the
 inventory, [selftest run 44908806277](https://github.com/2AMLogic/gf180-comparator/actions/runs/44908806277)
 on `feature/issue-461` produced the current envelope. All 80 checks passed.
