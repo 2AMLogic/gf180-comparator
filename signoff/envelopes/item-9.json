@@ -3,14 +3,14 @@
   "kind": "generic",
   "status": "pass",
   "t1_item": 9,
-  "summary": "T1 item 9 (Testbenches shipped): 79/79 attestation checks passed (klt signoff --attest)",
+  "summary": "T1 item 9 (Testbenches shipped): 80/80 attestation checks passed (klt signoff --attest)",
   "source": "signoff/inventory/item-9.json",
   "attestation": {
     "producer": "klt signoff --attest",
     "inventory_schema_version": 1,
     "hash_algorithm": "sha256-raw-bytes",
-    "check_count": 79,
-    "passed_count": 79,
+    "check_count": 80,
+    "passed_count": 80,
     "checks": [
       {
         "check": "present",
@@ -31,7 +31,7 @@
         "role": "testbench",
         "path": "sim/comparator-avg-power/README.md",
         "passed": true,
-        "content_hash": "sha256:09332e8621d6782832af122dab958759ca53234f1a4577e1237b36f84fce0521"
+        "content_hash": "sha256:f12b658cd93251d6111a0fbdb16d9360388775893602b00b64031ef510050430"
       },
       {
         "check": "present",
@@ -344,6 +344,13 @@
       {
         "check": "present",
         "role": "testbench",
+        "path": "sim/harness/tests/klt_record_fixtures.py",
+        "passed": true,
+        "content_hash": "sha256:f9b474a6b54674dd7bbf35e239395796ca3efeb4da25d1c57ce69cda3be01106"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
         "path": "sim/harness/tests/test_adapt_samples.py",
         "passed": true,
         "content_hash": "sha256:99dfae04941dba6c4f7a82cecec267a8ecad90563c585673b291b506eab28e97"
@@ -353,7 +360,7 @@
         "role": "testbench",
         "path": "sim/harness/tests/test_avg_power_overrides.py",
         "passed": true,
-        "content_hash": "sha256:f1f3ec56e81e537965755d8ae6d423d13189674b8de280899c983b317911623d"
+        "content_hash": "sha256:9bd85ceed052fa7627b298237ccf4ee33318da99ee6cfb71e32436c487313427"
       },
       {
         "check": "present",
@@ -416,7 +423,7 @@
         "role": "testbench",
         "path": "sim/harness/tests/test_klt_record.py",
         "passed": true,
-        "content_hash": "sha256:c42b7d1bf07bfab01069e161e32e7869a4cb458d8af59b1513dc1c6e691a8e6a"
+        "content_hash": "sha256:15db9fdbd6583c1a3696755871f5c9306c3093c2b67eeb7e4471a6b25e2e53d0"
       },
       {
         "check": "present",
@@ -586,7 +593,7 @@
         "path": "signoff/inventory/item-9.json",
         "scope": "repo"
       },
-      "content_hash": "sha256:c2908de194e3d7c3faa2e5e5780a11df47d51eb836dbc4073dfb53040325a086"
+      "content_hash": "sha256:47ae1a0ddbc7ab34b1d93805ada64133530a4d86e69d5962b11ad2e2ed9b3aba"
     }
   }
 }
