@@ -894,7 +894,9 @@ runs 44863740368 and 45186423722 on `feature/issue-452` (issue #452; the latter 
 Judge-feedback edits to the avg-power README).
 After issue #461 added `sim/harness/tests/klt_record_fixtures.py` to the
 inventory, [selftest run 44908806277](https://github.com/2AMLogic/gf180-comparator/actions/runs/44908806277)
-on `feature/issue-461` produced the current envelope. All 80 checks passed.
+on `feature/issue-461` passed all 80 checks. The current envelope comes from
+`feature/issue-465` at `8bbe7b1`, where all 80 checks passed with the shared
+DUT fragment scan. [Selftest run 45146302274](https://github.com/2AMLogic/gf180-comparator/actions/runs/45146302274)
 
 The manifest pins the inventory hash, and `signoff.yml` re-runs `--check` for
 items 1, 9 and 10. For item 9, the PDK-free check verifies the 77 files and

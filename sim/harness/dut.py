@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -91,6 +92,12 @@ REQUIRED_SUBCKTS_BY_PROVENANCE: dict[str, dict[str, tuple[str, ...]]] = {
 }
 
 
+#: Word-boundary regex per REQUIRED_SUBCKTS name, in that dict's order -- the
+#: scan order ``Dut.missing_fragment_subckt`` walks. Compiled once here so
+#: neither caller rebuilds it.
+_FRAGMENT_SUBCKT_RE = {name: re.compile(rf"\b{name}\b") for name in REQUIRED_SUBCKTS}
+
+
 @dataclass(frozen=True)
 class Dut:
     """The bound device under test."""
@@ -123,6 +130,22 @@ class Dut:
         fragment instantiates ``name``.
         """
         return name in _declared_subckts(self.netlist.read_text())
+
+    def missing_fragment_subckt(self, fragment: str) -> str | None:
+        """The first ``REQUIRED_SUBCKTS`` name ``fragment`` instantiates (as
+        a whole word) that this netlist does not define, or ``None``.
+
+        This is the scan half of the runtime fragment-compatibility check,
+        shared by the local harness CLI and the fleet request builder
+        (issue #465): a fragment "instantiates" a subckt when its name
+        appears as a whole word, so ``comparator_dut`` does not match inside
+        ``comparator_dut_analog``. The callers own the diagnostic context
+        and exit behavior.
+        """
+        for name, pattern in _FRAGMENT_SUBCKT_RE.items():
+            if pattern.search(fragment) and not self.provides(name):
+                return name
+        return None
 
     def param_lines(self) -> list[str]:
         """``.param`` lines every testbench fragment may rely on."""

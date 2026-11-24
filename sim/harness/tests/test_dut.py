@@ -9,8 +9,10 @@ tests pin the load-time contract that change relies on:
   error naming what IS available otherwise),
 * the provenance-conditional subckt requirement (a flat extraction defines
   only ``comparator_dut``; a schematic binding must still define all three),
-* ``Dut.provides`` and the CLI's bench/DUT compatibility check that keeps
-  the analog-partition benches off the flat binding,
+* ``Dut.provides`` and the fragment-compatibility scan it feeds
+  (``Dut.missing_fragment_subckt``) plus the two wrappers that report it --
+  the CLI's bench/DUT compatibility check and the fleet request builder's
+  guard, which keep the analog-partition benches off the flat binding,
 * the record's post-layout delta section against a committed
   schematic-provenance counterpart.
 
@@ -217,12 +219,18 @@ class CompatibilityCheckTest(_Fixture):
             )
         )
 
-    def _tb(self, fragment: str):
+    def _tb(self, fragment: str, name: str = "fixture-tb"):
         netlist = self.root / "tb.spice"
         netlist.write_text(fragment)
         return types.SimpleNamespace(
-            experiment="fixture-bench", netlist=netlist
+            experiment="fixture-bench", name=name, netlist=netlist
         )
+
+    def _fleet_check(self):
+        sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools"))
+        import mk_klt_request
+
+        return mk_klt_request.check_dut_fragment_compatibility
 
     def test_analog_partition_bench_is_refused_on_extracted_dut(self):
         from harness.cli import _check_dut_compatibility
@@ -231,6 +239,8 @@ class CompatibilityCheckTest(_Fixture):
         with self.assertRaises(dut_mod.DutError) as ctx:
             _check_dut_compatibility(self._dut(), tb)
         self.assertIn("comparator_dut_analog", str(ctx.exception))
+        self.assertIn("fixture-bench", str(ctx.exception))
+        self.assertIn("schematic binding", str(ctx.exception))
 
     def test_whole_comparator_bench_passes_on_extracted_dut(self):
         from harness.cli import _check_dut_compatibility
@@ -250,6 +260,39 @@ class CompatibilityCheckTest(_Fixture):
                 self._dut(),
                 self._tb("* tb\nXA v v i a a vdd vss comparator_dut_analog\n"),
             )
+
+    def test_shared_scan_reports_first_missing_subckt(self):
+        dut = self._dut()
+        self.assertEqual(
+            dut.missing_fragment_subckt(
+                "* tb\nXA v v i a a vdd vss comparator_dut_analog\n"
+                "XL v v c d db vdd vss comparator_dut_latch\n"
+            ),
+            "comparator_dut_analog",
+        )
+        # A whole-word `comparator_dut` mention is NOT a match for the
+        # longer names, and this flat binding does define it.
+        self.assertIsNone(
+            dut.missing_fragment_subckt(
+                "* tb\nXa v v c i d db vdd vss comparator_dut\n"
+            )
+        )
+
+    def test_fleet_guard_refuses_analog_bench_with_same_hint(self):
+        check = self._fleet_check()
+
+        tb = self._tb("* tb\nXA vinp vinn ibias aop aon vdd vss comparator_dut_analog\n")
+        with self.assertRaises(SystemExit) as ctx:
+            check(self._dut(), tb)
+        self.assertIn("comparator_dut_analog", str(ctx.exception))
+        self.assertIn("fixture-tb", str(ctx.exception))
+        self.assertIn("schematic binding", str(ctx.exception))
+
+    def test_fleet_guard_passes_whole_comparator_bench(self):
+        check = self._fleet_check()
+
+        tb = self._tb("* tb\nXa vinp vinn clk ibias dout doutb vdd vss comparator_dut\n")
+        check(self._dut(), tb)  # must not raise
 
 
 _CTX = {"dut_provenance": "extracted", "schematic_baseline_id": "fixture-dut",
