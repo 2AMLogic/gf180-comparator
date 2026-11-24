@@ -1,0 +1,125 @@
+{
+ "schema": "gf180-comparator/klt-source-bundle",
+ "version": 2,
+ "generator": "sim/tools/mk_klt_request.py",
+ "generated_utc": "2026-11-23T21:04:44Z",
+ "bench": "comparator-kickback",
+ "phase": "main",
+ "probe": {
+  "mechanism": "two-phase dut_vos referral (issue #374): the phase-1 requests request-probe-*.json measured each point's trip time t_flip; these phase-2 bodies bake each point's dut_vos = -vspan + 2*vspan*t_flip/tramp",
+  "probe_deck": "tb_vosprobe.spice",
+  "vspan_v": 0.04,
+  "tramp_s": 7.999999999999999e-05,
+  "vos_formula": "-vspan + 2*vspan*t_flip/tramp",
+  "vos_by_corner": {
+   "ss_125c_2.97v": -0.001927488148659992,
+   "tt_125c_2.97v": -0.003308078193979991
+  },
+  "probe_results_sha256": "49d7d814660f2c59538a4103e0d08d5ec24a8f4b31facfb94b15c2c8e5957859",
+  "probe_reports": {
+   "probe-v2.97": "70e4f33947880dc04017113511afe6341387c4dea663f66b7126f781dad92d86"
+  }
+ },
+ "origin": {
+  "commit": "559b686a0c67eab54df6602bdc728915b00b95c3",
+  "dirty": true,
+  "dirty_paths": [
+   "layout/pex/artifacts/design-levers-combined/20261123-192546-559b686/kickback/tail-x1.5-cgr-0250-0500/binding.json",
+   "layout/pex/artifacts/design-levers-combined/20261123-192546-559b686/kickback/tail-x1.5-cgr-0250-0500/variant.cir"
+  ],
+  "checked_paths": [
+   "design",
+   "sim/tools",
+   "sim/harness",
+   "sim/comparator-kickback/testbench",
+   "layout/pex/artifacts/design-levers-combined/20261123-192546-559b686/kickback/tail-x1.5-cgr-0250-0500/binding.json",
+   "layout/pex/artifacts/design-levers-combined/20261123-192546-559b686/kickback/tail-x1.5-cgr-0250-0500/variant.cir"
+  ]
+ },
+ "dut": {
+  "selector": "layout/pex/artifacts/design-levers-combined/20261123-192546-559b686/kickback/tail-x1.5-cgr-0250-0500/binding.json",
+  "key": null,
+  "dut_id": "tail-x1.5-cgr-0250-0500",
+  "provenance": "extracted",
+  "netlist": "layout/pex/artifacts/design-levers-combined/20261123-192546-559b686/kickback/tail-x1.5-cgr-0250-0500/variant.cir",
+  "netlist_sha256": "8fe3b53e4e5838e8bdc94178c6165163e4a6c9d521fde220c5559b530a3c12b1",
+  "params": {
+   "dut_ib": 1e-05,
+   "dut_vcm": 1.65
+  },
+  "binding_config": "layout/pex/artifacts/design-levers-combined/20261123-192546-559b686/kickback/tail-x1.5-cgr-0250-0500/binding.json",
+  "binding_entry_sha256": "566a763bbbc112e453e66620ad59476914940f00907bb380bdc65d58e19d67d3",
+  "staged_netlist": "sources/dut/variant.cir",
+  "staged_binding": "sources/dut-binding.json"
+ },
+ "testbench": {
+  "experiment": "comparator-kickback",
+  "dir": "sim/comparator-kickback/testbench",
+  "netlist": "tb_kickback.spice",
+  "netlist_sha256": "f42495917522fa2c726d29ad6ef053284482489c93da3b9bc2236678fea4e090",
+  "manifest_sha256": "7522a3fff330a0dcd6d0554bc232c4b16e21b949ab98ac4fffac658331bb99fb",
+  "staged_dir": "sources/testbench"
+ },
+ "toolchain": {
+  "file": "sim/toolchain.json",
+  "sha256": "9f31fd9f7b46d10913524529b7d39070594913954a753e1d608639525f68f60b",
+  "commit": "559b686a0c67eab54df6602bdc728915b00b95c3",
+  "ngspice_min_major": 46,
+  "open_pdks": "f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7",
+  "pdk_variant": "gf180mcuD"
+ },
+ "parameters": {
+  "corners": [
+   "tt",
+   "ss"
+  ],
+  "temperatures_c": [
+   125.0
+  ],
+  "supply_tolerance": 0.1,
+  "supply_v": [
+   2.97
+  ],
+  "mc_n": null
+ },
+ "requests": {
+  "probe-v2.97": {
+   "leg": "probe",
+   "vdd": 2.97,
+   "request": "request-probe-v2.97.json",
+   "request_sha256": "eafa0ca0062c7c04100d845b8c2e0b30e9bcf0a87fc185b9a6bdbaf32ae2db04",
+   "netlist": "body-v2.97.spice",
+   "netlist_sha256": "528f2f50d3f31a036cee154ca39f91f4666bf96907a21b254b5dd22e9771930b"
+  },
+  "main-tt_125c_2.97v": {
+   "leg": "main",
+   "vdd": 2.97,
+   "request": "request-main-tt_125c_2.97v.json",
+   "request_sha256": "5f5f6ac764519ee5b8d97e982f006c7941efb3da6de7be63f2189dbc249beec4",
+   "netlist": "body-tt_125c_2.97v.spice",
+   "netlist_sha256": "1e24a3c55bf3dfcc56a09dc7db784ee38c7d50f0b4701d41fc9128aa14df63ab"
+  },
+  "main-ss_125c_2.97v": {
+   "leg": "main",
+   "vdd": 2.97,
+   "request": "request-main-ss_125c_2.97v.json",
+   "request_sha256": "26cfa7661afa640bcec023ed00b4e7f4aa2fa35c75319d27d361fa5bf8eb7848",
+   "netlist": "body-ss_125c_2.97v.spice",
+   "netlist_sha256": "cdb15308d326f779a82cc1a057a98fe71a21305fdb8e7d4c66389f1a9e06252e"
+  }
+ },
+ "staged": {
+  "body-ss_125c_2.97v.spice": "cdb15308d326f779a82cc1a057a98fe71a21305fdb8e7d4c66389f1a9e06252e",
+  "body-tt_125c_2.97v.spice": "1e24a3c55bf3dfcc56a09dc7db784ee38c7d50f0b4701d41fc9128aa14df63ab",
+  "body-v2.97.spice": "528f2f50d3f31a036cee154ca39f91f4666bf96907a21b254b5dd22e9771930b",
+  "design.ngspice": "7e222f050318388f37543a64fbd0be55cc15e4b93f57501a09f7c159c4c9e561",
+  "request-main-ss_125c_2.97v.json": "26cfa7661afa640bcec023ed00b4e7f4aa2fa35c75319d27d361fa5bf8eb7848",
+  "request-main-tt_125c_2.97v.json": "5f5f6ac764519ee5b8d97e982f006c7941efb3da6de7be63f2189dbc249beec4",
+  "request-probe-v2.97.json": "eafa0ca0062c7c04100d845b8c2e0b30e9bcf0a87fc185b9a6bdbaf32ae2db04",
+  "sources/dut/variant.cir": "8fe3b53e4e5838e8bdc94178c6165163e4a6c9d521fde220c5559b530a3c12b1",
+  "sources/dut-binding.json": "e4470d926e617b26fe536089ed1c5dd42ba97c5fd8ee519c8becd48f8712e2c8",
+  "sources/testbench/tb.json": "7522a3fff330a0dcd6d0554bc232c4b16e21b949ab98ac4fffac658331bb99fb",
+  "sources/testbench/tb_kickback.spice": "f42495917522fa2c726d29ad6ef053284482489c93da3b9bc2236678fea4e090",
+  "sources/testbench/tb_vosprobe.spice": "3a1bd8f03483f1028effeb71342f46e468aa007a4f4902cbc0c0ec25c5bf9632"
+ }
+}

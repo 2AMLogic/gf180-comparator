@@ -1,0 +1,3 @@
+set num_threads=1
+set measureprec=12
+set numdgt=12

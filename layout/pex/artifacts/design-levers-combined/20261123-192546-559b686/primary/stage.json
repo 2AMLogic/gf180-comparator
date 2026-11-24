@@ -1,0 +1,442 @@
+{
+  "generated_by": "layout/pex/design_lever_study.py combined-run",
+  "issue": 453,
+  "points": [
+    "tt_125c_2.97v",
+    "ss_125c_2.97v"
+  ],
+  "request_cap": 323,
+  "requests_planned": 63,
+  "scope": "pre-cascode diagnostic, device W and global ground-C / series-R residue",
+  "source_sha256": {
+    "cited_report": "385fadcf7cd74c60508e01b3cd0341df7b64341479f437c0446c09bd07497dd8",
+    "design_lever_study_py": "d4dc51689ce1ab13bf5381ba404943b4ccc103621056790a1f5640eff04ad0d9",
+    "extracted_dut": "a7ca3c00ea4db8a2b00cad69f2edc2d9320738499049cfa9c7faec517b7b5f45",
+    "parasitic_attribution_py": "6daacccb7bfd8e9e9f9831e55743e859d624a62701989412b0ae115c166cd168",
+    "pex_measure_py": "9248ddd15c25efba7643124a44e8eb6ca45f9b8365f573406cfa17fed90a495b",
+    "schematic_dut": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a",
+    "tb_json_consumed_fields": "462b79b389613fbc06de8037311ed54b0820a60f48778e1a1322c48c94a13f74"
+  },
+  "variants": [
+    {
+      "cascode_independent": true,
+      "centre": "probed",
+      "description": "latch tail W x1.5",
+      "device_w_um": {
+        "M$12": 24.0
+      },
+      "device_w_um_source": {
+        "M$12": 16.0
+      },
+      "dut_sha256": "d46b5f74ef00d1e5a14639bf5717c6a96d420a0bd5ddeb44361198cac07b0e79",
+      "fc": 1.0,
+      "fr": 1.0,
+      "id": "tail-x1.5-cgr-1000-1000",
+      "lever": "tail-x1.5",
+      "probe_deck_sha256": "a4803a2402cdcea264458ea74eabfdfb11577a65f2856cf23387a05514ee87f7",
+      "side": "extracted"
+    },
+    {
+      "cascode_independent": true,
+      "centre": "probed",
+      "description": "latch tail W x1.5",
+      "device_w_um": {
+        "M$12": 24.0
+      },
+      "device_w_um_source": {
+        "M$12": 16.0
+      },
+      "dut_sha256": "b8bf1b1a6e308944b3dce5028a1ba917408927131f5c4ea18e5d613964b49d52",
+      "fc": 0.75,
+      "fr": 1.0,
+      "id": "tail-x1.5-cgr-0750-1000",
+      "lever": "tail-x1.5",
+      "probe_deck_sha256": "f8e4b2603b1242bd641abb3c1889413b5316922154c7224d30b2ea788ed2f765",
+      "side": "extracted"
+    },
+    {
+      "cascode_independent": true,
+      "centre": "probed",
+      "description": "latch tail W x1.5",
+      "device_w_um": {
+        "M$12": 24.0
+      },
+      "device_w_um_source": {
+        "M$12": 16.0
+      },
+      "dut_sha256": "1c22edc48fa585b7eada492619c0814b4db41dc022ae0643928270a7c425cd59",
+      "fc": 0.5,
+      "fr": 1.0,
+      "id": "tail-x1.5-cgr-0500-1000",
+      "lever": "tail-x1.5",
+      "probe_deck_sha256": "05274bf6e98d6805778f27bc0964ac7bd4bc2f921466b014eca5fff28eb1b2fd",
+      "side": "extracted"
+    },
+    {
+      "cascode_independent": true,
+      "centre": "probed",
+      "description": "latch tail W x1.5",
+      "device_w_um": {
+        "M$12": 24.0
+      },
+      "device_w_um_source": {
+        "M$12": 16.0
+      },
+      "dut_sha256": "90d5db27fe988cd385a519905ad89f263c9536666878435e5ed6b0ceeaa26df5",
+      "fc": 0.25,
+      "fr": 1.0,
+      "id": "tail-x1.5-cgr-0250-1000",
+      "lever": "tail-x1.5",
+      "probe_deck_sha256": "448f59f06f2ac5c3f2f23d79d902edf8799ce106d9df55b0b791dcc65886587a",
+      "side": "extracted"
+    },
+    {
+      "cascode_independent": true,
+      "centre": "probed",
+      "description": "latch tail W x1.5",
+      "device_w_um": {
+        "M$12": 24.0
+      },
+      "device_w_um_source": {
+        "M$12": 16.0
+      },
+      "dut_sha256": "3641021fae6d5e4a54b2aaf87f442a3b057a68b5715253711d96ada3b6dd6482",
+      "fc": 0.75,
+      "fr": 0.5,
+      "id": "tail-x1.5-cgr-0750-0500",
+      "lever": "tail-x1.5",
+      "probe_deck_sha256": "b06dcd452c98628195beb8b635926d491cfaccc60e9e04ed6aacff9d258b2948",
+      "side": "extracted"
+    },
+    {
+      "cascode_independent": true,
+      "centre": "probed",
+      "description": "latch tail W x1.5",
+      "device_w_um": {
+        "M$12": 24.0
+      },
+      "device_w_um_source": {
+        "M$12": 16.0
+      },
+      "dut_sha256": "315de951099702deecfbfdd12fbbbab600c00613bbd8aa98ea21b7cd581177b4",
+      "fc": 0.5,
+      "fr": 0.5,
+      "id": "tail-x1.5-cgr-0500-0500",
+      "lever": "tail-x1.5",
+      "probe_deck_sha256": "def70cb4ce13646eac47b699d3aec323d05bb4eedd6190bd2a9eed48ef1e0997",
+      "side": "extracted"
+    },
+    {
+      "cascode_independent": true,
+      "centre": "probed",
+      "description": "latch tail W x1.5",
+      "device_w_um": {
+        "M$12": 24.0
+      },
+      "device_w_um_source": {
+        "M$12": 16.0
+      },
+      "dut_sha256": "8fe3b53e4e5838e8bdc94178c6165163e4a6c9d521fde220c5559b530a3c12b1",
+      "fc": 0.25,
+      "fr": 0.5,
+      "id": "tail-x1.5-cgr-0250-0500",
+      "lever": "tail-x1.5",
+      "probe_deck_sha256": "7fc856db3f14253b2029cd110fa86c040aa5d401ec3325c1548ce7e09a042d3b",
+      "side": "extracted"
+    },
+    {
+      "cascode_independent": false,
+      "centre": "probed",
+      "description": "latch input pair W x1.5",
+      "device_w_um": {
+        "M$13": 12.0,
+        "M$9": 12.0
+      },
+      "device_w_um_source": {
+        "M$13": 8.0,
+        "M$9": 8.0
+      },
+      "dut_sha256": "54cbfe310d13ad4b1366814a7fae1705d51d3a35e6d8a96a10c99ce74cab306f",
+      "fc": 1.0,
+      "fr": 1.0,
+      "id": "pair-x1.5-cgr-1000-1000",
+      "lever": "pair-x1.5",
+      "probe_deck_sha256": "5897520f615c952eb78d1244533d9fd175af6cafe8d63b41509c42b3d23c5816",
+      "side": "extracted"
+    },
+    {
+      "cascode_independent": false,
+      "centre": "probed",
+      "description": "latch input pair W x1.5",
+      "device_w_um": {
+        "M$13": 12.0,
+        "M$9": 12.0
+      },
+      "device_w_um_source": {
+        "M$13": 8.0,
+        "M$9": 8.0
+      },
+      "dut_sha256": "44b9a8eab98c806225d5f62ceaf25fc062d16a49c28c076f14bfd5b9c49d69b2",
+      "fc": 0.75,
+      "fr": 1.0,
+      "id": "pair-x1.5-cgr-0750-1000",
+      "lever": "pair-x1.5",
+      "probe_deck_sha256": "70adf7bffd6b1c16b05f339f0af063e99bb0f65927e9c8cd7a74f7e9b9c13f7c",
+      "side": "extracted"
+    },
+    {
+      "cascode_independent": false,
+      "centre": "probed",
+      "description": "latch input pair W x1.5",
+      "device_w_um": {
+        "M$13": 12.0,
+        "M$9": 12.0
+      },
+      "device_w_um_source": {
+        "M$13": 8.0,
+        "M$9": 8.0
+      },
+      "dut_sha256": "5526a71959851ceb860e77ace24d6d5a0a8f85be64a60ed6bf700858c03c1615",
+      "fc": 0.5,
+      "fr": 1.0,
+      "id": "pair-x1.5-cgr-0500-1000",
+      "lever": "pair-x1.5",
+      "probe_deck_sha256": "b28619a5bda19667538d740b2c6991cdc5626e155e1c2031bb5a196c0255b543",
+      "side": "extracted"
+    },
+    {
+      "cascode_independent": false,
+      "centre": "probed",
+      "description": "latch input pair W x1.5",
+      "device_w_um": {
+        "M$13": 12.0,
+        "M$9": 12.0
+      },
+      "device_w_um_source": {
+        "M$13": 8.0,
+        "M$9": 8.0
+      },
+      "dut_sha256": "efd7dda1a1f8ebe09dc670699439a9ae60b26dcec910d1fe3df99fdb889a392e",
+      "fc": 0.25,
+      "fr": 1.0,
+      "id": "pair-x1.5-cgr-0250-1000",
+      "lever": "pair-x1.5",
+      "probe_deck_sha256": "f4ecebcf30b7bb8295719067e312f21b0056d662433713c53baf84aa3fba6db1",
+      "side": "extracted"
+    },
+    {
+      "cascode_independent": false,
+      "centre": "probed",
+      "description": "latch input pair W x1.5",
+      "device_w_um": {
+        "M$13": 12.0,
+        "M$9": 12.0
+      },
+      "device_w_um_source": {
+        "M$13": 8.0,
+        "M$9": 8.0
+      },
+      "dut_sha256": "6722d41174e92c5a78c5ddeab1d486b513506f7a16034077e0b3e33c216944b0",
+      "fc": 0.75,
+      "fr": 0.5,
+      "id": "pair-x1.5-cgr-0750-0500",
+      "lever": "pair-x1.5",
+      "probe_deck_sha256": "75d59e9a0cd0a2b1a09cc051a5aae87d8711cb787dcee8c30c69a3c28e5e7cad",
+      "side": "extracted"
+    },
+    {
+      "cascode_independent": false,
+      "centre": "probed",
+      "description": "latch input pair W x1.5",
+      "device_w_um": {
+        "M$13": 12.0,
+        "M$9": 12.0
+      },
+      "device_w_um_source": {
+        "M$13": 8.0,
+        "M$9": 8.0
+      },
+      "dut_sha256": "09e65cdae4356410f894c46f680857d4dc681bd0fd11b5b547d2e08c9f95af76",
+      "fc": 0.5,
+      "fr": 0.5,
+      "id": "pair-x1.5-cgr-0500-0500",
+      "lever": "pair-x1.5",
+      "probe_deck_sha256": "a94a7c7c2aaf9118ca5c19495781f5c86fd7ec3f9ba4f01be85061f12aed66a4",
+      "side": "extracted"
+    },
+    {
+      "cascode_independent": false,
+      "centre": "probed",
+      "description": "latch input pair W x1.5",
+      "device_w_um": {
+        "M$13": 12.0,
+        "M$9": 12.0
+      },
+      "device_w_um_source": {
+        "M$13": 8.0,
+        "M$9": 8.0
+      },
+      "dut_sha256": "ca6f8584a895fdb0ad8e66b0f0960b3c0ddbfa239385fa07fcbb63ab2faccfe2",
+      "fc": 0.25,
+      "fr": 0.5,
+      "id": "pair-x1.5-cgr-0250-0500",
+      "lever": "pair-x1.5",
+      "probe_deck_sha256": "a08725cd1b29c59058d9d5a373aa66e3eb5dd4ace666cf4fc94222ffa4ad558d",
+      "side": "extracted"
+    },
+    {
+      "cascode_independent": false,
+      "centre": "probed",
+      "description": "latch input pair and tail W x1.5",
+      "device_w_um": {
+        "M$12": 24.0,
+        "M$13": 12.0,
+        "M$9": 12.0
+      },
+      "device_w_um_source": {
+        "M$12": 16.0,
+        "M$13": 8.0,
+        "M$9": 8.0
+      },
+      "dut_sha256": "a7439104283e6bf5f3f952431c9d6152b1af000e326707af82e476d2cb430208",
+      "fc": 1.0,
+      "fr": 1.0,
+      "id": "pair+tail-cgr-1000-1000",
+      "lever": "pair+tail",
+      "probe_deck_sha256": "f9da4af5263817fe0acddc5a77dd03f493703c3331ae8d2c5f77a08daf2e0823",
+      "side": "extracted"
+    },
+    {
+      "cascode_independent": false,
+      "centre": "probed",
+      "description": "latch input pair and tail W x1.5",
+      "device_w_um": {
+        "M$12": 24.0,
+        "M$13": 12.0,
+        "M$9": 12.0
+      },
+      "device_w_um_source": {
+        "M$12": 16.0,
+        "M$13": 8.0,
+        "M$9": 8.0
+      },
+      "dut_sha256": "275a914f1887f2a55ad1dff7a38a0715959f470a237a98024993453919813ff3",
+      "fc": 0.75,
+      "fr": 1.0,
+      "id": "pair+tail-cgr-0750-1000",
+      "lever": "pair+tail",
+      "probe_deck_sha256": "b3da745b6869ab77e4b604eb823490d95290d7e7a9747ebaad9b4ccfdfb5807e",
+      "side": "extracted"
+    },
+    {
+      "cascode_independent": false,
+      "centre": "probed",
+      "description": "latch input pair and tail W x1.5",
+      "device_w_um": {
+        "M$12": 24.0,
+        "M$13": 12.0,
+        "M$9": 12.0
+      },
+      "device_w_um_source": {
+        "M$12": 16.0,
+        "M$13": 8.0,
+        "M$9": 8.0
+      },
+      "dut_sha256": "f13f2650ef964a6fc2ed6f274ece9ecbeb265c6f6f748a58db4aa998053e65b0",
+      "fc": 0.5,
+      "fr": 1.0,
+      "id": "pair+tail-cgr-0500-1000",
+      "lever": "pair+tail",
+      "probe_deck_sha256": "489941cfafa501a6b6bde9f0836557071a9bd636568fe8639b65e69f3e642bf2",
+      "side": "extracted"
+    },
+    {
+      "cascode_independent": false,
+      "centre": "probed",
+      "description": "latch input pair and tail W x1.5",
+      "device_w_um": {
+        "M$12": 24.0,
+        "M$13": 12.0,
+        "M$9": 12.0
+      },
+      "device_w_um_source": {
+        "M$12": 16.0,
+        "M$13": 8.0,
+        "M$9": 8.0
+      },
+      "dut_sha256": "f029c8898f26238b2f3b3cebc6dc5047b2382964745e75e616ed24bf444c4cfb",
+      "fc": 0.25,
+      "fr": 1.0,
+      "id": "pair+tail-cgr-0250-1000",
+      "lever": "pair+tail",
+      "probe_deck_sha256": "f8d8ff0e7113e9a6a3aa4e27fb04de23b4cac54d0a04888ba6c50b2180408c81",
+      "side": "extracted"
+    },
+    {
+      "cascode_independent": false,
+      "centre": "probed",
+      "description": "latch input pair and tail W x1.5",
+      "device_w_um": {
+        "M$12": 24.0,
+        "M$13": 12.0,
+        "M$9": 12.0
+      },
+      "device_w_um_source": {
+        "M$12": 16.0,
+        "M$13": 8.0,
+        "M$9": 8.0
+      },
+      "dut_sha256": "64978bc44e2e834f3f016a29bd2b7a86a9cb5cc724662e1476e05bd7b3e9b4e8",
+      "fc": 0.75,
+      "fr": 0.5,
+      "id": "pair+tail-cgr-0750-0500",
+      "lever": "pair+tail",
+      "probe_deck_sha256": "317f8698bd97220d4e01d05bb7523eab249672be4e74a57852c086a6c52b2544",
+      "side": "extracted"
+    },
+    {
+      "cascode_independent": false,
+      "centre": "probed",
+      "description": "latch input pair and tail W x1.5",
+      "device_w_um": {
+        "M$12": 24.0,
+        "M$13": 12.0,
+        "M$9": 12.0
+      },
+      "device_w_um_source": {
+        "M$12": 16.0,
+        "M$13": 8.0,
+        "M$9": 8.0
+      },
+      "dut_sha256": "4db28034f88e94ba39a6b5ed30d621d85557c32111ce41c1945b098bbe2bbe16",
+      "fc": 0.5,
+      "fr": 0.5,
+      "id": "pair+tail-cgr-0500-0500",
+      "lever": "pair+tail",
+      "probe_deck_sha256": "f512210291f7f870f694f4a31a1d289e2acc6d13fe959695cdd1098cd1f2b0bb",
+      "side": "extracted"
+    },
+    {
+      "cascode_independent": false,
+      "centre": "probed",
+      "description": "latch input pair and tail W x1.5",
+      "device_w_um": {
+        "M$12": 24.0,
+        "M$13": 12.0,
+        "M$9": 12.0
+      },
+      "device_w_um_source": {
+        "M$12": 16.0,
+        "M$13": 8.0,
+        "M$9": 8.0
+      },
+      "dut_sha256": "588be9f465f9d9a9dd322d0c94265292ba0f91b5ff179d36c97031b81bcf685d",
+      "fc": 0.25,
+      "fr": 0.5,
+      "id": "pair+tail-cgr-0250-0500",
+      "lever": "pair+tail",
+      "probe_deck_sha256": "20a9a965f5a14a4519e5f3ea3fb2f10fdc67f55d13e06cf9f57dd5240f0df761",
+      "side": "extracted"
+    }
+  ]
+}

@@ -1,0 +1,832 @@
+{
+  "schema_version": 3,
+  "netlist": {
+    "path": "layout/pex/artifacts/design-levers-combined/20261123-192546-559b686/kickback/tail-x1.5-cgr-0250-1000/body-tt_125c_2.97v.spice",
+    "scope": "repo"
+  },
+  "status": "pass",
+  "corner_count": 1,
+  "passed": 1,
+  "failed": 0,
+  "errored": 0,
+  "inconclusive": 0,
+  "diagnostic_counts": {
+    "by_code": {},
+    "by_severity": {},
+    "corners_with_diagnostics": 0
+  },
+  "metrics": {
+    "sim__corner__count": 1,
+    "sim__corner__passed_count": 1,
+    "sim__corner__failed_count": 0,
+    "sim__corner__errored_count": 0,
+    "sim__corner__inconclusive_count": 0
+  },
+  "environment": {
+    "engine": "ngspice",
+    "engine_version": "47",
+    "ngspice_binary": "/usr/local/bin/ngspice",
+    "engine_build": {
+      "version_banner": "******\n** ngspice-47 : Circuit level simulation program\n** Compiled with KLU Direct Linear Solver\n** The U. C. Berkeley CAD Group\n** Copyright 1985-1994, Regents of the University of California.\n** Copyright 2001-2026, The ngspice team.\n** Please get your ngspice manual from https://ngspice.sourceforge.io/docs.html\n** Please file your bug-reports at http://ngspice.sourceforge.net/bugrep.html\n** Creation Date: Fri Nov 13 23:19:32 UTC 2026\n******",
+      "binary_sha256": "39ca1adb826660324c3626f72bd946ec40704f0f3fc8e243c623f76e24b3eee2",
+      "probe": "ok",
+      "reason": null
+    },
+    "models_lib": {
+      "path": null,
+      "scope": "external"
+    },
+    "models_lib_sha256": "f6f4a96e18fc5ad11270ad3451aaecc7ac37fc81eb61e15b0d7d94c7bc594a24",
+    "models_lib_sha256_scope": "client",
+    "netlist_sha256": "43139c5e0613ec3e0f665b78f87750161f6fdcdc44f50962fd9ed12a6e4f245b",
+    "netlist_closure": [
+      {
+        "path": "layout/pex/artifacts/design-levers-combined/20261123-192546-559b686/kickback/tail-x1.5-cgr-0250-1000/body-tt_125c_2.97v.spice",
+        "scope": "repo",
+        "sha256": "43139c5e0613ec3e0f665b78f87750161f6fdcdc44f50962fd9ed12a6e4f245b"
+      },
+      {
+        "path": "layout/pex/artifacts/design-levers-combined/20261123-192546-559b686/kickback/tail-x1.5-cgr-0250-1000/design.ngspice",
+        "scope": "repo",
+        "sha256": "7e222f050318388f37543a64fbd0be55cc15e4b93f57501a09f7c159c4c9e561"
+      },
+      {
+        "path": "layout/pex/artifacts/design-levers-combined/20261123-192546-559b686/kickback/tail-x1.5-cgr-0250-1000/sources/dut/variant.cir",
+        "scope": "repo",
+        "sha256": "90d5db27fe988cd385a519905ad89f263c9536666878435e5ed6b0ceeaa26df5"
+      },
+      {
+        "path": "layout/pex/artifacts/design-levers-combined/20261123-192546-559b686/kickback/tail-x1.5-cgr-0250-1000/sources/testbench/tb_kickback.spice",
+        "scope": "repo",
+        "sha256": "f42495917522fa2c726d29ad6ef053284482489c93da3b9bc2236678fea4e090"
+      }
+    ],
+    "netlist_identity": "sha256:bca3153461c229994a27294a041bc99f6723ccfbb8ff185ce56afa62ae466fe4",
+    "remote": {
+      "provider": "aws-batch-fleet",
+      "job_id": "klt-sim-cdb08fb506b9",
+      "region": "us-east-1",
+      "instance_id": "i-0b0c0f5832863bd3b",
+      "instance_type": "c7i.8xlarge",
+      "availability_zone": "us-east-1f",
+      "ami_id": "ami-09c14f55df4958cbd",
+      "lifecycle": "spot",
+      "spot": true,
+      "state": "done",
+      "exit_code": "0",
+      "concurrency": "2",
+      "physical_cores": "16",
+      "elapsed_seconds": 11,
+      "client_submitted_at": "2026-11-23T21:01:46.612802Z",
+      "client_launched_at": "2026-11-23T21:02:15.262701Z",
+      "client_status_terminal_at": "2026-11-23T21:02:46.601353Z",
+      "client_collected_at": "2026-11-23T21:02:47.386337Z",
+      "runner_klt_version": "0.9.0",
+      "client_klt_version": "0.9.2",
+      "runner_compatibility": "match",
+      "runner_request_features": {
+        "required": [
+          "options.ngspice_init"
+        ],
+        "missing": [],
+        "status": "supported"
+      },
+      "worker_environment": {
+        "capture": "ok",
+        "simulator": {
+          "requested_binary": "ngspice",
+          "binary_source": "PATH",
+          "selected_path": "/usr/local/bin/ngspice",
+          "version_banner": "******\n** ngspice-47 : Circuit level simulation program\n** Compiled with KLU Direct Linear Solver\n** The U. C. Berkeley CAD Group\n** Copyright 1985-1994, Regents of the University of California.\n** Copyright 2001-2026, The ngspice team.\n** Please get your ngspice manual from https://ngspice.sourceforge.io/docs.html\n** Please file your bug-reports at http://ngspice.sourceforge.net/bugrep.html\n** Creation Date: Fri Nov 13 23:19:32 UTC 2026\n******\n",
+          "version_probe": "ok"
+        },
+        "pdk": {
+          "variant": "gf180mcuD",
+          "root": "/opt/pdk",
+          "stamp_scheme": "sources-sha256",
+          "stamp_sha256": "4ca10280ae9f293aa1ff69f0060a52e0026929111bda881503717469b429ce67",
+          "stamp_text": "open_pdks f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7",
+          "models_staged": false,
+          "stamp_scope": "executed"
+        },
+        "cpu_model": "Intel(R) Xeon(R) Platinum 8488C",
+        "omp_num_threads": null,
+        "image_manifest": null,
+        "model_inputs": null,
+        "diagnostics": [],
+        "pdk_stamp_comparison": {
+          "status": "match"
+        },
+        "engine_build_comparison": {
+          "status": "match"
+        }
+      },
+      "runner_model_inputs": null,
+      "runner_models_lib_sha256": "f6f4a96e18fc5ad11270ad3451aaecc7ac37fc81eb61e15b0d7d94c7bc594a24",
+      "job_ceiling": {
+        "basis": "conservative_serial_bound",
+        "unit_count": 1,
+        "per_unit_timeout_s": 3000,
+        "overhead_s": 120.0,
+        "job_bound_s": 3120.0,
+        "max_job_seconds": 3600.0,
+        "max_job_seconds_source": "fleet_config",
+        "exceeds_ceiling": false,
+        "check": "warn",
+        "max_units_per_job": 1,
+        "recommended_hosts": 1
+      },
+      "models_lib_comparison": {
+        "status": "match"
+      }
+    },
+    "engine_host": "worker",
+    "client_ngspice_binary": "/home/ubuntu/.local/bin/ngspice",
+    "backend": {
+      "resolved": "batch",
+      "source": "flag",
+      "requested": "batch"
+    }
+  },
+  "coverage": {
+    "corners_simulated": 1,
+    "measurements_declared": 20,
+    "measurements_with_limits": 0,
+    "unrecognized_limit_keys": [],
+    "schema_version": 1,
+    "known": true,
+    "checked": [
+      "measurement:[0,\"tt/novdd/125C\",\"ad_neg\"]/observation",
+      "measurement:[0,\"tt/novdd/125C\",\"ad_pos\"]/observation",
+      "measurement:[0,\"tt/novdd/125C\",\"adn_neg\"]/observation",
+      "measurement:[0,\"tt/novdd/125C\",\"adn_pos\"]/observation",
+      "measurement:[0,\"tt/novdd/125C\",\"ap0\"]/observation",
+      "measurement:[0,\"tt/novdd/125C\",\"apmax\"]/observation",
+      "measurement:[0,\"tt/novdd/125C\",\"apmin\"]/observation",
+      "measurement:[0,\"tt/novdd/125C\",\"bc0\"]/observation",
+      "measurement:[0,\"tt/novdd/125C\",\"bc1\"]/observation",
+      "measurement:[0,\"tt/novdd/125C\",\"bd0\"]/observation",
+      "measurement:[0,\"tt/novdd/125C\",\"bd1\"]/observation",
+      "measurement:[0,\"tt/novdd/125C\",\"bn0\"]/observation",
+      "measurement:[0,\"tt/novdd/125C\",\"bn1\"]/observation",
+      "measurement:[0,\"tt/novdd/125C\",\"bp0\"]/observation",
+      "measurement:[0,\"tt/novdd/125C\",\"bp1\"]/observation",
+      "measurement:[0,\"tt/novdd/125C\",\"cd0\"]/observation",
+      "measurement:[0,\"tt/novdd/125C\",\"cd1\"]/observation",
+      "measurement:[0,\"tt/novdd/125C\",\"da_end\"]/observation",
+      "measurement:[0,\"tt/novdd/125C\",\"db_end\"]/observation",
+      "measurement:[0,\"tt/novdd/125C\",\"dc_end\"]/observation"
+    ],
+    "skipped": [],
+    "inapplicable": [
+      {
+        "id": "measurement:[0,\"tt/novdd/125C\",\"ad_neg\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/125C\",\"ad_pos\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/125C\",\"adn_neg\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/125C\",\"adn_pos\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/125C\",\"ap0\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/125C\",\"apmax\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/125C\",\"apmin\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/125C\",\"bc0\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/125C\",\"bc1\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/125C\",\"bd0\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/125C\",\"bd1\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/125C\",\"bn0\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/125C\",\"bn1\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/125C\",\"bp0\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/125C\",\"bp1\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/125C\",\"cd0\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/125C\",\"cd1\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/125C\",\"da_end\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/125C\",\"db_end\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[0,\"tt/novdd/125C\",\"dc_end\"]/limits",
+        "reason": "characterization_without_limits"
+      }
+    ],
+    "unknown": [],
+    "nothing_checked": false,
+    "nothing_checked_reasons": []
+  },
+  "provenance": {
+    "klt_version": "0.9.2",
+    "klt_git_commit": "046ba74652fc096bd97071fc3237f7159dd40183",
+    "klt_reinstall_spec": "klayout-tools==0.9.2",
+    "klayout_version": "0.30.14",
+    "pdk": {
+      "name": "gf180mcuD",
+      "source": "search root: ~/.ciel",
+      "version": "open_pdks f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7"
+    },
+    "deck": {
+      "name": "sm141064.ngspice",
+      "content_hash": "sha256:f6f4a96e18fc5ad11270ad3451aaecc7ac37fc81eb61e15b0d7d94c7bc594a24",
+      "released": false
+    },
+    "input": {
+      "content_hash": "sha256:43139c5e0613ec3e0f665b78f87750161f6fdcdc44f50962fd9ed12a6e4f245b",
+      "role": "netlist"
+    }
+  },
+  "measurements": [
+    {
+      "name": "ad_pos",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/125C",
+        "value": 0.005312485650792,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "tt/novdd/125C",
+        "value": 0.005312485650792
+      },
+      "max": {
+        "corner_id": "tt/novdd/125C",
+        "value": 0.005312485650792
+      }
+    },
+    {
+      "name": "ad_neg",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/125C",
+        "value": -0.004426701795339,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "tt/novdd/125C",
+        "value": -0.004426701795339
+      },
+      "max": {
+        "corner_id": "tt/novdd/125C",
+        "value": -0.004426701795339
+      }
+    },
+    {
+      "name": "adn_pos",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/125C",
+        "value": 0.00524187192248,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "tt/novdd/125C",
+        "value": 0.00524187192248
+      },
+      "max": {
+        "corner_id": "tt/novdd/125C",
+        "value": 0.00524187192248
+      }
+    },
+    {
+      "name": "adn_neg",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/125C",
+        "value": -0.004381122166013,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "tt/novdd/125C",
+        "value": -0.004381122166013
+      },
+      "max": {
+        "corner_id": "tt/novdd/125C",
+        "value": -0.004381122166013
+      }
+    },
+    {
+      "name": "ap0",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/125C",
+        "value": 1.648695999448,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "tt/novdd/125C",
+        "value": 1.648695999448
+      },
+      "max": {
+        "corner_id": "tt/novdd/125C",
+        "value": 1.648695999448
+      }
+    },
+    {
+      "name": "apmax",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/125C",
+        "value": 1.654008490688,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "tt/novdd/125C",
+        "value": 1.654008490688
+      },
+      "max": {
+        "corner_id": "tt/novdd/125C",
+        "value": 1.654008490688
+      }
+    },
+    {
+      "name": "apmin",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/125C",
+        "value": 1.644269303242,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "tt/novdd/125C",
+        "value": 1.644269303242
+      },
+      "max": {
+        "corner_id": "tt/novdd/125C",
+        "value": 1.644269303242
+      }
+    },
+    {
+      "name": "bd0",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/125C",
+        "value": -0.002607981700652,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "tt/novdd/125C",
+        "value": -0.002607981700652
+      },
+      "max": {
+        "corner_id": "tt/novdd/125C",
+        "value": -0.002607981700652
+      }
+    },
+    {
+      "name": "bd1",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/125C",
+        "value": -0.002610003855227,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "tt/novdd/125C",
+        "value": -0.002610003855227
+      },
+      "max": {
+        "corner_id": "tt/novdd/125C",
+        "value": -0.002610003855227
+      }
+    },
+    {
+      "name": "cd0",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/125C",
+        "value": 0.09639209819492,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "tt/novdd/125C",
+        "value": 0.09639209819492
+      },
+      "max": {
+        "corner_id": "tt/novdd/125C",
+        "value": 0.09639209819492
+      }
+    },
+    {
+      "name": "cd1",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/125C",
+        "value": 0.09635469427026,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "tt/novdd/125C",
+        "value": 0.09635469427026
+      },
+      "max": {
+        "corner_id": "tt/novdd/125C",
+        "value": 0.09635469427026
+      }
+    },
+    {
+      "name": "bc0",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/125C",
+        "value": -1.421644690733e-06,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "tt/novdd/125C",
+        "value": -1.421644690733e-06
+      },
+      "max": {
+        "corner_id": "tt/novdd/125C",
+        "value": -1.421644690733e-06
+      }
+    },
+    {
+      "name": "bc1",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/125C",
+        "value": 0.0001215885921949,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "tt/novdd/125C",
+        "value": 0.0001215885921949
+      },
+      "max": {
+        "corner_id": "tt/novdd/125C",
+        "value": 0.0001215885921949
+      }
+    },
+    {
+      "name": "bp0",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/125C",
+        "value": 1.648694587505,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "tt/novdd/125C",
+        "value": 1.648694587505
+      },
+      "max": {
+        "corner_id": "tt/novdd/125C",
+        "value": 1.648694587505
+      }
+    },
+    {
+      "name": "bn0",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/125C",
+        "value": 1.651302569206,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "tt/novdd/125C",
+        "value": 1.651302569206
+      },
+      "max": {
+        "corner_id": "tt/novdd/125C",
+        "value": 1.651302569206
+      }
+    },
+    {
+      "name": "bp1",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/125C",
+        "value": 1.648816586665,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "tt/novdd/125C",
+        "value": 1.648816586665
+      },
+      "max": {
+        "corner_id": "tt/novdd/125C",
+        "value": 1.648816586665
+      }
+    },
+    {
+      "name": "bn1",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/125C",
+        "value": 1.65142659052,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "tt/novdd/125C",
+        "value": 1.65142659052
+      },
+      "max": {
+        "corner_id": "tt/novdd/125C",
+        "value": 1.65142659052
+      }
+    },
+    {
+      "name": "da_end",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/125C",
+        "value": 0.9999971333975,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "tt/novdd/125C",
+        "value": 0.9999971333975
+      },
+      "max": {
+        "corner_id": "tt/novdd/125C",
+        "value": 0.9999971333975
+      }
+    },
+    {
+      "name": "db_end",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/125C",
+        "value": 0.9999971333975,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "tt/novdd/125C",
+        "value": 0.9999971333975
+      },
+      "max": {
+        "corner_id": "tt/novdd/125C",
+        "value": 0.9999971333975
+      }
+    },
+    {
+      "name": "dc_end",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/125C",
+        "value": 0.9999971333975,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "tt/novdd/125C",
+        "value": 0.9999971333975
+      },
+      "max": {
+        "corner_id": "tt/novdd/125C",
+        "value": 0.9999971333975
+      }
+    }
+  ],
+  "corners": [
+    {
+      "corner_id": "tt/novdd/125C",
+      "process": "tt",
+      "supply_v": {},
+      "temperature_c": 125.0,
+      "status": "pass",
+      "runtime_s": 2.371,
+      "peak_rss_bytes": 60641280,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "ad_pos",
+          "value": 0.005312485650792,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "ad_neg",
+          "value": -0.004426701795339,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "adn_pos",
+          "value": 0.00524187192248,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "adn_neg",
+          "value": -0.004381122166013,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "ap0",
+          "value": 1.648695999448,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "apmax",
+          "value": 1.654008490688,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "apmin",
+          "value": 1.644269303242,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "bd0",
+          "value": -0.002607981700652,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "bd1",
+          "value": -0.002610003855227,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "cd0",
+          "value": 0.09639209819492,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "cd1",
+          "value": 0.09635469427026,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "bc0",
+          "value": -1.421644690733e-06,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "bc1",
+          "value": 0.0001215885921949,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "bp0",
+          "value": 1.648694587505,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "bn0",
+          "value": 1.651302569206,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "bp1",
+          "value": 1.648816586665,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "bn1",
+          "value": 1.65142659052,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "da_end",
+          "value": 0.9999971333975,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "db_end",
+          "value": 0.9999971333975,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        },
+        {
+          "name": "dc_end",
+          "value": 0.9999971333975,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-453/layout/pex/artifacts/design-levers-combined/20261123-192546-559b686/kickback/tail-x1.5-cgr-0250-1000/out-main-tt_125c_2.97v/tt_novdd_125C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-453/layout/pex/artifacts/design-levers-combined/20261123-192546-559b686/kickback/tail-x1.5-cgr-0250-1000/out-main-tt_125c_2.97v/tt_novdd_125C/corner.cir"
+      },
+      "monte_carlo": null
+    }
+  ]
+}

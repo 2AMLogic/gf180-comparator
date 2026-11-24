@@ -1,0 +1,94 @@
+{
+  "corners": {
+    "ss_125c_2.97v": {
+      "dut_vos_v": -0.001927488148659992,
+      "kick_1k_peak_mv": 4.776396853475
+    },
+    "tt_125c_2.97v": {
+      "dut_vos_v": -0.003308078193979991,
+      "kick_1k_peak_mv": 5.353995564889
+    }
+  },
+  "decision_checks": {
+    "bounds_source": "generation-time testbench manifest `checks` (record `testbench.manifest_sha256`)",
+    "checks": {
+      "dout_1k_end": {
+        "min": 0.9,
+        "phase": "end",
+        "required": true
+      },
+      "dout_float_big_end": {
+        "min": 0.9,
+        "phase": "end",
+        "required": true
+      },
+      "dout_float_small_end": {
+        "min": 0.9,
+        "phase": "end",
+        "required": true
+      }
+    },
+    "corners_evaluated": 2,
+    "corners_expected": 2,
+    "corners_fail": 0,
+    "corners_pass": 2,
+    "failures": [],
+    "missing": [],
+    "per_corner": {
+      "ss_125c_2.97v": {
+        "checks": {
+          "dout_1k_end": {
+            "min": 0.9,
+            "phase": "end",
+            "status": "pass",
+            "value": 0.9999972159447
+          },
+          "dout_float_big_end": {
+            "min": 0.9,
+            "phase": "end",
+            "status": "pass",
+            "value": 0.9999972159447
+          },
+          "dout_float_small_end": {
+            "min": 0.9,
+            "phase": "end",
+            "status": "pass",
+            "value": 0.9999972159447
+          }
+        },
+        "status": "pass"
+      },
+      "tt_125c_2.97v": {
+        "checks": {
+          "dout_1k_end": {
+            "min": 0.9,
+            "phase": "end",
+            "status": "pass",
+            "value": 0.9999971690179
+          },
+          "dout_float_big_end": {
+            "min": 0.9,
+            "phase": "end",
+            "status": "pass",
+            "value": 0.9999971690179
+          },
+          "dout_float_small_end": {
+            "min": 0.9,
+            "phase": "end",
+            "status": "pass",
+            "value": 0.9999971690179
+          }
+        },
+        "status": "pass"
+      }
+    },
+    "schema": "decision-correctness/1",
+    "status": "pass"
+  },
+  "dut_sha256": "8fe3b53e4e5838e8bdc94178c6165163e4a6c9d521fde220c5559b530a3c12b1",
+  "job_ids": {
+    "main-ss_125c_2.97v": "klt-sim-d0e7d40845ec",
+    "main-tt_125c_2.97v": "klt-sim-10f3961619f3",
+    "probe-v2.97": "klt-sim-3fa525a5d93a"
+  }
+}

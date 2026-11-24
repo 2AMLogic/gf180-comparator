@@ -1,0 +1,2389 @@
+{
+  "controls": {
+    "ctrl@ss_125c_2.97v": {
+      "abs_diff_ns": 0.0,
+      "cited_dut_vos_v": -0.005186500000000004,
+      "cited_td_od50_ns": 2.02956,
+      "reproduces": true,
+      "rerun_dut_vos_v": -0.005186500000000004,
+      "rerun_td_od50_ns": 2.02956
+    },
+    "ctrl@tt_125c_2.97v": {
+      "abs_diff_ns": 0.0,
+      "cited_dut_vos_v": -0.0089074,
+      "cited_td_od50_ns": 1.58774,
+      "reproduces": true,
+      "rerun_dut_vos_v": -0.0089074,
+      "rerun_td_od50_ns": 1.58774
+    },
+    "sch@ss_125c_2.97v": {
+      "abs_diff_ns": 0.0,
+      "cited_td_od50_ns": 1.23747,
+      "reproduces": true,
+      "rerun_td_od50_ns": 1.23747
+    },
+    "sch@tt_125c_2.97v": {
+      "abs_diff_ns": 0.0,
+      "cited_td_od50_ns": 0.986719,
+      "reproduces": true,
+      "rerun_td_od50_ns": 0.986719
+    }
+  },
+  "controls_valid": true,
+  "kickback_and_offset": {
+    "ctrl": {
+      "corners": {
+        "ss_125c_2.97v": {
+          "dut_vos_v": -0.005166640204629994,
+          "kick_1k_peak_mv": 10.115821742929999
+        },
+        "tt_125c_2.97v": {
+          "dut_vos_v": -0.008917367602289995,
+          "kick_1k_peak_mv": 9.565699627416
+        }
+      },
+      "decision_checks": {
+        "bounds_source": "generation-time testbench manifest `checks` (record `testbench.manifest_sha256`)",
+        "checks": {
+          "dout_1k_end": {
+            "min": 0.9,
+            "phase": "end",
+            "required": true
+          },
+          "dout_float_big_end": {
+            "min": 0.9,
+            "phase": "end",
+            "required": true
+          },
+          "dout_float_small_end": {
+            "min": 0.9,
+            "phase": "end",
+            "required": true
+          }
+        },
+        "corners_evaluated": 2,
+        "corners_expected": 2,
+        "corners_fail": 0,
+        "corners_pass": 2,
+        "failures": [],
+        "missing": [],
+        "per_corner": {
+          "ss_125c_2.97v": {
+            "checks": {
+              "dout_1k_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999913033166
+              },
+              "dout_float_big_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999913033168
+              },
+              "dout_float_small_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999913033165
+              }
+            },
+            "status": "pass"
+          },
+          "tt_125c_2.97v": {
+            "checks": {
+              "dout_1k_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999893491759
+              },
+              "dout_float_big_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.999989349176
+              },
+              "dout_float_small_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999893491759
+              }
+            },
+            "status": "pass"
+          }
+        },
+        "schema": "decision-correctness/1",
+        "status": "pass"
+      },
+      "dut_sha256": "a7ca3c00ea4db8a2b00cad69f2edc2d9320738499049cfa9c7faec517b7b5f45",
+      "job_ids": {
+        "main-ss_125c_2.97v": "klt-sim-3fe92c7be94e",
+        "main-tt_125c_2.97v": "klt-sim-c6ec3bd8dd2e",
+        "probe-v2.97": "klt-sim-b5076ef327cd"
+      }
+    },
+    "pair+tail-cgr-0250-0500": {
+      "corners": {
+        "ss_125c_2.97v": {
+          "dut_vos_v": -0.0017776601323400004,
+          "kick_1k_peak_mv": 5.586852825022
+        },
+        "tt_125c_2.97v": {
+          "dut_vos_v": -0.0030081356251299984,
+          "kick_1k_peak_mv": 6.178603234864
+        }
+      },
+      "decision_checks": {
+        "bounds_source": "generation-time testbench manifest `checks` (record `testbench.manifest_sha256`)",
+        "checks": {
+          "dout_1k_end": {
+            "min": 0.9,
+            "phase": "end",
+            "required": true
+          },
+          "dout_float_big_end": {
+            "min": 0.9,
+            "phase": "end",
+            "required": true
+          },
+          "dout_float_small_end": {
+            "min": 0.9,
+            "phase": "end",
+            "required": true
+          }
+        },
+        "corners_evaluated": 2,
+        "corners_expected": 2,
+        "corners_fail": 0,
+        "corners_pass": 2,
+        "failures": [],
+        "missing": [],
+        "per_corner": {
+          "ss_125c_2.97v": {
+            "checks": {
+              "dout_1k_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.999996082557
+              },
+              "dout_float_big_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.999996082557
+              },
+              "dout_float_small_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.999996082557
+              }
+            },
+            "status": "pass"
+          },
+          "tt_125c_2.97v": {
+            "checks": {
+              "dout_1k_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999958859437
+              },
+              "dout_float_big_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999958859437
+              },
+              "dout_float_small_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999958859437
+              }
+            },
+            "status": "pass"
+          }
+        },
+        "schema": "decision-correctness/1",
+        "status": "pass"
+      },
+      "dut_sha256": "588be9f465f9d9a9dd322d0c94265292ba0f91b5ff179d36c97031b81bcf685d",
+      "job_ids": {
+        "main-ss_125c_2.97v": "klt-sim-1d31f1663d26",
+        "main-tt_125c_2.97v": "klt-sim-1b0d40b1499c",
+        "probe-v2.97": "klt-sim-c7973612edee"
+      }
+    },
+    "pair+tail-cgr-0250-1000": {
+      "corners": {
+        "ss_125c_2.97v": {
+          "dut_vos_v": -0.002017520245529994,
+          "kick_1k_peak_mv": 5.543991232442
+        },
+        "tt_125c_2.97v": {
+          "dut_vos_v": -0.0033379719355899964,
+          "kick_1k_peak_mv": 6.1374479889239995
+        }
+      },
+      "decision_checks": {
+        "bounds_source": "generation-time testbench manifest `checks` (record `testbench.manifest_sha256`)",
+        "checks": {
+          "dout_1k_end": {
+            "min": 0.9,
+            "phase": "end",
+            "required": true
+          },
+          "dout_float_big_end": {
+            "min": 0.9,
+            "phase": "end",
+            "required": true
+          },
+          "dout_float_small_end": {
+            "min": 0.9,
+            "phase": "end",
+            "required": true
+          }
+        },
+        "corners_evaluated": 2,
+        "corners_expected": 2,
+        "corners_fail": 0,
+        "corners_pass": 2,
+        "failures": [],
+        "missing": [],
+        "per_corner": {
+          "ss_125c_2.97v": {
+            "checks": {
+              "dout_1k_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999960403904
+              },
+              "dout_float_big_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999960403904
+              },
+              "dout_float_small_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999960403904
+              }
+            },
+            "status": "pass"
+          },
+          "tt_125c_2.97v": {
+            "checks": {
+              "dout_1k_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999958351452
+              },
+              "dout_float_big_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999958351452
+              },
+              "dout_float_small_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999958351452
+              }
+            },
+            "status": "pass"
+          }
+        },
+        "schema": "decision-correctness/1",
+        "status": "pass"
+      },
+      "dut_sha256": "f029c8898f26238b2f3b3cebc6dc5047b2382964745e75e616ed24bf444c4cfb",
+      "job_ids": {
+        "main-ss_125c_2.97v": "klt-sim-d9eca4f9196d",
+        "main-tt_125c_2.97v": "klt-sim-fcb68a651ef5",
+        "probe-v2.97": "klt-sim-e2f590709aa8"
+      }
+    },
+    "pair-x1.5-cgr-0250-0500": {
+      "corners": {
+        "ss_125c_2.97v": {
+          "dut_vos_v": -0.0016576105684599982,
+          "kick_1k_peak_mv": 5.674439041967
+        },
+        "tt_125c_2.97v": {
+          "dut_vos_v": -0.0027681163184699945,
+          "kick_1k_peak_mv": 6.333507477641
+        }
+      },
+      "decision_checks": {
+        "bounds_source": "generation-time testbench manifest `checks` (record `testbench.manifest_sha256`)",
+        "checks": {
+          "dout_1k_end": {
+            "min": 0.9,
+            "phase": "end",
+            "required": true
+          },
+          "dout_float_big_end": {
+            "min": 0.9,
+            "phase": "end",
+            "required": true
+          },
+          "dout_float_small_end": {
+            "min": 0.9,
+            "phase": "end",
+            "required": true
+          }
+        },
+        "corners_evaluated": 2,
+        "corners_expected": 2,
+        "corners_fail": 0,
+        "corners_pass": 2,
+        "failures": [],
+        "missing": [],
+        "per_corner": {
+          "ss_125c_2.97v": {
+            "checks": {
+              "dout_1k_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999961118194
+              },
+              "dout_float_big_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999961118194
+              },
+              "dout_float_small_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999961118194
+              }
+            },
+            "status": "pass"
+          },
+          "tt_125c_2.97v": {
+            "checks": {
+              "dout_1k_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.99999590861
+              },
+              "dout_float_big_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.99999590861
+              },
+              "dout_float_small_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.99999590861
+              }
+            },
+            "status": "pass"
+          }
+        },
+        "schema": "decision-correctness/1",
+        "status": "pass"
+      },
+      "dut_sha256": "ca6f8584a895fdb0ad8e66b0f0960b3c0ddbfa239385fa07fcbb63ab2faccfe2",
+      "job_ids": {
+        "main-ss_125c_2.97v": "klt-sim-4c7db0ed8dab",
+        "main-tt_125c_2.97v": "klt-sim-632795770e71",
+        "probe-v2.97": "klt-sim-bc9c3a391267"
+      }
+    },
+    "pair-x1.5-cgr-0250-1000": {
+      "corners": {
+        "ss_125c_2.97v": {
+          "dut_vos_v": -0.001897450991519993,
+          "kick_1k_peak_mv": 5.6321498248549995
+        },
+        "tt_125c_2.97v": {
+          "dut_vos_v": -0.0030681009052199934,
+          "kick_1k_peak_mv": 6.293238284396001
+        }
+      },
+      "decision_checks": {
+        "bounds_source": "generation-time testbench manifest `checks` (record `testbench.manifest_sha256`)",
+        "checks": {
+          "dout_1k_end": {
+            "min": 0.9,
+            "phase": "end",
+            "required": true
+          },
+          "dout_float_big_end": {
+            "min": 0.9,
+            "phase": "end",
+            "required": true
+          },
+          "dout_float_small_end": {
+            "min": 0.9,
+            "phase": "end",
+            "required": true
+          }
+        },
+        "corners_evaluated": 2,
+        "corners_expected": 2,
+        "corners_fail": 0,
+        "corners_pass": 2,
+        "failures": [],
+        "missing": [],
+        "per_corner": {
+          "ss_125c_2.97v": {
+            "checks": {
+              "dout_1k_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999960694763
+              },
+              "dout_float_big_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999960694763
+              },
+              "dout_float_small_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999960694763
+              }
+            },
+            "status": "pass"
+          },
+          "tt_125c_2.97v": {
+            "checks": {
+              "dout_1k_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999958576785
+              },
+              "dout_float_big_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999958576785
+              },
+              "dout_float_small_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999958576785
+              }
+            },
+            "status": "pass"
+          }
+        },
+        "schema": "decision-correctness/1",
+        "status": "pass"
+      },
+      "dut_sha256": "efd7dda1a1f8ebe09dc670699439a9ae60b26dcec910d1fe3df99fdb889a392e",
+      "job_ids": {
+        "main-ss_125c_2.97v": "klt-sim-555c64df5c52",
+        "main-tt_125c_2.97v": "klt-sim-6a233a1a23c0",
+        "probe-v2.97": "klt-sim-80cf2e315b0e"
+      }
+    },
+    "tail-x1.5-cgr-0250-0500": {
+      "corners": {
+        "ss_125c_2.97v": {
+          "dut_vos_v": -0.001927488148659992,
+          "kick_1k_peak_mv": 4.776396853475
+        },
+        "tt_125c_2.97v": {
+          "dut_vos_v": -0.003308078193979991,
+          "kick_1k_peak_mv": 5.353995564889
+        }
+      },
+      "decision_checks": {
+        "bounds_source": "generation-time testbench manifest `checks` (record `testbench.manifest_sha256`)",
+        "checks": {
+          "dout_1k_end": {
+            "min": 0.9,
+            "phase": "end",
+            "required": true
+          },
+          "dout_float_big_end": {
+            "min": 0.9,
+            "phase": "end",
+            "required": true
+          },
+          "dout_float_small_end": {
+            "min": 0.9,
+            "phase": "end",
+            "required": true
+          }
+        },
+        "corners_evaluated": 2,
+        "corners_expected": 2,
+        "corners_fail": 0,
+        "corners_pass": 2,
+        "failures": [],
+        "missing": [],
+        "per_corner": {
+          "ss_125c_2.97v": {
+            "checks": {
+              "dout_1k_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999972159447
+              },
+              "dout_float_big_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999972159447
+              },
+              "dout_float_small_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999972159447
+              }
+            },
+            "status": "pass"
+          },
+          "tt_125c_2.97v": {
+            "checks": {
+              "dout_1k_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999971690179
+              },
+              "dout_float_big_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999971690179
+              },
+              "dout_float_small_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999971690179
+              }
+            },
+            "status": "pass"
+          }
+        },
+        "schema": "decision-correctness/1",
+        "status": "pass"
+      },
+      "dut_sha256": "8fe3b53e4e5838e8bdc94178c6165163e4a6c9d521fde220c5559b530a3c12b1",
+      "job_ids": {
+        "main-ss_125c_2.97v": "klt-sim-d0e7d40845ec",
+        "main-tt_125c_2.97v": "klt-sim-10f3961619f3",
+        "probe-v2.97": "klt-sim-3fa525a5d93a"
+      }
+    },
+    "tail-x1.5-cgr-0250-1000": {
+      "corners": {
+        "ss_125c_2.97v": {
+          "dut_vos_v": -0.0021374843723900028,
+          "kick_1k_peak_mv": 4.736506875341
+        },
+        "tt_125c_2.97v": {
+          "dut_vos_v": -0.0036079899257599954,
+          "kick_1k_peak_mv": 5.3124856507919995
+        }
+      },
+      "decision_checks": {
+        "bounds_source": "generation-time testbench manifest `checks` (record `testbench.manifest_sha256`)",
+        "checks": {
+          "dout_1k_end": {
+            "min": 0.9,
+            "phase": "end",
+            "required": true
+          },
+          "dout_float_big_end": {
+            "min": 0.9,
+            "phase": "end",
+            "required": true
+          },
+          "dout_float_small_end": {
+            "min": 0.9,
+            "phase": "end",
+            "required": true
+          }
+        },
+        "corners_evaluated": 2,
+        "corners_expected": 2,
+        "corners_fail": 0,
+        "corners_pass": 2,
+        "failures": [],
+        "missing": [],
+        "per_corner": {
+          "ss_125c_2.97v": {
+            "checks": {
+              "dout_1k_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999971855146
+              },
+              "dout_float_big_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999971855147
+              },
+              "dout_float_small_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999971855147
+              }
+            },
+            "status": "pass"
+          },
+          "tt_125c_2.97v": {
+            "checks": {
+              "dout_1k_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999971333975
+              },
+              "dout_float_big_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999971333975
+              },
+              "dout_float_small_end": {
+                "min": 0.9,
+                "phase": "end",
+                "status": "pass",
+                "value": 0.9999971333975
+              }
+            },
+            "status": "pass"
+          }
+        },
+        "schema": "decision-correctness/1",
+        "status": "pass"
+      },
+      "dut_sha256": "90d5db27fe988cd385a519905ad89f263c9536666878435e5ed6b0ceeaa26df5",
+      "job_ids": {
+        "main-ss_125c_2.97v": "klt-sim-e9b4e695169d",
+        "main-tt_125c_2.97v": "klt-sim-cdb08fb506b9",
+        "probe-v2.97": "klt-sim-c89d86046cd1"
+      }
+    }
+  },
+  "noise_gap": "preamp_noise_pvt.py pins the extracted DUT hash to #202",
+  "ranked_by_ss_td_od50": [
+    "pair+tail-cgr-0250-0500",
+    "pair+tail-cgr-0250-1000",
+    "pair-x1.5-cgr-0250-0500",
+    "pair-x1.5-cgr-0250-1000",
+    "tail-x1.5-cgr-0250-0500",
+    "tail-x1.5-cgr-0250-1000",
+    "pair+tail-cgr-0500-0500",
+    "pair+tail-cgr-0500-1000",
+    "pair-x1.5-cgr-0500-0500",
+    "pair-x1.5-cgr-0500-1000",
+    "tail-x1.5-cgr-0500-0500",
+    "tail-x1.5-cgr-0500-1000",
+    "pair+tail-cgr-0750-0500",
+    "pair+tail-cgr-0750-1000",
+    "pair-x1.5-cgr-0750-0500",
+    "pair-x1.5-cgr-0750-1000",
+    "tail-x1.5-cgr-0750-0500",
+    "tail-x1.5-cgr-0750-1000",
+    "pair+tail-cgr-1000-1000",
+    "pair-x1.5-cgr-1000-1000",
+    "tail-x1.5-cgr-1000-1000"
+  ],
+  "request_plan": {
+    "cap": 323,
+    "controls": 5,
+    "kickback_and_offset_per_dut": 3,
+    "larger_if_no_pass": 21,
+    "larger_max": 176,
+    "primary": 63,
+    "primary_max": 323,
+    "remaining_five_per_pass": 9
+  },
+  "seven_corner_passes": [
+    "tail-x1.5-cgr-0250-1000",
+    "tail-x1.5-cgr-0250-0500",
+    "pair-x1.5-cgr-0250-1000",
+    "pair-x1.5-cgr-0250-0500",
+    "pair+tail-cgr-0250-1000",
+    "pair+tail-cgr-0250-0500"
+  ],
+  "two_corner_passes": [
+    "tail-x1.5-cgr-0250-1000",
+    "tail-x1.5-cgr-0250-0500",
+    "pair-x1.5-cgr-0250-1000",
+    "pair-x1.5-cgr-0250-0500",
+    "pair+tail-cgr-0250-1000",
+    "pair+tail-cgr-0250-0500"
+  ],
+  "variants": {
+    "pair+tail-cgr-0250-0500": {
+      "fs_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999974,
+        "dout_od50_first": 4.72379e-06,
+        "dut_vos_shift_v": null,
+        "dut_vos_v": -0.0031482000000000038,
+        "job_ids": [
+          "klt-sim-62db9add3777"
+        ],
+        "ladder_netlist_sha256": "ff2ab097b1d368c60e81a4a3328d94bc70abfb811c86aacf06f82c9390a404fc",
+        "margin_to_1p5ns_ns": 0.38932999999999995,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-081324749bf9",
+          "klt-sim-464eec43c62f",
+          "klt-sim-f6599f28e3cd",
+          "klt-sim-faae104c55d7"
+        ],
+        "tau_ps": 82.89813070569274,
+        "td_od01_ns": 1.57722,
+        "td_od1_ns": 1.38634,
+        "td_od50_ns": 1.11067
+      },
+      "sf_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.99998,
+        "dout_od50_first": 3.44668e-05,
+        "dut_vos_shift_v": null,
+        "dut_vos_v": -0.0028779000000000027,
+        "job_ids": [
+          "klt-sim-46fc3c999955"
+        ],
+        "ladder_netlist_sha256": "030cac47448e85eb43899f3698137e01595b923b38592388d17bf180f89a569b",
+        "margin_to_1p5ns_ns": 0.31128,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-081324749bf9",
+          "klt-sim-464eec43c62f",
+          "klt-sim-f6599f28e3cd",
+          "klt-sim-faae104c55d7"
+        ],
+        "tau_ps": 98.06803695857332,
+        "td_od01_ns": 1.73668,
+        "td_od1_ns": 1.51087,
+        "td_od50_ns": 1.18872
+      },
+      "ss_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999985,
+        "dout_od50_first": 1.1452e-05,
+        "dut_vos_shift_v": 0.003389000000000003,
+        "dut_vos_v": -0.0017975000000000005,
+        "job_ids": [
+          "klt-sim-4f10049d3bf2"
+        ],
+        "ladder_netlist_sha256": "0d5f2aa19c266069c04d0d318bd19185707fd18633bf45d65b1f332cfd76ff2c",
+        "margin_to_1p5ns_ns": 0.07980999999999994,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-7188bff270e6"
+        ],
+        "tau_ps": 124.72503225779484,
+        "td_od01_ns": 2.14049,
+        "td_od1_ns": 1.8533,
+        "td_od50_ns": 1.42019
+      },
+      "ss_125c_3.30v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999982,
+        "dout_od50_first": 1.39579e-05,
+        "dut_vos_shift_v": null,
+        "dut_vos_v": -0.002577799999999998,
+        "job_ids": [
+          "klt-sim-84fbb4708a42"
+        ],
+        "ladder_netlist_sha256": "261b738bce5794e48107e63e378664470bcf66f86e6dc92f0c68d3d36e8cb73e",
+        "margin_to_1p5ns_ns": 0.2657099999999999,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-081324749bf9",
+          "klt-sim-464eec43c62f",
+          "klt-sim-f6599f28e3cd",
+          "klt-sim-faae104c55d7"
+        ],
+        "tau_ps": 104.84303087626407,
+        "td_od01_ns": 1.81107,
+        "td_od1_ns": 1.5696599999999998,
+        "td_od50_ns": 1.23429
+      },
+      "ss_125c_3.63v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.99998,
+        "dout_od50_first": 1.55536e-05,
+        "dut_vos_shift_v": null,
+        "dut_vos_v": -0.0033581999999999987,
+        "job_ids": [
+          "klt-sim-b163f4250a36"
+        ],
+        "ladder_netlist_sha256": "261b738bce5794e48107e63e378664470bcf66f86e6dc92f0c68d3d36e8cb73e",
+        "margin_to_1p5ns_ns": 0.39175000000000004,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-081324749bf9",
+          "klt-sim-464eec43c62f",
+          "klt-sim-f6599f28e3cd",
+          "klt-sim-faae104c55d7"
+        ],
+        "tau_ps": 84.61793685402954,
+        "td_od01_ns": 1.5933599999999999,
+        "td_od1_ns": 1.39852,
+        "td_od50_ns": 1.10825
+      },
+      "ss_27c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.99999,
+        "dout_od50_first": 3.17247e-06,
+        "dut_vos_shift_v": null,
+        "dut_vos_v": -0.0011076000000000003,
+        "job_ids": [
+          "klt-sim-408a845249c5"
+        ],
+        "ladder_netlist_sha256": "261b738bce5794e48107e63e378664470bcf66f86e6dc92f0c68d3d36e8cb73e",
+        "margin_to_1p5ns_ns": 0.33124,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-081324749bf9",
+          "klt-sim-464eec43c62f",
+          "klt-sim-f6599f28e3cd",
+          "klt-sim-faae104c55d7"
+        ],
+        "tau_ps": 104.73445725578821,
+        "td_od01_ns": 1.86207,
+        "td_od1_ns": 1.6209099999999999,
+        "td_od50_ns": 1.16876
+      },
+      "tt_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999977,
+        "dout_od50_first": 2.36297e-05,
+        "dut_vos_shift_v": 0.005879499999999992,
+        "dut_vos_v": -0.003027900000000007,
+        "job_ids": [
+          "klt-sim-a183f58551bd"
+        ],
+        "ladder_netlist_sha256": "c4fad14f6f0ed2d803b5d1d4cd6f9f34bce9033269dd8202736defa830f912c5",
+        "margin_to_1p5ns_ns": 0.35850000000000004,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-7188bff270e6"
+        ],
+        "tau_ps": 94.76305595128959,
+        "td_od01_ns": 1.65853,
+        "td_od1_ns": 1.4403299999999999,
+        "td_od50_ns": 1.1415
+      }
+    },
+    "pair+tail-cgr-0250-1000": {
+      "fs_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999973,
+        "dout_od50_first": 1.42026e-05,
+        "dut_vos_shift_v": null,
+        "dut_vos_v": -0.0035081,
+        "job_ids": [
+          "klt-sim-891b00c9fd9b"
+        ],
+        "ladder_netlist_sha256": "e586f607019933a3d79de02b2e52816aa7f2ac9a189874731a6d580b5ab73b3f",
+        "margin_to_1p5ns_ns": 0.37358999999999987,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-4c6786a035fe",
+          "klt-sim-8343f08f8d7a",
+          "klt-sim-984c43cd82ad",
+          "klt-sim-fc3572a16122"
+        ],
+        "tau_ps": 90.38536757370481,
+        "td_od01_ns": 1.61593,
+        "td_od1_ns": 1.40781,
+        "td_od50_ns": 1.1264100000000001
+      },
+      "sf_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.99998,
+        "dout_od50_first": 5.13412e-06,
+        "dut_vos_shift_v": null,
+        "dut_vos_v": -0.003148100000000008,
+        "job_ids": [
+          "klt-sim-ab78c14eee77"
+        ],
+        "ladder_netlist_sha256": "c74976044cb3d03a24e3d1f8f89af010edb06c99c03da3d5f13d4e50e46c5a56",
+        "margin_to_1p5ns_ns": 0.2953699999999999,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-4c6786a035fe",
+          "klt-sim-8343f08f8d7a",
+          "klt-sim-984c43cd82ad",
+          "klt-sim-fc3572a16122"
+        ],
+        "tau_ps": 91.28870009606351,
+        "td_od01_ns": 1.73911,
+        "td_od1_ns": 1.52891,
+        "td_od50_ns": 1.20463
+      },
+      "ss_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999985,
+        "dout_od50_first": 1.14639e-05,
+        "dut_vos_shift_v": 0.0031788999999999984,
+        "dut_vos_v": -0.002007600000000005,
+        "job_ids": [
+          "klt-sim-c253ad543e84"
+        ],
+        "ladder_netlist_sha256": "ac2231aa0739e24d037239931f015f4a16065d9a033acaf1820ec51e29eb762c",
+        "margin_to_1p5ns_ns": 0.061549999999999994,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-fc7ec7ca3d06"
+        ],
+        "tau_ps": 117.49402913410565,
+        "td_od01_ns": 2.14582,
+        "td_od1_ns": 1.87528,
+        "td_od50_ns": 1.43845
+      },
+      "ss_125c_3.30v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999982,
+        "dout_od50_first": 4.66266e-06,
+        "dut_vos_shift_v": null,
+        "dut_vos_v": -0.0028478000000000045,
+        "job_ids": [
+          "klt-sim-5a7d3fcad043"
+        ],
+        "ladder_netlist_sha256": "2ef1271a9299019a6ec27cd40cb5cb6ddd6f13639c4e92ae601bd525e7765e56",
+        "margin_to_1p5ns_ns": 0.24909999999999988,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-4c6786a035fe",
+          "klt-sim-8343f08f8d7a",
+          "klt-sim-984c43cd82ad",
+          "klt-sim-fc3572a16122"
+        ],
+        "tau_ps": 105.103607565406,
+        "td_od01_ns": 1.83259,
+        "td_od1_ns": 1.5905799999999999,
+        "td_od50_ns": 1.2509000000000001
+      },
+      "ss_125c_3.63v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.99998,
+        "dout_od50_first": 1.56315e-05,
+        "dut_vos_shift_v": null,
+        "dut_vos_v": -0.0036882000000000026,
+        "job_ids": [
+          "klt-sim-34230a0b323a"
+        ],
+        "ladder_netlist_sha256": "2ef1271a9299019a6ec27cd40cb5cb6ddd6f13639c4e92ae601bd525e7765e56",
+        "margin_to_1p5ns_ns": 0.37634999999999996,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-4c6786a035fe",
+          "klt-sim-8343f08f8d7a",
+          "klt-sim-984c43cd82ad",
+          "klt-sim-fc3572a16122"
+        ],
+        "tau_ps": 84.0576969723743,
+        "td_od01_ns": 1.6109499999999999,
+        "td_od1_ns": 1.4174,
+        "td_od50_ns": 1.12365
+      },
+      "ss_27c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.99999,
+        "dout_od50_first": 3.19053e-06,
+        "dut_vos_shift_v": null,
+        "dut_vos_v": -0.0012879000000000015,
+        "job_ids": [
+          "klt-sim-948b90edc724"
+        ],
+        "ladder_netlist_sha256": "2ef1271a9299019a6ec27cd40cb5cb6ddd6f13639c4e92ae601bd525e7765e56",
+        "margin_to_1p5ns_ns": 0.31276000000000015,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-4c6786a035fe",
+          "klt-sim-8343f08f8d7a",
+          "klt-sim-984c43cd82ad",
+          "klt-sim-fc3572a16122"
+        ],
+        "tau_ps": 95.85313510086677,
+        "td_od01_ns": 1.86657,
+        "td_od1_ns": 1.6458599999999999,
+        "td_od50_ns": 1.1872399999999999
+      },
+      "tt_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999977,
+        "dout_od50_first": 4.95379e-06,
+        "dut_vos_shift_v": 0.005579299999999992,
+        "dut_vos_v": -0.0033281000000000074,
+        "job_ids": [
+          "klt-sim-2e16b51538a9"
+        ],
+        "ladder_netlist_sha256": "d084e89476472738c7110ebb6e0ff33747e3cdf8635c0b6de6d07f4c77ad9ec5",
+        "margin_to_1p5ns_ns": 0.3426500000000001,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-fc7ec7ca3d06"
+        ],
+        "tau_ps": 90.285479842867,
+        "td_od01_ns": 1.66667,
+        "td_od1_ns": 1.45878,
+        "td_od50_ns": 1.1573499999999999
+      }
+    },
+    "pair+tail-cgr-0500-0500": {
+      "ss_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999974,
+        "dout_od50_first": 1.41167e-05,
+        "dut_vos_shift_v": 0.0021292000000000047,
+        "dut_vos_v": -0.003057299999999999,
+        "job_ids": [
+          "klt-sim-eca8e480e177"
+        ],
+        "ladder_netlist_sha256": "4c5e241d883aa81ef6aee9edf45a695fc31c349ec486f4884e501528f7469927",
+        "margin_to_1p5ns_ns": -0.06423000000000001,
+        "meets_1p5ns": false,
+        "probe_job_ids": [
+          "klt-sim-0b23d768366f"
+        ],
+        "tau_ps": 145.05001401086707,
+        "td_od01_ns": 2.3753699999999998,
+        "td_od1_ns": 2.0413799999999998,
+        "td_od50_ns": 1.56423
+      },
+      "tt_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999961,
+        "dout_od50_first": 2.64671e-05,
+        "dut_vos_shift_v": 0.0037193999999999942,
+        "dut_vos_v": -0.005188000000000005,
+        "job_ids": [
+          "klt-sim-487434463d3a"
+        ],
+        "ladder_netlist_sha256": "fd6f907ec28886170d2b3278ab9875b7c63257201cbb47c24bceec69007c653b",
+        "margin_to_1p5ns_ns": 0.24668,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-0b23d768366f"
+        ],
+        "tau_ps": 94.92374490959374,
+        "td_od01_ns": 1.80229,
+        "td_od1_ns": 1.58372,
+        "td_od50_ns": 1.25332
+      }
+    },
+    "pair+tail-cgr-0500-1000": {
+      "ss_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999974,
+        "dout_od50_first": 1.41701e-05,
+        "dut_vos_shift_v": 0.001919100000000007,
+        "dut_vos_v": -0.0032673999999999967,
+        "job_ids": [
+          "klt-sim-e26ca34229b1"
+        ],
+        "ladder_netlist_sha256": "275c88d389ec162ee81b8e11fcf81e617cd056d62a778176d045cf3ef4d1fac4",
+        "margin_to_1p5ns_ns": -0.08409999999999984,
+        "meets_1p5ns": false,
+        "probe_job_ids": [
+          "klt-sim-e345f638a6c1"
+        ],
+        "tau_ps": 137.05030965420914,
+        "td_od01_ns": 2.38106,
+        "td_od1_ns": 2.06549,
+        "td_od50_ns": 1.5840999999999998
+      },
+      "tt_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.99996,
+        "dout_od50_first": 2.64152e-05,
+        "dut_vos_shift_v": 0.0033895,
+        "dut_vos_v": -0.005517899999999999,
+        "job_ids": [
+          "klt-sim-162744862517"
+        ],
+        "ladder_netlist_sha256": "ff4ecce3df161996e9243022ad981843be4575682b65b0ce8faffd7bf5c005aa",
+        "margin_to_1p5ns_ns": 0.22971000000000008,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-e345f638a6c1"
+        ],
+        "tau_ps": 104.15684559485688,
+        "td_od01_ns": 1.84749,
+        "td_od1_ns": 1.60766,
+        "td_od50_ns": 1.27029
+      }
+    },
+    "pair+tail-cgr-0750-0500": {
+      "ss_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999966,
+        "dout_od50_first": 1.67309e-05,
+        "dut_vos_shift_v": 0.0011093000000000006,
+        "dut_vos_v": -0.004077200000000003,
+        "job_ids": [
+          "klt-sim-8b0762493766"
+        ],
+        "ladder_netlist_sha256": "12a9802f5e8bff02fa0567264925c5d8a6b6004bc27539dd84264e5a9ea60b9e",
+        "margin_to_1p5ns_ns": -0.21318000000000015,
+        "meets_1p5ns": false,
+        "probe_job_ids": [
+          "klt-sim-6ddb6a012a9a"
+        ],
+        "tau_ps": 160.33717977386155,
+        "td_od01_ns": 2.60315,
+        "td_od1_ns": 2.23396,
+        "td_od50_ns": 1.7131800000000001
+      },
+      "tt_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999948,
+        "dout_od50_first": 2.88553e-05,
+        "dut_vos_shift_v": 0.001919600000000004,
+        "dut_vos_v": -0.006987799999999995,
+        "job_ids": [
+          "klt-sim-9109bd17fd97"
+        ],
+        "ladder_netlist_sha256": "49670045620e3b0d814c8bd64d99b862fd3d4706a97dadd8ee08fb42a58f5a27",
+        "margin_to_1p5ns_ns": 0.13293,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-6ddb6a012a9a"
+        ],
+        "tau_ps": 101.1471848352673,
+        "td_od01_ns": 1.9648899999999998,
+        "td_od1_ns": 1.73199,
+        "td_od50_ns": 1.36707
+      }
+    },
+    "pair+tail-cgr-0750-1000": {
+      "ss_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999966,
+        "dout_od50_first": 1.19646e-05,
+        "dut_vos_shift_v": 0.0008695000000000022,
+        "dut_vos_v": -0.004317000000000001,
+        "job_ids": [
+          "klt-sim-0c53b61c4d64"
+        ],
+        "ladder_netlist_sha256": "7ce7905eeb3849b11617f2fda6b74fb2848d26be7f68943d745fa644f4ee9ac3",
+        "margin_to_1p5ns_ns": -0.23495,
+        "meets_1p5ns": false,
+        "probe_job_ids": [
+          "klt-sim-7a6c6bd383d4"
+        ],
+        "tau_ps": 179.99334802480269,
+        "td_od01_ns": 2.68019,
+        "td_od1_ns": 2.26574,
+        "td_od50_ns": 1.73495
+      },
+      "tt_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999948,
+        "dout_od50_first": 2.88759e-05,
+        "dut_vos_shift_v": 0.001589699999999996,
+        "dut_vos_v": -0.007317700000000003,
+        "job_ids": [
+          "klt-sim-482bb5f3b1c6"
+        ],
+        "ladder_netlist_sha256": "4ad9a1625689ab49070fd8cdb1855437d758ec02fc54177d7fa3fcbaf7fa6896",
+        "margin_to_1p5ns_ns": 0.11477999999999988,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-7a6c6bd383d4"
+        ],
+        "tau_ps": 112.71244688835095,
+        "td_od01_ns": 2.01798,
+        "td_od1_ns": 1.75845,
+        "td_od50_ns": 1.3852200000000001
+      }
+    },
+    "pair+tail-cgr-1000-1000": {
+      "ss_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.99996,
+        "dout_od50_first": 1.51405e-05,
+        "dut_vos_shift_v": 2.9500000000001747e-05,
+        "dut_vos_v": -0.005157000000000002,
+        "job_ids": [
+          "klt-sim-620a8ad0c938"
+        ],
+        "ladder_netlist_sha256": "ab48636248c179e2ef6cb53e8dcbac085e47f278299332fcbf6feed6ef3f87c3",
+        "margin_to_1p5ns_ns": -0.3897999999999999,
+        "meets_1p5ns": false,
+        "probe_job_ids": [
+          "klt-sim-229e9251b9a4"
+        ],
+        "tau_ps": 167.47263811153204,
+        "td_od01_ns": 2.84561,
+        "td_od1_ns": 2.45999,
+        "td_od50_ns": 1.8898
+      },
+      "tt_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999938,
+        "dout_od50_first": 3.11094e-05,
+        "dut_vos_shift_v": 5.9799999999995274e-05,
+        "dut_vos_v": -0.008847600000000004,
+        "job_ids": [
+          "klt-sim-75d4081e345a"
+        ],
+        "ladder_netlist_sha256": "4c11bc258e00fcb0b954592af91314c999eccd3c5c02f466d6c7c93c81de752a",
+        "margin_to_1p5ns_ns": -0.0021599999999999397,
+        "meets_1p5ns": false,
+        "probe_job_ids": [
+          "klt-sim-229e9251b9a4"
+        ],
+        "tau_ps": 125.20275618788847,
+        "td_od01_ns": 2.20173,
+        "td_od1_ns": 1.91344,
+        "td_od50_ns": 1.50216
+      }
+    },
+    "pair-x1.5-cgr-0250-0500": {
+      "fs_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999974,
+        "dout_od50_first": 4.74865e-06,
+        "dut_vos_shift_v": null,
+        "dut_vos_v": -0.0029081000000000037,
+        "job_ids": [
+          "klt-sim-6baa9c96509c"
+        ],
+        "ladder_netlist_sha256": "db32d4b700d094866535fbf36321b3f79024aadba71ebf4ebc6a03e2bec7e1e5",
+        "margin_to_1p5ns_ns": 0.36297,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-3d02aad3ce52",
+          "klt-sim-4debe9c6f45d",
+          "klt-sim-b4356bc6e763",
+          "klt-sim-def1428dc3ed"
+        ],
+        "tau_ps": 88.8523080525862,
+        "td_od01_ns": 1.6231,
+        "td_od1_ns": 1.4185100000000002,
+        "td_od50_ns": 1.13703
+      },
+      "sf_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.99998,
+        "dout_od50_first": 3.39786e-05,
+        "dut_vos_shift_v": null,
+        "dut_vos_v": -0.0026380000000000084,
+        "job_ids": [
+          "klt-sim-48afdf0ddb27"
+        ],
+        "ladder_netlist_sha256": "1c5c98e909f816900fafdfffb68afac68370aad02963f39b8963cdd211ea2929",
+        "margin_to_1p5ns_ns": 0.28163000000000005,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-3d02aad3ce52",
+          "klt-sim-4debe9c6f45d",
+          "klt-sim-b4356bc6e763",
+          "klt-sim-def1428dc3ed"
+        ],
+        "tau_ps": 93.71640624990268,
+        "td_od01_ns": 1.76412,
+        "td_od1_ns": 1.54833,
+        "td_od50_ns": 1.21837
+      },
+      "ss_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999985,
+        "dout_od50_first": 1.11611e-05,
+        "dut_vos_shift_v": 0.0035089999999999982,
+        "dut_vos_v": -0.0016775000000000054,
+        "job_ids": [
+          "klt-sim-76e096604f82"
+        ],
+        "ladder_netlist_sha256": "1e19e3e330136fc86a3518aad23f3f10853e4de0d1c52cbae38f0a90b3826b93",
+        "margin_to_1p5ns_ns": 0.04499999999999993,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-78852fcafee5"
+        ],
+        "tau_ps": 125.25487152571695,
+        "td_od01_ns": 2.1968300000000003,
+        "td_od1_ns": 1.90842,
+        "td_od50_ns": 1.455
+      },
+      "ss_125c_3.30v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999982,
+        "dout_od50_first": 1.35989e-05,
+        "dut_vos_shift_v": null,
+        "dut_vos_v": -0.002368000000000002,
+        "job_ids": [
+          "klt-sim-d6968f208d24"
+        ],
+        "ladder_netlist_sha256": "a5722b4b4fd2cd762c69773e999562e18ca6928b3b2d10644b822325a3e50df9",
+        "margin_to_1p5ns_ns": 0.23543000000000003,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-3d02aad3ce52",
+          "klt-sim-4debe9c6f45d",
+          "klt-sim-b4356bc6e763",
+          "klt-sim-def1428dc3ed"
+        ],
+        "tau_ps": 101.22970078682899,
+        "td_od01_ns": 1.8410600000000001,
+        "td_od1_ns": 1.60797,
+        "td_od50_ns": 1.26457
+      },
+      "ss_125c_3.63v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.99998,
+        "dout_od50_first": 1.53016e-05,
+        "dut_vos_shift_v": null,
+        "dut_vos_v": -0.0030882000000000062,
+        "job_ids": [
+          "klt-sim-99c4f3002bc9"
+        ],
+        "ladder_netlist_sha256": "a5722b4b4fd2cd762c69773e999562e18ca6928b3b2d10644b822325a3e50df9",
+        "margin_to_1p5ns_ns": 0.36512999999999995,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-3d02aad3ce52",
+          "klt-sim-4debe9c6f45d",
+          "klt-sim-b4356bc6e763",
+          "klt-sim-def1428dc3ed"
+        ],
+        "tau_ps": 88.67859025982503,
+        "td_od01_ns": 1.63517,
+        "td_od1_ns": 1.43098,
+        "td_od50_ns": 1.13487
+      },
+      "ss_27c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.99999,
+        "dout_od50_first": 3.14535e-06,
+        "dut_vos_shift_v": null,
+        "dut_vos_v": -0.0010476999999999986,
+        "job_ids": [
+          "klt-sim-a63313628128"
+        ],
+        "ladder_netlist_sha256": "a5722b4b4fd2cd762c69773e999562e18ca6928b3b2d10644b822325a3e50df9",
+        "margin_to_1p5ns_ns": 0.3055000000000001,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-3d02aad3ce52",
+          "klt-sim-4debe9c6f45d",
+          "klt-sim-b4356bc6e763",
+          "klt-sim-def1428dc3ed"
+        ],
+        "tau_ps": 104.7865725936166,
+        "td_od01_ns": 1.91764,
+        "td_od1_ns": 1.67636,
+        "td_od50_ns": 1.1945
+      },
+      "tt_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999977,
+        "dout_od50_first": 2.30642e-05,
+        "dut_vos_shift_v": 0.006119500000000003,
+        "dut_vos_v": -0.002787899999999996,
+        "job_ids": [
+          "klt-sim-c041b3a94ff1"
+        ],
+        "ladder_netlist_sha256": "1962960c3dc30f5b0d4e697fd39c1b0b8c2a60005de7a91d0fd5ada6a3274e8f",
+        "margin_to_1p5ns_ns": 0.33058999999999994,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-78852fcafee5"
+        ],
+        "tau_ps": 96.33085903096023,
+        "td_od01_ns": 1.69675,
+        "td_od1_ns": 1.4749400000000001,
+        "td_od50_ns": 1.16941
+      }
+    },
+    "pair-x1.5-cgr-0250-1000": {
+      "fs_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999973,
+        "dout_od50_first": 1.3866e-05,
+        "dut_vos_shift_v": null,
+        "dut_vos_v": -0.0032381000000000076,
+        "job_ids": [
+          "klt-sim-073ee30b5bd6"
+        ],
+        "ladder_netlist_sha256": "3cc3d2f29e16f26c4fac3bb819347a0e9429f8a2e58fb08b9d440c732db6d341",
+        "margin_to_1p5ns_ns": 0.34865999999999997,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-57da28711f8e",
+          "klt-sim-59193698ae3a",
+          "klt-sim-6259e5e35001",
+          "klt-sim-6d0762535798"
+        ],
+        "tau_ps": 91.71430868832874,
+        "td_od01_ns": 1.64852,
+        "td_od1_ns": 1.4373399999999998,
+        "td_od50_ns": 1.15134
+      },
+      "sf_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.99998,
+        "dout_od50_first": 5.16509e-06,
+        "dut_vos_shift_v": null,
+        "dut_vos_v": -0.0029378000000000043,
+        "job_ids": [
+          "klt-sim-6bfb2ee77371"
+        ],
+        "ladder_netlist_sha256": "1133007e79f090726ded4337c0cd52ecd2318fa1dea0dab93790db6795b4fbd3",
+        "margin_to_1p5ns_ns": 0.26725,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-57da28711f8e",
+          "klt-sim-59193698ae3a",
+          "klt-sim-6259e5e35001",
+          "klt-sim-6d0762535798"
+        ],
+        "tau_ps": 101.75519710993194,
+        "td_od01_ns": 1.8035800000000002,
+        "td_od1_ns": 1.56928,
+        "td_od50_ns": 1.23275
+      },
+      "ss_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999985,
+        "dout_od50_first": 1.11791e-05,
+        "dut_vos_shift_v": 0.0032988999999999935,
+        "dut_vos_v": -0.00188760000000001,
+        "job_ids": [
+          "klt-sim-a6fc0e33304e"
+        ],
+        "ladder_netlist_sha256": "c122d280f6e4720242f5c3c49a2f087fee8f6c21074f5c0f9434fdca9d6dac09",
+        "margin_to_1p5ns_ns": 0.028350000000000097,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-a7ff4d4405e3"
+        ],
+        "tau_ps": 119.61772915061253,
+        "td_od01_ns": 2.2046099999999997,
+        "td_od1_ns": 1.9291800000000001,
+        "td_od50_ns": 1.47165
+      },
+      "ss_125c_3.30v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999982,
+        "dout_od50_first": 4.67402e-06,
+        "dut_vos_shift_v": null,
+        "dut_vos_v": -0.0026379000000000055,
+        "job_ids": [
+          "klt-sim-399777e8b40e"
+        ],
+        "ladder_netlist_sha256": "dabe9a53e86277a54b1fe74ae24ff677a2073bd00058e3b3e546338b3f7cd93e",
+        "margin_to_1p5ns_ns": 0.22031,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-57da28711f8e",
+          "klt-sim-59193698ae3a",
+          "klt-sim-6259e5e35001",
+          "klt-sim-6d0762535798"
+        ],
+        "tau_ps": 103.31431429996462,
+        "td_od01_ns": 1.86589,
+        "td_od1_ns": 1.628,
+        "td_od50_ns": 1.27969
+      },
+      "ss_125c_3.63v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.99998,
+        "dout_od50_first": 5.00983e-06,
+        "dut_vos_shift_v": null,
+        "dut_vos_v": -0.0034181000000000003,
+        "job_ids": [
+          "klt-sim-059004040cdd"
+        ],
+        "ladder_netlist_sha256": "dabe9a53e86277a54b1fe74ae24ff677a2073bd00058e3b3e546338b3f7cd93e",
+        "margin_to_1p5ns_ns": 0.3511199999999999,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-57da28711f8e",
+          "klt-sim-59193698ae3a",
+          "klt-sim-6259e5e35001",
+          "klt-sim-6d0762535798"
+        ],
+        "tau_ps": 92.24414795625069,
+        "td_od01_ns": 1.66221,
+        "td_od1_ns": 1.44981,
+        "td_od50_ns": 1.1488800000000001
+      },
+      "ss_27c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.99999,
+        "dout_od50_first": 3.16502e-06,
+        "dut_vos_shift_v": null,
+        "dut_vos_v": -0.001227900000000004,
+        "job_ids": [
+          "klt-sim-99803e162602"
+        ],
+        "ladder_netlist_sha256": "dabe9a53e86277a54b1fe74ae24ff677a2073bd00058e3b3e546338b3f7cd93e",
+        "margin_to_1p5ns_ns": 0.2885199999999999,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-57da28711f8e",
+          "klt-sim-59193698ae3a",
+          "klt-sim-6259e5e35001",
+          "klt-sim-6d0762535798"
+        ],
+        "tau_ps": 96.47417620998837,
+        "td_od01_ns": 1.92181,
+        "td_od1_ns": 1.69967,
+        "td_od50_ns": 1.2114800000000001
+      },
+      "tt_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999977,
+        "dout_od50_first": 2.318e-05,
+        "dut_vos_shift_v": 0.005819399999999999,
+        "dut_vos_v": -0.0030880000000000005,
+        "job_ids": [
+          "klt-sim-fdf17217e59f"
+        ],
+        "ladder_netlist_sha256": "0c6820dc96d2501287d75418cc24d3c0080b427087ebbc6bc534adbd3ef34be3",
+        "margin_to_1p5ns_ns": 0.31623999999999985,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-a7ff4d4405e3"
+        ],
+        "tau_ps": 96.39166025842675,
+        "td_od01_ns": 1.71525,
+        "td_od1_ns": 1.4933,
+        "td_od50_ns": 1.1837600000000001
+      }
+    },
+    "pair-x1.5-cgr-0500-0500": {
+      "ss_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999974,
+        "dout_od50_first": 1.38572e-05,
+        "dut_vos_shift_v": 0.002339600000000004,
+        "dut_vos_v": -0.0028468999999999994,
+        "job_ids": [
+          "klt-sim-1999a18ac041"
+        ],
+        "ladder_netlist_sha256": "5796ba689108e447bd7681917ca078e564c50e4d7e6236beebe6c08876e6b3a9",
+        "margin_to_1p5ns_ns": -0.10350999999999999,
+        "meets_1p5ns": false,
+        "probe_job_ids": [
+          "klt-sim-70fac09fc6bb"
+        ],
+        "tau_ps": 151.6426042461584,
+        "td_od01_ns": 2.45187,
+        "td_od1_ns": 2.1027,
+        "td_od50_ns": 1.60351
+      },
+      "tt_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999961,
+        "dout_od50_first": 2.57923e-05,
+        "dut_vos_shift_v": 0.004139499999999994,
+        "dut_vos_v": -0.0047679000000000055,
+        "job_ids": [
+          "klt-sim-2efd61a842e5"
+        ],
+        "ladder_netlist_sha256": "739828bde386ccfef923793e994a29815520e3a0c6a5168938c8aa1fd3e0edce",
+        "margin_to_1p5ns_ns": 0.21587,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-70fac09fc6bb"
+        ],
+        "tau_ps": 101.71176766174152,
+        "td_od01_ns": 1.85669,
+        "td_od1_ns": 1.62249,
+        "td_od50_ns": 1.28413
+      }
+    },
+    "pair-x1.5-cgr-0500-1000": {
+      "ss_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999974,
+        "dout_od50_first": 1.39174e-05,
+        "dut_vos_shift_v": 0.0021292000000000047,
+        "dut_vos_v": -0.003057299999999999,
+        "job_ids": [
+          "klt-sim-1043f44968dc"
+        ],
+        "ladder_netlist_sha256": "4b0a025434282f607d1f7ee960f7950e9820c61fa3a70730a01325d9ea532614",
+        "margin_to_1p5ns_ns": -0.12173999999999996,
+        "meets_1p5ns": false,
+        "probe_job_ids": [
+          "klt-sim-20ac7411d67e"
+        ],
+        "tau_ps": 142.8741986565319,
+        "td_od01_ns": 2.4541600000000003,
+        "td_od1_ns": 2.12518,
+        "td_od50_ns": 1.62174
+      },
+      "tt_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.99996,
+        "dout_od50_first": 2.58817e-05,
+        "dut_vos_shift_v": 0.0038394999999999922,
+        "dut_vos_v": -0.005067900000000007,
+        "job_ids": [
+          "klt-sim-67c5d71b4531"
+        ],
+        "ladder_netlist_sha256": "08380fe19a6ce30701bf0c3f1627a9f174c037757645278f8f0c915dd1fd6ec7",
+        "margin_to_1p5ns_ns": 0.20035999999999987,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-20ac7411d67e"
+        ],
+        "tau_ps": 99.89641672738597,
+        "td_od01_ns": 1.87188,
+        "td_od1_ns": 1.6418599999999999,
+        "td_od50_ns": 1.2996400000000001
+      }
+    },
+    "pair-x1.5-cgr-0750-0500": {
+      "ss_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999966,
+        "dout_od50_first": 1.65234e-05,
+        "dut_vos_shift_v": 0.0014093999999999982,
+        "dut_vos_v": -0.0037771000000000055,
+        "job_ids": [
+          "klt-sim-9eb63f86df32"
+        ],
+        "ladder_netlist_sha256": "e43c3742e9535f07f2cadf3ad28da8698e19cfa805711b8d4ef9567a14dbce4d",
+        "margin_to_1p5ns_ns": -0.25759,
+        "meets_1p5ns": false,
+        "probe_job_ids": [
+          "klt-sim-e55125f5633c"
+        ],
+        "tau_ps": 166.66919332001103,
+        "td_od01_ns": 2.68388,
+        "td_od1_ns": 2.3001099999999997,
+        "td_od50_ns": 1.75759
+      },
+      "tt_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999948,
+        "dout_od50_first": 2.82219e-05,
+        "dut_vos_shift_v": 0.002489799999999997,
+        "dut_vos_v": -0.0064176000000000025,
+        "job_ids": [
+          "klt-sim-2d5fd2e480c2"
+        ],
+        "ladder_netlist_sha256": "4eebc2c464a75c8426e310eceb621bd1d6967dacaf1f5bea1cdb920cf396ee3d",
+        "margin_to_1p5ns_ns": 0.09942999999999991,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-e55125f5633c"
+        ],
+        "tau_ps": 121.59811198809155,
+        "td_od01_ns": 2.05721,
+        "td_od1_ns": 1.77722,
+        "td_od50_ns": 1.40057
+      }
+    },
+    "pair-x1.5-cgr-0750-1000": {
+      "ss_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999966,
+        "dout_od50_first": 1.66311e-05,
+        "dut_vos_shift_v": 0.0011696999999999957,
+        "dut_vos_v": -0.004016800000000008,
+        "job_ids": [
+          "klt-sim-d2efab418c1e"
+        ],
+        "ladder_netlist_sha256": "5e53667537accdfd99db3f581c4ecce47437c94b0e2b0fdfb012e2aab651a9dc",
+        "margin_to_1p5ns_ns": -0.27779,
+        "meets_1p5ns": false,
+        "probe_job_ids": [
+          "klt-sim-4d49aadefcf0"
+        ],
+        "tau_ps": 191.64546897426692,
+        "td_od01_ns": 2.77223,
+        "td_od1_ns": 2.33095,
+        "td_od50_ns": 1.77779
+      },
+      "tt_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999948,
+        "dout_od50_first": 2.83414e-05,
+        "dut_vos_shift_v": 0.0021896999999999923,
+        "dut_vos_v": -0.006717700000000007,
+        "job_ids": [
+          "klt-sim-3d88f90323a5"
+        ],
+        "ladder_netlist_sha256": "36ca11fe3be0347f1e174d68988a00f7e1e83eec60ae84af2726b34c292a101d",
+        "margin_to_1p5ns_ns": 0.08267000000000002,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-4d49aadefcf0"
+        ],
+        "tau_ps": 115.62221991710283,
+        "td_od01_ns": 2.0636,
+        "td_od1_ns": 1.79737,
+        "td_od50_ns": 1.41733
+      }
+    },
+    "pair-x1.5-cgr-1000-1000": {
+      "ss_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.99996,
+        "dout_od50_first": 1.93877e-05,
+        "dut_vos_shift_v": 0.00038969999999999977,
+        "dut_vos_v": -0.004796800000000004,
+        "job_ids": [
+          "klt-sim-776b17cecb03"
+        ],
+        "ladder_netlist_sha256": "078468a68f79a530a265a073809da6738c238a0fc6470a73e856648df7af8126",
+        "margin_to_1p5ns_ns": -0.4389200000000002,
+        "meets_1p5ns": false,
+        "probe_job_ids": [
+          "klt-sim-6a18f250ae0d"
+        ],
+        "tau_ps": 233.72426132587302,
+        "td_od01_ns": 3.07732,
+        "td_od1_ns": 2.53915,
+        "td_od50_ns": 1.9389200000000002
+      },
+      "tt_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999938,
+        "dout_od50_first": 3.05932e-05,
+        "dut_vos_shift_v": 0.0008098999999999988,
+        "dut_vos_v": -0.0080975,
+        "job_ids": [
+          "klt-sim-b55d2acb1ddb"
+        ],
+        "ladder_netlist_sha256": "e90400473d09e06d19ddcc79a9508fcad6b43d03f893fa501bedd6b05a12656b",
+        "margin_to_1p5ns_ns": -0.03672999999999993,
+        "meets_1p5ns": false,
+        "probe_job_ids": [
+          "klt-sim-6a18f250ae0d"
+        ],
+        "tau_ps": 127.73035007256534,
+        "td_od01_ns": 2.24905,
+        "td_od1_ns": 1.95494,
+        "td_od50_ns": 1.53673
+      }
+    },
+    "tail-x1.5-cgr-0250-0500": {
+      "fs_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.99998,
+        "dout_od50_first": 3.71131e-06,
+        "dut_vos_shift_v": null,
+        "dut_vos_v": -0.003478000000000002,
+        "job_ids": [
+          "klt-sim-ccbb6a5c365a"
+        ],
+        "ladder_netlist_sha256": "06fbb5626d3a7cfe82871eb127f5bffd7c1919ab4b44d4c2d9fe6d773a6cc7ed",
+        "margin_to_1p5ns_ns": 0.36056999999999984,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-124e275d88d0",
+          "klt-sim-6e8ca98e7cee",
+          "klt-sim-b67b048ce0a3",
+          "klt-sim-d7cbdeb60c12"
+        ],
+        "tau_ps": 95.20603632283085,
+        "td_od01_ns": 1.67013,
+        "td_od1_ns": 1.45091,
+        "td_od50_ns": 1.1394300000000002
+      },
+      "sf_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999985,
+        "dout_od50_first": 3.26097e-05,
+        "dut_vos_shift_v": null,
+        "dut_vos_v": -0.0031779000000000043,
+        "job_ids": [
+          "klt-sim-517560e4d852"
+        ],
+        "ladder_netlist_sha256": "1591f7823e5ce0bdb40bccbb09d57e2a84b48bac1d3e2d35c7f3bdffff90c977",
+        "margin_to_1p5ns_ns": 0.276,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-124e275d88d0",
+          "klt-sim-6e8ca98e7cee",
+          "klt-sim-b67b048ce0a3",
+          "klt-sim-d7cbdeb60c12"
+        ],
+        "tau_ps": 105.9721965292125,
+        "td_od01_ns": 1.83088,
+        "td_od1_ns": 1.58687,
+        "td_od50_ns": 1.224
+      },
+      "ss_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999988,
+        "dout_od50_first": 1.00868e-05,
+        "dut_vos_shift_v": 0.0032392000000000046,
+        "dut_vos_v": -0.001947299999999999,
+        "job_ids": [
+          "klt-sim-d0c6ab8c354a"
+        ],
+        "ladder_netlist_sha256": "625f0e69f7777bda76336085681185d748b50cb85a5c34880b7def013e459979",
+        "margin_to_1p5ns_ns": 0.025299999999999878,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-00a86dfced7d"
+        ],
+        "tau_ps": 136.56824277929644,
+        "td_od01_ns": 2.2829099999999998,
+        "td_od1_ns": 1.9684500000000003,
+        "td_od50_ns": 1.4747000000000001
+      },
+      "ss_125c_3.30v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999986,
+        "dout_od50_first": 3.74085e-06,
+        "dut_vos_shift_v": null,
+        "dut_vos_v": -0.002817900000000005,
+        "job_ids": [
+          "klt-sim-a353e26f8dbc"
+        ],
+        "ladder_netlist_sha256": "29ccb5c6621c42bc36ac242ab194122e978e592f433be25e6457db2d8a0781c3",
+        "margin_to_1p5ns_ns": 0.22662000000000004,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-124e275d88d0",
+          "klt-sim-6e8ca98e7cee",
+          "klt-sim-b67b048ce0a3",
+          "klt-sim-d7cbdeb60c12"
+        ],
+        "tau_ps": 109.59421250828552,
+        "td_od01_ns": 1.90261,
+        "td_od1_ns": 1.65026,
+        "td_od50_ns": 1.27338
+      },
+      "ss_125c_3.63v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999984,
+        "dout_od50_first": 1.42105e-05,
+        "dut_vos_shift_v": null,
+        "dut_vos_v": -0.0037478000000000025,
+        "job_ids": [
+          "klt-sim-326455dc723f"
+        ],
+        "ladder_netlist_sha256": "29ccb5c6621c42bc36ac242ab194122e978e592f433be25e6457db2d8a0781c3",
+        "margin_to_1p5ns_ns": 0.36092000000000013,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-124e275d88d0",
+          "klt-sim-6e8ca98e7cee",
+          "klt-sim-b67b048ce0a3",
+          "klt-sim-d7cbdeb60c12"
+        ],
+        "tau_ps": 100.35242593338444,
+        "td_od01_ns": 1.69626,
+        "td_od1_ns": 1.46519,
+        "td_od50_ns": 1.1390799999999999
+      },
+      "ss_27c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999992,
+        "dout_od50_first": 2.58897e-06,
+        "dut_vos_shift_v": null,
+        "dut_vos_v": -0.0011678000000000036,
+        "job_ids": [
+          "klt-sim-a480ca2720cd"
+        ],
+        "ladder_netlist_sha256": "29ccb5c6621c42bc36ac242ab194122e978e592f433be25e6457db2d8a0781c3",
+        "margin_to_1p5ns_ns": 0.28570000000000007,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-124e275d88d0",
+          "klt-sim-6e8ca98e7cee",
+          "klt-sim-b67b048ce0a3",
+          "klt-sim-d7cbdeb60c12"
+        ],
+        "tau_ps": 104.6171977456744,
+        "td_od01_ns": 1.97293,
+        "td_od1_ns": 1.73204,
+        "td_od50_ns": 1.2143
+      },
+      "tt_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999983,
+        "dout_od50_first": 2.18416e-05,
+        "dut_vos_shift_v": 0.005579399999999995,
+        "dut_vos_v": -0.0033280000000000046,
+        "job_ids": [
+          "klt-sim-e014f4a7a2e6"
+        ],
+        "ladder_netlist_sha256": "19b59e4341973d222adf55737d3ed1bd83da1fa04a9bd5b0169aedfcb620f1d4",
+        "margin_to_1p5ns_ns": 0.32692999999999994,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-00a86dfced7d"
+        ],
+        "tau_ps": 99.28840445272141,
+        "td_od01_ns": 1.73719,
+        "td_od1_ns": 1.5085700000000002,
+        "td_od50_ns": 1.17307
+      }
+    },
+    "tail-x1.5-cgr-0250-1000": {
+      "fs_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.99998,
+        "dout_od50_first": 1.27026e-05,
+        "dut_vos_shift_v": null,
+        "dut_vos_v": -0.0037781000000000065,
+        "job_ids": [
+          "klt-sim-af8fdc1aeee9"
+        ],
+        "ladder_netlist_sha256": "6b79de3d3457345ddbb886c3f0e5d9b2d9ca5ebcc0c3baf334e82ab48243b8c9",
+        "margin_to_1p5ns_ns": 0.34559000000000006,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-1864cee71b06",
+          "klt-sim-7b4c698c26ee",
+          "klt-sim-94b14691a9b3",
+          "klt-sim-d7cb853b6324"
+        ],
+        "tau_ps": 92.56986881767813,
+        "td_od01_ns": 1.68181,
+        "td_od1_ns": 1.46866,
+        "td_od50_ns": 1.15441
+      },
+      "sf_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999985,
+        "dout_od50_first": 4.06976e-06,
+        "dut_vos_shift_v": null,
+        "dut_vos_v": -0.003447800000000001,
+        "job_ids": [
+          "klt-sim-bd2ea3eaedc0"
+        ],
+        "ladder_netlist_sha256": "7a21a7219b06b7d06672dabc961419f75a4d26c0163e55f90c06aeae16cc4f6f",
+        "margin_to_1p5ns_ns": 0.26085,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-1864cee71b06",
+          "klt-sim-7b4c698c26ee",
+          "klt-sim-94b14691a9b3",
+          "klt-sim-d7cb853b6324"
+        ],
+        "tau_ps": 107.66594500863516,
+        "td_od01_ns": 1.85436,
+        "td_od1_ns": 1.60645,
+        "td_od50_ns": 1.23915
+      },
+      "ss_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999988,
+        "dout_od50_first": 1.0104e-05,
+        "dut_vos_shift_v": 0.0030291,
+        "dut_vos_v": -0.0021574000000000038,
+        "job_ids": [
+          "klt-sim-3c4922f5497e"
+        ],
+        "ladder_netlist_sha256": "d6ecb7e44923f813ed7ee42e13c073e3d0e0d9263f85183efb54425c459c819a",
+        "margin_to_1p5ns_ns": 0.007990000000000164,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-aeb202987a03"
+        ],
+        "tau_ps": 135.1524427682919,
+        "td_od01_ns": 2.30192,
+        "td_od1_ns": 1.9907199999999998,
+        "td_od50_ns": 1.4920099999999998
+      },
+      "ss_125c_3.30v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999986,
+        "dout_od50_first": 3.79329e-06,
+        "dut_vos_shift_v": null,
+        "dut_vos_v": -0.0030579000000000023,
+        "job_ids": [
+          "klt-sim-7f681f28373c"
+        ],
+        "ladder_netlist_sha256": "2141bfd28dd33872b2e2bc56ef4a26bfba21491324ea58ca6211352b5f0ef222",
+        "margin_to_1p5ns_ns": 0.21083000000000007,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-1864cee71b06",
+          "klt-sim-7b4c698c26ee",
+          "klt-sim-94b14691a9b3",
+          "klt-sim-d7cb853b6324"
+        ],
+        "tau_ps": 105.32944069599556,
+        "td_od01_ns": 1.9113299999999998,
+        "td_od1_ns": 1.6688,
+        "td_od50_ns": 1.28917
+      },
+      "ss_125c_3.63v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999984,
+        "dout_od50_first": 1.42881e-05,
+        "dut_vos_shift_v": null,
+        "dut_vos_v": -0.0040479,
+        "job_ids": [
+          "klt-sim-5365dc514842"
+        ],
+        "ladder_netlist_sha256": "2141bfd28dd33872b2e2bc56ef4a26bfba21491324ea58ca6211352b5f0ef222",
+        "margin_to_1p5ns_ns": 0.3462799999999999,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-1864cee71b06",
+          "klt-sim-7b4c698c26ee",
+          "klt-sim-94b14691a9b3",
+          "klt-sim-d7cb853b6324"
+        ],
+        "tau_ps": 99.6054394245108,
+        "td_od01_ns": 1.7127000000000001,
+        "td_od1_ns": 1.48335,
+        "td_od50_ns": 1.15372
+      },
+      "ss_27c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999992,
+        "dout_od50_first": 2.60024e-06,
+        "dut_vos_shift_v": null,
+        "dut_vos_v": -0.0013775000000000037,
+        "job_ids": [
+          "klt-sim-f210930d3e21"
+        ],
+        "ladder_netlist_sha256": "2141bfd28dd33872b2e2bc56ef4a26bfba21491324ea58ca6211352b5f0ef222",
+        "margin_to_1p5ns_ns": 0.26817,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-1864cee71b06",
+          "klt-sim-7b4c698c26ee",
+          "klt-sim-94b14691a9b3",
+          "klt-sim-d7cb853b6324"
+        ],
+        "tau_ps": 112.76890517099831,
+        "td_od01_ns": 2.01946,
+        "td_od1_ns": 1.7598,
+        "td_od50_ns": 1.23183
+      },
+      "tt_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999983,
+        "dout_od50_first": 3.90983e-06,
+        "dut_vos_shift_v": 0.0053092999999999994,
+        "dut_vos_v": -0.0035981,
+        "job_ids": [
+          "klt-sim-643f8dcef058"
+        ],
+        "ladder_netlist_sha256": "4ff410165480839462dd3e3cf29ed901256957f4998de07c37fc8daed5ab4379",
+        "margin_to_1p5ns_ns": 0.31186,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-aeb202987a03"
+        ],
+        "tau_ps": 93.80326514628335,
+        "td_od01_ns": 1.74164,
+        "td_od1_ns": 1.52565,
+        "td_od50_ns": 1.18814
+      }
+    },
+    "tail-x1.5-cgr-0500-0500": {
+      "ss_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.99998,
+        "dout_od50_first": 1.22295e-05,
+        "dut_vos_shift_v": 0.0018892999999999965,
+        "dut_vos_v": -0.003297200000000007,
+        "job_ids": [
+          "klt-sim-1ad0eee3f5df"
+        ],
+        "ladder_netlist_sha256": "8657192e79ba0a3a2f0561443c0f6a53004b155999bc031a1807d3cb88cf095a",
+        "margin_to_1p5ns_ns": -0.1310500000000001,
+        "meets_1p5ns": false,
+        "probe_job_ids": [
+          "klt-sim-8e974a1c2084"
+        ],
+        "tau_ps": 146.08363487779687,
+        "td_od01_ns": 2.51162,
+        "td_od1_ns": 2.17525,
+        "td_od50_ns": 1.63105
+      },
+      "tt_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.99997,
+        "dout_od50_first": 2.36969e-05,
+        "dut_vos_shift_v": 0.0031794999999999983,
+        "dut_vos_v": -0.005727900000000001,
+        "job_ids": [
+          "klt-sim-20efc5018b20"
+        ],
+        "ladder_netlist_sha256": "f7e05ef2f02f4d1b9caf5e0d2577b59c069cae5cf36ceb26519a2e6f1009e880",
+        "margin_to_1p5ns_ns": 0.20794999999999986,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-8e974a1c2084"
+        ],
+        "tau_ps": 106.93198733421866,
+        "td_od01_ns": 1.9118,
+        "td_od1_ns": 1.66558,
+        "td_od50_ns": 1.2920500000000001
+      }
+    },
+    "tail-x1.5-cgr-0500-1000": {
+      "ss_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999979,
+        "dout_od50_first": 1.2285e-05,
+        "dut_vos_shift_v": 0.0016792999999999947,
+        "dut_vos_v": -0.003507200000000009,
+        "job_ids": [
+          "klt-sim-b130e53aa089"
+        ],
+        "ladder_netlist_sha256": "e20a1210a19f991c5c02b5d2935e4f9540227609e5c549c5b38003cddc9ee9c9",
+        "margin_to_1p5ns_ns": -0.15002000000000004,
+        "meets_1p5ns": false,
+        "probe_job_ids": [
+          "klt-sim-88dc64784666"
+        ],
+        "tau_ps": 147.55589317144884,
+        "td_od01_ns": 2.54016,
+        "td_od1_ns": 2.2004,
+        "td_od50_ns": 1.65002
+      },
+      "tt_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999969,
+        "dout_od50_first": 2.37881e-05,
+        "dut_vos_shift_v": 0.002909499999999992,
+        "dut_vos_v": -0.005997900000000007,
+        "job_ids": [
+          "klt-sim-271775bf745e"
+        ],
+        "ladder_netlist_sha256": "932a5df2ce36d0cb4ed1ade1775cab9d29ebf955f33b4e2d185dbaf1abac8da5",
+        "margin_to_1p5ns_ns": 0.19167999999999985,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-88dc64784666"
+        ],
+        "tau_ps": 103.94404129872416,
+        "td_od01_ns": 1.9243899999999998,
+        "td_od1_ns": 1.6850500000000002,
+        "td_od50_ns": 1.3083200000000001
+      }
+    },
+    "tail-x1.5-cgr-0750-0500": {
+      "ss_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999973,
+        "dout_od50_first": 1.45184e-05,
+        "dut_vos_shift_v": 0.0007795999999999983,
+        "dut_vos_v": -0.004406900000000005,
+        "job_ids": [
+          "klt-sim-b98eed7aab5e"
+        ],
+        "ladder_netlist_sha256": "3f990dda9f88804b6f2865920762b6196615f568beaff563393ba825c2ca9b1c",
+        "margin_to_1p5ns_ns": -0.2937400000000001,
+        "meets_1p5ns": false,
+        "probe_job_ids": [
+          "klt-sim-484536100fe2"
+        ],
+        "tau_ps": 180.840222264514,
+        "td_od01_ns": 2.8104199999999997,
+        "td_od1_ns": 2.39402,
+        "td_od50_ns": 1.7937400000000001
+      },
+      "tt_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.99996,
+        "dout_od50_first": 2.55061e-05,
+        "dut_vos_shift_v": 0.0012296999999999968,
+        "dut_vos_v": -0.007677700000000003,
+        "job_ids": [
+          "klt-sim-7ff5ad312faa"
+        ],
+        "ladder_netlist_sha256": "145cec690189e1617903f6fc4f8cd72c4d97e12f82f5cac5ba7e618d38726f8d",
+        "margin_to_1p5ns_ns": 0.08662000000000014,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-484536100fe2"
+        ],
+        "tau_ps": 112.08271988959122,
+        "td_od01_ns": 2.08309,
+        "td_od1_ns": 1.82501,
+        "td_od50_ns": 1.4133799999999999
+      }
+    },
+    "tail-x1.5-cgr-0750-1000": {
+      "ss_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999973,
+        "dout_od50_first": 1.46188e-05,
+        "dut_vos_shift_v": 0.0005696999999999994,
+        "dut_vos_v": -0.004616800000000004,
+        "job_ids": [
+          "klt-sim-c069153fbe9d"
+        ],
+        "ladder_netlist_sha256": "fb214f9de5b2a9eb7838f235a5230c06a0d4153548dc51382d74a4abbb87c8f6",
+        "margin_to_1p5ns_ns": -0.3145,
+        "meets_1p5ns": false,
+        "probe_job_ids": [
+          "klt-sim-8753f199c52a"
+        ],
+        "tau_ps": 186.58159531527505,
+        "td_od01_ns": 2.8517900000000003,
+        "td_od1_ns": 2.42217,
+        "td_od50_ns": 1.8145
+      },
+      "tt_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999959,
+        "dout_od50_first": 2.56252e-05,
+        "dut_vos_shift_v": 0.0009299000000000009,
+        "dut_vos_v": -0.007977499999999998,
+        "job_ids": [
+          "klt-sim-11ca4ce94942"
+        ],
+        "ladder_netlist_sha256": "4561788e556ff9f478849b885d5e92928d15ddf9c4a1bda9f709ab9c0d9dcde0",
+        "margin_to_1p5ns_ns": 0.06908000000000003,
+        "meets_1p5ns": true,
+        "probe_job_ids": [
+          "klt-sim-8753f199c52a"
+        ],
+        "tau_ps": 126.5881555851598,
+        "td_od01_ns": 2.1429899999999997,
+        "td_od1_ns": 1.85151,
+        "td_od50_ns": 1.43092
+      }
+    },
+    "tail-x1.5-cgr-1000-1000": {
+      "ss_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999968,
+        "dout_od50_first": 1.71218e-05,
+        "dut_vos_shift_v": -0.00032999999999999696,
+        "dut_vos_v": -0.005516500000000001,
+        "job_ids": [
+          "klt-sim-4dcfa117852b"
+        ],
+        "ladder_netlist_sha256": "d06d693148ee06b28c3e1f5ef0667759c08596e4f8c410682e7702929f75a432",
+        "margin_to_1p5ns_ns": -0.4846799999999998,
+        "meets_1p5ns": false,
+        "probe_job_ids": [
+          "klt-sim-548a7f3d092f"
+        ],
+        "tau_ps": 216.93443665549333,
+        "td_od01_ns": 3.1462499999999998,
+        "td_od1_ns": 2.64674,
+        "td_od50_ns": 1.9846799999999998
+      },
+      "tt_125c_2.97v": {
+        "decision_failures": [],
+        "decision_ok": true,
+        "dout_od50_end": 0.999951,
+        "dout_od50_first": 2.74213e-05,
+        "dut_vos_shift_v": -0.0006900000000000031,
+        "dut_vos_v": -0.009597400000000002,
+        "job_ids": [
+          "klt-sim-11979f5a1105"
+        ],
+        "ladder_netlist_sha256": "093920fea64c643ca8a65489b28810a1950523f7e97e1dda5fd7fe4acc2bcb3b",
+        "margin_to_1p5ns_ns": -0.05579999999999985,
+        "meets_1p5ns": false,
+        "probe_job_ids": [
+          "klt-sim-548a7f3d092f"
+        ],
+        "tau_ps": 130.08856910930004,
+        "td_od01_ns": 2.3151200000000003,
+        "td_od1_ns": 2.0155800000000004,
+        "td_od50_ns": 1.5557999999999998
+      }
+    }
+  }
+}

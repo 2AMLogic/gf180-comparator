@@ -1,0 +1,291 @@
+{
+  "schema_version": 3,
+  "netlist": {
+    "path": "layout/pex/artifacts/design-levers-combined/20261123-192546-559b686/kickback/pair+tail-cgr-0250-1000/body-v2.97.spice",
+    "scope": "repo"
+  },
+  "status": "pass",
+  "corner_count": 2,
+  "passed": 2,
+  "failed": 0,
+  "errored": 0,
+  "inconclusive": 0,
+  "diagnostic_counts": {
+    "by_code": {},
+    "by_severity": {},
+    "corners_with_diagnostics": 0
+  },
+  "metrics": {
+    "sim__corner__count": 2,
+    "sim__corner__passed_count": 2,
+    "sim__corner__failed_count": 0,
+    "sim__corner__errored_count": 0,
+    "sim__corner__inconclusive_count": 0
+  },
+  "environment": {
+    "engine": "ngspice",
+    "engine_version": "47",
+    "ngspice_binary": "/usr/local/bin/ngspice",
+    "engine_build": {
+      "version_banner": "******\n** ngspice-47 : Circuit level simulation program\n** Compiled with KLU Direct Linear Solver\n** The U. C. Berkeley CAD Group\n** Copyright 1985-1994, Regents of the University of California.\n** Copyright 2001-2026, The ngspice team.\n** Please get your ngspice manual from https://ngspice.sourceforge.io/docs.html\n** Please file your bug-reports at http://ngspice.sourceforge.net/bugrep.html\n** Creation Date: Fri Nov 13 23:19:32 UTC 2026\n******",
+      "binary_sha256": "39ca1adb826660324c3626f72bd946ec40704f0f3fc8e243c623f76e24b3eee2",
+      "probe": "ok",
+      "reason": null
+    },
+    "models_lib": {
+      "path": null,
+      "scope": "external"
+    },
+    "models_lib_sha256": "f6f4a96e18fc5ad11270ad3451aaecc7ac37fc81eb61e15b0d7d94c7bc594a24",
+    "models_lib_sha256_scope": "client",
+    "netlist_sha256": "871c2095f0e6659ba6499495b2426237ea820a098ec4f0f06e9fcf76b7cd6472",
+    "corner_coverage": {
+      "pdk": "gf180mcuD",
+      "sections": [
+        {
+          "process": "ss",
+          "unmoved_devices": [
+            "06v0",
+            "06v0_nvt",
+            "fets_mm",
+            "noise_corner"
+          ]
+        }
+      ]
+    },
+    "netlist_closure": [
+      {
+        "path": "layout/pex/artifacts/design-levers-combined/20261123-192546-559b686/kickback/pair+tail-cgr-0250-1000/body-v2.97.spice",
+        "scope": "repo",
+        "sha256": "871c2095f0e6659ba6499495b2426237ea820a098ec4f0f06e9fcf76b7cd6472"
+      },
+      {
+        "path": "layout/pex/artifacts/design-levers-combined/20261123-192546-559b686/kickback/pair+tail-cgr-0250-1000/design.ngspice",
+        "scope": "repo",
+        "sha256": "7e222f050318388f37543a64fbd0be55cc15e4b93f57501a09f7c159c4c9e561"
+      },
+      {
+        "path": "layout/pex/artifacts/design-levers-combined/20261123-192546-559b686/kickback/pair+tail-cgr-0250-1000/sources/dut/variant.cir",
+        "scope": "repo",
+        "sha256": "f029c8898f26238b2f3b3cebc6dc5047b2382964745e75e616ed24bf444c4cfb"
+      },
+      {
+        "path": "layout/pex/artifacts/design-levers-combined/20261123-192546-559b686/kickback/pair+tail-cgr-0250-1000/sources/testbench/tb_vosprobe.spice",
+        "scope": "repo",
+        "sha256": "3a1bd8f03483f1028effeb71342f46e468aa007a4f4902cbc0c0ec25c5bf9632"
+      }
+    ],
+    "netlist_identity": "sha256:144bed5439de7ae87c778b24986bc76f3979b624fe9181692eefc50e0dfbf425",
+    "remote": {
+      "provider": "aws-batch-fleet",
+      "job_id": "klt-sim-e2f590709aa8",
+      "region": "us-east-1",
+      "instance_id": "i-05b5c6f85108cba45",
+      "instance_type": "c7i.4xlarge",
+      "availability_zone": "us-east-1b",
+      "ami_id": "ami-09c14f55df4958cbd",
+      "lifecycle": "spot",
+      "spot": true,
+      "state": "done",
+      "exit_code": "0",
+      "concurrency": "1",
+      "physical_cores": "8",
+      "elapsed_seconds": 102,
+      "client_submitted_at": "2026-11-23T21:14:15.123631Z",
+      "client_launched_at": "2026-11-23T21:14:39.172415Z",
+      "client_status_terminal_at": "2026-11-23T21:16:42.801537Z",
+      "client_collected_at": "2026-11-23T21:16:43.657037Z",
+      "runner_klt_version": "0.9.0",
+      "client_klt_version": "0.9.2",
+      "runner_compatibility": "match",
+      "runner_request_features": {
+        "required": [
+          "options.ngspice_init"
+        ],
+        "missing": [],
+        "status": "supported"
+      },
+      "worker_environment": {
+        "capture": "ok",
+        "simulator": {
+          "requested_binary": "ngspice",
+          "binary_source": "PATH",
+          "selected_path": "/usr/local/bin/ngspice",
+          "version_banner": "******\n** ngspice-47 : Circuit level simulation program\n** Compiled with KLU Direct Linear Solver\n** The U. C. Berkeley CAD Group\n** Copyright 1985-1994, Regents of the University of California.\n** Copyright 2001-2026, The ngspice team.\n** Please get your ngspice manual from https://ngspice.sourceforge.io/docs.html\n** Please file your bug-reports at http://ngspice.sourceforge.net/bugrep.html\n** Creation Date: Fri Nov 13 23:19:32 UTC 2026\n******\n",
+          "version_probe": "ok"
+        },
+        "pdk": {
+          "variant": "gf180mcuD",
+          "root": "/opt/pdk",
+          "stamp_scheme": "sources-sha256",
+          "stamp_sha256": "4ca10280ae9f293aa1ff69f0060a52e0026929111bda881503717469b429ce67",
+          "stamp_text": "open_pdks f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7",
+          "models_staged": false,
+          "stamp_scope": "executed"
+        },
+        "cpu_model": "Intel(R) Xeon(R) Platinum 8488C",
+        "omp_num_threads": null,
+        "image_manifest": null,
+        "model_inputs": null,
+        "diagnostics": [],
+        "pdk_stamp_comparison": {
+          "status": "match"
+        },
+        "engine_build_comparison": {
+          "status": "match"
+        }
+      },
+      "runner_model_inputs": null,
+      "runner_models_lib_sha256": "f6f4a96e18fc5ad11270ad3451aaecc7ac37fc81eb61e15b0d7d94c7bc594a24",
+      "job_ceiling": {
+        "basis": "conservative_serial_bound",
+        "unit_count": 2,
+        "per_unit_timeout_s": 3000,
+        "overhead_s": 120.0,
+        "job_bound_s": 6120.0,
+        "max_job_seconds": 3600.0,
+        "max_job_seconds_source": "fleet_config",
+        "exceeds_ceiling": true,
+        "check": "warn",
+        "max_units_per_job": 1,
+        "recommended_hosts": 2,
+        "warning": "batch job bound 6120s (options.timeout_s 3000s x 2 units + 120s; a conservative fully-serial upper bound, not a runtime estimate) exceeds the fleet's whole-job ceiling of 3600s (max_job_seconds from fleet_config); a job still running at the ceiling is killed and every unit is reported batch_job_timeout. Set request.remote.hosts to at least 2 to run one job per shard of at most 1 units, each within the ceiling"
+      },
+      "models_lib_comparison": {
+        "status": "match"
+      }
+    },
+    "engine_host": "worker",
+    "client_ngspice_binary": "/home/ubuntu/.local/bin/ngspice",
+    "backend": {
+      "resolved": "batch",
+      "source": "flag",
+      "requested": "batch"
+    }
+  },
+  "coverage": {
+    "corners_simulated": 2,
+    "measurements_declared": 1,
+    "measurements_with_limits": 0,
+    "unrecognized_limit_keys": [],
+    "schema_version": 1,
+    "known": true,
+    "checked": [
+      "measurement:[0,\"tt/novdd/125C\",\"t_flip\"]/observation",
+      "measurement:[1,\"ss/novdd/125C\",\"t_flip\"]/observation"
+    ],
+    "skipped": [],
+    "inapplicable": [
+      {
+        "id": "measurement:[0,\"tt/novdd/125C\",\"t_flip\"]/limits",
+        "reason": "characterization_without_limits"
+      },
+      {
+        "id": "measurement:[1,\"ss/novdd/125C\",\"t_flip\"]/limits",
+        "reason": "characterization_without_limits"
+      }
+    ],
+    "unknown": [],
+    "nothing_checked": false,
+    "nothing_checked_reasons": []
+  },
+  "provenance": {
+    "klt_version": "0.9.2",
+    "klt_git_commit": "046ba74652fc096bd97071fc3237f7159dd40183",
+    "klt_reinstall_spec": "klayout-tools==0.9.2",
+    "klayout_version": "0.30.14",
+    "pdk": {
+      "name": "gf180mcuD",
+      "source": "search root: ~/.ciel",
+      "version": "open_pdks f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7"
+    },
+    "deck": {
+      "name": "sm141064.ngspice",
+      "content_hash": "sha256:f6f4a96e18fc5ad11270ad3451aaecc7ac37fc81eb61e15b0d7d94c7bc594a24",
+      "released": false
+    },
+    "input": {
+      "content_hash": "sha256:871c2095f0e6659ba6499495b2426237ea820a098ec4f0f06e9fcf76b7cd6472",
+      "role": "netlist"
+    }
+  },
+  "measurements": [
+    {
+      "name": "t_flip",
+      "unit": null,
+      "limits": null,
+      "status": "pass",
+      "worst_case": {
+        "corner_id": "tt/novdd/125C",
+        "value": 3.666202806441e-05,
+        "margin": null
+      },
+      "min": {
+        "corner_id": "tt/novdd/125C",
+        "value": 3.666202806441e-05
+      },
+      "max": {
+        "corner_id": "ss/novdd/125C",
+        "value": 3.798247975447e-05
+      }
+    }
+  ],
+  "corners": [
+    {
+      "corner_id": "tt/novdd/125C",
+      "process": "tt",
+      "supply_v": {},
+      "temperature_c": 125.0,
+      "status": "pass",
+      "runtime_s": 56.69,
+      "peak_rss_bytes": 546574336,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "t_flip",
+          "value": 3.666202806441e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-453/layout/pex/artifacts/design-levers-combined/20261123-192546-559b686/kickback/pair+tail-cgr-0250-1000/out-probe-v2.97/tt_novdd_125C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-453/layout/pex/artifacts/design-levers-combined/20261123-192546-559b686/kickback/pair+tail-cgr-0250-1000/out-probe-v2.97/tt_novdd_125C/corner.cir"
+      },
+      "monte_carlo": null
+    },
+    {
+      "corner_id": "ss/novdd/125C",
+      "process": "ss",
+      "supply_v": {},
+      "temperature_c": 125.0,
+      "status": "pass",
+      "runtime_s": 56.587,
+      "peak_rss_bytes": 546574336,
+      "engine_exit_code": 0,
+      "engine_killed_by_signal": null,
+      "measurements": [
+        {
+          "name": "t_flip",
+          "value": 3.798247975447e-05,
+          "unit": null,
+          "status": "pass",
+          "margin": null
+        }
+      ],
+      "diagnostics": [],
+      "artifacts": {
+        "log": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-453/layout/pex/artifacts/design-levers-combined/20261123-192546-559b686/kickback/pair+tail-cgr-0250-1000/out-probe-v2.97/ss_novdd_125C/ngspice.log",
+        "raw": null,
+        "waveform": null,
+        "deck": "/home/ubuntu/GitHub/gf180-comparator/.loom/worktrees/issue-453/layout/pex/artifacts/design-levers-combined/20261123-192546-559b686/kickback/pair+tail-cgr-0250-1000/out-probe-v2.97/ss_novdd_125C/corner.cir"
+      },
+      "monte_carlo": null
+    }
+  ]
+}

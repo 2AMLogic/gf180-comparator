@@ -1,0 +1,42 @@
+{
+  "generated_by": "layout/pex/design_lever_study.py combined-run",
+  "issue": 453,
+  "points": [
+    "tt_125c_2.97v",
+    "ss_125c_2.97v"
+  ],
+  "request_cap": 323,
+  "requests_planned": 5,
+  "scope": "pre-cascode diagnostic, device W and global ground-C / series-R residue",
+  "source_sha256": {
+    "cited_report": "385fadcf7cd74c60508e01b3cd0341df7b64341479f437c0446c09bd07497dd8",
+    "design_lever_study_py": "d4dc51689ce1ab13bf5381ba404943b4ccc103621056790a1f5640eff04ad0d9",
+    "extracted_dut": "a7ca3c00ea4db8a2b00cad69f2edc2d9320738499049cfa9c7faec517b7b5f45",
+    "parasitic_attribution_py": "6daacccb7bfd8e9e9f9831e55743e859d624a62701989412b0ae115c166cd168",
+    "pex_measure_py": "9248ddd15c25efba7643124a44e8eb6ca45f9b8365f573406cfa17fed90a495b",
+    "schematic_dut": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a",
+    "tb_json_consumed_fields": "462b79b389613fbc06de8037311ed54b0820a60f48778e1a1322c48c94a13f74"
+  },
+  "variants": [
+    {
+      "cascode_independent": null,
+      "centre": "probed",
+      "description": "cited extracted DUT, unchanged",
+      "device_w_um": {},
+      "device_w_um_source": {},
+      "dut_sha256": "a7ca3c00ea4db8a2b00cad69f2edc2d9320738499049cfa9c7faec517b7b5f45",
+      "id": "ctrl",
+      "probe_deck_sha256": "171b9eace488887991790ec89f3d9bad981a8f810b4a4ad53840801bf41bdb9f",
+      "side": "extracted"
+    },
+    {
+      "cascode_independent": null,
+      "centre": "zero",
+      "description": "schematic leg as cited (ladder at 0 V)",
+      "dut_sha256": "0df618e73b1f0736aac33c786eac58e5a7381f55b3a4e41dc4eb56d9a8ad0d8a",
+      "id": "sch",
+      "probe_deck_sha256": "8bddb05f22e5145d925895b38b5d78d9fe7064a6bf1b64837a0ab25b51abe86a",
+      "side": "schematic"
+    }
+  ]
+}

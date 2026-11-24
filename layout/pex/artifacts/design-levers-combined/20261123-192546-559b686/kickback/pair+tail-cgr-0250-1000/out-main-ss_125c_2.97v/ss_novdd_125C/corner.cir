@@ -1,0 +1,35 @@
+* klt sim -- generated corner deck, do not edit
+.lib /opt/pdk/gf180mcuD/libs.tech/ngspice/sm141064.ngspice ss
+.lib /opt/pdk/gf180mcuD/libs.tech/ngspice/sm141064.ngspice res_ss
+.lib /opt/pdk/gf180mcuD/libs.tech/ngspice/sm141064.ngspice bjt_ss
+.lib /opt/pdk/gf180mcuD/libs.tech/ngspice/sm141064.ngspice diode_ss
+.lib /opt/pdk/gf180mcuD/libs.tech/ngspice/sm141064.ngspice moscap_ss
+.lib /opt/pdk/gf180mcuD/libs.tech/ngspice/sm141064.ngspice mimcap_ss
+.include /var/tmp/eda-job-klt-sim-d9eca4f9196d/inputs/netlist.cir
+.temp 125.0
+.meas tran ad_pos max v(ad) from=30n to=45n
+.meas tran ad_neg min v(ad) from=30n to=45n
+.meas tran adn_pos max v(adn) from=30n to=45n
+.meas tran adn_neg min v(adn) from=30n to=45n
+.meas tran ap0 find v(apa) at=29n
+.meas tran apmax max v(apa) from=30n to=45n
+.meas tran apmin min v(apa) from=30n to=45n
+.meas tran bd0 find v(bd) at=29n
+.meas tran bd1 find v(bd) at=55n
+.meas tran cd0 find v(cd) at=29n
+.meas tran cd1 find v(cd) at=55n
+.meas tran bc0 find v(bc) at=29n
+.meas tran bc1 find v(bc) at=55n
+.meas tran bp0 find v(bpp) at=29n
+.meas tran bn0 find v(bpn) at=29n
+.meas tran bp1 find v(bpp) at=55n
+.meas tran bn1 find v(bpn) at=55n
+.meas tran da_end find v(dan) at=55n
+.meas tran db_end find v(dbn) at=55n
+.meas tran dc_end find v(dcn) at=55n
+.control
+save all
+tran 5p 60n
+quit
+.endc
+.end
